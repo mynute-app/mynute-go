@@ -3,7 +3,6 @@ package main
 import (
 	"agenda-kaki-company-go/api/config"
 	"agenda-kaki-company-go/api/routes"
-	"agenda-kaki-company-go/api/services"
 	"log"
 
 	"github.com/gofiber/fiber/v3"
