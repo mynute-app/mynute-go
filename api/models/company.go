@@ -15,7 +15,7 @@ type CompanyType struct {
 // First step: Choosing the company.
 type Company struct {
 	gorm.Model
-	Name  string        `json:"not null;unique"`
+	Name  string        `gorm:"not null;unique" json:"name"`
 	Types []CompanyType `gorm:"many2many:company_types;"` // Many-to-many relation
 	TaxID string        `gorm:"unique" json:"tax_id"`     // TaxID must be unique
 }
