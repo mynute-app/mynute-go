@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"agenda-kaki-go/api/controllers"
-	"agenda-kaki-go/api/services"
+	"agenda-kaki-go/core/controllers"
+	"agenda-kaki-go/core/services"
 
 	"github.com/gofiber/fiber/v3"
 )

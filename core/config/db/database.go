@@ -1,7 +1,7 @@
 package config
 
 import (
-	"agenda-kaki-go/api/models"
+	"agenda-kaki-go/core/config/db/models"
 	"fmt"
 	"log"
 	"os"

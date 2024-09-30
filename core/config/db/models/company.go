@@ -2,23 +2,20 @@ package models
 
 import (
 	"errors"
-	"regexp"
 	"gorm.io/gorm"
+	"regexp"
 )
 
-// CompanyType: Represents different types of companies
-type CompanyType struct {
-	gorm.Model
-	Name string `gorm:"not null;unique" json:"name"`
-}
 
-// First step: Choosing the company.
+
+// Company holds an array of CompanyTypes.
 type Company struct {
 	gorm.Model
 	Name  string        `gorm:"not null;unique" json:"name"`
-	Types []CompanyType `gorm:"many2many:company_types;"` // Many-to-many relation
-	TaxID string        `gorm:"unique" json:"tax_id"`     // TaxID must be unique
+	Types []CompanyType `gorm:"many2many:company_company_types" json:"company_types"` // Many-to-many relation with a custom join table
+	TaxID string        `gorm:"not null;unique" json:"tax_id"`
 }
+
 
 // BeforeSave is a GORM hook that runs before the record is saved
 func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
