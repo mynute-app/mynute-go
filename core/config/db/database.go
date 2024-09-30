@@ -1,4 +1,4 @@
-package config
+package database
 
 import (
 	"agenda-kaki-go/core/config/db/models"
@@ -11,7 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConnectDB() *gorm.DB {
+type Database struct {
+	Gorm *gorm.DB
+}
+
+func Connect() *Database {
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -38,20 +42,19 @@ func ConnectDB() *gorm.DB {
 	}
 
 	// Migrate the database schema
-	MigrateDB(db)
 
-	return db
+	return &Database{Gorm: db}
 }
 
-func MigrateDB(db *gorm.DB) {
-	err := db.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Schedule{})
+func (db *Database) Migrate() {
+	err := db.Gorm.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Schedule{})
 	if err != nil {
 		log.Fatal("Failed to migrate the database: ", err)
 	}
 }
 
-func CloseDB(db *gorm.DB) {
-	sqlDB, err := db.DB()
+func (db *Database) CloseDB() {
+	sqlDB, err := db.Gorm.DB()
 	if err != nil {
 		log.Fatal("Failed to close the database: ", err)
 	}

@@ -8,7 +8,7 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
-func (p *Postgres) Create(v interface{}) (error) {
+func (p *Postgres) Create(v interface{}, associations []string) error {
 	return p.DB.Create(v).Error
 }
 
@@ -20,6 +20,28 @@ func (p *Postgres) Delete(v interface{}) (error) {
 	return p.DB.Delete(v).Error
 }
 
-func (p *Postgres) GetOneById(v interface{}, id string) (error) {
-	return p.DB.Preload("Types").First(v, id).Error
+func (p *Postgres) GetOneById(v interface{}, id string, preloads []string) (error) {
+		// Start with the base query
+		query := p.DB
+
+		// Iterate over the preloads and apply each one
+		for _, preload := range preloads {
+			query = query.Preload(preload)
+		}
+	
+		// Fetch the first record by ID after applying all preloads
+		return query.First(v, "id = ?", id).Error
+}
+
+func (p *Postgres) GetOneByName(v interface{}, name string, preloads []string) (error) {
+	// Start with the base query
+	query := p.DB
+
+	// Iterate over the preloads and apply each one
+	for _, preload := range preloads {
+		query = query.Preload(preload)
+	}
+
+	// Fetch the first record by name after applying all preloads
+	return query.First(v, "name = ?", name).Error
 }
