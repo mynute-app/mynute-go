@@ -1,8 +1,8 @@
 package main
 
 import (
+	"agenda-kaki-company-go/api"
 	"agenda-kaki-company-go/api/config"
-	"agenda-kaki-company-go/api/routes"
 	"log"
 
 	"github.com/gofiber/fiber/v3"
@@ -18,8 +18,8 @@ func main() {
     // Close the database connection when the app closes
     defer config.CloseDB(db)
 
-    // Initialize the routes
-    routes.Init(db, app)
+    // Initialize the API content
+    api.Build(db, app)
 
     // Start the server on port 3000
     log.Fatal(app.Listen(":3000"))

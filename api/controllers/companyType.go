@@ -16,21 +16,19 @@ type CompanyType struct {
 func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
 	id := c.Params("id")
 	var companyType models.CompanyType
-	result := ctc.DB.GetOneById(&companyType, id)
-	if result.Error() != "" {
-		return c.Status(404).JSON(fiber.Map{"error": result.Error()})
+	if err := ctc.DB.GetOneById(&companyType, id); err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(companyType)
 }
 
 func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	var companyType models.CompanyType
-	if err := lib.ParseBody(c.Request(), &companyType); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	if err := lib.BodyParser(c.Body(), &companyType); err != nil {
+		return lib.FiberError(400, c, err)
 	}
-	result := ctc.DB.Create(&companyType)
-	if result.Error() != "" {
-		return c.Status(400).JSON(fiber.Map{"error": result.Error()})
+	if err := ctc.DB.Create(&companyType); err != nil {
+		return lib.FiberError(400, c, err)
 	}
 	return c.JSON(companyType)
 }

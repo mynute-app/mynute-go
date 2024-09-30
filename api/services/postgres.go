@@ -10,10 +10,7 @@ type Postgres struct {
 
 func (p *Postgres) Create(v interface{}) (error) {
 	result := p.DB.Create(&v)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return result.Error
 }
 
 func (p *Postgres) Update(v interface{}) (error) {

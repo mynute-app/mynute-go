@@ -8,7 +8,7 @@ import (
 )
 
 func CompanyType(DB *services.Postgres, App *fiber.App) {
-	Controller := controllers.CompanyType{}
+	Controller := controllers.CompanyType{DB: DB, App: App}
 
 	App.Post("/companyType", Controller.Create)
 	App.Get("/companyType/:id", Controller.GetOneById)

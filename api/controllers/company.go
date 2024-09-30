@@ -25,7 +25,7 @@ func (cc *Company) GetOneById(c fiber.Ctx) error {
 
 func (cc *Company) Create(c fiber.Ctx) error {
 	var company models.Company
-	if err := lib.ParseBody(c.Request(), &company); err != nil {
+	if err := lib.BodyParser(c.Body(), &company); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 	result := cc.DB.Create(&company)
@@ -42,7 +42,7 @@ func (cr *Company) UpdateById(c fiber.Ctx) error {
 	if result.Error() != "" {
 		return c.Status(404).JSON(fiber.Map{"error": result.Error()})
 	}
-	if err := lib.ParseBody(c.Request(), &company); err != nil {
+	if err := lib.BodyParser(c.Body(), &company); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 	result = cr.DB.Update(&company)
