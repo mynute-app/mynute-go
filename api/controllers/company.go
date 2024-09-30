@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"agenda-kaki-company-go/api/lib"
-	"agenda-kaki-company-go/api/models"
-	"agenda-kaki-company-go/api/services"
+	"agenda-kaki-go/api/lib"
+	"agenda-kaki-go/api/models"
+	"agenda-kaki-go/api/services"
 
 	"github.com/gofiber/fiber/v3"
 )

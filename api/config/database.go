@@ -1,14 +1,14 @@
 package config
 
 import (
-	"agenda-kaki-company-go/api/models"
+	"agenda-kaki-go/api/models"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"github.com/joho/godotenv"
 )
 
 func ConnectDB() *gorm.DB {
@@ -25,7 +25,7 @@ func ConnectDB() *gorm.DB {
 	dbName := os.Getenv("POSTGRES_DB_NAME")
 	port := os.Getenv("POSTGRES_PORT")
 	sslmode := "disable" // You can modify this based on your setup
-	timeZone := "UTC"     // Default timezone
+	timeZone := "UTC"    // Default timezone
 
 	// Build the DSN (Data Source Name)
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
@@ -42,7 +42,6 @@ func ConnectDB() *gorm.DB {
 
 	return db
 }
-
 
 func MigrateDB(db *gorm.DB) {
 	err := db.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Schedule{})

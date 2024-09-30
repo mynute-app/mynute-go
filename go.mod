@@ -1,4 +1,4 @@
-module agenda-kaki-company-go
+module agenda-kaki-go
 
 go 1.22.2
 

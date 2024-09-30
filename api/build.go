@@ -1,8 +1,8 @@
 package api
 
 import (
-	"agenda-kaki-company-go/api/routes"
-	"agenda-kaki-company-go/api/services"
+	"agenda-kaki-go/api/routes"
+	"agenda-kaki-go/api/services"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
