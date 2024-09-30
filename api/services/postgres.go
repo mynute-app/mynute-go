@@ -9,30 +9,17 @@ type Postgres struct {
 }
 
 func (p *Postgres) Create(v interface{}) (error) {
-	result := p.DB.Create(&v)
-	return result.Error
+	return p.DB.Create(&v).Error
 }
 
 func (p *Postgres) Update(v interface{}) (error) {
-	result := p.DB.Save(&v)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return p.DB.Save(&v).Error
 }
 
 func (p *Postgres) Delete(v interface{}) (error) {
-	result := p.DB.Delete(&v)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return p.DB.Delete(&v).Error
 }
 
 func (p *Postgres) GetOneById(v interface{}, id string) (error) {
-	result := p.DB.First(&v, id)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return p.DB.First(&v, id).Error
 }

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-company-go/api/lib"
 	"agenda-kaki-company-go/api/models"
 	"agenda-kaki-company-go/api/services"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -27,6 +28,7 @@ func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	if err := lib.BodyParser(c.Body(), &companyType); err != nil {
 		return lib.FiberError(400, c, err)
 	}
+	log.Printf("CompanyType: %+v", companyType)
 	if err := ctc.DB.Create(&companyType); err != nil {
 		return lib.FiberError(400, c, err)
 	}
