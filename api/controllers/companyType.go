@@ -17,7 +17,7 @@ func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
 	id := c.Params("id")
 	var companyType models.CompanyType
 	if err := ctc.DB.GetOneById(&companyType, id); err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": err.Error()})
+		return lib.FiberError(404, c, err)
 	}
 	return c.JSON(companyType)
 }
