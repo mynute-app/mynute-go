@@ -43,17 +43,12 @@ func ConnectDB() *gorm.DB {
 	return db
 }
 
-// func MigrateDB(db *gorm.DB) {
-// 	// First, migrate the primary models
-// 	db.AutoMigrate(&Company{}, &CompanyType{}, &Branch{}, &Employee{}, &Service{})
-
-// 	// Then migrate any models that have foreign key relationships
-// 	db.AutoMigrate(&Schedule{})
-// }
-
 
 func MigrateDB(db *gorm.DB) {
-	db.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Schedule{})
+	err := db.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Schedule{})
+	if err != nil {
+		log.Fatal("Failed to migrate the database: ", err)
+	}
 }
 
 func CloseDB(db *gorm.DB) {

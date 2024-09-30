@@ -1,6 +1,8 @@
 package services
 
 import (
+	"log"
+
 	"gorm.io/gorm"
 )
 
@@ -9,7 +11,8 @@ type Postgres struct {
 }
 
 func (p *Postgres) Create(v interface{}) (error) {
-	return p.DB.Create(&v).Error
+	log.Printf("Create: %v", v)
+	return p.DB.Create(v).Error
 }
 
 func (p *Postgres) Update(v interface{}) (error) {
