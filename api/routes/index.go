@@ -10,4 +10,5 @@ import (
 func Init(DB *gorm.DB, App *fiber.App) {
 	postgres := &services.Postgres{DB: DB}
 	Company(postgres, App)
+	CompanyType(postgres, App)
 }

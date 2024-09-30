@@ -1,6 +1,8 @@
+# docker compose -p kaki-go -f docker-compose.yml up -d --force-recreate
+
 services:
   postgres:
-    container_name: postgresdb
+    container_name: postgresdb-kaki
     image: postgres:17.0
     restart: always
     volumes:
@@ -13,7 +15,7 @@ services:
       - "${POSTGRES_PORT}:5432"
 
   pgadmin:
-    container_name: pgadmin4
+    container_name: pgadmin4-kaki
     image: dpage/pgadmin4:8
     restart: always
     volumes:

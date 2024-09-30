@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // Fifth step: Scheduling with service and employee availability.
 type Schedule struct {
@@ -8,5 +12,6 @@ type Schedule struct {
 	ServiceID  uint      `json:"service_id"`
 	EmployeeID uint      `json:"employee_id"`
 	BranchID   uint      `json:"branch_id"`
-	Duration   TimeRange `json:"duration"`
+	StartTime  time.Time `json:"start_time"`
+	EndTime    time.Time `json:"end_time"`
 }
