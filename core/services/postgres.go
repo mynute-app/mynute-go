@@ -1,11 +1,23 @@
 package services
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 )
 
 type Postgres struct {
 	DB *gorm.DB
+}
+
+func (p *Postgres) UpdateOneBy(param string, value string, v interface{}) (error) {
+	// Start with the base query
+	query := p.DB
+
+	cond := fmt.Sprintf("%s = ?", param)
+
+	// Fetch and update the first record.
+	return query.First(cond, value).Updates(v).Error
 }
 
 func (p *Postgres) Create(v interface{}, associations []string) error {
@@ -25,24 +37,7 @@ func (p *Postgres) UpdateMany(v interface{}) error {
 	return p.DB.Model(v).Updates(v).Error
 }
 
-func (p *Postgres) Delete(v interface{}) (error) {
-	return p.DB.Delete(v).Error
-}
-
-func (p *Postgres) GetOneById(v interface{}, id string, preloads []string) (error) {
-		// Start with the base query
-		query := p.DB
-
-		// Iterate over the preloads and apply each one
-		for _, preload := range preloads {
-			query = query.Preload(preload)
-		}
-	
-		// Fetch the first record by ID after applying all preloads
-		return query.First(v, "id = ?", id).Error
-}
-
-func (p *Postgres) GetOneByName(v interface{}, name string, preloads []string) (error) {
+func (p *Postgres) GetOneBy(param string, value string, v interface{}, preloads []string) (error) {
 	// Start with the base query
 	query := p.DB
 
@@ -51,8 +46,20 @@ func (p *Postgres) GetOneByName(v interface{}, name string, preloads []string) (
 		query = query.Preload(preload)
 	}
 
-	// Fetch the first record by name after applying all preloads
-	return query.First(v, "name = ?", name).Error
+	cond := fmt.Sprintf("%s = ?", param)
+
+	// Fetch the first record by the specified parameter after applying all preloads
+	return query.First(v, cond, value).Error
+}
+
+func (p *Postgres) DeleteOneBy(param string, value string, v interface{}) (error) {
+	// Start with the base query
+	query := p.DB
+
+	cond := fmt.Sprintf("%s = ?", param)
+
+	// Fetch and delete the first record.
+	return query.First(cond, value).Delete(v).Error
 }
 
 func (p *Postgres) GetAll(v interface{}, preloads []string) (error) {

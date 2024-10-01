@@ -37,32 +37,38 @@ func (c *Controller) GetAll(model interface{}, dto interface{}, associations []s
 	return c.Ctx.JSON(dto)
 }
 
-func (c *Controller) GetOneById(model interface{}, dto interface{}, associations []string) error {
-	id := c.Ctx.Params("id")
-	if err := c.DB.GetOneById(model, id, associations); err != nil {
-		return lib.FiberError(404, c.Ctx, err)
+func (c *Controller) GetOneBy(param string, model interface{}, dto interface{}, associations []string) error {
+	paramValue := c.Ctx.Params(param)
+	if err := c.DB.GetOneBy(param, paramValue, model, associations); err != nil {
+		lib.FiberError(404, c.Ctx, err)
 	}
 	if err := ConvertToDTO(model, dto); err != nil {
-		return lib.FiberError(500, c.Ctx, err)
+		lib.FiberError(500, c.Ctx, err)
 	}
-	log.Printf("Got from Database! \n %+v", dto)
+	log.Printf("Got from Database using '%s'! \n %+v", param, dto)
 	return c.Ctx.JSON(dto)
 }
 
-func (c *Controller) UpdateById(model interface{}, dto interface{}, associations []string) error {
-	id := c.Ctx.Params("id")
-	if err := c.DB.GetOneById(model, id, associations); err != nil {
+func (c *Controller) DeleteOneBy(param string, model interface{}) error {
+	paramValue := c.Ctx.Params(param)
+	if err := c.DB.DeleteOneBy(param, paramValue, model); err != nil {
 		return lib.FiberError(404, c.Ctx, err)
 	}
+	log.Printf("Deleted from Database using '%s'! \n %+v", param, model)
+	return c.Ctx.JSON(model)
+}
+
+func (c *Controller) UpdateOneBy(param string, model interface{}, dto interface{}, associations []string) error {
+	paramValue := c.Ctx.Params(param)
 	if err := lib.BodyParser(c.Ctx.Body(), model); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
 	}
-	if err := c.DB.UpdateOne(model); err != nil {
+	if err := c.DB.UpdateOneBy(param, paramValue, model); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
 	}
 	if err := ConvertToDTO(model, dto); err != nil {
 		return lib.FiberError(500, c.Ctx, err)
 	}
-	log.Printf("Updated on Database! \n %+v", dto)
+	log.Printf("Updated on Database using '%s'! \n %+v", param, dto)
 	return c.Ctx.JSON(dto)
 }

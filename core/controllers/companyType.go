@@ -3,7 +3,6 @@ package controllers
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
-	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/services"
 
 	"github.com/gofiber/fiber/v3"
@@ -14,55 +13,76 @@ type CompanyType struct {
 	DB  *services.Postgres
 }
 
-func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
-	id := c.Params("id")
-	var companyType models.CompanyType
-	if err := ctc.DB.GetOneById(&companyType, id, nil); err != nil {
-		return lib.FiberError(404, c, err)
-	}
-	var companyTypeDTO DTO.CompanyType
-	if err := services.ConvertToDTO(companyType, &companyTypeDTO); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-	return c.JSON(companyType)
-}
+func (ctc *CompanyType) Create(c fiber.Ctx) error {
+	var model models.CompanyType
+	var dto DTO.CompanyType
+	assocs := []string{}
 
-func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
-	name := c.Params("name")
-	var companyType models.CompanyType
-	if err := ctc.DB.GetOneByName(&companyType, name, nil); err != nil {
-		return lib.FiberError(404, c, err)
+	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+	if err := CtrlService.Create(&model, &dto, assocs); err != nil {
+		return err
 	}
-	var companyTypeDTO DTO.CompanyType
-	if err := services.ConvertToDTO(companyType, &companyTypeDTO); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-	return c.JSON(companyTypeDTO)
+	return nil
 }
 
 func (ctc *CompanyType) GetAll(c fiber.Ctx) error {
-	var companyTypes []models.CompanyType
-	if err := ctc.DB.GetAll(&companyTypes, nil); err != nil {
-		return lib.FiberError(404, c, err)
+	var model []models.CompanyType
+	var dto []DTO.CompanyType
+	assocs := []string{}
+
+	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+	if err := CtrlService.GetAll(&model, &dto, assocs); err != nil {
+		return err
 	}
-	var companyTypesDTO []DTO.CompanyType
-	if err := services.ConvertToDTO(companyTypes, &companyTypesDTO); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-	return c.JSON(companyTypesDTO)
+	return nil
 }
 
-func (ctc *CompanyType) Create(c fiber.Ctx) error {
-	var companyType models.CompanyType
-	if err := lib.BodyParser(c.Body(), &companyType); err != nil {
-		return lib.FiberError(400, c, err)
+func (ctc *CompanyType) getBy(param string, c fiber.Ctx) error {
+	var model models.CompanyType
+	var dto DTO.CompanyType
+	assocs := []string{}
+
+	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
+		return err
 	}
-	if err := ctc.DB.Create(&companyType, nil); err != nil {
-		return lib.FiberError(400, c, err)
+	return nil
+}
+
+func (ctc *CompanyType) updateBy(param string, c fiber.Ctx) error {
+	var model models.CompanyType
+	var dto DTO.CompanyType
+	assocs := []string{}
+
+	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
+		return err
 	}
-	var companyTypeDTO DTO.CompanyType
-	if err := services.ConvertToDTO(companyType, &companyTypeDTO); err != nil {
-		return lib.FiberError(500, c, err)
+	return nil
+}
+
+func (ctc *CompanyType) deleteBy(param string, c fiber.Ctx) error {
+	var model models.CompanyType
+
+	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+	if err := CtrlService.DeleteOneBy(param, &model); err != nil {
+		return err
 	}
-	return c.JSON(companyType)
+	return nil
+}
+
+func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
+	return ctc.getBy("id", c)
+}
+
+func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
+	return ctc.getBy("name", c)
+}
+
+func (ctc *CompanyType) UpdateById(c fiber.Ctx) error {
+	return ctc.updateBy("id", c)
+}
+
+func (ctc *CompanyType) DeleteById(c fiber.Ctx) error {
+	return ctc.deleteBy("id", c)
 }
