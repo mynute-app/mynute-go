@@ -1,3 +1,4 @@
 .env
 pgadmin-data
 postgres-data
+tmp
