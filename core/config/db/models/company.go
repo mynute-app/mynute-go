@@ -17,7 +17,10 @@ type Company struct {
 // BeforeSave is a GORM hook that runs before the record is saved
 func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
 	if !c.ValidateTaxID() {
-		return errors.New("invalid TaxID: it must contain only 15 numeric characters")
+		return errors.New("tax_id must contain only 15 numeric characters")
+	}
+	if c.Name == "" {
+		return errors.New("name cannot be empty")
 	}
 	return nil
 }

@@ -45,3 +45,16 @@ func (p *Postgres) GetOneByName(v interface{}, name string, preloads []string) (
 	// Fetch the first record by name after applying all preloads
 	return query.First(v, "name = ?", name).Error
 }
+
+func (p *Postgres) GetAll(v interface{}, preloads []string) (error) {
+	// Start with the base query
+	query := p.DB
+
+	// Iterate over the preloads and apply each one
+	for _, preload := range preloads {
+		query = query.Preload(preload)
+	}
+
+	// Fetch all records after applying all preloads
+	return query.Find(v).Error
+}

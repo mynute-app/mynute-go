@@ -12,4 +12,6 @@ func CompanyType(DB *services.Postgres, App *fiber.App) {
 
 	App.Post("/companyType", Controller.Create)
 	App.Get("/companyType/:id", Controller.GetOneById)
+	App.Get("/companyType/name/:name", Controller.GetOneByName)
+	App.Get("/companyType", Controller.GetAll)
 }

@@ -6,8 +6,17 @@ import (
 	"reflect"
 )
 
-// ConvertToDTO recursively converts a source struct to a destination DTO struct
+// ConvertToDTO recursively converts a source struct or slice of structs to a destination DTO struct or slice of DTOs
 func ConvertToDTO(source interface{}, dto interface{}) error {
+	// Handle if the source is a slice
+	sourceVal := reflect.ValueOf(source)
+	dtoVal := reflect.ValueOf(dto)
+
+	if sourceVal.Kind() == reflect.Slice && dtoVal.Kind() == reflect.Ptr && dtoVal.Elem().Kind() == reflect.Slice {
+		// It's a slice, handle accordingly
+		return copySlice(sourceVal, dtoVal.Elem())
+	}
+
 	// Resolve and validate the destination (DTO) as a pointer to a struct
 	dtoVal, err := lib.ResolvePointerStruct(dto)
 	if err != nil {
@@ -15,7 +24,7 @@ func ConvertToDTO(source interface{}, dto interface{}) error {
 	}
 
 	// Resolve and validate the source as a struct
-	sourceVal, err := lib.ResolveStruct(source)
+	sourceVal, err = lib.ResolveStruct(source)
 	if err != nil {
 		return err
 	}
@@ -23,6 +32,34 @@ func ConvertToDTO(source interface{}, dto interface{}) error {
 	// Call the recursive function to copy the fields
 	if err := copyMatchingFields(sourceVal, dtoVal); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Helper function to copy slice elements
+func copySlice(sourceVal, dtoVal reflect.Value) error {
+	if sourceVal.IsNil() {
+		dtoVal.Set(reflect.MakeSlice(dtoVal.Type(), 0, 0))
+		return nil
+	}
+
+	// Initialize the destination slice with the same length
+	dtoVal.Set(reflect.MakeSlice(dtoVal.Type(), sourceVal.Len(), sourceVal.Len()))
+
+	for i := 0; i < sourceVal.Len(); i++ {
+		sourceElem := sourceVal.Index(i)
+		destElem := dtoVal.Index(i)
+
+		// If the elements are structs, recursively copy their fields
+		if sourceElem.Kind() == reflect.Struct && destElem.Kind() == reflect.Struct {
+			if err := copyMatchingFields(sourceElem, destElem); err != nil {
+				return err
+			}
+		} else if sourceElem.Type() == destElem.Type() {
+			// Directly copy if the types match
+			destElem.Set(sourceElem)
+		}
 	}
 
 	return nil
@@ -60,37 +97,6 @@ func copyMatchingFields(sourceVal, dtoVal reflect.Value) error {
 				}
 			}
 		}
-	}
-
-	return nil
-}
-
-// copySlice handles copying slices from the source to the destination
-func copySlice(sourceField, dtoField reflect.Value) error {
-	// Initialize the destination slice
-	if sourceField.IsNil() {
-		dtoField.Set(reflect.MakeSlice(dtoField.Type(), 0, 0))
-	} else {
-		// Create a new slice with the same type as the destination
-		newSlice := reflect.MakeSlice(dtoField.Type(), sourceField.Len(), sourceField.Cap())
-
-		// Copy each element from the source slice to the destination slice
-		for i := 0; i < sourceField.Len(); i++ {
-			sourceElem := sourceField.Index(i)
-			destElem := newSlice.Index(i)
-
-			// Handle structs in the slice (recursively copy fields if they are structs)
-			if sourceElem.Kind() == reflect.Struct && destElem.Kind() == reflect.Struct {
-				if err := copyMatchingFields(sourceElem, destElem); err != nil {
-					return err
-				}
-			} else if sourceElem.Type() == destElem.Type() {
-				destElem.Set(sourceElem)
-			}
-		}
-
-		// Set the destination field with the newly populated slice
-		dtoField.Set(newSlice)
 	}
 
 	return nil
