@@ -2,8 +2,9 @@ package models
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"regexp"
+
+	"gorm.io/gorm"
 )
 
 // Company holds an array of CompanyTypes.
@@ -15,12 +16,12 @@ type Company struct {
 }
 
 // BeforeSave is a GORM hook that runs before the record is saved
-func (c *Company) BeforeSave(tx *gorm.DB) (err error) {
-	if !c.ValidateTaxID() {
+func (company *Company) BeforeSave(tx *gorm.DB) (err error) {
+	if !company.ValidateTaxID() {
 		return errors.New("tax_id must contain only 15 numeric characters")
 	}
-	if c.Name == "" {
-		return errors.New("name cannot be empty")
+	if company.Name == "" {
+		return errors.New("company.Name cannot be empty")
 	}
 	return nil
 }

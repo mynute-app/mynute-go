@@ -8,10 +8,12 @@ import (
 )
 
 func CompanyType(DB *services.Postgres, App *fiber.App) {
-	Controller := controllers.CompanyType{DB: DB, App: App}
+	cct := controllers.CompanyType{DB: DB, App: App}
+	r := App.Group("/companyType")
 
-	App.Post("/companyType", Controller.Create)
-	App.Get("/companyType/:id", Controller.GetOneById)
-	App.Get("/companyType/name/:name", Controller.GetOneByName)
-	App.Get("/companyType", Controller.GetAll)
+	r.Post("/", cct.Create)
+	r.Get("/", cct.GetAll)
+	r.Get("/:id", cct.GetOneById)
+	r.Get("/name/:name", cct.GetOneByName)
+	
 }

@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/services"
 
 	"github.com/gofiber/fiber/v3"
+	"log"
 )
 
 type Company struct {
@@ -41,18 +42,15 @@ func (cc *Company) GetOneByName(c fiber.Ctx) error {
 }
 
 func (cc *Company) Create(c fiber.Ctx) error {
-	var company models.Company
-	if err := lib.BodyParser(c.Body(), &company); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	var model models.Company
+	var dto DTO.Company
+	assocs := []string{"CompanyTypes"}
+	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
+	if err := CtrlService.Create(&model, &dto, assocs); err != nil {
+		log.Printf("An internal error occurred! %v", err)
+		return err
 	}
-	if err := cc.DB.Create(&company, []string{"CompanyTypes"}); err != nil {
-		return lib.FiberError(400, c, err)
-	}
-	var companyDTO DTO.Company
-	if err := services.ConvertToDTO(company, &companyDTO); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-	return c.JSON(companyDTO)
+	return nil
 }
 
 func (cr *Company) UpdateById(c fiber.Ctx) error {
@@ -64,7 +62,7 @@ func (cr *Company) UpdateById(c fiber.Ctx) error {
 	if err := lib.BodyParser(c.Body(), &company); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
-	if err := cr.DB.Update(&company); err != nil {
+	if err := cr.DB.UpdateOne(&company); err != nil {
 		return lib.FiberError(400, c, err)
 	}
 	var companyDTO DTO.Company

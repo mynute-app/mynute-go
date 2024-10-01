@@ -8,12 +8,12 @@ import (
 
 type CompanyType struct {
 	gorm.Model
-	Name string `gorm:"not null;unique;required" json:"name"`
+	Name string `gorm:"not null;unique" json:"name"`
 }
 
-func (company *CompanyType) BeforeCreate(tx *gorm.DB) (err error) {
-	if company.Name == "" {
-		return errors.New("name cannot be empty")
+func (companyType *CompanyType) BeforeCreate(tx *gorm.DB) (err error) {
+	if companyType.Name == "" {
+		return errors.New("companyType.Name cannot be empty")
 	}
 	return nil
 }

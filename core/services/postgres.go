@@ -12,8 +12,17 @@ func (p *Postgres) Create(v interface{}, associations []string) error {
 	return p.DB.Create(v).Error
 }
 
-func (p *Postgres) Update(v interface{}) (error) {
+// UpdateOne updates a single record
+func (p *Postgres) UpdateOne(v interface{}) error {
+	// Use GORM's Save method to update the record
 	return p.DB.Save(v).Error
+}
+
+// UpdateMany updates multiple records
+func (p *Postgres) UpdateMany(v interface{}) error {
+	// Expect that `v` is a slice of records. Use GORM's Save method for bulk updates.
+	// Note: GORM's `Save` updates the records if they already exist.
+	return p.DB.Model(v).Updates(v).Error
 }
 
 func (p *Postgres) Delete(v interface{}) (error) {

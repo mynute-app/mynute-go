@@ -60,5 +60,9 @@ func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	if err := ctc.DB.Create(&companyType, nil); err != nil {
 		return lib.FiberError(400, c, err)
 	}
+	var companyTypeDTO DTO.CompanyType
+	if err := services.ConvertToDTO(companyType, &companyTypeDTO); err != nil {
+		return lib.FiberError(500, c, err)
+	}
 	return c.JSON(companyType)
 }
