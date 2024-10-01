@@ -8,22 +8,22 @@ import (
 
 // ConvertToDTO recursively converts a source struct or slice of structs to a destination DTO struct or slice of DTOs
 func ConvertToDTO(source interface{}, dto interface{}) error {
-	// Handle if the source is a slice
 	sourceVal := reflect.ValueOf(source)
 	dtoVal := reflect.ValueOf(dto)
 
+	// Handle if the source is a slice
 	if sourceVal.Kind() == reflect.Slice && dtoVal.Kind() == reflect.Ptr && dtoVal.Elem().Kind() == reflect.Slice {
 		// It's a slice, handle accordingly
 		return copySlice(sourceVal, dtoVal.Elem())
 	}
 
-	// Resolve and validate the destination (DTO) as a pointer to a struct
+	// Resolve and validate the destination (DTO) as a pointer to a struct or slice
 	dtoVal, err := lib.ResolvePointerStruct(dto)
 	if err != nil {
 		return err
 	}
 
-	// Resolve and validate the source as a struct
+	// Resolve and validate the source as a struct or slice
 	sourceVal, err = lib.ResolveStruct(source)
 	if err != nil {
 		return err
@@ -67,6 +67,16 @@ func copySlice(sourceVal, dtoVal reflect.Value) error {
 
 // copyMatchingFields is a helper function that recursively copies fields from the source to the destination
 func copyMatchingFields(sourceVal, dtoVal reflect.Value) error {
+	// Handle the case where either source or destination is a slice
+	if sourceVal.Kind() == reflect.Slice && dtoVal.Kind() == reflect.Slice {
+		return copySlice(sourceVal, dtoVal)
+	}
+
+	// Ensure both are structs before calling NumField
+	if sourceVal.Kind() != reflect.Struct || dtoVal.Kind() != reflect.Struct {
+		return errors.New("both source and destination must be structs or slices")
+	}
+
 	// Iterate through the fields of the destination (DTO) struct
 	for i := 0; i < dtoVal.NumField(); i++ {
 		dtoField := dtoVal.Field(i)
@@ -79,12 +89,10 @@ func copyMatchingFields(sourceVal, dtoVal reflect.Value) error {
 		if sourceField.IsValid() {
 			// Check if the field is a struct, and if so, recursively copy its fields
 			if sourceField.Kind() == reflect.Struct && dtoField.Kind() == reflect.Struct {
-				// Recursively copy nested struct fields
 				if err := copyMatchingFields(sourceField, dtoField); err != nil {
 					return err
 				}
 			} else if sourceField.Kind() == reflect.Slice && dtoField.Kind() == reflect.Slice {
-				// Handle slice fields
 				if err := copySlice(sourceField, dtoField); err != nil {
 					return err
 				}

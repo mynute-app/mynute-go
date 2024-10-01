@@ -12,6 +12,7 @@ func Company(DB *services.Postgres, App *fiber.App) {
 	r := App.Group("/company")
 
 	r.Post("/", cc.Create)
+	r.Get("/", cc.GetAll)
 	r.Get("/:id", cc.GetOneById)
 	r.Put("/:id", cc.UpdateById)
 	r.Delete("/:id", cc.DeleteById)
