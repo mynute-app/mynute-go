@@ -21,7 +21,7 @@ func (c *Controller) UpdateOneBy(param string, model interface{}, dto interface{
 	if err := c.DB.UpdateOneBy(param, paramValue, model, changes, associations); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
 	}
-	if err := ConvertToDTO(changes, dto); err != nil {
+	if err := ConvertToDTO(model, dto); err != nil {
 		return lib.FiberError(500, c.Ctx, err)
 	}
 	log.Printf("Updated on Database using '%s'! \n %+v", param, dto)

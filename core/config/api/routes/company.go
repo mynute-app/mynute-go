@@ -18,5 +18,4 @@ func Company(DB *services.Postgres, App *fiber.App) {
 	r.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
 	r.Patch("/:id", cc.UpdateById) 
 	r.Delete("/:id", cc.DeleteById)
-	
 }

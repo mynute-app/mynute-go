@@ -14,6 +14,18 @@ type Company struct {
 	DB    *services.Postgres
 }
 
+func (cr *Company) updateBy(param string, c fiber.Ctx) error {
+	var model models.Company
+	var dto DTO.Company
+	assocs := []string{"CompanyTypes"}
+	CtrlService := services.Controller{Ctx: c, DB: cr.DB}
+	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
+		log.Printf("An internal error occurred! %v", err)
+		return err
+	}
+	return nil
+}
+
 func (cc *Company) Create(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
@@ -44,18 +56,6 @@ func (cc *Company) getBy(param string, c fiber.Ctx) error {
 	assocs := []string{"CompanyTypes"}
 	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
 	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
-		log.Printf("An internal error occurred! %v", err)
-		return err
-	}
-	return nil
-}
-
-func (cr *Company) updateBy(param string, c fiber.Ctx) error {
-	var model models.Company
-	var dto DTO.Company
-	assocs := []string{"CompanyTypes"}
-	CtrlService := services.Controller{Ctx: c, DB: cr.DB}
-	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
 		log.Printf("An internal error occurred! %v", err)
 		return err
 	}

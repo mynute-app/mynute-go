@@ -16,21 +16,29 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 	query := p.DB.Model(model)
 
 	// Iterate over the associations and apply each one
-	for _, association := range associations {
-		query = query.Omit(association)
-	}
+	// It seems like the below iteration over the associations
+	// is handled automatically by GORM.
+	// for _, association := range associations {
+	// 	query = query.Omit(association)
+	// }
 
 	cond := fmt.Sprintf("%s = ?", param)
 
+	// First, fetch the existing record
 	if err := query.Where(cond, value).Error; err != nil {
 		return err
 	}
-	log.Printf("Model: %+v", model)
-	log.Printf("Condition: %s", cond)
-	log.Printf("Changes: %+v", changes)
+
+	log.Printf("Updating record with %s = %s", param, value)
 
 	// Use GORM's Updates method to update the record
-	return query.Updates(changes).Error
+	if err := query.Updates(changes).Error; err != nil {
+		return err
+	}
+
+	// Get the updated record and load it into the model
+
+	return p.GetOneBy(param, value, model, associations)
 }
 
 func (p *Postgres) Create(model interface{}, associations []string) error {
