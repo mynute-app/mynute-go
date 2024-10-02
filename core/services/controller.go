@@ -18,7 +18,6 @@ func (c *Controller) UpdateOneBy(param string, model interface{}, dto interface{
 	if err := lib.BodyParser(c.Ctx.Body(), &changes); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
 	}
-	log.Printf("Changes: %+v", changes)
 	if err := c.DB.UpdateOneBy(param, paramValue, model, changes, associations); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
 	}

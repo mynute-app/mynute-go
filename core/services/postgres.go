@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -10,7 +11,7 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
-func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) (error) {
+func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB.Model(model)
 
@@ -21,12 +22,19 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 
 	cond := fmt.Sprintf("%s = ?", param)
 
-	// Fetch and update the first record.
-	return query.First(cond, value).Updates(changes).Error
+	if err := query.Where(cond, value).Error; err != nil {
+		return err
+	}
+	log.Printf("Model: %+v", model)
+	log.Printf("Condition: %s", cond)
+	log.Printf("Changes: %+v", changes)
+
+	// Use GORM's Updates method to update the record
+	return query.Updates(changes).Error
 }
 
-func (p *Postgres) Create(v interface{}, associations []string) error {
-	return p.DB.Create(v).Error
+func (p *Postgres) Create(model interface{}, associations []string) error {
+	return p.DB.Create(model).Error
 }
 
 // UpdateOne updates a single record
@@ -42,40 +50,40 @@ func (p *Postgres) UpdateMany(v interface{}) error {
 	return p.DB.Model(v).Updates(v).Error
 }
 
-func (p *Postgres) GetOneBy(param string, value string, v interface{}, preloads []string) (error) {
+func (p *Postgres) GetOneBy(param string, value string, model interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB
 
 	// Iterate over the preloads and apply each one
-	for _, preload := range preloads {
+	for _, preload := range associations {
 		query = query.Preload(preload)
 	}
 
 	cond := fmt.Sprintf("%s = ?", param)
 
 	// Fetch the first record by the specified parameter after applying all preloads
-	return query.First(v, cond, value).Error
+	return query.First(model, cond, value).Error
 }
 
-func (p *Postgres) DeleteOneBy(param string, value string, v interface{}) (error) {
+func (p *Postgres) DeleteOneBy(param string, value string, model interface{}) error {
 	// Start with the base query
 	query := p.DB
 
 	cond := fmt.Sprintf("%s = ?", param)
 
 	// Fetch and delete the first record.
-	return query.First(cond, value).Delete(v).Error
+	return query.First(cond, value).Delete(model).Error
 }
 
-func (p *Postgres) GetAll(v interface{}, preloads []string) (error) {
+func (p *Postgres) GetAll(model interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB
 
 	// Iterate over the preloads and apply each one
-	for _, preload := range preloads {
+	for _, preload := range associations {
 		query = query.Preload(preload)
 	}
 
 	// Fetch all records after applying all preloads
-	return query.Find(v).Error
+	return query.Find(model).Error
 }

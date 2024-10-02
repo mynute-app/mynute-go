@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"log"
 	"regexp"
 
 	"gorm.io/gorm"
@@ -11,18 +12,25 @@ import (
 type Company struct {
 	gorm.Model
 	Name         string        `gorm:"not null;unique" json:"name"`
-	CompanyTypes []CompanyType `gorm:"many2many:company_company_types" json:"company_types"` // Many-to-many relation with a custom join table
+	CompanyTypes []CompanyType `gorm:"many2many:company_company_types;ForeignKey:id;References:id" json:"company_types"` // Many-to-many relation with a custom join table
 	TaxID        string        `gorm:"not null;unique" json:"tax_id"`
 }
 
 // BeforeSave is a GORM hook that runs before the record is saved
 func (company *Company) BeforeSave(tx *gorm.DB) (err error) {
-	if !company.ValidateTaxID() {
-		return errors.New("tax_id must contain only 15 numeric characters")
+	log.Printf("Company: %+v", company)
+	// Only validate the TaxID if it's being updated
+	if tx.Statement.Changed("TaxID") {
+			if !company.ValidateTaxID() {
+					return errors.New("company.tax_id must contain only 15 numeric characters")
+			}
 	}
-	if company.Name == "" {
-		return errors.New("company.Name cannot be empty")
+
+	// Validate the Name field if it’s being updated
+	if tx.Statement.Changed("Name") && company.Name == "" {
+			return errors.New("company.name cannot be empty")
 	}
+
 	return nil
 }
 
