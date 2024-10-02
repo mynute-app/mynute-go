@@ -12,6 +12,23 @@ type Controller struct {
 	DB  *Postgres
 }
 
+func (c *Controller) UpdateOneBy(param string, model interface{}, dto interface{}, associations []string) error {
+	paramValue := c.Ctx.Params(param)
+	var changes map[string]interface{}
+	if err := lib.BodyParser(c.Ctx.Body(), &changes); err != nil {
+		return lib.FiberError(400, c.Ctx, err)
+	}
+	log.Printf("Changes: %+v", changes)
+	if err := c.DB.UpdateOneBy(param, paramValue, model, changes, associations); err != nil {
+		return lib.FiberError(400, c.Ctx, err)
+	}
+	if err := ConvertToDTO(changes, dto); err != nil {
+		return lib.FiberError(500, c.Ctx, err)
+	}
+	log.Printf("Updated on Database using '%s'! \n %+v", param, dto)
+	return c.Ctx.JSON(dto)
+}
+
 func (c *Controller) Create(model interface{}, dto interface{}, associations []string) error {
 	if err := lib.BodyParser(c.Ctx.Body(), model); err != nil {
 		return lib.FiberError(400, c.Ctx, err)
@@ -56,19 +73,4 @@ func (c *Controller) DeleteOneBy(param string, model interface{}) error {
 	}
 	log.Printf("Deleted from Database using '%s'! \n %+v", param, model)
 	return c.Ctx.JSON(model)
-}
-
-func (c *Controller) UpdateOneBy(param string, model interface{}, dto interface{}, associations []string) error {
-	paramValue := c.Ctx.Params(param)
-	if err := lib.BodyParser(c.Ctx.Body(), model); err != nil {
-		return lib.FiberError(400, c.Ctx, err)
-	}
-	if err := c.DB.UpdateOneBy(param, paramValue, model); err != nil {
-		return lib.FiberError(400, c.Ctx, err)
-	}
-	if err := ConvertToDTO(model, dto); err != nil {
-		return lib.FiberError(500, c.Ctx, err)
-	}
-	log.Printf("Updated on Database using '%s'! \n %+v", param, dto)
-	return c.Ctx.JSON(dto)
 }

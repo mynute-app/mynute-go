@@ -55,7 +55,7 @@ func (cr *Company) updateBy(param string, c fiber.Ctx) error {
 	var dto DTO.Company
 	assocs := []string{"CompanyTypes"}
 	CtrlService := services.Controller{Ctx: c, DB: cr.DB}
-	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
+	if err := CtrlService.UpdateOneBy(param, &dto, model, assocs); err != nil {
 		log.Printf("An internal error occurred! %v", err)
 		return err
 	}

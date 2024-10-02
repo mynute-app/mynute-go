@@ -10,14 +10,19 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
-func (p *Postgres) UpdateOneBy(param string, value string, v interface{}) (error) {
+func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) (error) {
 	// Start with the base query
-	query := p.DB
+	query := p.DB.Model(model)
+
+	// Iterate over the associations and apply each one
+	for _, association := range associations {
+		query = query.Omit(association)
+	}
 
 	cond := fmt.Sprintf("%s = ?", param)
 
 	// Fetch and update the first record.
-	return query.First(cond, value).Updates(v).Error
+	return query.First(cond, value).Updates(changes).Error
 }
 
 func (p *Postgres) Create(v interface{}, associations []string) error {
