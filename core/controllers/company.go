@@ -13,7 +13,7 @@ import (
 )
 
 type Company struct {
-	DB    *services.Postgres
+	DB         *services.Postgres
 	Middleware *middleware.Company
 }
 
@@ -48,7 +48,7 @@ func (cc *Company) updateBy(paramKey string, c fiber.Ctx) error {
 	if err := cc.DB.UpdateOneBy(paramKey, paramVal, &model, changes, assocs); err != nil {
 		return lib.FiberError(400, c, err)
 	}
-	
+
 	var dto DTO.Company
 
 	if err := lib.ParseToDTO(model, &dto); err != nil {
@@ -58,6 +58,43 @@ func (cc *Company) updateBy(paramKey string, c fiber.Ctx) error {
 	if err := c.JSON(dto); err != nil {
 		log.Printf("An internal error occurred! %v", err)
 		return err
+	}
+
+	return nil
+}
+
+func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
+	var model models.Company
+
+	assocs := []string{"CompanyTypes"}
+
+	paramVal := c.Params(paramKey)
+
+	if err := cc.DB.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
+		return lib.FiberError(404, c, err)
+	}
+
+	var dto DTO.Company
+
+	if err := lib.ParseToDTO(model, &dto); err != nil {
+		return lib.FiberError(500, c, err)
+	}
+
+	if err := c.JSON(dto); err != nil {
+		log.Printf("An internal error occurred! %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
+	var model models.Company
+
+	paramVal := c.Params(paramKey)
+
+	if err := cc.DB.DeleteOneBy(paramKey, paramVal, &model); err != nil {
+		return lib.FiberError(400, c, err)
 	}
 
 	return nil
@@ -96,37 +133,60 @@ func (cc *Company) Create(c fiber.Ctx) error {
 
 func (cc *Company) GetAll(c fiber.Ctx) error {
 	var model []models.Company
+
+	assocs := []string{"CompanyTypes"}
+
+	if err := cc.DB.GetAll(&model, assocs); err != nil {
+		return lib.FiberError(404, c, err)
+	}
+
 	var dto []DTO.Company
-	assocs := []string{"CompanyTypes"}
-	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
-	if err := CtrlService.GetAll(&model, &dto, assocs); err != nil {
+
+	if err := lib.ParseToDTO(model, &dto); err != nil {
+		return lib.FiberError(500, c, err)
+	}
+
+	if err := c.JSON(dto); err != nil {
 		log.Printf("An internal error occurred! %v", err)
 		return err
 	}
+
 	return nil
 }
 
-func (cc *Company) getBy(param string, c fiber.Ctx) error {
-	var model models.Company
-	var dto DTO.Company
-	assocs := []string{"CompanyTypes"}
-	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
-	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
-		log.Printf("An internal error occurred! %v", err)
-		return err
-	}
-	return nil
-}
+// func (cc *Company) GetAll(c fiber.Ctx) error {
+// 	var model []models.Company
+// 	var dto []DTO.Company
+// 	assocs := []string{"CompanyTypes"}
+// 	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
+// 	if err := CtrlService.GetAll(&model, &dto, assocs); err != nil {
+// 		log.Printf("An internal error occurred! %v", err)
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func (cr *Company) deleteBy(param string, c fiber.Ctx) error {
-	var model models.Company
-	CtrlService := services.Controller{Ctx: c, DB: cr.DB}
-	if err := CtrlService.DeleteOneBy(param, &model); err != nil {
-		log.Printf("An internal error occurred! %v", err)
-		return err
-	}
-	return nil
-}
+// func (cc *Company) getBy(param string, c fiber.Ctx) error {
+// 	var model models.Company
+// 	var dto DTO.Company
+// 	assocs := []string{"CompanyTypes"}
+// 	CtrlService := services.Controller{Ctx: c, DB: cc.DB}
+// 	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
+// 		log.Printf("An internal error occurred! %v", err)
+// 		return err
+// 	}
+// 	return nil
+// }
+
+// func (cr *Company) deleteBy(param string, c fiber.Ctx) error {
+// 	var model models.Company
+// 	CtrlService := services.Controller{Ctx: c, DB: cr.DB}
+// 	if err := CtrlService.DeleteOneBy(param, &model); err != nil {
+// 		log.Printf("An internal error occurred! %v", err)
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (cc *Company) GetOneById(c fiber.Ctx) error {
 	return cc.getBy("id", c)
