@@ -15,10 +15,17 @@ type Postgres struct {
 // 		return err
 // 	}
 
-// 	if err := lib.MergeMapIntoInterface(model, changes) ; err != nil {
+// 	query := p.DB.Model(model)
+
+// 	if query.Error != nil {
+// 		return query.Error
+// 	}
+
+// 	if err := query.Updates(changes).Error; err != nil {
 // 		return err
 // 	}
 
+// 	return nil
 // }
 
 func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
@@ -36,7 +43,7 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 		return err
 	}
 
-	// Use GORM's Updates method to update the record
+	// Apply the changes
 	if err := query.Updates(changes).Error; err != nil {
 		return err
 	}
@@ -47,12 +54,6 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 
 func (p *Postgres) Create(model interface{}, associations []string) error {
 	return p.DB.Create(model).Error
-}
-
-// UpdateOne updates a single record
-func (p *Postgres) UpdateOne(v interface{}) error {
-	// Use GORM's Save method to update the record
-	return p.DB.Save(v).Error
 }
 
 // UpdateMany updates multiple records
@@ -79,12 +80,22 @@ func (p *Postgres) GetOneBy(param string, value string, model interface{}, assoc
 
 func (p *Postgres) DeleteOneBy(param string, value string, model interface{}) error {
 	// Start with the base query
-	query := p.DB
+	// query := p.DB.Model(model)
 
-	cond := fmt.Sprintf("%s = ?", param)
+	// if query.Error != nil {
+	// 	return query.Error
+	// }
 
-	// Fetch and delete the first record.
-	return query.First(cond, value).Delete(model).Error
+	// cond := fmt.Sprintf("%s = ?", param)
+
+	// // Fetch and delete the first record.
+	// return query.First(cond, value).Delete(model).Error
+
+	err := p.GetOneBy(param, value, model, nil); if err != nil {
+		return err
+	}
+
+	return p.DB.Delete(model).Error
 }
 
 func (p *Postgres) GetAll(model interface{}, associations []string) error {
