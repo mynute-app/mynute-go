@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -11,25 +10,31 @@ type Postgres struct {
 	DB *gorm.DB
 }
 
+// func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
+// 	if err := p.GetOneBy(param, value, model, associations); err != nil {
+// 		return err
+// 	}
+
+// 	if err := lib.MergeMapIntoInterface(model, changes) ; err != nil {
+// 		return err
+// 	}
+
+// }
+
 func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB.Model(model)
 
-	// Iterate over the associations and apply each one
-	// It seems like the below iteration over the associations
-	// is handled automatically by GORM.
-	// for _, association := range associations {
-	// 	query = query.Omit(association)
-	// }
+	if query.Error != nil {
+		return query.Error
+	}
 
 	cond := fmt.Sprintf("%s = ?", param)
 
-	// First, fetch the existing record
+	// Fetch the existing record
 	if err := query.Where(cond, value).Error; err != nil {
 		return err
 	}
-
-	log.Printf("Updating record with %s = %s", param, value)
 
 	// Use GORM's Updates method to update the record
 	if err := query.Updates(changes).Error; err != nil {
@@ -37,7 +42,6 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 	}
 
 	// Get the updated record and load it into the model
-
 	return p.GetOneBy(param, value, model, associations)
 }
 
