@@ -1,6 +1,7 @@
 package services
 
 import (
+	"agenda-kaki-go/core/lib"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -15,7 +16,9 @@ func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, ch
 		return err
 	}
 
-	
+	if err := lib.MergeMapIntoInterface(model, changes) ; err != nil {
+		return err
+	}
 
 }
 
