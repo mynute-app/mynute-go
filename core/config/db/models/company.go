@@ -31,6 +31,7 @@ func (company *Company) BeforeCreate(tx *gorm.DB) (err error) {
 func (company *Company) BeforeUpdate(tx *gorm.DB) (err error) {
 	log.Printf("We are updating a company record")
 	log.Printf("Company: %+v", company)
+	
 	log.Printf(`tx.Statement.Changed("Name"): %+v`, tx.Statement.Changed("Name"))
 	log.Printf(`tx.Statement.Changed("TaxID"): %+v`, tx.Statement.Changed("TaxID"))
 	if tx.Statement.Changed("Name") && !validateCompanyName(company.Name) {

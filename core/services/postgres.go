@@ -11,38 +11,47 @@ type Postgres struct {
 }
 
 func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
-	query := p.DB.Model(model)
-
-	if query.Error != nil {
-		return query.Error
+	if err := p.GetOneBy(param, value, model, associations); err != nil {
+		return err
 	}
+
 	
-	selectArray := []string{}
 
-	for key := range changes.(map[string]interface{}) {
-		selectArray = append(selectArray, key)
-	}
-
-	if len(selectArray) > 0 {
-		// Select only the fields that must be updated
-		query = query.Select(selectArray)
-	}
-
-	cond := fmt.Sprintf("%s = ?", param)
-
-	// Fetch the existing record
-	if err := query.Where(cond, value).Error; err != nil {
-		return err
-	}
-
-	// Apply the changes to the record
-	if err := query.Updates(model).Error; err != nil {
-		return err
-	}
-
-	// Get the updated record and load it into the model
-	return p.GetOneBy(param, value, model, associations)
 }
+
+// func (p *Postgres) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
+// 	query := p.DB.Model(model)
+
+// 	if query.Error != nil {
+// 		return query.Error
+// 	}
+	
+// 	selectArray := []string{}
+
+// 	for key := range changes.(map[string]interface{}) {
+// 		selectArray = append(selectArray, key)
+// 	}
+
+// 	if len(selectArray) > 0 {
+// 		// Select only the fields that must be updated
+// 		query = query.Select(selectArray)
+// 	}
+
+// 	cond := fmt.Sprintf("%s = ?", param)
+
+// 	// Fetch the existing record
+// 	if err := query.Where(cond, value).Error; err != nil {
+// 		return err
+// 	}
+
+// 	// Apply the changes to the record
+// 	if err := query.Updates(model).Error; err != nil {
+// 		return err
+// 	}
+
+// 	// Get the updated record and load it into the model
+// 	return p.GetOneBy(param, value, model, associations)
+// }
 
 func (p *Postgres) Create(model interface{}, associations []string) error {
 	return p.DB.Create(model).Error
