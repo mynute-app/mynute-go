@@ -13,7 +13,7 @@ import (
 )
 
 type Company struct {
-	DB         *services.Postgres
+	Gorm         *services.Gorm
 	Middleware *middleware.Company
 }
 
@@ -24,7 +24,7 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 
 	paramVal := c.Params(paramKey)
 
-	if err := cc.DB.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
+	if err := cc.Gorm.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
 		return lib.FiberError(404, c, err)
 	}
 
@@ -58,7 +58,7 @@ func (cc *Company) updateBy(paramKey string, c fiber.Ctx) error {
 	assocs := []string{"CompanyTypes"}
 	paramVal := c.Params(paramKey)
 
-	if err := cc.DB.UpdateOneBy(paramKey, paramVal, &model, changes, assocs); err != nil {
+	if err := cc.Gorm.UpdateOneBy(paramKey, paramVal, &model, changes, assocs); err != nil {
 		return lib.FiberError(400, c, err)
 	}
 
@@ -81,7 +81,7 @@ func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
 
 	paramVal := c.Params(paramKey)
 
-	if err := cc.DB.DeleteOneBy(paramKey, paramVal, &model); err != nil {
+	if err := cc.Gorm.DeleteOneBy(paramKey, paramVal, &model); err != nil {
 		return lib.FiberError(400, c, err)
 	}
 
@@ -91,26 +91,31 @@ func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
 func (cc *Company) Create(c fiber.Ctx) error {
 	var model models.Company
 
+	log.Printf("lib.BodyParser")
 	if err := lib.BodyParser(c.Body(), &model); err != nil {
-		return lib.FiberError(400, c, err)
+		return lib.FiberError(500, c, err)
 	}
-
+	log.Printf("Middleware.Create")
 	if err := cc.Middleware.Create(model); err != nil {
 		return lib.FiberError(400, c, err)
 	}
 
 	assocs := []string{"CompanyTypes"}
 
-	if err := cc.DB.Create(&model, assocs); err != nil {
+	log.Printf("DB.Create")
+	log.Printf("model: %+v", model)
+	if err := cc.Gorm.Create(&model, assocs); err != nil {
 		return lib.FiberError(400, c, err)
 	}
 
 	var dto DTO.Company
 
+	log.Printf("lib.ParseToDTO")
 	if err := lib.ParseToDTO(model, &dto); err != nil {
 		return lib.FiberError(500, c, err)
 	}
 
+	log.Printf("c.JSON")
 	if err := c.JSON(dto); err != nil {
 		log.Printf("An internal error occurred! %v", err)
 		return err
@@ -124,7 +129,7 @@ func (cc *Company) GetAll(c fiber.Ctx) error {
 
 	assocs := []string{"CompanyTypes"}
 
-	if err := cc.DB.GetAll(&model, assocs); err != nil {
+	if err := cc.Gorm.GetAll(&model, assocs); err != nil {
 		return lib.FiberError(404, c, err)
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func Build(DB *gorm.DB, App *fiber.App) {
-	postgres := &services.Postgres{DB: DB}
-	Company(postgres, App)
-	CompanyType(postgres, App)
+	gorm := &services.Gorm{DB: DB}
+	Company(gorm, App)
+	CompanyType(gorm, App)
 }

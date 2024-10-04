@@ -8,7 +8,7 @@ import (
 )
 
 type CompanyType struct {
-	DB *services.Postgres
+	Gorm *services.Gorm
 }
 
 func (c *CompanyType) Create(companyType models.CompanyType) error {

@@ -10,7 +10,7 @@ import (
 )
 
 type Company struct {
-	DB *services.Postgres
+	Gorm *services.Gorm
 }
 
 func (c *Company) Create(company models.Company) error {
@@ -22,10 +22,17 @@ func (c *Company) Create(company models.Company) error {
 		return errors.New("company type is required")
 	}
 	for _, companyType := range company.CompanyTypes {
-		idStr := strconv.Itoa(int(companyType.ID))
-		if err := c.DB.GetOneBy("id", idStr, models.CompanyType{}, nil); err != nil {
+		if companyType.ID == 0 {
+			return errors.New("company type ID is missing or invalid")
+		}
+		var model models.CompanyType
+		idStr := strconv.FormatUint(uint64(companyType.ID), 10)
+		if err := c.Gorm.GetOneBy("id", idStr, &model, nil); err != nil {
 			errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
 			return errors.New(errStr)
+		}
+		if model.Name != companyType.Name {
+			return errors.New("company type name passed does not match the ID provided")
 		}
 	}
 	return nil
@@ -40,7 +47,7 @@ func (c *Company) Update(changes map[string]interface{}) error {
 		companyTypes := changes["company_types"].([]models.CompanyType)
 		for _, companyType := range companyTypes {
 			idStr := strconv.Itoa(int(companyType.ID))
-			if err := c.DB.GetOneBy("id", idStr, models.CompanyType{}, nil); err != nil {
+			if err := c.Gorm.GetOneBy("id", idStr, models.CompanyType{}, nil); err != nil {
 				errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
 				return errors.New(errStr)
 			}

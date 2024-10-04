@@ -8,9 +8,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Company(DB *services.Postgres, App *fiber.App) {
-	mdw := &middleware.Company{DB: DB}
-	cc := &controllers.Company{DB: DB, Middleware: mdw}
+func Company(Gorm *services.Gorm, App *fiber.App) {
+	mdw := &middleware.Company{Gorm: Gorm}
+	cc := &controllers.Company{Gorm: Gorm, Middleware: mdw}
 	r := App.Group("/company")
 
 	r.Post("/", cc.Create) // ok
