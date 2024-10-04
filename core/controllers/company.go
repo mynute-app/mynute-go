@@ -13,7 +13,7 @@ import (
 )
 
 type Company struct {
-	Gorm         *services.Gorm
+	Gorm       *services.Gorm
 	Middleware *middleware.Company
 }
 
