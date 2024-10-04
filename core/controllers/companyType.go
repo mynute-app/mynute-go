@@ -1,88 +1,125 @@
 package controllers
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/services"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type CompanyType struct {
-	App *fiber.App
-	DB  *services.Postgres
+	DB *services.Postgres
+	Middleware *Middleware.CompanyType
 }
 
-func (ctc *CompanyType) Create(c fiber.Ctx) error {
+func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var model models.CompanyType
+
+	paramVal := c.Params(paramKey)
+
+	if err := ctc.DB.GetOneBy(paramKey, paramVal, &model, nil); err != nil {
+		return err
+	}
+
 	var dto DTO.CompanyType
-	assocs := []string{}
 
-	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
-	if err := CtrlService.Create(&model, &dto, assocs); err != nil {
+	if err := lib.ParseToDTO(model, &dto); err != nil {
 		return err
 	}
+
+	if err := c.JSON(dto); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ctc *CompanyType) GetAll(c fiber.Ctx) error {
-	var model []models.CompanyType
-	var dto []DTO.CompanyType
-	assocs := []string{}
+func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
+	var changes map[string]interface{}
 
-	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
-	if err := CtrlService.GetAll(&model, &dto, assocs); err != nil {
+	if err := lib.BodyParser(c.Body(), &changes); err != nil {
 		return err
 	}
+
+	if err := ctc.DB.UpdateOneBy(paramKey, c.Params(paramKey), &models.CompanyType{}, changes, nil); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ctc *CompanyType) getBy(param string, c fiber.Ctx) error {
-	var model models.CompanyType
-	var dto DTO.CompanyType
-	assocs := []string{}
+// func (ctc *CompanyType) Create(c fiber.Ctx) error {
+// 	var model models.CompanyType
+// 	var dto DTO.CompanyType
+// 	assocs := []string{}
 
-	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
-	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
-		return err
-	}
-	return nil
-}
+// 	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+// 	if err := CtrlService.Create(&model, &dto, assocs); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func (ctc *CompanyType) updateBy(param string, c fiber.Ctx) error {
-	var model models.CompanyType
-	var dto DTO.CompanyType
-	assocs := []string{}
+// func (ctc *CompanyType) GetAll(c fiber.Ctx) error {
+// 	var model []models.CompanyType
+// 	var dto []DTO.CompanyType
+// 	assocs := []string{}
 
-	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
-	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
-		return err
-	}
-	return nil
-}
+// 	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+// 	if err := CtrlService.GetAll(&model, &dto, assocs); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func (ctc *CompanyType) deleteBy(param string, c fiber.Ctx) error {
-	var model models.CompanyType
+// func (ctc *CompanyType) getBy(param string, c fiber.Ctx) error {
+// 	var model models.CompanyType
+// 	var dto DTO.CompanyType
+// 	assocs := []string{}
 
-	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
-	if err := CtrlService.DeleteOneBy(param, &model); err != nil {
-		return err
-	}
-	return nil
-}
+// 	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+// 	if err := CtrlService.GetOneBy(param, &model, &dto, assocs); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
-	return ctc.getBy("id", c)
-}
+// func (ctc *CompanyType) updateBy(param string, c fiber.Ctx) error {
+// 	var model models.CompanyType
+// 	var dto DTO.CompanyType
+// 	assocs := []string{}
 
-func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
-	return ctc.getBy("name", c)
-}
+// 	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+// 	if err := CtrlService.UpdateOneBy(param, &model, &dto, assocs); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func (ctc *CompanyType) UpdateById(c fiber.Ctx) error {
-	return ctc.updateBy("id", c)
-}
+// func (ctc *CompanyType) deleteBy(param string, c fiber.Ctx) error {
+// 	var model models.CompanyType
 
-func (ctc *CompanyType) DeleteById(c fiber.Ctx) error {
-	return ctc.deleteBy("id", c)
-}
+// 	CtrlService := services.Controller{Ctx: c, DB: ctc.DB}
+// 	if err := CtrlService.DeleteOneBy(param, &model); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+// func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
+// 	return ctc.getBy("id", c)
+// }
+
+// func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
+// 	return ctc.getBy("name", c)
+// }
+
+// func (ctc *CompanyType) UpdateById(c fiber.Ctx) error {
+// 	return ctc.updateBy("id", c)
+// }
+
+// func (ctc *CompanyType) DeleteById(c fiber.Ctx) error {
+// 	return ctc.deleteBy("id", c)
+// }
