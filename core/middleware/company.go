@@ -3,14 +3,14 @@ package middleware
 import (
 	"agenda-kaki-go/core/config/db/models"
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/services"
+	"agenda-kaki-go/core/handlers"
 	"errors"
 	"fmt"
 	"strconv"
 )
 
 type Company struct {
-	Gorm *services.Gorm
+	Gorm *handlers.Gorm
 }
 
 func (c *Company) Create(company models.Company) error {

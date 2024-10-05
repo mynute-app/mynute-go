@@ -2,15 +2,16 @@ package routes
 
 import (
 	"agenda-kaki-go/core/controllers"
+	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/services"
 
 	"github.com/gofiber/fiber/v3"
 )
 
-func CompanyType(Gorm *services.Gorm, App *fiber.App) {
+func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	mdw := middleware.CompanyType{Gorm: Gorm}
-	cct := controllers.CompanyType{Gorm: Gorm, Middleware: &mdw}
+	handler := handlers.HTTP{Gorm: Gorm}
+	cct := controllers.CompanyType{Gorm: Gorm, Middleware: &mdw, HttpHandler: &handler}
 	r := App.Group("/companyType")
 
 	r.Post("/", cct.Create)
@@ -18,5 +19,6 @@ func CompanyType(Gorm *services.Gorm, App *fiber.App) {
 	r.Get("/:id", cct.GetOneById)
 	r.Get("/name/:name", cct.GetOneByName)
 	r.Delete("/:id", cct.DeleteById)
+	r.Patch("/:id", cct.UpdateById)
 	
 }

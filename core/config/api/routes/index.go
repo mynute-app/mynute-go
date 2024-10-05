@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/services"
+	"agenda-kaki-go/core/handlers"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
 
 func Build(DB *gorm.DB, App *fiber.App) {
-	gorm := &services.Gorm{DB: DB}
-	Company(gorm, App)
-	CompanyType(gorm, App)
+	gormHandler := &handlers.Gorm{DB: DB}
+	Company(gormHandler, App)
+	CompanyType(gormHandler, App)
 }

@@ -3,12 +3,12 @@ package routes
 import (
 	"agenda-kaki-go/core/controllers"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/services"
+	"agenda-kaki-go/core/handlers"
 
 	"github.com/gofiber/fiber/v3"
 )
 
-func Company(Gorm *services.Gorm, App *fiber.App) {
+func Company(Gorm *handlers.Gorm, App *fiber.App) {
 	mdw := &middleware.Company{Gorm: Gorm}
 	cc := &controllers.Company{Gorm: Gorm, Middleware: mdw}
 	r := App.Group("/company")

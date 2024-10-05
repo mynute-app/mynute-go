@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/models"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/services"
+	"agenda-kaki-go/core/handlers"
 
 	"log"
 
@@ -13,7 +13,7 @@ import (
 )
 
 type Company struct {
-	Gorm       *services.Gorm
+	Gorm       *handlers.Gorm
 	Middleware *middleware.Company
 }
 
