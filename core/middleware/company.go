@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/config/db/models"
-	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
 	"strconv"
