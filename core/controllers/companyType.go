@@ -21,7 +21,7 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	paramVal := c.Params(paramKey)
 
 	if err := ctc.Gorm.GetOneBy(paramKey, paramVal, &model, nil); err != nil {
-		return err
+		return lib.FiberError(404, c, err)
 	}
 
 	var dto DTO.CompanyType
@@ -41,11 +41,11 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 	var changes map[string]interface{}
 
 	if err := lib.BodyParser(c.Body(), &changes); err != nil {
-		return err
+		return lib.FiberError(400, c, err)
 	}
 
 	if err := ctc.Middleware.Update(changes); err != nil {
-		return err
+		return lib.FiberError(400, c, err)
 	}
 
 	var model models.CompanyType
@@ -53,7 +53,7 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 	var paramVal = c.Params(paramKey)
 
 	if err := ctc.Gorm.UpdateOneBy(paramKey, paramVal, &model, changes, nil); err != nil {
-		return err
+		return lib.FiberError(400, c, err)
 	}
 
 	var dto DTO.CompanyType
@@ -73,6 +73,14 @@ func (ctc *CompanyType) deleteBy(paramKey string, c fiber.Ctx) error {
 	var model models.CompanyType
 
 	paramVal := c.Params(paramKey)
+
+	if err := ctc.Gorm.GetOneBy(paramKey, paramVal, &model, nil); err != nil {
+		return lib.FiberError(404, c, err)
+	}
+
+	if err := ctc.Middleware.Delete(model); err != nil {
+		return lib.FiberError(400, c, err)
+	}
 
 	if err := ctc.Gorm.DeleteOneBy(paramKey, paramVal, &model); err != nil {
 		return lib.FiberError(400, c, err)

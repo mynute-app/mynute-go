@@ -25,18 +25,17 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 	paramVal := c.Params(paramKey)
 
 	if err := cc.Gorm.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
-		return lib.FiberError(404, c, err)
+		return lib.Fiber404(c)
 	}
 
 	var dto DTO.Company
 
 	if err := lib.ParseToDTO(model, &dto); err != nil {
-		return lib.FiberError(500, c, err)
+		return lib.Fiber500(c, err)
 	}
 
 	if err := c.JSON(dto); err != nil {
-		log.Printf("An internal error occurred! %v", err)
-		return err
+		return lib.Fiber500(c, err)
 	}
 
 	return nil
