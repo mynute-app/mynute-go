@@ -17,10 +17,23 @@ type CompanyType struct {
 
 func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 
-	var model models.CompanyType
-	var dto DTO.CompanyType
 	assocs := []string{}
 
+	if paramKey == "" {
+		var modelArr []models.CompanyType
+		var dtoArr []DTO.CompanyType
+		ctc.HttpHandler.
+			Model(&modelArr).
+			DTO(&dtoArr).
+			FiberCtx(c).
+			Assoc(assocs).
+			GetOneBy(paramKey)
+		return nil
+	}
+
+	var model models.CompanyType
+	var dto DTO.CompanyType
+	
 	ctc.HttpHandler.
 		Model(&model).
 		DTO(&dto).

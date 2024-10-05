@@ -189,8 +189,6 @@ func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
 	return nil
 }
 
-
-
 func (cc *Company) Create(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company

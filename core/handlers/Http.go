@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"agenda-kaki-go/core/lib"
+	"log"
+
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -126,17 +128,21 @@ func (ac *ActionChain) UpdateOneBy(paramKey string) {
 // Final method that executes a CREATE action
 func (ac *ActionChain) Create() {
 	// Parse the request body into the model
+	log.Printf("Parsing body")
 	if err := lib.BodyParser(ac.ctx.Body(), &ac.model); err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}
 
+	log.Printf("Executing middlewares")
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
 	}
 
-	if err := ac.h.Gorm.Create(ac.model, ac.assoc); err != nil {
+	log.Printf("Creating model")
+	log.Printf("model: %+v", ac.model)
+	if err := ac.h.Gorm.Create(ac.model); err != nil {
 		ac.sendResponse.Http400(err)
 		return
 	}

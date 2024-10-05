@@ -34,7 +34,7 @@ func (p *Gorm) UpdateOneBy(param string, value string, model interface{}, change
 	return p.GetOneBy(param, value, model, associations)
 }
 
-func (p *Gorm) Create(model interface{}, associations []string) error {
+func (p *Gorm) Create(model interface{}) error {
 	query := p.DB.Model(&model)
 	if query.Error != nil {
 		return query.Error
