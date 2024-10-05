@@ -7,60 +7,57 @@ import (
 )
 
 type SendResponse struct {
-	c fiber.Ctx
+	Ctx fiber.Ctx
 }
 
-func (sr *SendResponse) DTO(source interface{}, dto interface{}) error {
+// This function is used to send a response back to the client
+// using the Data Transfer Object (DTO) pattern.
+func (sr *SendResponse) DTO(source interface{}, dto interface{}) {
 	if err := ParseToDTO(source, dto); err != nil {
-		return sr.Http500(err)
+		sr.Http500(err)
 	}
-
 	sr.Http200(dto)
-
-	return nil
 }
 
-func (sr *SendResponse) HttpError(s int, err error) error {
-	return sr.send(s, err.Error())
+func (sr *SendResponse) HttpError(s int, err error) {
+	sr.send(s, err.Error())
 }
 
-func (sr *SendResponse) Http400(err error) error {
-	return sr.send(400, err.Error())
+func (sr *SendResponse) Http400(err error) {
+	sr.send(400, err.Error())
 }
 
-func (sr *SendResponse) Http404() error {
-	return sr.send(404, nil)
+func (sr *SendResponse) Http404() {
+	sr.sendStatus(404)
 }
 
-func (sr *SendResponse) Http500(err error) error {
+func (sr *SendResponse) Http500(err error) {
 	log.Printf("An internal error occurred! \n Error: %v", err)
-	return sr.send(500, err.Error())
+	sr.send(500, err.Error())
 }
 
-func (sr *SendResponse) Http201() error {
-	return sr.send(201, nil)
+func (sr *SendResponse) Http201() {
+	sr.sendStatus(201)
 }
 
-func (sr *SendResponse) Http204() error {
-	return sr.send(204, nil)
+func (sr *SendResponse) Http204() {
+	sr.sendStatus(204)
 }
 
-func (sr *SendResponse) Http200(data any) error {
-	return sr.send(200, data)
+func (sr *SendResponse) Http200(data any) {
+	sr.send(200, data)
 }
 
-func (sr *SendResponse) send(s int, data any) error {
-	if data != nil {
-		if err := sr.c.Status(s).JSON(data); err != nil {
-			sr.saveError(err)
-		}
-		return nil
-	}
-	if err := sr.c.SendStatus(s); err != nil {
+func (sr *SendResponse) send(s int, data any) {
+	if err := sr.Ctx.Status(s).JSON(data); err != nil {
 		sr.saveError(err)
-		return err
 	}
-	return nil
+}
+
+func (sr *SendResponse) sendStatus(s int) {
+	if err := sr.Ctx.SendStatus(s); err != nil {
+		sr.saveError(err)
+	}
 }
 
 func (sr *SendResponse) saveError(err error) {

@@ -15,7 +15,7 @@ type ActionChain struct {
 	model        interface{}
 	dto          interface{}
 	assoc        []string
-	middlewares  []func(fiber.Ctx) error
+	middlewares  []func(fiber.Ctx) (int, error)
 	ctx          fiber.Ctx
 	sendResponse *lib.SendResponse
 	changes      map[string]interface{}
@@ -43,7 +43,7 @@ func (ac *ActionChain) Assoc(assoc []string) *ActionChain {
 }
 
 // Chainable method to add a middleware
-func (ac *ActionChain) Middleware(mw func(fiber.Ctx) error) *ActionChain {
+func (ac *ActionChain) Middleware(mw func(fiber.Ctx) (int, error)) *ActionChain {
 	ac.middlewares = append(ac.middlewares, mw)
 	return ac
 }
@@ -51,77 +51,107 @@ func (ac *ActionChain) Middleware(mw func(fiber.Ctx) error) *ActionChain {
 // Chainable method to set the Fiber context
 func (ac *ActionChain) FiberCtx(c fiber.Ctx) *ActionChain {
 	ac.ctx = c
-	ac.sendResponse = &SendResponse{c}
+	ac.sendResponse = &lib.SendResponse{Ctx: c}
 	return ac
 }
 
 // Final method that executes a GetOneBy action
-func (ac *ActionChain) GetOneBy(paramKey string) error {
-	if err := ac.executeMiddlewares(); err != nil {
-		return err
+func (ac *ActionChain) GetOneBy(paramKey string) {
+	if status, err := ac.executeMiddlewares(); err != nil {
+		ac.sendResponse.HttpError(status, err)
+		return
+	}
+
+	if paramKey == "" {
+		if err := ac.h.Gorm.GetAll(ac.model, ac.assoc); err != nil {
+			ac.sendResponse.Http400(err)
+			return
+		}
+		ac.sendResponse.DTO(ac.model, ac.dto)
+		return
 	}
 
 	paramVal := ac.ctx.Params(paramKey)
 
 	if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, ac.model, ac.assoc); err != nil {
-		return lib.Fiber404(ac.ctx)
+		ac.sendResponse.Http404()
+		return
 	}
 
-	if err := ac.sendResponse.DTO(ac.model, ac.dto); err != nil {
-		return lib.Fiber500(ac.ctx, err)
-	}
-
-	return nil
+	ac.sendResponse.DTO(ac.model, ac.dto)
 }
 
 // Final method that executes a DELETE action
-func (ac *ActionChain) DeleteOneBy(paramKey string) error {
-	if err := ac.executeMiddlewares(); err != nil {
-		return err
+func (ac *ActionChain) DeleteOneBy(paramKey string) {
+	if status, err := ac.executeMiddlewares(); err != nil {
+		ac.sendResponse.HttpError(status, err)
+		return
 	}
 
 	paramVal := ac.ctx.Params(paramKey)
 
 	if err := ac.h.Gorm.DeleteOneBy(paramKey, paramVal, ac.model); err != nil {
-		return lib.Fiber500(ac.ctx, err)
+		ac.sendResponse.Http500(err)
+		return
 	}
 
-	return ac.ctx.SendStatus(fiber.StatusNoContent)
+	ac.sendResponse.Http204()
 }
 
 // Final method that executes an UPDATE action
-func (ac *ActionChain) UpdateOneBy(paramKey string) error {
+func (ac *ActionChain) UpdateOneBy(paramKey string) {
 	// Parse the request body into the model
 	if err := lib.BodyParser(ac.ctx.Body(), &ac.changes); err != nil {
-		return lib.Fiber500(ac.ctx, err)
+		ac.sendResponse.Http500(err)
+		return
 	}
 
-	if err := ac.executeMiddlewares(); err != nil {
-		return err
+	ac.ctx.Locals("changes", ac.changes)
+
+	if status, err := ac.executeMiddlewares(); err != nil {
+		ac.sendResponse.HttpError(status, err)
+		return
 	}
 
 	paramVal := ac.ctx.Params(paramKey)
 
 	if err := ac.h.Gorm.UpdateOneBy(paramKey, paramVal, ac.model, ac.changes, ac.assoc); err != nil {
-		return lib.Fiber400(ac.ctx, err)
+		ac.sendResponse.Http400(err)
+		return
 	}
 
-	if err := ac.sendResponse.DTO(ac.model, ac.dto); err != nil {
-		return err
+	ac.sendResponse.DTO(ac.model, ac.dto)
+}
+
+// Final method that executes a CREATE action
+func (ac *ActionChain) Create() {
+	// Parse the request body into the model
+	if err := lib.BodyParser(ac.ctx.Body(), &ac.model); err != nil {
+		ac.sendResponse.Http500(err)
+		return
 	}
 
-	return nil
+	if status, err := ac.executeMiddlewares(); err != nil {
+		ac.sendResponse.HttpError(status, err)
+		return
+	}
+
+	if err := ac.h.Gorm.Create(ac.model, ac.assoc); err != nil {
+		ac.sendResponse.Http400(err)
+		return
+	}
+
+	ac.sendResponse.Http201()
 }
 
 // Helper method to execute middlewares and authentication
-func (ac *ActionChain) executeMiddlewares() error {
+func (ac *ActionChain) executeMiddlewares() (int, error) {
 
 	for _, mw := range ac.middlewares {
-		if err := mw(ac.ctx); err != nil {
-			lib.Fiber400(ac.ctx, err)
-			return err
+		if status, err := mw(ac.ctx); err != nil {
+			return status, err
 		}
 	}
 
-	return nil
+	return 0, nil
 }

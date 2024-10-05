@@ -4,7 +4,6 @@ import (
 	"agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
 	"agenda-kaki-go/core/handlers"
-	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
 
 	"github.com/gofiber/fiber/v3"
@@ -22,16 +21,12 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	assocs := []string{}
 
-	err := ctc.HttpHandler.
+	ctc.HttpHandler.
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
 		FiberCtx(c).
 		GetOneBy(paramKey)
-	
-	if err != nil {
-		panic(err)
-	}
 
 	return nil
 }
@@ -70,18 +65,12 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	assocs := []string{}
 
-	updateMiddleware := func (c fiber.Ctx) error {
-		ctc.Middleware.Update
-
-	if err := ctc.HttpHandler.
-	Model(&model).
-	DTO(&dto).
-	Assoc(assocs).
-	FiberCtx(c).
-	Middleware(ctc.Middleware.Update).
-	UpdateOneBy(paramKey); err != nil {
-		return err
-	}
+	ctc.HttpHandler.
+		Model(&model).
+		DTO(&dto).
+		Assoc(assocs).
+		FiberCtx(c).
+		UpdateOneBy(paramKey)
 
 	return nil
 }
@@ -118,7 +107,20 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 // 	return nil
 // }
 
+func (ctc *CompanyType) deleteBy(paramKey string, c fiber.Ctx) error {
+	var model models.CompanyType
+	var dto DTO.CompanyType
+	assocs := []string{}
 
+	ctc.HttpHandler.
+		Model(&model).
+		DTO(&dto).
+		Assoc(assocs).
+		FiberCtx(c).
+		DeleteOneBy(paramKey)
+
+	return nil
+}
 
 // func (ctc *CompanyType) deleteBy(paramKey string, c fiber.Ctx) error {
 // 	var model models.CompanyType
@@ -142,50 +144,49 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 
 func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	var model models.CompanyType
-
-	if err := lib.BodyParser(c.Body(), &model); err != nil {
-		return lib.FiberError(400, c, err)
-	}
-
-	if err := ctc.Middleware.Create(model); err != nil {
-		return lib.FiberError(400, c, err)
-	}
-
-	if err := ctc.Gorm.Create(&model, nil); err != nil {
-		return lib.FiberError(400, c, err)
-	}
-
 	var dto DTO.CompanyType
+	assocs := []string{}
 
-	if err := lib.ParseToDTO(model, &dto); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-
-	if err := c.JSON(dto); err != nil {
-		return err
-	}
+	ctc.HttpHandler.
+		Model(&model).
+		DTO(&dto).
+		Assoc(assocs).
+		FiberCtx(c).
+		Create()
 
 	return nil
 }
 
+// func (ctc *CompanyType) Create(c fiber.Ctx) error {
+// 	var model models.CompanyType
+
+// 	if err := lib.BodyParser(c.Body(), &model); err != nil {
+// 		return lib.FiberError(400, c, err)
+// 	}
+
+// 	if err := ctc.Middleware.Create(model); err != nil {
+// 		return lib.FiberError(400, c, err)
+// 	}
+
+// 	if err := ctc.Gorm.Create(&model, nil); err != nil {
+// 		return lib.FiberError(400, c, err)
+// 	}
+
+// 	var dto DTO.CompanyType
+
+// 	if err := lib.ParseToDTO(model, &dto); err != nil {
+// 		return lib.FiberError(500, c, err)
+// 	}
+
+// 	if err := c.JSON(dto); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
 func (ctc *CompanyType) GetAll(c fiber.Ctx) error {
-	var model []models.CompanyType
-
-	if err := ctc.Gorm.GetAll(&model, nil); err != nil {
-		return lib.FiberError(400, c, err)
-	}
-
-	var dto []DTO.CompanyType
-
-	if err := lib.ParseToDTO(model, &dto); err != nil {
-		return lib.FiberError(500, c, err)
-	}
-
-	if err := c.JSON(dto); err != nil {
-		return err
-	}
-
-	return nil
+	return ctc.getBy("", c)
 }
 
 func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
