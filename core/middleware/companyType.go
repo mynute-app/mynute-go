@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v3"
@@ -15,24 +15,12 @@ type CompanyType struct {
 	Gorm *handlers.Gorm
 }
 
-// Define context keys using a non-exported type to avoid collisions
-type contextKey string
-
-const (
-	companyTypeKey contextKey = "companyType"
-	changesKey     contextKey = "changes"
-)
-
 // Middleware for Create operation
 func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 	// Retrieve companyType from c.Locals
-	companyTypeInterface := c.Locals(companyTypeKey)
-	if companyTypeInterface == nil {
-		return 500, interfaceDataNotFound("companyType")
-	}
-	companyType, ok := companyTypeInterface.(models.CompanyType)
-	if !ok {
-		return 500, invalidDataType("companyType")
+	companyType, err := getInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
+	if err != nil {
+		return 500, err
 	}
 
 	// Perform validation
@@ -47,13 +35,9 @@ func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 // Middleware for Update operation
 func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 	// Retrieve changes from c.Locals
-	changesInterface := c.Locals(changesKey)
-	if changesInterface == nil {
-		return 500, interfaceDataNotFound("'changes'")
-	}
-	changes, ok := changesInterface.(map[string]interface{})
-	if !ok {
-		return 500, invalidDataType("'changes'")
+	changes, err := getInterface[map[string]interface{}](c, namespace.CompanyType.ChangesKey)
+	if err != nil {
+		return 500, err
 	}
 
 	// Perform validation
@@ -79,22 +63,20 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 // Middleware for Delete operation
 func (ctm *CompanyType) Delete(c fiber.Ctx) (int, error) {
 	// Retrieve companyType from c.Locals
-	companyTypeInterface := c.Locals(companyTypeKey)
-	log.Printf("companyTypeInterface: %v", companyTypeInterface)
-	if companyTypeInterface == nil {
-		return 500, interfaceDataNotFound("companyType")
-	}
-	companyType, ok := companyTypeInterface.(models.CompanyType)
-	if !ok {
-		return 500, invalidDataType("companyType")
+	companyType, err := getInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
+	if err != nil {
+		return 500, err
 	}
 
+	companyTypeId := c.Params("id")
+
+	log.Printf("CompanyType.Delete: %v", companyType)
 	// Check if the company type is associated with any companies
 	var companies []models.Company
 	if err := ctm.Gorm.DB.
 		Model(&companies).
 		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
-		Where("company_company_types.company_type_id = ?", companyType.ID).
+		Where("company_company_types.company_type_id = ?", companyTypeId).
 		Find(&companies).Error; err != nil {
 		return 500, err
 	}
@@ -102,16 +84,6 @@ func (ctm *CompanyType) Delete(c fiber.Ctx) (int, error) {
 		return 400, errors.New("companyType is associated with companies")
 	}
 
-	// Proceed to the next middleware or handler
+	// // Proceed to the next middleware or handler
 	return 0, nil
-}
-
-func interfaceDataNotFound(interfaceName string) error {
-	errStr := fmt.Sprintf("%s data not found in context", interfaceName)
-	return errors.New(errStr)
-}
-
-func invalidDataType(interfaceName string) error {
-	errStr := fmt.Sprintf("invalid %s data type", interfaceName)
-	return errors.New(errStr)
 }

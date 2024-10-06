@@ -3,8 +3,10 @@ package controllers
 import (
 	"agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -54,23 +56,29 @@ func (ctc *CompanyType) updateBy(paramKey string, c fiber.Ctx) error {
 		DTO(&dto).
 		Assoc(assocs).
 		FiberCtx(c).
+		ChangesKey(namespace.CompanyType.ChangesKey).
+		InterfaceKey(namespace.CompanyType.InterfaceKey).
+		Middleware(ctc.Middleware.Update).
 		UpdateOneBy(paramKey)
 
 	return nil
 }
 
-func (ctc *CompanyType) deleteBy(paramKey string, c fiber.Ctx) error {
+func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
 	var model models.CompanyType
 	var dto DTO.CompanyType
 	assocs := []string{}
+
+	log.Printf("model: %+v", &model)
 
 	ctc.HttpHandler.
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
 		FiberCtx(c).
+		InterfaceKey(namespace.CompanyType.InterfaceKey).
 		Middleware(ctc.Middleware.Delete).
-		DeleteOneBy(paramKey)
+		DeleteOneById()
 
 	return nil
 }
@@ -84,6 +92,8 @@ func (ctc *CompanyType) Create(c fiber.Ctx) error {
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
+		InterfaceKey(namespace.CompanyType.InterfaceKey).
+		Middleware(ctc.Middleware.Create).
 		FiberCtx(c).
 		Create()
 
@@ -108,12 +118,4 @@ func (ctc *CompanyType) UpdateById(c fiber.Ctx) error {
 
 func (ctc *CompanyType) UpdateByName(c fiber.Ctx) error {
 	return ctc.updateBy("name", c)
-}
-
-func (ctc *CompanyType) DeleteById(c fiber.Ctx) error {
-	return ctc.deleteBy("id", c)
-}
-
-func (ctc *CompanyType) DeleteByName(c fiber.Ctx) error {
-	return ctc.deleteBy("name", c)
 }

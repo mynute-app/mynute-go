@@ -45,7 +45,7 @@ func (cc *Company) updateBy(paramKey string, c fiber.Ctx) error {
 	return nil
 }
 
-func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
+func (cc *Company) DeleteOneById(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
 	var assocs = []string{"CompanyTypes"}
@@ -55,7 +55,7 @@ func (cc *Company) deleteBy(paramKey string, c fiber.Ctx) error {
 		DTO(&dto).
 		Assoc(assocs).
 		FiberCtx(c).
-		DeleteOneBy(paramKey)
+		DeleteOneById()
 
 	return nil
 }
@@ -94,24 +94,4 @@ func (cc *Company) GetOneByTaxId(c fiber.Ctx) error {
 
 func (cr *Company) UpdateById(c fiber.Ctx) error {
 	return cr.updateBy("id", c)
-}
-
-func (cr *Company) UpdateByName(c fiber.Ctx) error {
-	return cr.updateBy("name", c)
-}
-
-func (cr *Company) UpdateByTaxId(c fiber.Ctx) error {
-	return cr.updateBy("tax_id", c)
-}
-
-func (cr *Company) DeleteById(c fiber.Ctx) error {
-	return cr.deleteBy("id", c)
-}
-
-func (cr *Company) DeleteByName(c fiber.Ctx) error {
-	return cr.deleteBy("name", c)
-}
-
-func (cr *Company) DeleteByTaxId(c fiber.Ctx) error {
-	return cr.deleteBy("tax_id", c)
 }

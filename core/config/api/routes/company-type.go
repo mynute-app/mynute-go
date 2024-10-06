@@ -18,7 +18,7 @@ func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	r.Get("/", cct.GetAll) // ok
 	r.Get("/:id", cct.GetOneById) // ok
 	r.Get("/name/:name", cct.GetOneByName) // ok
-	r.Delete("/:id", cct.DeleteById) 
+	r.Delete("/:id", cct.DeleteOneById) 
 	r.Patch("/:id", cct.UpdateById)
 	
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"log"
 
@@ -13,15 +14,17 @@ type HTTP struct {
 
 // ActionChain holds the intermediate data for method chaining
 type ActionChain struct {
-	h            *HTTP
-	model        interface{}
-	dto          interface{}
-	assoc        []string
-	middlewares  []func(fiber.Ctx) (int, error)
-	ctx          fiber.Ctx
-	sendResponse *lib.SendResponse
-	changes      map[string]interface{}
-	Error        error
+	h                *HTTP
+	model            interface{}
+	dto              interface{}
+	assoc            []string
+	middlewares      []func(fiber.Ctx) (int, error)
+	ctx              fiber.Ctx
+	sendResponse     *lib.SendResponse
+	changes          map[string]interface{}
+	interfaceNameKey namespace.ContextKey
+	localChangesKey  namespace.ContextKey
+	Error            error
 }
 
 // Chainable method to set the model
@@ -57,6 +60,16 @@ func (ac *ActionChain) FiberCtx(c fiber.Ctx) *ActionChain {
 	return ac
 }
 
+func (ac *ActionChain) InterfaceKey(key namespace.ContextKey) *ActionChain {
+	ac.interfaceNameKey = key
+	return ac
+}
+
+func (ac *ActionChain) ChangesKey(key namespace.ContextKey) *ActionChain {
+	ac.localChangesKey = key
+	return ac
+}
+
 // Final method that executes a GetOneBy action
 func (ac *ActionChain) GetOneBy(paramKey string) {
 	if status, err := ac.executeMiddlewares(); err != nil {
@@ -84,17 +97,19 @@ func (ac *ActionChain) GetOneBy(paramKey string) {
 }
 
 // Final method that executes a DELETE action
-func (ac *ActionChain) DeleteOneBy(paramKey string) {
-	ac.ctx.Locals("companyType", ac.model)
+func (ac *ActionChain) DeleteOneById() {
+	log.Printf("model: %+v", ac.model)
+
+	ac.ctx.Locals(ac.interfaceNameKey, ac.model)
 
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
 	}
 
-	paramVal := ac.ctx.Params(paramKey)
+	paramVal := ac.ctx.Params("id")
 
-	if err := ac.h.Gorm.DeleteOneBy(paramKey, paramVal, ac.model); err != nil {
+	if err := ac.h.Gorm.DeleteOneById(paramVal, ac.model); err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}
@@ -110,7 +125,7 @@ func (ac *ActionChain) UpdateOneBy(paramKey string) {
 		return
 	}
 
-	ac.ctx.Locals("changes", ac.changes)
+	ac.ctx.Locals(ac.localChangesKey, &ac.changes)
 
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
@@ -135,6 +150,8 @@ func (ac *ActionChain) Create() {
 		ac.sendResponse.Http500(err)
 		return
 	}
+
+	ac.ctx.Locals(ac.interfaceNameKey, &ac.model)
 
 	log.Printf("Executing middlewares")
 	if status, err := ac.executeMiddlewares(); err != nil {

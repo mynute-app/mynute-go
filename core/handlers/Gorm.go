@@ -62,20 +62,8 @@ func (p Gorm) GetOneBy(param string, value string, model interface{}, associatio
 	return query.First(model, cond, value).Error
 }
 
-func (p Gorm) DeleteOneBy(param string, value string, model interface{}) error {
-	// Start with the base query
-	// query := p.DB.Model(model)
-
-	// if query.Error != nil {
-	// 	return query.Error
-	// }
-
-	// cond := fmt.Sprintf("%s = ?", param)
-
-	// // Fetch and delete the first record.
-	// return query.First(cond, value).Delete(model).Error
-
-	err := p.GetOneBy(param, value, model, nil); if err != nil {
+func (p Gorm) DeleteOneById(value string, model interface{}) error {
+	err := p.GetOneBy("id", value, model, nil); if err != nil {
 		return err
 	}
 
