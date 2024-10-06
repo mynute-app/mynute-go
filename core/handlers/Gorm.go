@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -35,11 +36,8 @@ func (p *Gorm) UpdateOneBy(param string, value string, model interface{}, change
 }
 
 func (p *Gorm) Create(model interface{}) error {
-	query := p.DB.Model(&model)
-	if query.Error != nil {
-		return query.Error
-	}
-	return query.Create(model).Error
+	log.Printf("GORM: %v", p.DB)
+	return p.DB.Create(model).Error
 }
 
 // UpdateMany updates multiple records

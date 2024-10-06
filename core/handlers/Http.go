@@ -85,6 +85,8 @@ func (ac *ActionChain) GetOneBy(paramKey string) {
 
 // Final method that executes a DELETE action
 func (ac *ActionChain) DeleteOneBy(paramKey string) {
+	ac.ctx.Locals("companyType", ac.model)
+
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
@@ -142,6 +144,7 @@ func (ac *ActionChain) Create() {
 
 	log.Printf("Creating model")
 	log.Printf("model: %+v", ac.model)
+
 	if err := ac.h.Gorm.Create(ac.model); err != nil {
 		ac.sendResponse.Http400(err)
 		return

@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -79,6 +80,7 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 func (ctm *CompanyType) Delete(c fiber.Ctx) (int, error) {
 	// Retrieve companyType from c.Locals
 	companyTypeInterface := c.Locals(companyTypeKey)
+	log.Printf("companyTypeInterface: %v", companyTypeInterface)
 	if companyTypeInterface == nil {
 		return 500, interfaceDataNotFound("companyType")
 	}
