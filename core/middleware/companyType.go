@@ -16,8 +16,9 @@ type CompanyType struct {
 
 // Middleware for Create operation
 func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
+	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
-	companyType, err := lib.GetInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
+	companyType, err := lib.GetFromCtx[*models.CompanyType](c, keys.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -33,8 +34,9 @@ func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 
 // Middleware for Update operation
 func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
+	keys := namespace.GeneralKey
 	// Retrieve changes from c.Locals
-	changes, err := lib.GetInterface[map[string]interface{}](c, namespace.CompanyType.ChangesKey)
+	changes, err := lib.GetFromCtx[map[string]interface{}](c, keys.Changes)
 	if err != nil {
 		return 500, err
 	}

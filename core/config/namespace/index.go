@@ -3,8 +3,17 @@ package namespace
 type ContextKey string
 
 type TypeStruct struct {
-	InterfaceKey    ContextKey
-	ChangesKey      ContextKey
-	DtoKey          ContextKey
-	AssociationsKey ContextKey
+	Model        ContextKey
+	Changes      ContextKey
+	Dto          ContextKey
+	Associations ContextKey
+	QueryId      ContextKey
+}
+
+var GeneralKey = TypeStruct{
+	Model:        "model_key",
+	Changes:      "changes_key",
+	Dto:          "dto_key",
+	Associations: "associations_key",
+	QueryId:      "id",
 }

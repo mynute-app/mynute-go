@@ -24,10 +24,9 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 		var modelArr []models.CompanyType
 		var dtoArr []DTO.CompanyType
 		ctc.HttpHandler.
-			Chain().
+			FiberCtx(c).
 			Model(&modelArr).
 			DTO(&dtoArr).
-			FiberCtx(c).
 			Assoc(assocs).
 			GetOneBy(paramKey)
 		return nil
@@ -37,11 +36,10 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var dto DTO.CompanyType
 
 	ctc.HttpHandler.
-		Chain().
+		FiberCtx(c).
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		FiberCtx(c).
 		GetOneBy(paramKey)
 
 	return nil
@@ -51,13 +49,12 @@ func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 	var model models.CompanyType
 	var dto DTO.CompanyType
 	assocs := []string{}
-
-	modelParserCtx := middleware.ParseBodyToContext(namespace.CompanyType.InterfaceKey, &model)
-	dtoCtx := middleware.AddToContext(namespace.CompanyType.DtoKey, &dto)
-	assocsCtx := middleware.AddToContext(namespace.CompanyType.AssociationsKey, &assocs)
+	keys := namespace.GeneralKey
+	modelParserCtx := middleware.ParseBodyToContext(keys.Model, &model)
+	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
+	assocsCtx := middleware.AddToContext(keys.Associations, &assocs)
 
 	ctc.HttpHandler.
-		Chain().
 		FiberCtx(c).
 		Middleware(modelParserCtx).
 		Middleware(dtoCtx).
@@ -69,21 +66,11 @@ func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 }
 
 func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
-	// var model models.CompanyType
-	// var dto DTO.CompanyType
-	// assocs := []string{}
-
-	// log.Printf("model: %+v", &model)
-	// modelParserCtx := middleware.ParseBodyToContext(namespace.CompanyType.InterfaceKey, &model)
-	// dtoCtx := middleware.AddToContext(namespace.CompanyType.DtoKey, &dto)
-	// assocsCtx := middleware.AddToContext(namespace.CompanyType.AssociationsKey, &assocs)
-
+	var model models.CompanyType
+	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
 	ctc.HttpHandler.
-		Chain().
 		FiberCtx(c).
-		// Middleware(modelParserCtx).
-		// Middleware(dtoCtx).
-		// Middleware(assocsCtx).
+		Middleware(modelCtx).
 		Middleware(ctc.Middleware.Delete).
 		DeleteOneById()
 
@@ -95,14 +82,16 @@ func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	assocs := []string{}
 
+	modelParserCtx := middleware.ParseBodyToContext(namespace.GeneralKey.Model, &model)
+	dtoCtx := middleware.AddToContext(namespace.GeneralKey.Dto, &dto)
+	assocsCtx := middleware.AddToContext(namespace.GeneralKey.Associations, &assocs)
+
 	ctc.HttpHandler.
-		Chain().
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		InterfaceKey(namespace.CompanyType.InterfaceKey).
-		Middleware(ctc.Middleware.Create).
 		FiberCtx(c).
+		Middleware(modelParserCtx).
+		Middleware(dtoCtx).
+		Middleware(assocsCtx).
+		Middleware(ctc.Middleware.Create).
 		Create()
 
 	return nil

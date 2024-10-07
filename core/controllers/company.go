@@ -21,11 +21,10 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 	var assocs = []string{"CompanyTypes"}
 
 	cc.HttpHandler.
-		Chain().
+		FiberCtx(c).
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		FiberCtx(c).
 		GetOneBy(paramKey)
 
 	return nil
@@ -37,11 +36,10 @@ func (cc *Company) UpdateOneById(c fiber.Ctx) error {
 	var assocs = []string{"CompanyTypes"}
 
 	cc.HttpHandler.
-		Chain().
+		FiberCtx(c).
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		FiberCtx(c).
 		UpdateOneById()
 
 	return nil
@@ -53,11 +51,10 @@ func (cc *Company) DeleteOneById(c fiber.Ctx) error {
 	var assocs = []string{"CompanyTypes"}
 
 	cc.HttpHandler.
-		Chain().
+		FiberCtx(c).
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		FiberCtx(c).
 		DeleteOneById()
 
 	return nil
@@ -69,11 +66,10 @@ func (cc *Company) Create(c fiber.Ctx) error {
 	var assocs = []string{"CompanyTypes"}
 
 	cc.HttpHandler.
-		Chain().
+		FiberCtx(c).
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		FiberCtx(c).
 		Create()
 
 	return nil

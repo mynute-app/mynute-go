@@ -12,11 +12,11 @@ type SendResponse struct {
 
 // This function is used to send a response back to the client
 // using the Data Transfer Object (DTO) pattern.
-func (sr *SendResponse) DTO(source interface{}, dto interface{}) {
+func (sr *SendResponse) DTO(s int, source interface{}, dto interface{}) {
 	if err := ParseToDTO(source, dto); err != nil {
 		sr.Http500(err)
 	}
-	sr.Http200(dto)
+	sr.send(s, dto)
 }
 
 func (sr *SendResponse) HttpError(s int, err error) {
@@ -36,8 +36,8 @@ func (sr *SendResponse) Http500(err error) {
 	sr.send(500, err.Error())
 }
 
-func (sr *SendResponse) Http201() {
-	sr.sendStatus(201)
+func (sr *SendResponse) Http201(data any) {
+	sr.send(201, data)
 }
 
 func (sr *SendResponse) Http204() {

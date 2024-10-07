@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -11,7 +10,7 @@ type Gorm struct {
 	DB *gorm.DB
 }
 
-func (p *Gorm) UpdateOneBy(param string, value string, model interface{}, changes interface{}, associations []string) error {
+func (p *Gorm) UpdateOneById(value string, model interface{}, changes interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB.Model(model)
 
@@ -19,7 +18,7 @@ func (p *Gorm) UpdateOneBy(param string, value string, model interface{}, change
 		return query.Error
 	}
 
-	cond := fmt.Sprintf("%s = ?", param)
+	cond := fmt.Sprintf("%s = ?", "id")
 
 	// Fetch the existing record
 	if err := query.Where(cond, value).Error; err != nil {
@@ -32,11 +31,10 @@ func (p *Gorm) UpdateOneBy(param string, value string, model interface{}, change
 	}
 
 	// Get the updated record and load it into the model
-	return p.GetOneBy(param, value, model, associations)
+	return p.GetOneBy("id", value, model, associations)
 }
 
 func (p *Gorm) Create(model interface{}) error {
-	log.Printf("GORM: %v", p.DB)
 	return p.DB.Create(model).Error
 }
 

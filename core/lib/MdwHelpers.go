@@ -4,13 +4,12 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 func InterfaceDataNotFound(interfaceName string) error {
-	errStr := fmt.Sprintf("%s data not found in context", interfaceName)
+	errStr := fmt.Sprintf("%s data not found in fiber.Ctx", interfaceName)
 	return errors.New(errStr)
 }
 
@@ -19,15 +18,14 @@ func InvalidDataType(interfaceName string) error {
 	return errors.New(errStr)
 }
 
-// getInterface retrieves an interface from Fiber context
-func GetInterface[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
+// GetFromCtx retrieves an interface from Fiber context
+func GetFromCtx[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
 	interfaceData := c.Locals(key)
 	if interfaceData == nil {
 		var zero T
 		return zero, InterfaceDataNotFound(string(key))
 	}
 	interfaceValue, ok := interfaceData.(T)
-	log.Printf("model: %+v", interfaceValue)
 	if !ok {
 		var zero T
 		return zero, InvalidDataType(string(key))
