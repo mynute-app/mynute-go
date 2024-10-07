@@ -19,6 +19,6 @@ func Company(Gorm *handlers.Gorm, App *fiber.App) {
 	r.Get("/:id", cc.GetOneById) // ok
 	r.Get("/name/:name", cc.GetOneByName) // ok
 	r.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
-	r.Patch("/:id", cc.UpdateById) // ok
+	r.Patch("/:id", cc.UpdateOneById) // ok
 	r.Delete("/:id", cc.DeleteOneById) // ok
 }

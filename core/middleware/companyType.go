@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
 	"errors"
-	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -18,7 +17,7 @@ type CompanyType struct {
 // Middleware for Create operation
 func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 	// Retrieve companyType from c.Locals
-	companyType, err := getInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
+	companyType, err := lib.GetInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
 	if err != nil {
 		return 500, err
 	}
@@ -35,7 +34,7 @@ func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 // Middleware for Update operation
 func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 	// Retrieve changes from c.Locals
-	changes, err := getInterface[map[string]interface{}](c, namespace.CompanyType.ChangesKey)
+	changes, err := lib.GetInterface[map[string]interface{}](c, namespace.CompanyType.ChangesKey)
 	if err != nil {
 		return 500, err
 	}
@@ -62,15 +61,8 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 
 // Middleware for Delete operation
 func (ctm *CompanyType) Delete(c fiber.Ctx) (int, error) {
-	// Retrieve companyType from c.Locals
-	companyType, err := getInterface[*models.CompanyType](c, namespace.CompanyType.InterfaceKey)
-	if err != nil {
-		return 500, err
-	}
-
 	companyTypeId := c.Params("id")
 
-	log.Printf("CompanyType.Delete: %v", companyType)
 	// Check if the company type is associated with any companies
 	var companies []models.Company
 	if err := ctm.Gorm.DB.

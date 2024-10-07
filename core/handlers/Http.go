@@ -21,18 +21,20 @@ type ActionChain struct {
 	middlewares      []func(fiber.Ctx) (int, error)
 	ctx              fiber.Ctx
 	sendResponse     *lib.SendResponse
-	changes          map[string]interface{}
 	interfaceNameKey namespace.ContextKey
-	localChangesKey  namespace.ContextKey
 	Error            error
 }
 
-// Chainable method to set the model
-func (h *HTTP) Model(model interface{}) *ActionChain {
+func (h *HTTP) Chain() *ActionChain {
 	return &ActionChain{
-		h:     h,
-		model: model,
+		h: h,
 	}
+}
+
+// Chainable method to set the model
+func (ac *ActionChain) Model(model interface{}) *ActionChain {
+	ac.model = model
+	return ac
 }
 
 // Chainable method to set the DTO
@@ -62,11 +64,6 @@ func (ac *ActionChain) FiberCtx(c fiber.Ctx) *ActionChain {
 
 func (ac *ActionChain) InterfaceKey(key namespace.ContextKey) *ActionChain {
 	ac.interfaceNameKey = key
-	return ac
-}
-
-func (ac *ActionChain) ChangesKey(key namespace.ContextKey) *ActionChain {
-	ac.localChangesKey = key
 	return ac
 }
 
@@ -100,16 +97,14 @@ func (ac *ActionChain) GetOneBy(paramKey string) {
 func (ac *ActionChain) DeleteOneById() {
 	log.Printf("model: %+v", ac.model)
 
-	ac.ctx.Locals(ac.interfaceNameKey, ac.model)
-
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
 	}
 
-	paramVal := ac.ctx.Params("id")
+	id := ac.ctx.Params("id")
 
-	if err := ac.h.Gorm.DeleteOneById(paramVal, ac.model); err != nil {
+	if err := ac.h.Gorm.DeleteOneById(id, ac.model); err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}
@@ -118,23 +113,33 @@ func (ac *ActionChain) DeleteOneById() {
 }
 
 // Final method that executes an UPDATE action
-func (ac *ActionChain) UpdateOneBy(paramKey string) {
+func (ac *ActionChain) UpdateOneById() {
 	// Parse the request body into the model
-	if err := lib.BodyParser(ac.ctx.Body(), &ac.changes); err != nil {
-		ac.sendResponse.Http500(err)
-		return
-	}
-
-	ac.ctx.Locals(ac.localChangesKey, &ac.changes)
+	// if err := lib.BodyParser(ac.ctx.Body(), &ac.changes); err != nil {
+	// 	ac.sendResponse.Http500(err)
+	// 	return
+	// }
 
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
 	}
+	associations, err := lib.GetInterface[[]string](ac.ctx, namespace.CompanyType.AssociationsKey); if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+	changes, err := lib.GetInterface[map[string]interface{}](ac.ctx, namespace.CompanyType.ChangesKey); if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+	model, err := lib.GetInterface[interface{}](ac.ctx, namespace.CompanyType.InterfaceKey); if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
 
-	paramVal := ac.ctx.Params(paramKey)
+	id := ac.ctx.Params("id")
 
-	if err := ac.h.Gorm.UpdateOneBy(paramKey, paramVal, ac.model, ac.changes, ac.assoc); err != nil {
+	if err := ac.h.Gorm.UpdateOneBy(id, "id", model, changes, associations); err != nil {
 		ac.sendResponse.Http400(err)
 		return
 	}
