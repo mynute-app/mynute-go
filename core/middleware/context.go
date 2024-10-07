@@ -17,7 +17,7 @@ func ParseBodyToContext[T any](key namespace.ContextKey, model *T) func(c fiber.
 	}
 }
 
-func AddToContext[T any](key namespace.ContextKey, model *T) func(c fiber.Ctx) (int, error) {
+func AddToContext[T any](key namespace.ContextKey, model T) func(c fiber.Ctx) (int, error) {
 	return func(c fiber.Ctx) (int, error) {
 		c.Locals(key, model)
 		return 0, nil

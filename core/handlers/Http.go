@@ -62,27 +62,63 @@ func (ac *ActionChain) InterfaceKey(key namespace.ContextKey) *ActionChain {
 	return ac
 }
 
-// Final method that executes a GetOneBy action
-func (ac *ActionChain) GetOneBy(paramKey string) {
+// // Final method that executes a GetOneBy action
+// func (ac *ActionChain) GetOneBy(paramKey string) {
+// 	if status, err := ac.executeMiddlewares(); err != nil {
+// 		ac.sendResponse.HttpError(status, err)
+// 		return
+// 	}
+
+// 	if paramKey == "" {
+// 		if err := ac.h.Gorm.GetAll(ac.model, ac.assoc); err != nil {
+// 			ac.sendResponse.Http400(err)
+// 			return
+// 		}
+// 		ac.sendResponse.DTO(200, ac.model, ac.dto)
+// 		return
+// 	}
+
+// 	paramVal := ac.ctx.Params(paramKey)
+
+// 	if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, ac.model, ac.assoc); err != nil {
+// 		ac.sendResponse.Http404()
+// 		return
+// 	}
+
+// 	ac.sendResponse.DTO(200, ac.model, ac.dto)
+// }
+
+// Final Method that executes a GET action
+func (ac *ActionChain) GetBy(paramKey string) {
 	if status, err := ac.executeMiddlewares(); err != nil {
 		ac.sendResponse.HttpError(status, err)
 		return
 	}
 
-	if paramKey == "" {
-		if err := ac.h.Gorm.GetAll(ac.model, ac.assoc); err != nil {
-			ac.sendResponse.Http400(err)
-			return
-		}
-		ac.sendResponse.DTO(200, ac.model, ac.dto)
+	keys := namespace.GeneralKey
+
+	model, err := lib.GetFromCtx[*interface{}](ac.ctx, keys.Model)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
+	if err != nil {
+		ac.sendResponse.Http500(err)
 		return
 	}
 
-	paramVal := ac.ctx.Params(paramKey)
-
-	if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, ac.model, ac.assoc); err != nil {
-		ac.sendResponse.Http404()
-		return
+	if paramKey == "" {
+		if err := ac.h.Gorm.GetAll(model, assocs); err != nil {
+			ac.sendResponse.Http400(err)
+			return
+		}
+	} else {
+		paramVal := ac.ctx.Params(paramKey)
+		if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, model, assocs); err != nil {
+			ac.sendResponse.Http404()
+			return
+		}
 	}
 
 	ac.sendResponse.DTO(200, ac.model, ac.dto)

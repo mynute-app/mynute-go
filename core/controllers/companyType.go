@@ -18,31 +18,23 @@ type CompanyType struct {
 
 func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 
+	var model []models.CompanyType
+	var dto []DTO.CompanyType
 	assocs := []string{}
-
-	if paramKey == "" {
-		var modelArr []models.CompanyType
-		var dtoArr []DTO.CompanyType
-		ctc.HttpHandler.
-			FiberCtx(c).
-			Model(&modelArr).
-			DTO(&dtoArr).
-			Assoc(assocs).
-			GetOneBy(paramKey)
-		return nil
-	}
-
-	var model models.CompanyType
-	var dto DTO.CompanyType
+	keys := namespace.GeneralKey
+	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
+	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
+	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
 
 	ctc.HttpHandler.
 		FiberCtx(c).
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		GetOneBy(paramKey)
+		Middleware(modelCtx).
+		Middleware(dtoCtx).
+		Middleware(assocsCtx).
+		GetBy(paramKey)
 
 	return nil
+
 }
 
 func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {

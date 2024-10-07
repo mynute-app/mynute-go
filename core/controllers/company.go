@@ -25,7 +25,7 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 		Model(&model).
 		DTO(&dto).
 		Assoc(assocs).
-		GetOneBy(paramKey)
+		GetBy(paramKey)
 
 	return nil
 }
