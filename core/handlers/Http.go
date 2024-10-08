@@ -27,9 +27,9 @@ type ActionChain struct {
 // Chainable method to set the Fiber context
 func (h *HTTP) FiberCtx(c fiber.Ctx) *ActionChain {
 	return &ActionChain{
-		h: h,
+		h:            h,
 		sendResponse: &lib.SendResponse{Ctx: c},
-		ctx: c,
+		ctx:          c,
 	}
 }
 
@@ -62,32 +62,6 @@ func (ac *ActionChain) InterfaceKey(key namespace.ContextKey) *ActionChain {
 	return ac
 }
 
-// // Final method that executes a GetOneBy action
-// func (ac *ActionChain) GetOneBy(paramKey string) {
-// 	if status, err := ac.executeMiddlewares(); err != nil {
-// 		ac.sendResponse.HttpError(status, err)
-// 		return
-// 	}
-
-// 	if paramKey == "" {
-// 		if err := ac.h.Gorm.GetAll(ac.model, ac.assoc); err != nil {
-// 			ac.sendResponse.Http400(err)
-// 			return
-// 		}
-// 		ac.sendResponse.DTO(200, ac.model, ac.dto)
-// 		return
-// 	}
-
-// 	paramVal := ac.ctx.Params(paramKey)
-
-// 	if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, ac.model, ac.assoc); err != nil {
-// 		ac.sendResponse.Http404()
-// 		return
-// 	}
-
-// 	ac.sendResponse.DTO(200, ac.model, ac.dto)
-// }
-
 // Final Method that executes a GET action
 func (ac *ActionChain) GetBy(paramKey string) {
 	if status, err := ac.executeMiddlewares(); err != nil {
@@ -97,7 +71,7 @@ func (ac *ActionChain) GetBy(paramKey string) {
 
 	keys := namespace.GeneralKey
 
-	model, err := lib.GetFromCtx[*interface{}](ac.ctx, keys.Model)
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
 		ac.sendResponse.Http500(err)
 		return
@@ -107,7 +81,7 @@ func (ac *ActionChain) GetBy(paramKey string) {
 		ac.sendResponse.Http500(err)
 		return
 	}
-	dto, err := lib.GetFromCtx[*interface{}](ac.ctx, keys.Dto)
+	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
 	if err != nil {
 		ac.sendResponse.Http500(err)
 		return
@@ -194,15 +168,18 @@ func (ac *ActionChain) UpdateOneById() {
 		return
 	}
 	keys := namespace.GeneralKey
-	associations, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations); if err != nil {
+	associations, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
+	if err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}
-	changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes); if err != nil {
+	changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes)
+	if err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model); if err != nil {
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	if err != nil {
 		ac.sendResponse.Http500(err)
 		return
 	}

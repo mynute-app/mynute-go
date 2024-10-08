@@ -22,8 +22,8 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var dto []DTO.CompanyType
 	assocs := []string{}
 	keys := namespace.GeneralKey
-	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, model)
-	dtoCtx := middleware.AddToContext(keys.Dto, dto)
+	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
+	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
 	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
 
 	ctc.HttpHandler.
@@ -34,7 +34,6 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 		GetBy(paramKey)
 
 	return nil
-
 }
 
 func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
