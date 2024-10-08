@@ -27,8 +27,8 @@ func GetFromCtx[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
 		return zero, InterfaceDataNotFound(string(key))
 	}
 	interfaceValue, ok := interfaceData.(T)
-	log.Printf("interfaceValue: %+v", interfaceValue)
 	log.Printf("interfaceData: %+v", interfaceData)
+	log.Printf("interfaceValue: %+v", interfaceValue)
 	log.Printf("ok: %+v", ok)
 	if !ok {
 		var zero T

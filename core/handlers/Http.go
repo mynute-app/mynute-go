@@ -107,10 +107,15 @@ func (ac *ActionChain) GetBy(paramKey string) {
 		ac.sendResponse.Http500(err)
 		return
 	}
+	dto, err := lib.GetFromCtx[*interface{}](ac.ctx, keys.Dto)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
 
 	if paramKey == "" {
 		if err := ac.h.Gorm.GetAll(model, assocs); err != nil {
-			ac.sendResponse.Http400(err)
+			ac.sendResponse.Http500(err)
 			return
 		}
 	} else {
@@ -121,7 +126,7 @@ func (ac *ActionChain) GetBy(paramKey string) {
 		}
 	}
 
-	ac.sendResponse.DTO(200, ac.model, ac.dto)
+	ac.sendResponse.DTO(200, model, dto)
 }
 
 // Final Method that executes a CREATE action

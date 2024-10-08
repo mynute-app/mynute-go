@@ -15,9 +15,9 @@ func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	r := App.Group("/companyType")
 
 	r.Post("/", cct.Create) // ok
-	r.Get("/", cct.GetAll) // ok
-	r.Get("/:id", cct.GetOneById) // ok
-	r.Get("/name/:name", cct.GetOneByName) // ok
+	r.Get("/", cct.GetAll)
+	r.Get("/:id", cct.GetOneById)
+	r.Get("/name/:name", cct.GetOneByName)
 	r.Delete("/:id", cct.DeleteOneById)
 	r.Patch("/:id", cct.UpdateOneById)
 	

@@ -22,8 +22,8 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var dto []DTO.CompanyType
 	assocs := []string{}
 	keys := namespace.GeneralKey
-	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
-	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
+	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, model)
+	dtoCtx := middleware.AddToContext(keys.Dto, dto)
 	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
 
 	ctc.HttpHandler.
@@ -35,6 +35,18 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 
 	return nil
 
+}
+
+func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
+	var model models.CompanyType
+	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
+	ctc.HttpHandler.
+		FiberCtx(c).
+		Middleware(modelCtx).
+		Middleware(ctc.Middleware.Delete).
+		DeleteOneById()
+
+	return nil
 }
 
 func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
@@ -53,18 +65,6 @@ func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 		Middleware(assocsCtx).
 		Middleware(ctc.Middleware.Update).
 		UpdateOneById()
-
-	return nil
-}
-
-func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
-	var model models.CompanyType
-	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
-	ctc.HttpHandler.
-		FiberCtx(c).
-		Middleware(modelCtx).
-		Middleware(ctc.Middleware.Delete).
-		DeleteOneById()
 
 	return nil
 }
