@@ -14,13 +14,8 @@ type HTTP struct {
 // ActionChain holds the intermediate data for method chaining
 type ActionChain struct {
 	h                *HTTP
-	model            interface{}
-	dto              interface{}
-	assoc            []string
-	middlewares      []func(fiber.Ctx) (int, error)
 	ctx              fiber.Ctx
 	sendResponse     *lib.SendResponse
-	interfaceNameKey namespace.ContextKey
 	Error            error
 }
 
@@ -33,39 +28,20 @@ func (h *HTTP) FiberCtx(c fiber.Ctx) *ActionChain {
 	}
 }
 
-// Chainable method to set the model
-func (ac *ActionChain) Model(model interface{}) *ActionChain {
-	ac.model = model
-	return ac
-}
-
-// Chainable method to set the DTO
-func (ac *ActionChain) DTO(dto interface{}) *ActionChain {
-	ac.dto = dto
-	return ac
-}
-
-// Chainable method to set the associations
-func (ac *ActionChain) Assoc(assoc []string) *ActionChain {
-	ac.assoc = assoc
-	return ac
-}
-
-// Chainable method to add a middleware
-func (ac *ActionChain) Middleware(mw func(fiber.Ctx) (int, error)) *ActionChain {
-	ac.middlewares = append(ac.middlewares, mw)
-	return ac
-}
-
-func (ac *ActionChain) InterfaceKey(key namespace.ContextKey) *ActionChain {
-	ac.interfaceNameKey = key
+func (ac *ActionChain) RunMiddlewares(mdws []func(fiber.Ctx) (int, error)) *ActionChain {
+	for _, mdw := range mdws {
+		if s, err := mdw(ac.ctx); err != nil {
+			ac.sendResponse.HttpError(s, err)
+			ac.Error = err
+			return ac
+		}
+	}
 	return ac
 }
 
 // Final Method that executes a GET action
 func (ac *ActionChain) GetBy(paramKey string) {
-	if status, err := ac.executeMiddlewares(); err != nil {
-		ac.sendResponse.HttpError(status, err)
+	if ac.Error != nil {
 		return
 	}
 
@@ -104,12 +80,10 @@ func (ac *ActionChain) GetBy(paramKey string) {
 }
 
 // Final Method that executes a CREATE action
-func (ac *ActionChain) Create() {
-	if status, err := ac.executeMiddlewares(); err != nil {
-		ac.sendResponse.HttpError(status, err)
+func (ac *ActionChain) CreateOne() {
+	if ac.Error != nil {
 		return
 	}
-
 	keys := namespace.GeneralKey
 
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
@@ -134,12 +108,9 @@ func (ac *ActionChain) Create() {
 
 // Final method that executes a DELETE action
 func (ac *ActionChain) DeleteOneById() {
-
-	if status, err := ac.executeMiddlewares(); err != nil {
-		ac.sendResponse.HttpError(status, err)
+	if ac.Error != nil {
 		return
 	}
-
 	keys := namespace.GeneralKey
 
 	id := ac.ctx.Params(string(keys.QueryId))
@@ -163,8 +134,7 @@ func (ac *ActionChain) DeleteOneById() {
 
 // Final method that executes an UPDATE action
 func (ac *ActionChain) UpdateOneById() {
-	if status, err := ac.executeMiddlewares(); err != nil {
-		ac.sendResponse.HttpError(status, err)
+	if ac.Error != nil {
 		return
 	}
 	keys := namespace.GeneralKey
@@ -197,44 +167,4 @@ func (ac *ActionChain) UpdateOneById() {
 	}
 
 	ac.sendResponse.DTO(200, model, dto)
-}
-
-// // Final method that executes a CREATE action
-// func (ac *ActionChain) Create() {
-// 	// Parse the request body into the model
-// 	log.Printf("Parsing body")
-// 	if err := lib.BodyParser(ac.ctx.Body(), &ac.model); err != nil {
-// 		ac.sendResponse.Http500(err)
-// 		return
-// 	}
-
-// 	ac.ctx.Locals(ac.interfaceNameKey, &ac.model)
-
-// 	log.Printf("Executing middlewares")
-// 	if status, err := ac.executeMiddlewares(); err != nil {
-// 		ac.sendResponse.HttpError(status, err)
-// 		return
-// 	}
-
-// 	log.Printf("Creating model")
-// 	log.Printf("model: %+v", ac.model)
-
-// 	if err := ac.h.Gorm.Create(ac.model); err != nil {
-// 		ac.sendResponse.Http400(err)
-// 		return
-// 	}
-
-// 	ac.sendResponse.Http201(ac.model)
-// }
-
-// Helper method to execute middlewares and authentication
-func (ac *ActionChain) executeMiddlewares() (int, error) {
-
-	for _, mw := range ac.middlewares {
-		if status, err := mw(ac.ctx); err != nil {
-			return status, err
-		}
-	}
-
-	return 0, nil
 }

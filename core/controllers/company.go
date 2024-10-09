@@ -10,22 +10,17 @@ import (
 )
 
 type Company struct {
-	Gorm        *handlers.Gorm
-	Middleware  *middleware.Company
-	HttpHandler *handlers.HTTP
+	Request    *handlers.Request
+	Middleware *middleware.Company
 }
 
 func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
-	var assocs = []string{"CompanyTypes"}
+	assocs := []string{"CompanyTypes"}
+	mdws := []func(fiber.Ctx) (int, error){}
 
-	cc.HttpHandler.
-		FiberCtx(c).
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		GetBy(paramKey)
+	cc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)
 
 	return nil
 }
@@ -33,44 +28,31 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 func (cc *Company) UpdateOneById(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
-	var assocs = []string{"CompanyTypes"}
+	var changes map[string]interface{}
+	assocs := []string{"CompanyTypes"}
+	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Update}
 
-	cc.HttpHandler.
-		FiberCtx(c).
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		UpdateOneById()
+	cc.Request.UpdateOneById(c, &model, &dto, changes, assocs, mdws)
 
 	return nil
 }
 
 func (cc *Company) DeleteOneById(c fiber.Ctx) error {
 	var model models.Company
-	var dto DTO.Company
-	var assocs = []string{"CompanyTypes"}
+	mdws := []func(fiber.Ctx) (int, error){}
 
-	cc.HttpHandler.
-		FiberCtx(c).
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		DeleteOneById()
+	cc.Request.DeleteOneById(c, &model, mdws)
 
 	return nil
 }
 
-func (cc *Company) Create(c fiber.Ctx) error {
+func (cc *Company) CreateOne(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
-	var assocs = []string{"CompanyTypes"}
+	assocs := []string{"CompanyTypes"}
+	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Create}
 
-	cc.HttpHandler.
-		FiberCtx(c).
-		Model(&model).
-		DTO(&dto).
-		Assoc(assocs).
-		Create()
+	cc.Request.CreateOne(c, &model, &dto, assocs, mdws)
 
 	return nil
 }
@@ -90,7 +72,3 @@ func (cc *Company) GetOneByName(c fiber.Ctx) error {
 func (cc *Company) GetOneByTaxId(c fiber.Ctx) error {
 	return cc.getBy("tax_id", c)
 }
-
-// func (cr *Company) UpdateById(c fiber.Ctx) error {
-// 	return cr.updateBy("id", c)
-// }

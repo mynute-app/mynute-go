@@ -3,7 +3,6 @@ package controllers
 import (
 	"agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
 
@@ -11,38 +10,26 @@ import (
 )
 
 type CompanyType struct {
-	Gorm         *handlers.Gorm
-	Middleware   *middleware.CompanyType
-	HttpHandler  *handlers.HTTP
+	Request    *handlers.Request
+	Middleware *middleware.CompanyType
 }
 
 func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var model []models.CompanyType
 	var dto []DTO.CompanyType
 	assocs := []string{}
-	keys := namespace.GeneralKey
-	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
-	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
-	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
+	mdws := []func(fiber.Ctx) (int, error){}
 
-	ctc.HttpHandler.
-		FiberCtx(c).
-		Middleware(modelCtx).
-		Middleware(dtoCtx).
-		Middleware(assocsCtx).
-		GetBy(paramKey)
+	ctc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)
 
 	return nil
 }
 
 func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
 	var model models.CompanyType
-	modelCtx := middleware.AddToContext(namespace.GeneralKey.Model, &model)
-	ctc.HttpHandler.
-		FiberCtx(c).
-		Middleware(modelCtx).
-		Middleware(ctc.Middleware.Delete).
-		DeleteOneById()
+	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
+
+	ctc.Request.DeleteOneById(c, &model, mdws)
 
 	return nil
 }
@@ -52,41 +39,20 @@ func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	var changes map[string]interface{}
 	assocs := []string{}
-	keys := namespace.GeneralKey
-	modelCtx := middleware.AddToContext(keys.Model, &model)
-	changesCtx := middleware.ParseBodyToContext(keys.Changes, changes)
-	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
-	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
+	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Update}
 
-	ctc.HttpHandler.
-		FiberCtx(c).
-		Middleware(changesCtx).
-		Middleware(modelCtx).
-		Middleware(dtoCtx).
-		Middleware(assocsCtx).
-		Middleware(ctc.Middleware.Update).
-		UpdateOneById()
+	ctc.Request.UpdateOneById(c, &model, &dto, changes, assocs, mdws)
 
 	return nil
 }
 
-func (ctc *CompanyType) Create(c fiber.Ctx) error {
+func (ctc *CompanyType) CreateOne(c fiber.Ctx) error {
 	var model models.CompanyType
 	var dto DTO.CompanyType
 	assocs := []string{}
+	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Create}
 
-	keys := namespace.GeneralKey
-	modelParserCtx := middleware.ParseBodyToContext(keys.Model, &model)
-	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
-	assocsCtx := middleware.AddToContext(keys.Associations, &assocs)
-
-	ctc.HttpHandler.
-		FiberCtx(c).
-		Middleware(modelParserCtx).
-		Middleware(dtoCtx).
-		Middleware(assocsCtx).
-		Middleware(ctc.Middleware.Create).
-		Create()
+	ctc.Request.CreateOne(c, &model, &dto, assocs, mdws)
 
 	return nil
 }
@@ -102,11 +68,3 @@ func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
 func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
 	return ctc.getBy("name", c)
 }
-
-// func (ctc *CompanyType) UpdateById(c fiber.Ctx) error {
-// 	return ctc.updateBy("id", c)
-// }
-
-// func (ctc *CompanyType) UpdateByName(c fiber.Ctx) error {
-// 	return ctc.updateBy("name", c)
-// }

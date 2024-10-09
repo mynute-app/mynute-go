@@ -65,7 +65,7 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 }
 
 // Middleware for Delete operation
-func (ctm *CompanyType) Delete(c fiber.Ctx) (int, error) {
+func (ctm *CompanyType) DeleteOneById(c fiber.Ctx) (int, error) {
 	companyTypeId := c.Params("id")
 
 	// Check if the company type is associated with any companies
