@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func ParseBodyToContext[T any](key namespace.ContextKey, model *T) func(c fiber.Ctx) (int, error) {
+func ParseBodyToContext[T any](key namespace.ContextKey, model T) func(c fiber.Ctx) (int, error) {
 	return func(c fiber.Ctx) (int, error) {
-		if err := lib.BodyParser(c.Body(), model); err != nil {
+		if err := lib.BodyParser(c.Body(), &model); err != nil {
 			return 500, err
 		}
 		c.Locals(key, model)

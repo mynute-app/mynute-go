@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
 	"errors"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -40,6 +41,8 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 	if err != nil {
 		return 500, err
 	}
+
+	log.Printf("Changes: %v", changes)
 
 	// Perform validation
 	if nameValue, exists := changes["name"]; exists {

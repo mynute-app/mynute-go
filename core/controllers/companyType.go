@@ -11,13 +11,12 @@ import (
 )
 
 type CompanyType struct {
-	Gorm        *handlers.Gorm
-	Middleware  *middleware.CompanyType
-	HttpHandler *handlers.HTTP
+	Gorm         *handlers.Gorm
+	Middleware   *middleware.CompanyType
+	HttpHandler  *handlers.HTTP
 }
 
 func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
-
 	var model []models.CompanyType
 	var dto []DTO.CompanyType
 	assocs := []string{}
@@ -51,15 +50,18 @@ func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
 func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 	var model models.CompanyType
 	var dto DTO.CompanyType
+	var changes map[string]interface{}
 	assocs := []string{}
 	keys := namespace.GeneralKey
-	modelParserCtx := middleware.ParseBodyToContext(keys.Model, &model)
+	modelCtx := middleware.AddToContext(keys.Model, &model)
+	changesCtx := middleware.ParseBodyToContext(keys.Changes, changes)
 	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
-	assocsCtx := middleware.AddToContext(keys.Associations, &assocs)
+	assocsCtx := middleware.AddToContext(keys.Associations, assocs)
 
 	ctc.HttpHandler.
 		FiberCtx(c).
-		Middleware(modelParserCtx).
+		Middleware(changesCtx).
+		Middleware(modelCtx).
 		Middleware(dtoCtx).
 		Middleware(assocsCtx).
 		Middleware(ctc.Middleware.Update).
@@ -73,9 +75,10 @@ func (ctc *CompanyType) Create(c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	assocs := []string{}
 
-	modelParserCtx := middleware.ParseBodyToContext(namespace.GeneralKey.Model, &model)
-	dtoCtx := middleware.AddToContext(namespace.GeneralKey.Dto, &dto)
-	assocsCtx := middleware.AddToContext(namespace.GeneralKey.Associations, &assocs)
+	keys := namespace.GeneralKey
+	modelParserCtx := middleware.ParseBodyToContext(keys.Model, &model)
+	dtoCtx := middleware.AddToContext(keys.Dto, &dto)
+	assocsCtx := middleware.AddToContext(keys.Associations, &assocs)
 
 	ctc.HttpHandler.
 		FiberCtx(c).

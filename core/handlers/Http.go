@@ -191,7 +191,12 @@ func (ac *ActionChain) UpdateOneById() {
 		return
 	}
 
-	ac.sendResponse.DTO(200, ac.model, ac.dto)
+	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto); if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+
+	ac.sendResponse.DTO(200, model, dto)
 }
 
 // // Final method that executes a CREATE action

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -18,6 +19,9 @@ func GetFromCtx[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
 	}
 
 	interfaceValue, ok := interfaceData.(T)
+
+	log.Printf("interfaceValue: %+v", interfaceValue)
+	log.Printf("interfaceData: %+v", interfaceData)
 
 	// If the initial type assertion succeeds, return the value
 	if ok {
