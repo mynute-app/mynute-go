@@ -10,6 +10,7 @@ import (
 const baseURL = "http://localhost:3000"
 
 // Run the test in debug mode to avoid cache.
+
 func TestCompanyTypeFlow(t *testing.T) {
 	var companyTypeID string
 	HTTP := lib.HttpClient{}
