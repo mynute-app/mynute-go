@@ -10,8 +10,11 @@ import (
 type Schedule struct {
 	gorm.Model
 	ServiceID  uint      `json:"service_id"`
+	Service    Service   `gorm:"foreignKey:ServiceID"`
 	EmployeeID uint      `json:"employee_id"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID"`
 	BranchID   uint      `json:"branch_id"`
+	Branch     Branch    `gorm:"foreignKey:BranchID"`
 	StartTime  time.Time `json:"start_time"`
 	EndTime    time.Time `json:"end_time"`
 }

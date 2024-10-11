@@ -17,6 +17,7 @@ type Employee struct {
 	gorm.Model
 	Name           string      `json:"name"`
 	Role           string      `json:"role"`
+	CompanyID      uint        `json:"company_id"`                       // One-to-one relation
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation
 	Schedules      []Schedule  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
