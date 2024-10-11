@@ -2,3 +2,5 @@
 pgadmin-data
 postgres-data
 tmp
+__debug
+.exe

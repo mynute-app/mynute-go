@@ -29,7 +29,6 @@ func (req *Request) GetBy(c fiber.Ctx, paramKey string, model interface{}, dto i
 	c.Locals(keys.Model, model)
 	c.Locals(keys.Dto, dto)
 	c.Locals(keys.Associations, assocs)
-
 	actions.RunMiddlewares(mdws).GetBy(paramKey)
 }
 
@@ -37,8 +36,14 @@ func (req *Request) DeleteOneById(c fiber.Ctx, model interface{}, mdws []func(fi
 	keys := namespace.GeneralKey
 	actions := req.HTTP.FiberCtx(c)
 	c.Locals(keys.Model, model)
-
 	actions.RunMiddlewares(mdws).DeleteOneById()
+}
+
+func (req *Request) ForceDeleteOneById(c fiber.Ctx, model interface{}, mdws []func(fiber.Ctx) (int, error)) {
+	keys := namespace.GeneralKey
+	actions := req.HTTP.FiberCtx(c)
+	c.Locals(keys.Model, model)
+	actions.RunMiddlewares(mdws).ForceDeleteOneById()
 }
 
 func (req *Request) UpdateOneById(c fiber.Ctx, model interface{}, dto interface{}, changes map[string]interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
@@ -51,6 +56,5 @@ func (req *Request) UpdateOneById(c fiber.Ctx, model interface{}, dto interface{
 	c.Locals(keys.Dto, dto)
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, assocs)
-
 	actions.RunMiddlewares(mdws).UpdateOneById()
 }

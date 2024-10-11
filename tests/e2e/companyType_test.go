@@ -8,18 +8,17 @@ import (
 
 const baseURL = "http://localhost:3000"
 
+var companyType = handlers.Tester{
+	Entity:    "companyType",
+	BaseURL:   baseURL,
+	PostBody:  map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+	PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+}
+
 // Run the test in debug mode to avoid cache.
 
 func TestCompanyTypeFlow(t *testing.T) {
-	tester := handlers.Tester{
-		Entity:    "companyType",
-		BaseURL:   baseURL,
-		PostBody:  map[string]string{"name": lib.GenerateRandomName("CompanyType")},
-		PatchBody: map[string]string{"name": lib.GenerateRandomName("CompanyType")},
-	}
-	t.Run("CreateCompanyType", tester.POST)
-
-	t.Run("UpdateCompanyType", tester.PATCH)
-
-	t.Run("DeleteCompanyType", tester.DELETE)
+	t.Run("CreateCompanyType", companyType.POST)
+	t.Run("UpdateCompanyType", companyType.PATCH)
+	t.Run("DeleteCompanyType", companyType.DELETE)
 }

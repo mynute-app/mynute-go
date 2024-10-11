@@ -84,3 +84,22 @@ func (ctm *CompanyType) DeleteOneById(c fiber.Ctx) (int, error) {
 	// // Proceed to the next middleware or handler
 	return 0, nil
 }
+
+// Middleware for Delete operation
+func (ctm *CompanyType) ForceDeleteOneById(c fiber.Ctx) (int, error) {
+	companyTypeId := c.Params("id")
+	// Check if the company type is associated with any companies
+	var companies []models.Company
+	if err := ctm.Gorm.DB.
+		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
+		Where("company_company_types.company_type_id = ?", companyTypeId).
+		Find(&companies).Error; err != nil {
+		return 500, err
+	}
+	if len(companies) > 0 {
+		return 400, errors.New("companyType is associated with companies")
+	}
+
+	// // Proceed to the next middleware or handler
+	return 0, nil
+}

@@ -9,13 +9,12 @@ import (
 type Tester struct {
 	Entity    string
 	BaseURL   string
-	PostBody  map[string]string
-	PatchBody map[string]string
-	EntityID  string
+	PostBody  map[string]interface{}
+	PatchBody map[string]interface{}
+	EntityID  int
 }
 
 func (test *Tester) POST(t *testing.T) {
-	t.Logf("POST: /%s", test.Entity)
 	HTTP := HttpClient{}
 	h := HTTP.SetTest(t)
 	url := fmt.Sprintf("%s/%s", test.BaseURL, test.Entity)
@@ -24,16 +23,19 @@ func (test *Tester) POST(t *testing.T) {
 		ExpectStatus(http.StatusCreated).
 		Method(http.MethodPost).
 		Send(test.PostBody)
-	test.EntityID = fmt.Sprintf("%v", h.ResBody["id"])
+	idFloat, ok := h.ResBody["id"].(float64)
+	if !ok {
+		t.Fatalf("failed to assert EntityID as float64")
+	}
+	test.EntityID = int(idFloat)
 }
 
 func (test *Tester) PATCH(t *testing.T) {
-	t.Logf("PATCH: /%s/%s", test.Entity, test.EntityID)
 	idMsg := validateId(test.EntityID)
 	if idMsg != "" {
 		t.Fatalf(idMsg)
 	}
-	url := fmt.Sprintf("%s/%s/%s", test.BaseURL, test.Entity, test.EntityID)
+	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.Entity, test.EntityID)
 	HTTP := HttpClient{}
 	HTTP.
 		SetTest(t).
@@ -44,12 +46,11 @@ func (test *Tester) PATCH(t *testing.T) {
 }
 
 func (test *Tester) DELETE(t *testing.T) {
-	t.Logf("DELETE: /%s/%s", test.Entity, test.EntityID)
 	idMsg := validateId(test.EntityID)
 	if idMsg != "" {
 		t.Fatalf(idMsg)
 	}
-	url := fmt.Sprintf("%s/%s/%s", test.BaseURL, test.Entity, test.EntityID)
+	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.Entity, test.EntityID)
 	HTTP := HttpClient{}
 	HTTP.
 		SetTest(t).
@@ -59,9 +60,9 @@ func (test *Tester) DELETE(t *testing.T) {
 		Send(nil)
 }
 
-func validateId(id string) string {
-	if id != "" {
+func validateId(id int) string {
+	if id != 0 {
 		return ""
 	}
-	return "EntityID is empty. Either: 1. Create test method hasn't been called 2. Create test method failed 3. EntityID is not set manually."
+	return "EntityID is empty or invalid. Either: 1. Create test method hasn't been called 2. Create test method failed 3. EntityID is not set manually."
 }

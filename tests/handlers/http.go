@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -53,8 +54,10 @@ func (h *httpActions) Clear() {
 // and returns the response. If an error occurs, it sets the error message.
 // The response body is stored in ResBody, and the status code is stored in Status.
 // It will defer res.Body.Close() to ensure the response body is closed.
-func (h *httpActions) Send(body map[string]string) *httpActions {
+func (h *httpActions) Send(body map[string]interface{}) *httpActions {
 	h.Error = ""
+	h.test.Logf("sending %s request to %s", h.method, h.url)
+	h.test.Logf("body: %+v", body)
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		h.Error = fmt.Sprintf("failed to marshal payload: %v", err)
@@ -63,6 +66,7 @@ func (h *httpActions) Send(body map[string]string) *httpActions {
 	}
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
 	req, err := http.NewRequest(h.method, h.url, bodyBuffer)
+	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		h.Error = fmt.Sprintf("failed to create request: %v", err)
 		h.test.Fatalf(h.Error)
@@ -75,21 +79,32 @@ func (h *httpActions) Send(body map[string]string) *httpActions {
 		h.test.Fatalf(h.Error)
 		return nil
 	}
-	defer res.Body.Close()
-	var response map[string]interface{}
-	if res.ContentLength != 0 {
-		if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-			h.Error = fmt.Sprintf("failed to decode response: %v", err)
-			h.test.Fatalf(h.Error)
-			return nil
-		}
+	if res.Body != nil {
+		defer res.Body.Close()
 	}
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
 		h.Error = fmt.Sprintf("expected status code %d, got %d", h.expectedStatus, res.StatusCode)
-		h.test.Fatalf(h.Error)
-		return nil
 	}
-	h.ResBody = response
+	if res.ContentLength != 0 && res.Body != nil {
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			h.Error = fmt.Sprintf("failed to read response body: %v", err)
+			h.test.Fatalf(h.Error)
+			return nil
+		}
+		var response map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &response); err != nil {
+			h.ResBody = map[string]interface{}{
+				"string": string(bodyBytes),
+			}
+		} else {
+			h.ResBody = response
+		}
+	}
+	h.test.Logf("response: %+v", h.ResBody)
+	if h.Error != "" {
+		h.test.Fatalf(h.Error)
+	}
 	h.Status = res.StatusCode
 	h.httpRes = res
 	return h

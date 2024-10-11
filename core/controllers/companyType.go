@@ -19,18 +19,21 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	var dto []DTO.CompanyType
 	assocs := []string{}
 	mdws := []func(fiber.Ctx) (int, error){}
-
 	ctc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)
-
 	return nil
 }
 
 func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
 	var model models.CompanyType
 	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
-
 	ctc.Request.DeleteOneById(c, &model, mdws)
+	return nil
+}
 
+func (ctc *CompanyType) ForceDeleteOneById(c fiber.Ctx) error {
+	var model models.CompanyType
+	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
+	ctc.Request.ForceDeleteOneById(c, &model, mdws)
 	return nil
 }
 
@@ -40,9 +43,7 @@ func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
 	var changes map[string]interface{}
 	assocs := []string{}
 	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Update}
-
 	ctc.Request.UpdateOneById(c, &model, &dto, changes, assocs, mdws)
-
 	return nil
 }
 
@@ -51,9 +52,7 @@ func (ctc *CompanyType) CreateOne(c fiber.Ctx) error {
 	var dto DTO.CompanyType
 	assocs := []string{}
 	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Create}
-
 	ctc.Request.CreateOne(c, &model, &dto, assocs, mdws)
-
 	return nil
 }
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -35,6 +36,7 @@ func (p *Gorm) UpdateOneById(value string, model interface{}, changes interface{
 }
 
 func (p *Gorm) Create(model interface{}) error {
+	log.Printf("Creating model: %+v", model)
 	return p.DB.Create(model).Error
 }
 
@@ -60,12 +62,31 @@ func (p Gorm) GetOneBy(param string, value string, model interface{}, associatio
 	return query.First(model, cond, value).Error
 }
 
-func (p Gorm) DeleteOneById(value string, model interface{}) error {
-	err := p.GetOneBy("id", value, model, nil); if err != nil {
-		return err
+func (p Gorm) ForceGetOneBy(param string, value string, model interface{}, associations []string) error {
+	// Start with the base query
+	query := p.DB.Unscoped()
+
+	// Iterate over the preloads and apply each one
+	for _, preload := range associations {
+		query = query.Preload(preload)
 	}
 
-	return p.DB.Delete(model).Error
+	cond := fmt.Sprintf("%s = ?", param)
+
+	// Fetch the first record by the specified parameter after applying all preloads
+	return query.First(model, cond, value).Error
+}
+
+func (p Gorm) DeleteOneById(value string, model interface{}) error {
+	cond := fmt.Sprintf("%s = ?", "id")
+
+	return p.DB.Model(model).Delete(cond, value).Error
+}
+
+func (p Gorm) ForceDeleteOneById(value string, model interface{}) error {
+	cond := fmt.Sprintf("%s = ?", "id")
+
+	return p.DB.Unscoped().Model(model).Delete(cond, value).Error
 }
 
 func (p Gorm) GetAll(model interface{}, associations []string) error {

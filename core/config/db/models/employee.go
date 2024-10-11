@@ -19,6 +19,7 @@ type Employee struct {
 	Role           string      `json:"role"`
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation
+	Schedules      []Schedule  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
 	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
 }
 

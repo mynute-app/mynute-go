@@ -132,6 +132,32 @@ func (ac *ActionChain) DeleteOneById() {
 	ac.sendResponse.Http204()
 }
 
+// Final method that executes a FORCE DELETE action
+func (ac *ActionChain) ForceDeleteOneById() {
+	if ac.Error != nil {
+		return
+	}
+	keys := namespace.GeneralKey
+
+	id := ac.ctx.Params(string(keys.QueryId))
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+
+	if err := ac.h.Gorm.ForceDeleteOneById(id, model); err != nil {
+		if err.Error() == "record not found" {
+			ac.sendResponse.Http404()
+			return
+		}
+		ac.sendResponse.Http500(err)
+		return
+	}
+
+	ac.sendResponse.Http204()
+}
+
 // Final method that executes an UPDATE action
 func (ac *ActionChain) UpdateOneById() {
 	if ac.Error != nil {

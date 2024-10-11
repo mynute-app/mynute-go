@@ -22,4 +22,5 @@ func Company(Gorm *handlers.Gorm, App *fiber.App) {
 	r.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
 	r.Patch("/:id", cc.UpdateOneById) // ok
 	r.Delete("/:id", cc.DeleteOneById) // ok
+	r.Delete("/:id/force", cc.ForceDeleteOneById) // ok
 }
