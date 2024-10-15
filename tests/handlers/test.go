@@ -12,6 +12,12 @@ type Tester struct {
 	PostBody  map[string]interface{}
 	PatchBody map[string]interface{}
 	EntityID  int
+	expectedStatus int
+}
+
+func (test *Tester) ExpectStatus(status int) *Tester {
+	test.expectedStatus = status
+	return test
 }
 
 func (test *Tester) POST(t *testing.T) {
@@ -20,7 +26,7 @@ func (test *Tester) POST(t *testing.T) {
 	url := fmt.Sprintf("%s/%s", test.BaseURL, test.Entity)
 	h.
 		URL(url).
-		ExpectStatus(http.StatusCreated).
+		ExpectStatus(test.expectedStatus).
 		Method(http.MethodPost).
 		Send(test.PostBody)
 	idFloat, ok := h.ResBody["id"].(float64)
@@ -41,7 +47,7 @@ func (test *Tester) PATCH(t *testing.T) {
 		SetTest(t).
 		URL(url).
 		Method(http.MethodPatch).
-		ExpectStatus(http.StatusOK).
+		ExpectStatus(test.expectedStatus).
 		Send(test.PatchBody)
 }
 
@@ -56,7 +62,22 @@ func (test *Tester) DELETE(t *testing.T) {
 		SetTest(t).
 		URL(url).
 		Method(http.MethodDelete).
-		ExpectStatus(http.StatusNoContent).
+		ExpectStatus(test.expectedStatus).
+		Send(nil)
+}
+
+func (test *Tester) ForceDELETE(t *testing.T) {
+	idMsg := validateId(test.EntityID)
+	if idMsg != "" {
+		t.Fatalf(idMsg)
+	}
+	url := fmt.Sprintf("%s/%s/%d/force", test.BaseURL, test.Entity, test.EntityID)
+	HTTP := HttpClient{}
+	HTTP.
+		SetTest(t).
+		URL(url).
+		Method(http.MethodDelete).
+		ExpectStatus(test.expectedStatus).
 		Send(nil)
 }
 

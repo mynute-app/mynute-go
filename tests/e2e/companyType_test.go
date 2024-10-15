@@ -18,7 +18,8 @@ var companyType = handlers.Tester{
 // Run the test in debug mode to avoid cache.
 
 func TestCompanyTypeFlow(t *testing.T) {
-	t.Run("CreateCompanyType", companyType.POST)
-	t.Run("UpdateCompanyType", companyType.PATCH)
-	t.Run("DeleteCompanyType", companyType.DELETE)
+	t.Run("CreateCompanyType", companyType.ExpectStatus(201).POST)
+	t.Run("UpdateCompanyType", companyType.ExpectStatus(200).PATCH)
+	t.Run("DeleteCompanyType", companyType.ExpectStatus(204).DELETE)
+	t.Run("ForceDeleteCompanyType", companyType.ExpectStatus(204).ForceDELETE)
 }

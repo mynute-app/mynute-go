@@ -18,13 +18,14 @@ var company = handlers.Tester{
 }
 
 func TestCompanyFlow(t *testing.T) {
-	t.Run("CreateCompanyType", companyType.POST)
+	t.Run("CreateCompanyType", companyType.ExpectStatus(201).POST)
 	company.PostBody["company_types"] = []map[string]interface{}{
 		{"id": companyType.EntityID, "name": companyType.PostBody["name"]},
 	}
-	t.Logf("company.PostBody before CreateCompany: %+v", company.PostBody)
-	t.Run("CreateCompany", company.POST)
-	t.Run("UpdateCompany", company.PATCH)
-	t.Run("DeleteCompany", company.DELETE)
-	t.Run("DeleteCompanyType", companyType.DELETE)
+	t.Run("CreateCompany", company.ExpectStatus(201).POST)
+	t.Run("UpdateCompany", company.ExpectStatus(200).PATCH)
+	t.Run("DeleteCompany", company.ExpectStatus(204).DELETE)
+	t.Run("DeleteCompanyType", companyType.ExpectStatus(204).DELETE)
+	t.Run("ForceDeleteCompanyType", companyType.ExpectStatus(204).ForceDELETE)
+	t.Run("ForceDeleteCompany", company.ExpectStatus(204).ForceDELETE)
 }
