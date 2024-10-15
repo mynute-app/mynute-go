@@ -15,8 +15,10 @@ type TimeRange struct {
 // Fourth step: Choosing the employee.
 type Employee struct {
 	gorm.Model
-	Name           string      `json:"name"`
-	Role           string      `json:"role"`
+	Name           string      `gorm:"not null" json:"name"`
+	Role           string      `gorm:"not null" json:"role"`
+	Email          string      `gorm:"not null;unique" json:"email"`
+	Phone          string      `json:"phone"`
 	CompanyID      uint        `json:"company_id"`                       // One-to-one relation
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation
