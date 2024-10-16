@@ -1,0 +1,33 @@
+package e2e_test
+
+import (
+	"agenda-kaki-go/tests/handlers"
+	"agenda-kaki-go/tests/lib"
+	"fmt"
+	"testing"
+)
+
+var branch = handlers.Tester{
+	Entity:  "branch",
+	BaseURL: baseURL,
+	PostBody: map[string]interface{}{
+		"name": lib.GenerateRandomName("Branch"),
+	},
+	PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("Branch")},
+}
+
+func TestBranchFlow(t *testing.T) {
+	t.Run("CreateCompanyType", companyType.ExpectStatus(201).POST)
+	company.PostBody["company_types"] = []map[string]interface{}{
+		{"id": companyType.EntityID, "name": companyType.PostBody["name"]},
+	}
+	t.Run("CreateCompany", company.ExpectStatus(201).POST)
+	branch.PostBody["company_id"] = company.EntityID
+	branch.RelatedPath = fmt.Sprintf("%d", company.EntityID)
+	t.Run("CreateBranch", branch.ExpectStatus(201).POST)
+	t.Run("UpdateBranch", branch.ExpectStatus(200).PATCH)
+	t.Run("DeleteBranch", branch.ExpectStatus(204).DELETE)
+	t.Run("ForceDeleteBranch", branch.ExpectStatus(204).ForceDELETE)
+	t.Run("ForceDeleteCompany", company.ExpectStatus(204).ForceDELETE)
+	t.Run("ForceDeleteCompanyType", companyType.ExpectStatus(204).ForceDELETE)
+}

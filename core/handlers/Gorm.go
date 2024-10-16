@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -36,8 +35,13 @@ func (p *Gorm) UpdateOneById(value string, model interface{}, changes interface{
 }
 
 func (p *Gorm) Create(model interface{}) error {
-	log.Printf("Creating model: %+v", model)
-	return p.DB.Create(model).Error
+	query := p.DB
+
+	if query.Error != nil {
+		return query.Error
+	}
+
+	return query.Create(model).Error
 }
 
 // UpdateMany updates multiple records
@@ -50,6 +54,10 @@ func (p *Gorm) UpdateMany(v interface{}) error {
 func (p Gorm) GetOneBy(param string, value string, model interface{}, associations []string) error {
 	// Start with the base query
 	query := p.DB
+
+	if query.Error != nil {
+		return query.Error
+	}
 
 	// Iterate over the preloads and apply each one
 	for _, preload := range associations {

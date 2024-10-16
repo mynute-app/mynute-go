@@ -22,10 +22,10 @@ func Branch(Gorm *handlers.Gorm, App *fiber.App) {
 
 	r.Post("/", cb.CreateOne) // ok
 	r.Get("/", cb.GetAll) // ok
-	r.Get("/:id", cb.GetOneById) // ok
+	r.Get("/:id/:companyId", cb.GetOneById) // ok
 	// r.Get("/name/:name", cb.GetOneByName) // ok
-	r.Delete("/:id", cb.DeleteOneById) // ok
-	r.Delete("/:id/force", cb.ForceDeleteOneById) // ok
-	r.Patch("/:id", cb.UpdateOneById) // ok
+	r.Delete("/:id/:companyId", cb.DeleteOneById) // ok
+	r.Delete("/:id/:companyId/force", cb.ForceDeleteOneById) // ok
+	r.Patch("/:id/:companyId", cb.UpdateOneById) // ok
 	
 }

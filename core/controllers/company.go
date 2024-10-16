@@ -45,7 +45,7 @@ func (cc *Company) DeleteOneById(c fiber.Ctx) error {
 func (cc *Company) ForceDeleteOneById(c fiber.Ctx) error {
 	var model models.Company
 	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.DeleteOneById(c, &model, mdws)
+	cc.Request.ForceDeleteOneById(c, &model, mdws)
 	return nil
 }
 

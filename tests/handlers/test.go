@@ -7,11 +7,12 @@ import (
 )
 
 type Tester struct {
-	Entity    string
-	BaseURL   string
-	PostBody  map[string]interface{}
-	PatchBody map[string]interface{}
-	EntityID  int
+	Entity         string
+	BaseURL        string
+	RelatedPath    string
+	PostBody       map[string]interface{}
+	PatchBody      map[string]interface{}
+	EntityID       int
 	expectedStatus int
 }
 
@@ -24,6 +25,9 @@ func (test *Tester) POST(t *testing.T) {
 	HTTP := HttpClient{}
 	h := HTTP.SetTest(t)
 	url := fmt.Sprintf("%s/%s", test.BaseURL, test.Entity)
+	if test.RelatedPath != "" {
+		url = fmt.Sprintf("%s/%s", url, test.RelatedPath)
+	}
 	h.
 		URL(url).
 		ExpectStatus(test.expectedStatus).
