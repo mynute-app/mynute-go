@@ -12,5 +12,5 @@ type Company struct {
 	CompanyTypes []CompanyType `gorm:"many2many:company_company_types;constraint:OnDelete:CASCADE" json:"company_types"`
 	Employees    []Employee    `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"employees"`
 	Branches     []Branch      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"` // Explicit foreign key definition
+	Services     []Service     `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"` // Explicit foreign key definition
 }
-
