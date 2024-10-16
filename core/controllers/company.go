@@ -12,11 +12,12 @@ import (
 type Company struct {
 	Request    *handlers.Request
 	Middleware *middleware.Company
+	Associations []string
 }
 
 func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
-	var model models.Company
-	var dto DTO.Company
+	var model []models.Company
+	var dto []DTO.Company
 	assocs := []string{"CompanyTypes"}
 	mdws := []func(fiber.Ctx) (int, error){}
 	cc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)

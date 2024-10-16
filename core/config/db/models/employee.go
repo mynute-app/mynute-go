@@ -19,7 +19,7 @@ type Employee struct {
 	Surname        string      `gorm:"not null" json:"surname"`
 	Role           string      `gorm:"not null" json:"role"`
 	Email          string      `gorm:"not null;unique" json:"email"`
-	Phone          string      `json:"phone"`
+	Phone          string      `gorm:"not null;unique" json:"phone"`
 	CompanyID      uint        `json:"company_id"`                       // Foreign key to Company
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation with Branch
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service

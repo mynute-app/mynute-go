@@ -73,4 +73,3 @@ func (comp *Company) Update(c fiber.Ctx) (int, error) {
 	}
 	return 0, nil
 }
-

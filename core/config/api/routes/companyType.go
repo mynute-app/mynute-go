@@ -12,7 +12,12 @@ func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	Middleware := &middleware.CompanyType{Gorm: Gorm}
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
-	cct := controllers.CompanyType{Request: RequestHandler, Middleware: Middleware}
+	Associations := []string{}
+	cct := controllers.CompanyType{
+		Request: RequestHandler,
+		Middleware: Middleware,
+		Associations: Associations,
+	}
 	r := App.Group("/companyType")
 
 	r.Post("/", cct.CreateOne) // ok

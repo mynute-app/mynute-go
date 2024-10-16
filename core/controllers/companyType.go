@@ -12,6 +12,7 @@ import (
 type CompanyType struct {
 	Request    *handlers.Request
 	Middleware *middleware.CompanyType
+	Associations []string
 }
 
 func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
