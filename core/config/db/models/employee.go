@@ -16,12 +16,13 @@ type TimeRange struct {
 type Employee struct {
 	gorm.Model
 	Name           string      `gorm:"not null" json:"name"`
+	Surname        string      `gorm:"not null" json:"surname"`
 	Role           string      `gorm:"not null" json:"role"`
 	Email          string      `gorm:"not null;unique" json:"email"`
 	Phone          string      `json:"phone"`
-	CompanyID      uint        `json:"company_id"`                       // One-to-one relation
-	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation
-	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation
+	CompanyID      uint        `json:"company_id"`                       // Foreign key to Company
+	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation with Branch
+	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
 	Schedules      []Schedule  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
 	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
 }

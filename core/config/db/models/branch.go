@@ -2,10 +2,12 @@ package models
 
 import "gorm.io/gorm"
 
-// Second step: Choosing the branch.
+// Branch model
 type Branch struct {
 	gorm.Model
-	CompanyID uint    `json:"company_id"`                 // Foreign key for Company
-	Name      string  `json:"name"`
-	Company   Company `gorm:"constraint:OnDelete:CASCADE;"` // No need for foreignKey here, it's inferred from CompanyID
+	CompanyID uint       `json:"company_id"`                 // Foreign key for Company
+	Name      string     `json:"name"`
+	Company   Company    `gorm:"constraint:OnDelete:CASCADE;"` // Foreign key to Company
+	Employees []Employee `gorm:"many2many:branch_employees;"`  // Many-to-many relation with Employee
+	Services  []Service  `gorm:"many2many:branch_services;"`   // Many-to-many relation with Service
 }
