@@ -21,9 +21,9 @@ func (comp *Company) Create(c fiber.Ctx) (int, error) {
 	if err != nil {
 		return 500, err
 	}
-
-	if !lib.ValidateName(company.Name) {
-		return 400, errors.New("company name must be at least 3 characters long")
+	err = lib.ValidateName(company.Name, "company")
+	if err != nil {
+		return 400, err
 	} else if !lib.ValidateTaxID(company.TaxID) {
 		return 400, errors.New("invalid tax ID")
 	} else if len(company.CompanyTypes) == 0 {
@@ -55,8 +55,10 @@ func (comp *Company) Update(c fiber.Ctx) (int, error) {
 		return 500, err
 	}
 
-	if changes["name"] != nil && !lib.ValidateName(changes["name"].(string)) {
-		return 400, errors.New("company name must be at least 3 characters long")
+	if changes["name"] != nil {
+		if err = lib.ValidateName(changes["name"].(string), "company"); err != nil {
+			return 400, err
+		}
 	} else if changes["tax_id"] != nil && !lib.ValidateTaxID(changes["tax_id"].(string)) {
 		return 400, errors.New("invalid tax ID")
 	} else if changes["company_types"] != nil {

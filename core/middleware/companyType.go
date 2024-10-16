@@ -24,9 +24,9 @@ func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 		return 500, err
 	}
 
-	// Perform validation
-	if !lib.ValidateName(companyType.Name) {
-		return 400, errors.New("companyType.Name must be at least 3 characters long")
+	err = lib.ValidateName(companyType.Name, "companyType")
+	if err != nil {
+		return 400, err
 	}
 
 	// Proceed to the next middleware or handler
@@ -50,8 +50,8 @@ func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
 		if !ok {
 			return 500, errors.New("invalid 'name' on 'changes' data type")
 		}
-		if !lib.ValidateName(name) {
-			return 400, errors.New("companyType.Name must be at least 3 characters long")
+		if err := lib.ValidateName(name, "companyType"); err != nil {
+			return 400, err
 		}
 		// Check if the name already exists
 		var companyType models.CompanyType

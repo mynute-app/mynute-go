@@ -1,9 +1,18 @@
 package lib
 
-import "regexp"
+import (
+	"errors"
+	"fmt"
+	"regexp"
+)
 
-func ValidateName(name string) bool {
-	return len(name) >= 3
+func ValidateName(name string, structStr string) error {
+	isValid := len(name) >= 3
+	if !isValid {
+		errStr := fmt.Sprintf("%s.name must be at least 3 characters long", structStr)
+		return errors.New(errStr)
+	}
+	return nil
 }
 
 func ValidateTaxID(taxID string) bool {
