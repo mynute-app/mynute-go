@@ -28,6 +28,9 @@ func (cb *Branch) CheckCompany(c fiber.Ctx) (int, error) {
 
 	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
+		if c.Method() == "GET" {
+			return 0, nil
+		}
 		return 500, err
 	}
 

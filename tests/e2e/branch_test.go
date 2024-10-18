@@ -25,6 +25,7 @@ func TestBranchFlow(t *testing.T) {
 	branch.RelatedPath = fmt.Sprintf("company/%d/branch", company.EntityID)
 	t.Run("CreateBranch", branch.ExpectStatus(201).POST)
 	t.Run("UpdateBranch", branch.ExpectStatus(200).PATCH)
+	t.Run("GetBranch", branch.ExpectStatus(200).GET)
 	t.Run("DeleteBranch", branch.ExpectStatus(204).DELETE)
 	t.Run("ForceDeleteBranch", branch.ExpectStatus(204).ForceDELETE)
 	t.Run("ForceDeleteCompany", company.ExpectStatus(204).ForceDELETE)

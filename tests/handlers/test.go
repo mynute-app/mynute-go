@@ -82,6 +82,17 @@ func (test *Tester) ForceDELETE(t *testing.T) {
 		Send(nil)
 }
 
+func (test *Tester) GET(t *testing.T) {
+	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.RelatedPath, test.EntityID)
+	HTTP := HttpClient{}
+	HTTP.
+		SetTest(t).
+		URL(url).
+		Method(http.MethodGet).
+		ExpectStatus(test.expectedStatus).
+		Send(nil)
+}
+
 func validateId(id int) string {
 	if id != 0 {
 		return ""

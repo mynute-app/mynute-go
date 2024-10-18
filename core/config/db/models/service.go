@@ -9,8 +9,8 @@ type Service struct {
 	Description string     `json:"description"`
 	Price       int32      `json:"price"`
 	Duration    int        `json:"duration"`                     // Duration in minutes
-	Branches    []Branch   `gorm:"many2many:branch_services;"`   // Many-to-many relation with Branch
 	CompanyID   uint       `json:"company_id"`                   // Foreign key to Company
 	Company     Company    `gorm:"foreignKey:CompanyID"`         // Relation to Company
 	Employees   []Employee `gorm:"many2many:employee_services;"` // Many-to-many relation with Employee
+	Branches    []Branch   `gorm:"many2many:branch_services;"`   // Many-to-many relation with Branch
 }

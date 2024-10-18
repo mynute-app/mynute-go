@@ -2,11 +2,19 @@ package DTO
 
 type Service struct {
 	ID          uint       `json:"id"`
+	CompanyID   uint       `json:"company_id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	Price       int32      `json:"price"`
 	Duration    int        `json:"duration"`
-	Company     Company    `json:"company"`
 	Branches    []Branch   `json:"branches"`
 	Employees   []Employee `json:"employees"`
+}
+
+type ServicePopulated struct {
+	ID          uint                `json:"id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Price       int32               `json:"price"`
+	Duration    int                 `json:"duration"`
 }

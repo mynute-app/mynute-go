@@ -21,6 +21,7 @@ type Employee struct {
 	Email          string      `gorm:"not null;unique" json:"email"`
 	Phone          string      `gorm:"not null;unique" json:"phone"`
 	CompanyID      uint        `json:"company_id"`                       // Foreign key to Company
+	Company        Company     `gorm:"constraint:OnDelete:CASCADE;"`     // Foreign key to Company
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation with Branch
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
 	Schedules      []Schedule  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
