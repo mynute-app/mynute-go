@@ -24,10 +24,7 @@ func (test *Tester) ExpectStatus(status int) *Tester {
 func (test *Tester) POST(t *testing.T) {
 	HTTP := HttpClient{}
 	h := HTTP.SetTest(t)
-	url := fmt.Sprintf("%s/%s", test.BaseURL, test.Entity)
-	if test.RelatedPath != "" {
-		url = fmt.Sprintf("%s/%s", url, test.RelatedPath)
-	}
+	url := fmt.Sprintf("%s/%s", test.BaseURL, test.RelatedPath)
 	h.
 		URL(url).
 		ExpectStatus(test.expectedStatus).

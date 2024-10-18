@@ -5,12 +5,35 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
+	"errors"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type Branch struct {
 	Gorm *handlers.Gorm
+}
+
+func (cb *Branch) CheckCompany(c fiber.Ctx) (int, error) {
+	companyId := c.Params("companyId")
+	if companyId == "" {
+		return 400, errors.New("missing companyId")
+	}
+
+	// Check if the company with the following id exists on the database.
+	var company models.Company
+	if err := cb.Gorm.GetOneBy("id", companyId, &company, []string{}); err != nil {
+		return 400, err
+	}
+
+	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
+	if err != nil {
+		return 500, err
+	}
+
+	branch.ID = company.ID
+
+	return 0, nil
 }
 
 func (cb *Branch) Create(c fiber.Ctx) (int, error) {

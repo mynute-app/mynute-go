@@ -10,6 +10,7 @@ import (
 var company = handlers.Tester{
 	Entity:  "company",
 	BaseURL: baseURL,
+	RelatedPath: "company",
 	PostBody: map[string]interface{}{
 		"name":   lib.GenerateRandomName("Company"),
 		"tax_id": fmt.Sprintf("%v", lib.GenerateRandomIntOfExactly(14)),

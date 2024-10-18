@@ -22,8 +22,7 @@ func TestBranchFlow(t *testing.T) {
 		{"id": companyType.EntityID, "name": companyType.PostBody["name"]},
 	}
 	t.Run("CreateCompany", company.ExpectStatus(201).POST)
-	branch.PostBody["company_id"] = company.EntityID
-	branch.RelatedPath = fmt.Sprintf("%d", company.EntityID)
+	branch.RelatedPath = fmt.Sprintf("company/%d/branch", company.EntityID)
 	t.Run("CreateBranch", branch.ExpectStatus(201).POST)
 	t.Run("UpdateBranch", branch.ExpectStatus(200).PATCH)
 	t.Run("DeleteBranch", branch.ExpectStatus(204).DELETE)

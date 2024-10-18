@@ -10,6 +10,7 @@ const baseURL = "http://localhost:3000"
 
 var companyType = handlers.Tester{
 	Entity:    "companyType",
+	RelatedPath: "companyType",
 	BaseURL:   baseURL,
 	PostBody:  map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
 	PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
