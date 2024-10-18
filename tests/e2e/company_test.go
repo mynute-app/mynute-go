@@ -25,6 +25,7 @@ func TestCompanyFlow(t *testing.T) {
 	}
 	t.Run("CreateCompany", company.ExpectStatus(201).POST)
 	t.Run("UpdateCompany", company.ExpectStatus(200).PATCH)
+	t.Run("DeleteCompanyTypeWithError", companyType.ExpectStatus(400).DELETE)
 	t.Run("DeleteCompany", company.ExpectStatus(204).DELETE)
 	t.Run("DeleteCompanyType", companyType.ExpectStatus(204).DELETE)
 	t.Run("ForceDeleteCompanyType", companyType.ExpectStatus(204).ForceDELETE)

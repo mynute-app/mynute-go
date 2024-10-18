@@ -12,7 +12,7 @@ func Company(Gorm *handlers.Gorm, App *fiber.App) {
 	Middleware := &middleware.Company{Gorm: Gorm}
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
-	Associations := []string{"CompanyTypes"}
+	Associations := []string{"CompanyTypes", "Branches"}
 	cc := &controllers.Company{
 		Request: RequestHandler, 
 		Middleware: Middleware,

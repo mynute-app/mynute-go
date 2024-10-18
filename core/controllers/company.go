@@ -18,9 +18,8 @@ type Company struct {
 func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 	var model []models.Company
 	var dto []DTO.Company
-	assocs := []string{"CompanyTypes"}
 	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)
+	cc.Request.GetBy(c, paramKey, &model, &dto, cc.Associations, mdws)
 	return nil
 }
 
@@ -29,9 +28,8 @@ func (cc *Company) UpdateOneById(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
 	var changes map[string]interface{}
-	assocs := []string{"CompanyTypes"}
 	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Update}
-	cc.Request.UpdateOneById(c, &model, &dto, changes, assocs, mdws)
+	cc.Request.UpdateOneById(c, &model, &dto, changes, cc.Associations, mdws)
 	return nil
 }
 
@@ -52,9 +50,8 @@ func (cc *Company) ForceDeleteOneById(c fiber.Ctx) error {
 func (cc *Company) CreateOne(c fiber.Ctx) error {
 	var model models.Company
 	var dto DTO.Company
-	assocs := []string{"CompanyTypes"}
 	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Create}
-	cc.Request.CreateOne(c, &model, &dto, assocs, mdws)
+	cc.Request.CreateOne(c, &model, &dto, cc.Associations, mdws)
 	return nil
 }
 

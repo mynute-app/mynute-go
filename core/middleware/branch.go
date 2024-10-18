@@ -31,7 +31,7 @@ func (cb *Branch) CheckCompany(c fiber.Ctx) (int, error) {
 		return 500, err
 	}
 
-	branch.ID = company.ID
+	branch.CompanyID = company.ID
 
 	return 0, nil
 }
