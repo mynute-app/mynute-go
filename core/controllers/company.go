@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+var _ IController = (*Company)(nil) // Ensures that the Struct implements the IController interface correctly
+
 type Company struct {
 	Request    *handlers.Request
 	Middleware *middleware.Company
@@ -23,6 +25,13 @@ func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
 	return nil
 }
 
+func (cc *Company) forceGetBy(paramKey string, c fiber.Ctx) error {
+	var model []models.Company
+	var dto []DTO.Company
+	mdws := []func(fiber.Ctx) (int, error){}
+	cc.Request.ForceGetBy(c, paramKey, &model, &dto, cc.Associations, mdws)
+	return nil
+}
 
 func (cc *Company) UpdateOneById(c fiber.Ctx) error {
 	var model models.Company
@@ -57,6 +66,14 @@ func (cc *Company) CreateOne(c fiber.Ctx) error {
 
 func (cc *Company) GetAll(c fiber.Ctx) error {
 	return cc.getBy("", c)
+}
+
+func (cc *Company) ForceGetAll(c fiber.Ctx) error {
+	return cc.forceGetBy("", c)
+}
+
+func (cc *Company) ForceGetOneById(c fiber.Ctx) error {
+	return cc.forceGetBy("id", c)
 }
 
 func (cc *Company) GetOneById(c fiber.Ctx) error {

@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+var _ IController = (*CompanyType)(nil)
+
 type CompanyType struct {
 	Request    *handlers.Request
 	Middleware *middleware.CompanyType
@@ -24,6 +26,15 @@ func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
 	return nil
 }
 
+func (ctc *CompanyType) forceGetBy(paramKey string, c fiber.Ctx) error {
+	var model []models.CompanyType
+	var dto []DTO.CompanyType
+	assocs := []string{}
+	mdws := []func(fiber.Ctx) (int, error){}
+	ctc.Request.ForceGetBy(c, paramKey, &model, &dto, assocs, mdws)
+	return nil
+}
+
 func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
 	var model models.CompanyType
 	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
@@ -36,6 +47,14 @@ func (ctc *CompanyType) ForceDeleteOneById(c fiber.Ctx) error {
 	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
 	ctc.Request.ForceDeleteOneById(c, &model, mdws)
 	return nil
+}
+
+func (ctc *CompanyType) ForceGetOneById(c fiber.Ctx) error {
+	return ctc.forceGetBy("id", c)
+}
+
+func (ctc *CompanyType) ForceGetAll(c fiber.Ctx) error {
+	return ctc.forceGetBy("", c)
 }
 
 func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {

@@ -79,6 +79,46 @@ func (ac *ActionChain) GetBy(paramKey string) {
 	ac.sendResponse.DTO(200, model, dto)
 }
 
+// Final Method that executes a FORCE GET action
+func (ac *ActionChain) ForceGetBy(paramKey string) {
+	if ac.Error != nil {
+		return
+	}
+
+	keys := namespace.GeneralKey
+
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
+	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+
+	if paramKey == "" {
+		if err := ac.h.Gorm.ForceGetAll(model, assocs); err != nil {
+			ac.sendResponse.Http500(err)
+			return
+		}
+	} else {
+		paramVal := ac.ctx.Params(paramKey)
+		if err := ac.h.Gorm.ForceGetOneBy(paramKey, paramVal, model, assocs); err != nil {
+			ac.sendResponse.Http404()
+			return
+		}
+	}
+
+	ac.sendResponse.DTO(200, model, dto)
+}
+
 // Final Method that executes a CREATE action
 func (ac *ActionChain) CreateOne() {
 	if ac.Error != nil {

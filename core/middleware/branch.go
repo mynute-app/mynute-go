@@ -52,4 +52,3 @@ func (cb *Branch) Create(c fiber.Ctx) (int, error) {
 	// Proceed to the next middleware or handler
 	return 0, nil
 }
-

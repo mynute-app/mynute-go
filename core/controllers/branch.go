@@ -3,8 +3,8 @@ package controllers
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
-	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/handlers"
 
 	"github.com/gofiber/fiber/v3"
 )

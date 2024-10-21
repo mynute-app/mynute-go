@@ -32,6 +32,15 @@ func (req *Request) GetBy(c fiber.Ctx, paramKey string, model interface{}, dto i
 	actions.RunMiddlewares(mdws).GetBy(paramKey)
 }
 
+func (req *Request) ForceGetBy(c fiber.Ctx, paramKey string, model interface{}, dto interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
+	keys := namespace.GeneralKey
+	actions := req.HTTP.FiberCtx(c)
+	c.Locals(keys.Model, model)
+	c.Locals(keys.Dto, dto)
+	c.Locals(keys.Associations, assocs)
+	actions.RunMiddlewares(mdws).ForceGetBy(paramKey)
+}
+
 func (req *Request) DeleteOneById(c fiber.Ctx, model interface{}, mdws []func(fiber.Ctx) (int, error)) {
 	keys := namespace.GeneralKey
 	actions := req.HTTP.FiberCtx(c)

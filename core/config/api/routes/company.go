@@ -2,8 +2,8 @@ package routes
 
 import (
 	"agenda-kaki-go/core/controllers"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/middleware"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -18,14 +18,10 @@ func Company(Gorm *handlers.Gorm, App *fiber.App) {
 		Middleware: Middleware,
 		Associations: Associations,
 	}
-	r := App.Group("/company")
 
-	r.Post("/", cc.CreateOne) // ok
-	r.Get("/", cc.GetAll) // ok
-	r.Get("/:id", cc.GetOneById) // ok
+	r := App.Group("/company")
 	r.Get("/name/:name", cc.GetOneByName) // ok
 	r.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
-	r.Patch("/:id", cc.UpdateOneById) // ok
-	r.Delete("/:id", cc.DeleteOneById) // ok
-	r.Delete("/:id/force", cc.ForceDeleteOneById) // ok
+
+	controllers.CreateRoutes(r, cc)
 }
