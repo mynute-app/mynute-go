@@ -27,6 +27,8 @@ func TestBranchFlow(t *testing.T) {
 	t.Run("UpdateBranch", branch.ExpectStatus(200).PATCH)
 	t.Run("GetBranch", branch.ExpectStatus(200).GET)
 	t.Run("DeleteBranch", branch.ExpectStatus(204).DELETE)
+	t.Run("GetBranchWith404", branch.ExpectStatus(404).GET)
+	t.Run("ForceGetBranch", branch.ExpectStatus(200).ForceGET)
 	t.Run("ForceDeleteBranch", branch.ExpectStatus(204).ForceDELETE)
 	t.Run("ForceDeleteCompany", company.ExpectStatus(204).ForceDELETE)
 	t.Run("ForceDeleteCompanyType", companyType.ExpectStatus(204).ForceDELETE)

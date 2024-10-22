@@ -13,18 +13,13 @@ func Branch(Gorm *handlers.Gorm, App *fiber.App) {
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
 	Associations := []string{}
-	cb := controllers.Branch{
+	cb := &controllers.Branch{
 		Request: RequestHandler,
 		Middleware: Middleware,
 		Associations: Associations,
 	}
 	r := App.Group("/company/:companyId/branch")
 
-	r.Post("/", cb.CreateOne) // ok
-	r.Get("/", cb.GetAll) // ok
-	r.Get("/:id", cb.GetOneById) // ok
-	r.Delete("/:id", cb.DeleteOneById) // ok
-	r.Delete("/:id/force", cb.ForceDeleteOneById) // ok
-	r.Patch("/:id", cb.UpdateOneById) // ok
+	controllers.CreateRoutes(r, cb)
 	
 }

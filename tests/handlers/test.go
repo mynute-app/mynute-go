@@ -6,6 +6,18 @@ import (
 	"testing"
 )
 
+type ITester interface {
+	ExpectStatus(int) *Tester
+	POST(*testing.T)
+	PATCH(*testing.T)
+	DELETE(*testing.T)
+	ForceDELETE(*testing.T)
+	GET(*testing.T)
+	ForceGET(*testing.T)
+}
+
+var _ ITester = (*Tester)(nil)
+
 type Tester struct {
 	Entity         string
 	BaseURL        string
@@ -84,6 +96,17 @@ func (test *Tester) ForceDELETE(t *testing.T) {
 
 func (test *Tester) GET(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.RelatedPath, test.EntityID)
+	HTTP := HttpClient{}
+	HTTP.
+		SetTest(t).
+		URL(url).
+		Method(http.MethodGet).
+		ExpectStatus(test.expectedStatus).
+		Send(nil)
+}
+
+func (test *Tester) ForceGET(t *testing.T) {
+	url := fmt.Sprintf("%s/%s/%d/force", test.BaseURL, test.RelatedPath, test.EntityID)
 	HTTP := HttpClient{}
 	HTTP.
 		SetTest(t).

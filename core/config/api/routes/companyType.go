@@ -13,19 +13,15 @@ func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
 	Associations := []string{}
-	cct := controllers.CompanyType{
+	cct := &controllers.CompanyType{
 		Request: RequestHandler,
 		Middleware: Middleware,
 		Associations: Associations,
 	}
 	r := App.Group("/companyType")
 
-	r.Post("/", cct.CreateOne) // ok
-	r.Get("/", cct.GetAll) // ok
-	r.Get("/:id", cct.GetOneById) // ok
 	r.Get("/name/:name", cct.GetOneByName) // ok
-	r.Delete("/:id", cct.DeleteOneById) // ok
-	r.Delete("/:id/force", cct.ForceDeleteOneById) // ok
-	r.Patch("/:id", cct.UpdateOneById) // ok
+
+	controllers.CreateRoutes(r, cct)
 	
 }

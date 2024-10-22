@@ -13,19 +13,14 @@ func Employee(Gorm *handlers.Gorm, App *fiber.App) {
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
 	Associations := []string{}
-	ce := controllers.Employee{
+	ce := &controllers.Employee{
 		Request: RequestHandler,
 		Middleware: Middleware,
 		Associations: Associations,
 	}
 	r := App.Group("/employee")
 
-	r.Post("/", ce.CreateOne) // ok
-	r.Get("/", ce.GetAll) // ok
-	r.Get("/:id", ce.GetOneById) // ok
-	// r.Get("/name/:name", ce.GetOneByName) // ok
 	r.Get("/email/:email", ce.GetOneByEmail) // ok
-	r.Patch("/:id", ce.UpdateOneById) // ok
-	r.Delete("/:id", ce.DeleteOneById) // ok
-	r.Delete("/:id/force", ce.ForceDeleteOneById) // ok
+
+	controllers.CreateRoutes(r, ce)
 }
