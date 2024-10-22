@@ -17,10 +17,10 @@ type CompanyType struct {
 	Gorm *handlers.Gorm
 }
 
-type CompanyTypeActions struct{}
+type CompanyTypeMiddlewareActions struct{}
 
 // Middleware for Create operation
-func (cta *CompanyTypeActions) Create(c fiber.Ctx) (int, error) {
+func (cta *CompanyTypeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
 	companyType, err := lib.GetFromCtx[*models.CompanyType](c, keys.Model)
@@ -38,7 +38,7 @@ func (cta *CompanyTypeActions) Create(c fiber.Ctx) (int, error) {
 }
 
 // Middleware for Update operation
-func (cta *CompanyTypeActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (cta *CompanyTypeMiddlewareActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	validateUpdate := func(c fiber.Ctx) (int, error) {
 		keys := namespace.GeneralKey
 		// Retrieve changes from c.Locals
@@ -71,7 +71,7 @@ func (cta *CompanyTypeActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (in
 }
 
 // Middleware for Delete operation
-func (cta *CompanyTypeActions) DeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (cta *CompanyTypeMiddlewareActions) DeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	validateDeletion := func(c fiber.Ctx) (int, error) {
 		companyTypeId := c.Params("id")
 		// Check if the company type is associated with any companies
@@ -93,7 +93,7 @@ func (cta *CompanyTypeActions) DeleteOneById(Gorm *handlers.Gorm) func(c fiber.C
 }
 
 // Middleware for Delete operation
-func (cta *CompanyTypeActions) ForceDeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (cta *CompanyTypeMiddlewareActions) ForceDeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	validateDeletion := func(c fiber.Ctx) (int, error) {
 		companyTypeId := c.Params("id")
 		// Check if the company type is associated with any companies
@@ -113,7 +113,7 @@ func (cta *CompanyTypeActions) ForceDeleteOneById(Gorm *handlers.Gorm) func(c fi
 	return validateDeletion
 }
 
-var companyTypeActs = CompanyTypeActions{}
+var companyTypeActs = CompanyTypeMiddlewareActions{}
 
 func (ct *CompanyType) POST() []func(fiber.Ctx) (int, error) {
 	return []func(fiber.Ctx) (int, error){companyTypeActs.Create}

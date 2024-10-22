@@ -18,7 +18,7 @@ type Company struct {
 	Gorm *handlers.Gorm
 }
 
-type CompanyActions struct {}
+type CompanyMiddlewareActions struct {}
 
 func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company models.Company) (int, error) {
 	companyID := c.Params("companyId")
@@ -33,7 +33,7 @@ func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company models.Company) (int, 
 	return 0, nil
 }
 
-func (ca *CompanyActions) Create(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (ca *CompanyMiddlewareActions) Create(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	validateCreation := func(c fiber.Ctx) (int, error) {
 		company, err := lib.GetFromCtx[*models.Company](c, namespace.GeneralKey.Model)
 		if err != nil {
@@ -67,7 +67,7 @@ func (ca *CompanyActions) Create(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, er
 	return validateCreation
 }
 
-func (ca *CompanyActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (ca *CompanyMiddlewareActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	validateUpdates := func(c fiber.Ctx) (int, error) {
 		changes, err := lib.GetFromCtx[map[string]interface{}](c, namespace.GeneralKey.Changes)
 		if err != nil {
@@ -94,7 +94,7 @@ func (ca *CompanyActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, er
 	return validateUpdates
 }
 
-var companyActs = CompanyActions{}
+var companyActs = CompanyMiddlewareActions{}
 
 func (cc *Company) POST() []func(fiber.Ctx) (int, error) {
 	return []func(fiber.Ctx) (int, error){companyActs.Create(cc.Gorm)}

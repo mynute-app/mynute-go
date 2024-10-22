@@ -14,9 +14,9 @@ type Branch struct {
 	Gorm *handlers.Gorm
 }
 
-type BranchActions struct {}
+type BranchMiddlewareActions struct {}
 
-func (ba *BranchActions) CheckCompany(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+func (ba *BranchMiddlewareActions) CheckCompany(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	checkCompany := func(c fiber.Ctx) (int, error) {
 		var company models.Company
 		if s, err := GetCompany(Gorm, c, company); err != nil {
@@ -39,7 +39,7 @@ func (ba *BranchActions) CheckCompany(Gorm *handlers.Gorm) func(c fiber.Ctx) (in
 	return checkCompany
 }
 
-func (ba *BranchActions) Create(c fiber.Ctx) (int, error) {
+func (ba *BranchMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 	service, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
@@ -52,7 +52,7 @@ func (ba *BranchActions) Create(c fiber.Ctx) (int, error) {
 	return 0, nil
 }
 
-var branchActs = BranchActions{}
+var branchActs = BranchMiddlewareActions{}
 
 func (cb *Branch) POST() []func(fiber.Ctx) (int, error) {
 	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm), branchActs.Create}

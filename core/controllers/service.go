@@ -17,7 +17,7 @@ func NewServiceController(Req *handlers.Request, Mid middleware.IMiddleware) *Se
 		BaseController: BaseController[models.Service, DTO.Service]{
 			Request:     Req,
 			Middleware:  Mid,
-			Associations: []string{"Branch"},
+			Associations: []string{"ServiceType"},
 		},
 	}
 }

@@ -12,14 +12,8 @@ func Service(Gorm *handlers.Gorm, App *fiber.App) {
 	Middleware := &middleware.Service{Gorm: Gorm}
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
-	Associations := []string{"ServiceType"}
-	cs := &controllers.Service{
-		Request: RequestHandler,
-		Middleware: Middleware,
-		Associations: Associations,
-	}
+	cs := controllers.NewServiceController(RequestHandler, Middleware)
 	r := App.Group("/service")
 
 	controllers.CreateRoutes(r, cs)
-
 }

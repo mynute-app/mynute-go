@@ -5,6 +5,8 @@ import (
 	"agenda-kaki-go/core/config/db/models"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
@@ -20,4 +22,9 @@ func NewEmployeeController(Req *handlers.Request, Mid middleware.IMiddleware) *E
 			Associations: []string{"Branch"},
 		},
 	}
+}
+
+// Custom extension method to get an employee by email
+func (cc *EmployeeController) GetOneByEmail(c fiber.Ctx) error {
+	return cc.GetBy("email", c)
 }
