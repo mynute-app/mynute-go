@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+var _ IController = (*Employee)(nil)
+
 type Employee struct {
 	Request    *handlers.Request
 	Middleware *middleware.Employee
@@ -20,6 +22,14 @@ func (ce *Employee) getBy(paramKey string, c fiber.Ctx) error {
 	var dto []DTO.Employee
 	mdws := []func(fiber.Ctx) (int, error){}
 	ce.Request.GetBy(c, paramKey, &model, &dto, ce.Associations, mdws)
+	return nil
+}
+
+func (ce *Employee) forceGetBy(paramKey string, c fiber.Ctx) error {
+	var model []models.Employee
+	var dto []DTO.Employee
+	mdws := []func(fiber.Ctx) (int, error){}
+	ce.Request.ForceGetBy(c, paramKey, &model, &dto, ce.Associations, mdws)
 	return nil
 }
 
@@ -36,6 +46,8 @@ func (ce *Employee) ForceDeleteOneById(c fiber.Ctx) error {
 	ce.Request.ForceDeleteOneById(c, &model, mdws)
 	return nil
 }
+
+
 
 func (ce *Employee) UpdateOneById(c fiber.Ctx) error {
 	var model models.Employee
@@ -64,4 +76,12 @@ func (ce *Employee) GetOneById(c fiber.Ctx) error {
 
 func (ce *Employee) GetOneByEmail(c fiber.Ctx) error {
 	return ce.getBy("email", c)
+}
+
+func (ce *Employee) ForceGetAll(c fiber.Ctx) error {
+	return ce.forceGetBy("", c)
+}
+
+func (ce *Employee) ForceGetOneById(c fiber.Ctx) error {
+	return ce.forceGetBy("id", c)
 }

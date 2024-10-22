@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+var _ IController = (*Branch)(nil)
+
 type Branch struct {
 	Request      *handlers.Request
 	Middleware   *middleware.Branch
@@ -20,6 +22,14 @@ func (cb *Branch) getBy(paramKey string, c fiber.Ctx) error {
 	var dto []DTO.Branch
 	mdws := []func(fiber.Ctx) (int, error){cb.Middleware.CheckCompany}
 	cb.Request.GetBy(c, paramKey, &model, &dto, cb.Associations, mdws)
+	return nil
+}
+
+func (cb *Branch) forceGetBy(paramKey string, c fiber.Ctx) error {
+	var model []models.Branch
+	var dto []DTO.Branch
+	mdws := []func(fiber.Ctx) (int, error){cb.Middleware.CheckCompany}
+	cb.Request.ForceGetBy(c, paramKey, &model, &dto, cb.Associations, mdws)
 	return nil
 }
 
@@ -64,5 +74,13 @@ func (cb *Branch) GetAll(c fiber.Ctx) error {
 
 func (cb *Branch) GetOneById(c fiber.Ctx) error {
 	return cb.getBy("id", c)
+}
+
+func (cb *Branch) ForceGetOneById(c fiber.Ctx) error {
+	return cb.forceGetBy("id", c)
+}
+
+func (cb *Branch) ForceGetAll(c fiber.Ctx) error {
+	return cb.forceGetBy("", c)
 }
 
