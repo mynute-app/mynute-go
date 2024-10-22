@@ -3,6 +3,7 @@ package handlers
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -160,6 +161,15 @@ func (ac *ActionChain) DeleteOneById() {
 		return
 	}
 
+	if err := ac.h.Gorm.GetOneBy("id", id, model, nil); err != nil {
+		if err.Error() == "record not found" {
+			ac.sendResponse.Http404()
+			return
+		}
+		ac.sendResponse.Http500(err)
+		return
+	}
+
 	if err := ac.h.Gorm.DeleteOneById(id, model); err != nil {
 		if err.Error() == "record not found" {
 			ac.sendResponse.Http404()
@@ -168,6 +178,8 @@ func (ac *ActionChain) DeleteOneById() {
 		ac.sendResponse.Http500(err)
 		return
 	}
+
+	log.Printf("Deleted record with ID: %s", id)
 
 	ac.sendResponse.Http204()
 }
@@ -182,6 +194,15 @@ func (ac *ActionChain) ForceDeleteOneById() {
 	id := ac.ctx.Params(string(keys.QueryId))
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
+		ac.sendResponse.Http500(err)
+		return
+	}
+
+	if err := ac.h.Gorm.ForceGetOneBy("id", id, model, nil); err != nil {
+		if err.Error() == "record not found" {
+			ac.sendResponse.Http404()
+			return
+		}
 		ac.sendResponse.Http500(err)
 		return
 	}

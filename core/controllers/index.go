@@ -47,7 +47,7 @@ func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c fiber.Ctx) error 
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx, ) error {
+func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx) error {
 	var model []MODEL
 	var dto []DTO
 	bc.Request.ForceGetBy(c, paramKey, &model, &dto, bc.Associations, bc.Middleware.ForceGET())
@@ -86,11 +86,11 @@ func (bc *BaseController[MODEL, DTO]) GetAll(c fiber.Ctx) error {
 }
 
 func (bc *BaseController[MODEL, DTO]) GetOneById(c fiber.Ctx) error {
-	return bc.GetBy("", c)
+	return bc.GetBy("id", c)
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetOneById(c fiber.Ctx) error {
-	return bc.ForceGetBy("", c)
+	return bc.ForceGetBy("id", c)
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetAll(c fiber.Ctx) error {

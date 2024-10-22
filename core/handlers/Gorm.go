@@ -91,16 +91,28 @@ func (p Gorm) ForceGetOneBy(param string, value string, model interface{}, assoc
 
 // DeleteOneById deletes a single record by its ID
 func (p Gorm) DeleteOneById(value string, model interface{}) error {
+	query := p.DB
+
+	if query.Error != nil {
+		return query.Error
+	}
+
 	cond := fmt.Sprintf("%s = ?", "id")
 
-	return p.DB.Model(model).Delete(cond, value).Error
+	return query.Model(model).Delete(cond, value).Error
 }
 
 // ForceDeleteOneById deletes a single record by its ID, including soft-deleted records
 func (p Gorm) ForceDeleteOneById(value string, model interface{}) error {
+	query := p.DB.Unscoped().Model(model)
+
+	if query.Error != nil {
+		return query.Error
+	}
+
 	cond := fmt.Sprintf("%s = ?", "id")
 
-	return p.DB.Unscoped().Model(model).Delete(cond, value).Error
+	return query.Delete(cond, value).Error
 }
 
 // GetAll fetches all records

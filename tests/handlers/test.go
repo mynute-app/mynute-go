@@ -107,6 +107,7 @@ func (test *Tester) GET(t *testing.T) {
 
 func (test *Tester) ForceGET(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/%d/force", test.BaseURL, test.RelatedPath, test.EntityID)
+	t.Logf("URL: %s", url)
 	HTTP := HttpClient{}
 	HTTP.
 		SetTest(t).

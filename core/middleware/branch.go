@@ -19,7 +19,7 @@ type BranchMiddlewareActions struct {}
 func (ba *BranchMiddlewareActions) CheckCompany(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
 	checkCompany := func(c fiber.Ctx) (int, error) {
 		var company models.Company
-		if s, err := GetCompany(Gorm, c, company); err != nil {
+		if s, err := GetCompany(Gorm, c, &company); err != nil {
 			return s, err
 		}
 

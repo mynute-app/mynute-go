@@ -8,6 +8,7 @@ type TypeStruct struct {
 	Dto          ContextKey
 	Associations ContextKey
 	QueryId      ContextKey
+	CompanyId    ContextKey
 }
 
 var GeneralKey = TypeStruct{
@@ -16,4 +17,5 @@ var GeneralKey = TypeStruct{
 	Dto:          "dto_key",
 	Associations: "associations_key",
 	QueryId:      "id",
+	CompanyId:    "companyId",
 }

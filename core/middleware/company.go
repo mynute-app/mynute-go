@@ -20,8 +20,8 @@ type Company struct {
 
 type CompanyMiddlewareActions struct {}
 
-func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company models.Company) (int, error) {
-	companyID := c.Params("companyId")
+func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company *models.Company) (int, error) {
+	companyID := c.Params(string(namespace.GeneralKey.CompanyId))
 	if companyID == "" {
 		return 400, errors.New("missing companyId")
 	}
