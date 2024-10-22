@@ -16,8 +16,8 @@ type BaseController[MODEL any, DTO any] struct {
 }
 
 type IController interface {
-	getBy(paramKey string, c fiber.Ctx) error
-	forceGetBy(paramKey string, c fiber.Ctx) error
+	GetBy(paramKey string, c fiber.Ctx) error
+	ForceGetBy(paramKey string, c fiber.Ctx) error
 	CreateOne(c fiber.Ctx) error
 	GetAll(c fiber.Ctx) error
 	GetOneById(c fiber.Ctx) error
@@ -40,14 +40,14 @@ func CreateRoutes(r fiber.Router, ci IController) {
 	id.Get("/force", ci.ForceGetOneById)       // ok
 }
 
-func (bc *BaseController[MODEL, DTO]) getBy(paramKey string, c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c fiber.Ctx) error {
 	var model []MODEL
 	var dto []DTO
 	bc.Request.GetBy(c, paramKey, &model, &dto, bc.Associations, bc.Middleware.GET())
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) forceGetBy(paramKey string, c fiber.Ctx, ) error {
+func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx, ) error {
 	var model []MODEL
 	var dto []DTO
 	bc.Request.ForceGetBy(c, paramKey, &model, &dto, bc.Associations, bc.Middleware.ForceGET())
@@ -82,17 +82,17 @@ func (bc *BaseController[MODEL, DTO]) CreateOne(c fiber.Ctx) error {
 }
 
 func (bc *BaseController[MODEL, DTO]) GetAll(c fiber.Ctx) error {
-	return bc.getBy("", c)
+	return bc.GetBy("", c)
 }
 
 func (bc *BaseController[MODEL, DTO]) GetOneById(c fiber.Ctx) error {
-	return bc.getBy("", c)
+	return bc.GetBy("", c)
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetOneById(c fiber.Ctx) error {
-	return bc.forceGetBy("", c)
+	return bc.ForceGetBy("", c)
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetAll(c fiber.Ctx) error {
-	return bc.forceGetBy("", c)
+	return bc.ForceGetBy("", c)
 }

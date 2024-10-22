@@ -9,81 +9,21 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-var _ IController = (*CompanyType)(nil)
-
-type CompanyType struct {
-	Request    *handlers.Request
-	Middleware *middleware.CompanyType
-	Associations []string
+type CompanyTypeController struct {
+	BaseController[models.CompanyType, DTO.CompanyType]
 }
 
-func (ctc *CompanyType) getBy(paramKey string, c fiber.Ctx) error {
-	var model []models.CompanyType
-	var dto []DTO.CompanyType
-	assocs := []string{}
-	mdws := []func(fiber.Ctx) (int, error){}
-	ctc.Request.GetBy(c, paramKey, &model, &dto, assocs, mdws)
-	return nil
+func NewCompanyTypeController(Req *handlers.Request, Mid middleware.IMiddleware) *CompanyTypeController {
+	return &CompanyTypeController{
+		BaseController: BaseController[models.CompanyType, DTO.CompanyType]{
+			Request:     Req,
+			Middleware:  Mid,
+			Associations: []string{"Companies"},
+		},
+	}
 }
 
-func (ctc *CompanyType) forceGetBy(paramKey string, c fiber.Ctx) error {
-	var model []models.CompanyType
-	var dto []DTO.CompanyType
-	assocs := []string{}
-	mdws := []func(fiber.Ctx) (int, error){}
-	ctc.Request.ForceGetBy(c, paramKey, &model, &dto, assocs, mdws)
-	return nil
-}
-
-func (ctc *CompanyType) DeleteOneById(c fiber.Ctx) error {
-	var model models.CompanyType
-	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
-	ctc.Request.DeleteOneById(c, &model, mdws)
-	return nil
-}
-
-func (ctc *CompanyType) ForceDeleteOneById(c fiber.Ctx) error {
-	var model models.CompanyType
-	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.DeleteOneById}
-	ctc.Request.ForceDeleteOneById(c, &model, mdws)
-	return nil
-}
-
-func (ctc *CompanyType) ForceGetOneById(c fiber.Ctx) error {
-	return ctc.forceGetBy("id", c)
-}
-
-func (ctc *CompanyType) ForceGetAll(c fiber.Ctx) error {
-	return ctc.forceGetBy("", c)
-}
-
-func (ctc *CompanyType) UpdateOneById(c fiber.Ctx) error {
-	var model models.CompanyType
-	var dto DTO.CompanyType
-	var changes map[string]interface{}
-	assocs := []string{}
-	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Update}
-	ctc.Request.UpdateOneById(c, &model, &dto, changes, assocs, mdws)
-	return nil
-}
-
-func (ctc *CompanyType) CreateOne(c fiber.Ctx) error {
-	var model models.CompanyType
-	var dto DTO.CompanyType
-	assocs := []string{}
-	mdws := []func(fiber.Ctx) (int, error){ctc.Middleware.Create}
-	ctc.Request.CreateOne(c, &model, &dto, assocs, mdws)
-	return nil
-}
-
-func (ctc *CompanyType) GetAll(c fiber.Ctx) error {
-	return ctc.getBy("", c)
-}
-
-func (ctc *CompanyType) GetOneById(c fiber.Ctx) error {
-	return ctc.getBy("id", c)
-}
-
-func (ctc *CompanyType) GetOneByName(c fiber.Ctx) error {
-	return ctc.getBy("name", c)
+// Custom extension method to get a company type by name
+func (cc *CompanyTypeController) GetOneByName(c fiber.Ctx) error {
+	return cc.GetBy("name", c)
 }

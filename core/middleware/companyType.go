@@ -11,12 +11,16 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+var _ IMiddleware = (*CompanyType)(nil)
+
 type CompanyType struct {
 	Gorm *handlers.Gorm
 }
 
+type CompanyTypeActions struct{}
+
 // Middleware for Create operation
-func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
+func (cta *CompanyTypeActions) Create(c fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
 	companyType, err := lib.GetFromCtx[*models.CompanyType](c, keys.Model)
@@ -34,72 +38,103 @@ func (ctm *CompanyType) Create(c fiber.Ctx) (int, error) {
 }
 
 // Middleware for Update operation
-func (ctm *CompanyType) Update(c fiber.Ctx) (int, error) {
-	keys := namespace.GeneralKey
-	// Retrieve changes from c.Locals
-	changes, err := lib.GetFromCtx[map[string]interface{}](c, keys.Changes)
-	if err != nil {
-		return 500, err
+func (cta *CompanyTypeActions) Update(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+	validateUpdate := func(c fiber.Ctx) (int, error) {
+		keys := namespace.GeneralKey
+		// Retrieve changes from c.Locals
+		changes, err := lib.GetFromCtx[map[string]interface{}](c, keys.Changes)
+		if err != nil {
+			return 500, err
+		}
+
+		log.Printf("Changes: %v", changes)
+
+		// Perform validation
+		if nameValue, exists := changes["name"]; exists {
+			name, ok := nameValue.(string)
+			if !ok {
+				return 500, errors.New("invalid 'name' on 'changes' data type")
+			}
+			if err := lib.ValidateName(name, "companyType"); err != nil {
+				return 400, err
+			}
+			// Check if the name already exists
+			var companyType models.CompanyType
+			if err := Gorm.GetOneBy("name", name, &companyType, nil); err == nil {
+				return 400, errors.New("companyType.Name already exists")
+			}
+		}
+		// Proceed to the next middleware or handler
+		return 0, nil
 	}
-
-	log.Printf("Changes: %v", changes)
-
-	// Perform validation
-	if nameValue, exists := changes["name"]; exists {
-		name, ok := nameValue.(string)
-		if !ok {
-			return 500, errors.New("invalid 'name' on 'changes' data type")
-		}
-		if err := lib.ValidateName(name, "companyType"); err != nil {
-			return 400, err
-		}
-		// Check if the name already exists
-		var companyType models.CompanyType
-		if err := ctm.Gorm.GetOneBy("name", name, &companyType, nil); err == nil {
-			return 400, errors.New("companyType.Name already exists")
-		}
-	}
-
-	// Proceed to the next middleware or handler
-	return 0, nil
+	return validateUpdate
 }
 
 // Middleware for Delete operation
-func (ctm *CompanyType) DeleteOneById(c fiber.Ctx) (int, error) {
-	companyTypeId := c.Params("id")
-
-	// Check if the company type is associated with any companies
-	var companies []models.Company
-	if err := ctm.Gorm.DB.
-		Model(&companies).
-		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
-		Where("company_company_types.company_type_id = ?", companyTypeId).
-		Find(&companies).Error; err != nil {
-		return 500, err
+func (cta *CompanyTypeActions) DeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+	validateDeletion := func(c fiber.Ctx) (int, error) {
+		companyTypeId := c.Params("id")
+		// Check if the company type is associated with any companies
+		var companies []models.Company
+		if err := Gorm.DB.
+			Model(&companies).
+			Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
+			Where("company_company_types.company_type_id = ?", companyTypeId).
+			Find(&companies).Error; err != nil {
+			return 500, err
+		}
+		if len(companies) > 0 {
+			return 400, errors.New("companyType is associated with companies")
+		}
+		// // Proceed to the next middleware or handler
+		return 0, nil
 	}
-	if len(companies) > 0 {
-		return 400, errors.New("companyType is associated with companies")
-	}
-
-	// // Proceed to the next middleware or handler
-	return 0, nil
+	return validateDeletion
 }
 
 // Middleware for Delete operation
-func (ctm *CompanyType) ForceDeleteOneById(c fiber.Ctx) (int, error) {
-	companyTypeId := c.Params("id")
-	// Check if the company type is associated with any companies
-	var companies []models.Company
-	if err := ctm.Gorm.DB.
-		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
-		Where("company_company_types.company_type_id = ?", companyTypeId).
-		Find(&companies).Error; err != nil {
-		return 500, err
+func (cta *CompanyTypeActions) ForceDeleteOneById(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+	validateDeletion := func(c fiber.Ctx) (int, error) {
+		companyTypeId := c.Params("id")
+		// Check if the company type is associated with any companies
+		var companies []models.Company
+		if err := Gorm.DB.
+			Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
+			Where("company_company_types.company_type_id = ?", companyTypeId).
+			Find(&companies).Error; err != nil {
+			return 500, err
+		}
+		if len(companies) > 0 {
+			return 400, errors.New("companyType is associated with companies")
+		}
+		// // Proceed to the next middleware or handler
+		return 0, nil
 	}
-	if len(companies) > 0 {
-		return 400, errors.New("companyType is associated with companies")
-	}
+	return validateDeletion
+}
 
-	// // Proceed to the next middleware or handler
-	return 0, nil
+var companyTypeActs = CompanyTypeActions{}
+
+func (ct *CompanyType) POST() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){companyTypeActs.Create}
+}
+
+func (ct *CompanyType) PATCH() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){companyTypeActs.Update(ct.Gorm)}
+}
+
+func (ct *CompanyType) DELETE() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){companyTypeActs.DeleteOneById(ct.Gorm)}
+}
+
+func (ct *CompanyType) ForceDELETE() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){companyTypeActs.ForceDeleteOneById(ct.Gorm)}
+}
+
+func (ct *CompanyType) GET() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){}
+}
+
+func (ct *CompanyType) ForceGET() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){}
 }

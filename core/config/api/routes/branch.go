@@ -12,14 +12,7 @@ func Branch(Gorm *handlers.Gorm, App *fiber.App) {
 	Middleware := &middleware.Branch{Gorm: Gorm}
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
-	Associations := []string{}
-	cb := &controllers.Branch{
-		Request: RequestHandler,
-		Middleware: Middleware,
-		Associations: Associations,
-	}
+	cb := controllers.NewBranchController(RequestHandler, Middleware)
 	r := App.Group("/company/:companyId/branch")
-
 	controllers.CreateRoutes(r, cb)
-	
 }

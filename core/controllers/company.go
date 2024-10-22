@@ -9,81 +9,30 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-var _ IController = (*Company)(nil) // Ensures that the Struct implements the IController interface correctly
-
-type Company struct {
-	Request    *handlers.Request
-	Middleware *middleware.Company
-	Associations []string
+// CompanyController embeds BaseController in order to extend it with the functions below
+type CompanyController struct {
+	BaseController[models.Company, DTO.Company]
 }
 
-func (cc *Company) getBy(paramKey string, c fiber.Ctx) error {
-	var model []models.Company
-	var dto []DTO.Company
-	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.GetBy(c, paramKey, &model, &dto, cc.Associations, mdws)
-	return nil
+// Custom extension method to get a company by name
+func (cc *CompanyController) GetOneByName(c fiber.Ctx) error {
+	return cc.GetBy("name", c)
 }
 
-func (cc *Company) forceGetBy(paramKey string, c fiber.Ctx) error {
-	var model []models.Company
-	var dto []DTO.Company
-	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.ForceGetBy(c, paramKey, &model, &dto, cc.Associations, mdws)
-	return nil
+// Custom extension method to get a company by tax ID
+func (cc *CompanyController) GetOneByTaxId(c fiber.Ctx) error {
+	return cc.GetBy("tax_id", c)
 }
 
-func (cc *Company) UpdateOneById(c fiber.Ctx) error {
-	var model models.Company
-	var dto DTO.Company
-	var changes map[string]interface{}
-	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Update}
-	cc.Request.UpdateOneById(c, &model, &dto, changes, cc.Associations, mdws)
-	return nil
+// Constructor for CompanyController
+func NewCompanyController(Req *handlers.Request, Mid middleware.IMiddleware) *CompanyController {
+	return &CompanyController{
+		BaseController: BaseController[models.Company, DTO.Company]{
+			Request:     Req,
+			Middleware:  Mid,
+			Associations: []string{"CompanyTypes", "Branches"},
+		},
+	}
 }
 
-func (cc *Company) DeleteOneById(c fiber.Ctx) error {
-	var model models.Company
-	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.DeleteOneById(c, &model, mdws)
-	return nil
-}
 
-func (cc *Company) ForceDeleteOneById(c fiber.Ctx) error {
-	var model models.Company
-	mdws := []func(fiber.Ctx) (int, error){}
-	cc.Request.ForceDeleteOneById(c, &model, mdws)
-	return nil
-}
-
-func (cc *Company) CreateOne(c fiber.Ctx) error {
-	var model models.Company
-	var dto DTO.Company
-	mdws := []func(fiber.Ctx) (int, error){cc.Middleware.Create}
-	cc.Request.CreateOne(c, &model, &dto, cc.Associations, mdws)
-	return nil
-}
-
-func (cc *Company) GetAll(c fiber.Ctx) error {
-	return cc.getBy("", c)
-}
-
-func (cc *Company) ForceGetAll(c fiber.Ctx) error {
-	return cc.forceGetBy("", c)
-}
-
-func (cc *Company) ForceGetOneById(c fiber.Ctx) error {
-	return cc.forceGetBy("id", c)
-}
-
-func (cc *Company) GetOneById(c fiber.Ctx) error {
-	return cc.getBy("id", c)
-}
-
-func (cc *Company) GetOneByName(c fiber.Ctx) error {
-	return cc.getBy("name", c)
-}
-
-func (cc *Company) GetOneByTaxId(c fiber.Ctx) error {
-	return cc.getBy("tax_id", c)
-}

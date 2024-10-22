@@ -12,14 +12,8 @@ func CompanyType(Gorm *handlers.Gorm, App *fiber.App) {
 	Middleware := &middleware.CompanyType{Gorm: Gorm}
 	HTTP := &handlers.HTTP{Gorm: Gorm}
 	RequestHandler := &handlers.Request{HTTP: HTTP}
-	Associations := []string{}
-	cct := &controllers.CompanyType{
-		Request: RequestHandler,
-		Middleware: Middleware,
-		Associations: Associations,
-	}
+	cct := controllers.NewCompanyTypeController(RequestHandler, Middleware)
 	r := App.Group("/companyType")
-
 	r.Get("/name/:name", cct.GetOneByName) // ok
 
 	controllers.CreateRoutes(r, cct)

@@ -5,42 +5,41 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
-	"errors"
-
 	"github.com/gofiber/fiber/v3"
 )
+
+var _ IMiddleware = (*Branch)(nil)
 
 type Branch struct {
 	Gorm *handlers.Gorm
 }
 
-func (cb *Branch) CheckCompany(c fiber.Ctx) (int, error) {
-	companyId := c.Params("companyId")
-	if companyId == "" {
-		return 400, errors.New("missing companyId")
-	}
+type BranchActions struct {}
 
-	// Check if the company with the following id exists on the database.
-	var company models.Company
-	if err := cb.Gorm.GetOneBy("id", companyId, &company, []string{}); err != nil {
-		return 400, err
-	}
+func (ba *BranchActions) CheckCompany(Gorm *handlers.Gorm) func(c fiber.Ctx) (int, error) {
+	checkCompany := func(c fiber.Ctx) (int, error) {
+		var company models.Company
+		if s, err := GetCompany(Gorm, c, company); err != nil {
+			return s, err
+		}
 
-	if c.Method() == "GET" {
+		if c.Method() == "GET" {
+			return 0, nil
+		}
+
+		branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
+		if err != nil {
+			return 500, err
+		}
+
+		branch.CompanyID = company.ID
+
 		return 0, nil
 	}
-
-	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
-	if err != nil {
-		return 500, err
-	}
-
-	branch.CompanyID = company.ID
-
-	return 0, nil
+	return checkCompany
 }
 
-func (cb *Branch) Create(c fiber.Ctx) (int, error) {
+func (ba *BranchActions) Create(c fiber.Ctx) (int, error) {
 	service, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
@@ -51,4 +50,30 @@ func (cb *Branch) Create(c fiber.Ctx) (int, error) {
 	}
 	// Proceed to the next middleware or handler
 	return 0, nil
+}
+
+var branchActs = BranchActions{}
+
+func (cb *Branch) POST() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm), branchActs.Create}
+}
+
+func (cb *Branch) GET() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm)}
+}
+
+func (cb *Branch) DELETE() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm)}
+}
+
+func (cb *Branch) PATCH() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm)}
+}
+
+func (cb *Branch) ForceGET() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm)}
+}
+
+func (cb *Branch) ForceDELETE() []func(fiber.Ctx) (int, error) {
+	return []func(fiber.Ctx) (int, error){branchActs.CheckCompany(cb.Gorm)}
 }
