@@ -24,7 +24,7 @@ type Employee struct {
 	Company        Company     `gorm:"constraint:OnDelete:CASCADE;"`     // Foreign key to Company
 	Branches       []Branch    `gorm:"many2many:branch_employees;"`      // Many-to-many relation with Branch
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
-	Schedules      []Schedule  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
+	Appointment      []Appointment  `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
 	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
 }
 

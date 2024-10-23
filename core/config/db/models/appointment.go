@@ -7,7 +7,7 @@ import (
 )
 
 // Fifth step: Scheduling with service and employee availability.
-type Schedule struct {
+type Appointment struct {
 	gorm.Model
 	ServiceID  uint      `json:"service_id"`
 	Service    Service   `gorm:"foreignKey:ServiceID"`

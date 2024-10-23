@@ -19,7 +19,7 @@ func NewEmployeeController(Req *handlers.Request, Mid middleware.IMiddleware) *E
 		BaseController: BaseController[models.Employee, DTO.Employee]{
 			Request:     Req,
 			Middleware:  Mid,
-			Associations: []string{"Branch"},
+			Associations: []string{"Branches", "Services", "Schedules"},
 		},
 	}
 }
