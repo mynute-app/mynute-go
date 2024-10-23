@@ -16,7 +16,7 @@ func NewBranchController(Req *handlers.Request, Mid middleware.IMiddleware) *Bra
 		BaseController: BaseController[models.Branch, DTO.Branch]{
 			Request:     Req,
 			Middleware:  Mid,
-			Associations: []string{"Company"},
+			Associations: []string{"Company", "Employees", "Services"},
 		},
 	}
 }
