@@ -1,14 +1,13 @@
 package namespace
 
-type ContextKey string
-
 type TypeStruct struct {
-	Model        ContextKey
-	Changes      ContextKey
-	Dto          ContextKey
-	Associations ContextKey
-	QueryId      ContextKey
-	CompanyId    ContextKey
+	Model        string
+	Changes      string
+	Dto          string
+	Associations string
+	QueryId      string
+	CompanyId    string
+	BaseURL      string
 }
 
 var GeneralKey = TypeStruct{
@@ -18,4 +17,5 @@ var GeneralKey = TypeStruct{
 	Associations: "associations_key",
 	QueryId:      "id",
 	CompanyId:    "companyId",
+	BaseURL:      "http://localhost:3000",
 }

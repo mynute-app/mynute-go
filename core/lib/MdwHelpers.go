@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"errors"
 	"fmt"
 
@@ -9,12 +8,12 @@ import (
 )
 
 // GetFromCtx retrieves an interface from Fiber context
-func GetFromCtx[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
+func GetFromCtx[T any](c fiber.Ctx, key string) (T, error) {
 	interfaceData := c.Locals(key)
 	var zero T
 
 	if interfaceData == nil {
-		return zero, InterfaceDataNotFound(string(key))
+		return zero, InterfaceDataNotFound(key)
 	}
 
 	interfaceValue, ok := interfaceData.(T)
@@ -23,7 +22,7 @@ func GetFromCtx[T any](c fiber.Ctx, key namespace.ContextKey) (T, error) {
 		return interfaceValue, nil
 	}
 
-	return zero, InvalidDataType(string(key))
+	return zero, InvalidDataType(key)
 }
 
 func InterfaceDataNotFound(interfaceName string) error {
