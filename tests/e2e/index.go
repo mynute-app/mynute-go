@@ -1,0 +1,114 @@
+package e2e
+
+import (
+	"agenda-kaki-go/core/config/namespace"
+	"agenda-kaki-go/tests/handlers"
+	"fmt"
+	"testing"
+)
+
+var _ IBaseE2EActions = (*BaseE2EActions)(nil)
+
+type IBaseE2EActions interface {
+	GenerateTesters(n int, entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions
+	CreateAllTesters(s int) *BaseE2EActions
+	GetAllTesters(s int) *BaseE2EActions
+	ForceGetAllTesters(s int) *BaseE2EActions
+	UpdateAllTesters(s int) *BaseE2EActions
+	DeleteAllTesters(s int) *BaseE2EActions
+	ForceDeleteAllTesters(s int) *BaseE2EActions
+	GetOneByIdTesters(s int) *BaseE2EActions
+	ForceGetOneByIdTesters(s int) *BaseE2EActions
+	RunAll() *BaseE2EActions
+}
+
+type BaseE2EActions struct {
+	T *testing.T
+	Testers []handlers.Tester
+}
+
+func (b *BaseE2EActions) GenerateTesters(n int, entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
+	for i := 0; i < n; i++ {
+		tester := handlers.Tester{
+			Entity:      path,
+			BaseURL:     namespace.GeneralKey.BaseURL,
+			RelatedPath: path,
+			PostBody:    postBody,
+			PatchBody:   patchBody,
+		}
+		b.Testers = append(b.Testers, tester)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) CreateAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("Create%v", tester.Entity), tester.ExpectStatus(201).POST)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) GetAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("Get%v", tester.Entity), tester.ExpectStatus(200).GET)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) ForceGetAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("ForceGet%v", tester.Entity), tester.ExpectStatus(200).ForceGET)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) UpdateAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("Update%v", tester.Entity), tester.ExpectStatus(200).PATCH)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) DeleteAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("Delete%v", tester.Entity), tester.ExpectStatus(204).DELETE)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) ForceDeleteAllTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("ForceDelete%v", tester.Entity), tester.ExpectStatus(204).ForceDELETE)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) GetOneByIdTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("GetOne%v", tester.Entity), tester.ExpectStatus(200).GET)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) ForceGetOneByIdTesters(s int) *BaseE2EActions {
+	for _, tester := range b.Testers {
+		b.T.Run(fmt.Sprintf("ForceGetOne%v", tester.Entity), tester.ExpectStatus(200).ForceGET)
+	}
+	return b
+}
+
+func (b *BaseE2EActions) RunAll() *BaseE2EActions {
+	b.
+		CreateAllTesters(201).
+		UpdateAllTesters(200).
+		GetAllTesters(200).
+		ForceGetAllTesters(200).
+		DeleteAllTesters(204).
+		GetAllTesters(404).
+		ForceGetAllTesters(200).
+		ForceDeleteAllTesters(204).
+		ForceGetAllTesters(404)
+	return b
+}
+
+

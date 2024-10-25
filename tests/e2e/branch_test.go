@@ -1,39 +1,36 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/tests/handlers"
+	"agenda-kaki-go/tests/e2e"
 	"agenda-kaki-go/tests/lib"
 	"testing"
 )
 
-type Branch struct {
-	T *testing.T
+func TestBranchFlow(t *testing.T) {
+	branch := &e2e.BaseE2EActions{T: t}
+	postBody := map[string]interface{}{"name": lib.GenerateRandomName("Branch")}
+	patchBody := map[string]interface{}{"name": lib.GenerateRandomName("Branch")}
+	branch.GenerateTesters(5, "branch", "branch", postBody, patchBody).RunAll()
 }
 
-type branchActios struct {
-	*Branch
-	Testers []handlers.Tester
-}
+// func (b *Branch) Init() *branchActios {
+// 	return &branchActios{Branch: b}
+// }
 
-func (b *Branch) Init() *branchActios {
-	return &branchActios{Branch: b}
-}
-
-func (b *branchActios) LoadTester(n int) *branchActios {
-	for i := 0; i < n; i++ {
-		branch := handlers.Tester{
-			Entity:  "branch",
-			BaseURL: namespace.GeneralKey.BaseURL,
-			PostBody: map[string]interface{}{
-				"name": lib.GenerateRandomName("Branch"),
-			},
-			PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("Branch")},
-		}
-		b.Testers = append(b.Testers, branch)
-	}
-	return b
-}
+// func (b *branchActios) LoadTester(n int) *branchActios {
+// 	for i := 0; i < n; i++ {
+// 		branch := handlers.Tester{
+// 			Entity:  "branch",
+// 			BaseURL: namespace.GeneralKey.BaseURL,
+// 			PostBody: map[string]interface{}{
+// 				"name": lib.GenerateRandomName("Branch"),
+// 			},
+// 			PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("Branch")},
+// 		}
+// 		b.Testers = append(b.Testers, branch)
+// 	}
+// 	return b
+// }
 
 // func TestBranchFlow(t *testing.T) {
 // 	t.Run("CreateCompanyType", companyType.ExpectStatus(201).POST)

@@ -1,40 +1,44 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/tests/handlers"
+	"agenda-kaki-go/tests/e2e"
 	"agenda-kaki-go/tests/lib"
 	"testing"
 )
 
-
-
-type CompanyType struct {
-	T *testing.T
+func TestCompanyTypeFlow(t *testing.T) {
+	companyType := &e2e.BaseE2EActions{T: t}
+	postBody := map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")}
+	patchBody := map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")}
+	companyType.GenerateTesters(5, "companyType", "companyType", postBody, patchBody).RunAll()
 }
 
-type companyTypeActios struct {
-	*CompanyType
-	Testers []handlers.Tester
-}
+// type CompanyType struct {
+// 	T *testing.T
+// }
 
-func (c *CompanyType) Init() *companyTypeActios {
-	return &companyTypeActios{CompanyType: c}
-}
+// type companyTypeActios struct {
+// 	*CompanyType
+// 	Testers []handlers.Tester
+// }
 
-func (c *companyTypeActios) LoadTester(n int) *companyTypeActios {
-	for i := 0; i < n; i++ {
-		companyType := handlers.Tester{
-			Entity:    "companyType",
-			RelatedPath: "companyType",
-			BaseURL:   namespace.GeneralKey.BaseURL,
-			PostBody:  map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
-			PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
-		}
-		c.Testers = append(c.Testers, companyType)
-	}
-	return c
-}
+// func (c *CompanyType) Init() *companyTypeActios {
+// 	return &companyTypeActios{CompanyType: c}
+// }
+
+// func (c *companyTypeActios) LoadTester(n int) *companyTypeActios {
+// 	for i := 0; i < n; i++ {
+// 		companyType := handlers.Tester{
+// 			Entity:    "companyType",
+// 			RelatedPath: "companyType",
+// 			BaseURL:   namespace.GeneralKey.BaseURL,
+// 			PostBody:  map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+// 			PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+// 		}
+// 		c.Testers = append(c.Testers, companyType)
+// 	}
+// 	return c
+// }
 
 // Run the test in debug mode to avoid cache.
 
