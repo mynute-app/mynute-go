@@ -6,11 +6,37 @@ import (
 	"testing"
 )
 
+var _ e2e.IEntity = (*CompanyType)(nil)
+
+type CompanyType struct {
+	*e2e.BaseE2EActions
+}
+
+func (c *CompanyType) GenerateTesters(n int) {
+	for i := 0; i < n; i++ {
+		c.GenerateTester(
+			"companyType",
+			"companyType",
+			map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+			map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+		)
+	}
+}
+
+func (c *CompanyType) Make(n int) {
+	c.GenerateTesters(n)
+}
+
+func (c *CompanyType) CreateDependencies(n int) {}
+
+func (c *CompanyType) ClearDependencies() {}
+
+
 func TestCompanyTypeFlow(t *testing.T) {
-	companyType := &e2e.BaseE2EActions{T: t}
-	postBody := map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")}
-	patchBody := map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")}
-	companyType.GenerateTesters(5, "companyType", "companyType", postBody, patchBody).RunAll()
+	companyType := &CompanyType{}
+	companyType.SetTest(t)
+	companyType.Make(10)
+	companyType.RunAll()
 }
 
 // type CompanyType struct {

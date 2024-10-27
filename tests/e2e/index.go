@@ -7,10 +7,17 @@ import (
 	"testing"
 )
 
+type IEntity interface {
+	Make(n int)
+	ClearDependencies()
+	CreateDependencies(n int)
+	GenerateTesters(n int)
+}
+
 var _ IBaseE2EActions = (*BaseE2EActions)(nil)
 
 type IBaseE2EActions interface {
-	GenerateTesters(n int, entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions
+	GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions
 	CreateAllTesters(s int) *BaseE2EActions
 	GetAllTesters(s int) *BaseE2EActions
 	ForceGetAllTesters(s int) *BaseE2EActions
@@ -20,6 +27,7 @@ type IBaseE2EActions interface {
 	GetOneByIdTesters(s int) *BaseE2EActions
 	ForceGetOneByIdTesters(s int) *BaseE2EActions
 	RunAll() *BaseE2EActions
+	SetTest (t *testing.T) *BaseE2EActions
 }
 
 type BaseE2EActions struct {
@@ -27,17 +35,20 @@ type BaseE2EActions struct {
 	Testers []handlers.Tester
 }
 
-func (b *BaseE2EActions) GenerateTesters(n int, entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
-	for i := 0; i < n; i++ {
-		tester := handlers.Tester{
-			Entity:      path,
-			BaseURL:     namespace.GeneralKey.BaseURL,
-			RelatedPath: path,
-			PostBody:    postBody,
-			PatchBody:   patchBody,
-		}
-		b.Testers = append(b.Testers, tester)
+func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
+	b.T = t
+	return b
+}
+
+func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
+	tester := handlers.Tester{
+		Entity:      path,
+		BaseURL:     namespace.GeneralKey.BaseURL,
+		RelatedPath: path,
+		PostBody:    postBody,
+		PatchBody:   patchBody,
 	}
+	b.Testers = append(b.Testers, tester)
 	return b
 }
 
