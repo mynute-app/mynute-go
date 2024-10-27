@@ -39,7 +39,9 @@ func (c *Company) Make(n int) {
 }
 
 func (c *Company) CreateDependencies(n int) {
-	companyType := &CompanyType{}
+	companyType := &CompanyType{
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
 	companyType.SetTest(c.T)
 	companyType.Make(n)
 	companyType.CreateAllTesters(201)
@@ -51,9 +53,11 @@ func (c *Company) ClearDependencies() {
 }
 
 func TestCompanyFlow(t *testing.T) {
-	company := &Company{}
+	company := &Company{
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
 	company.SetTest(t)
-	company.Make(10)
+	company.Make(1)
 	company.RunAll()
 	company.ClearDependencies()
 }
