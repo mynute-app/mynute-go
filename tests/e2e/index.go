@@ -32,7 +32,7 @@ type IBaseE2EActions interface {
 
 type BaseE2EActions struct {
 	T *testing.T
-	Testers []handlers.Tester
+	Testers []*handlers.Tester
 }
 
 func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
@@ -41,7 +41,7 @@ func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
 }
 
 func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
-	tester := handlers.Tester{
+	tester := &handlers.Tester{
 		Entity:      path,
 		BaseURL:     namespace.GeneralKey.BaseURL,
 		RelatedPath: path,
@@ -54,56 +54,56 @@ func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map
 
 func (b *BaseE2EActions) CreateAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("Create%v", tester.Entity), tester.ExpectStatus(201).POST)
+		b.T.Run(fmt.Sprintf("Create%v", tester.Entity), tester.ExpectStatus(s).POST)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) GetAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("Get%v", tester.Entity), tester.ExpectStatus(200).GET)
+		b.T.Run(fmt.Sprintf("Get%v", tester.Entity), tester.ExpectStatus(s).GET)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) ForceGetAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("ForceGet%v", tester.Entity), tester.ExpectStatus(200).ForceGET)
+		b.T.Run(fmt.Sprintf("ForceGet%v", tester.Entity), tester.ExpectStatus(s).ForceGET)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) UpdateAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("Update%v", tester.Entity), tester.ExpectStatus(200).PATCH)
+		b.T.Run(fmt.Sprintf("Update%v", tester.Entity), tester.ExpectStatus(s).PATCH)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) DeleteAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("Delete%v", tester.Entity), tester.ExpectStatus(204).DELETE)
+		b.T.Run(fmt.Sprintf("Delete%v", tester.Entity), tester.ExpectStatus(s).DELETE)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) ForceDeleteAllTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("ForceDelete%v", tester.Entity), tester.ExpectStatus(204).ForceDELETE)
+		b.T.Run(fmt.Sprintf("ForceDelete%v", tester.Entity), tester.ExpectStatus(s).ForceDELETE)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) GetOneByIdTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("GetOne%v", tester.Entity), tester.ExpectStatus(200).GET)
+		b.T.Run(fmt.Sprintf("GetOne%v", tester.Entity), tester.ExpectStatus(s).GET)
 	}
 	return b
 }
 
 func (b *BaseE2EActions) ForceGetOneByIdTesters(s int) *BaseE2EActions {
 	for _, tester := range b.Testers {
-		b.T.Run(fmt.Sprintf("ForceGetOne%v", tester.Entity), tester.ExpectStatus(200).ForceGET)
+		b.T.Run(fmt.Sprintf("ForceGetOne%v", tester.Entity), tester.ExpectStatus(s).ForceGET)
 	}
 	return b
 }
@@ -111,6 +111,7 @@ func (b *BaseE2EActions) ForceGetOneByIdTesters(s int) *BaseE2EActions {
 func (b *BaseE2EActions) RunAll() *BaseE2EActions {
 	b.
 		CreateAllTesters(201).
+		GetAllTesters(200).
 		UpdateAllTesters(200).
 		GetAllTesters(200).
 		ForceGetAllTesters(200).

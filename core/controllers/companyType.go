@@ -18,7 +18,7 @@ func NewCompanyTypeController(Req *handlers.Request, Mid middleware.IMiddleware)
 		BaseController: BaseController[models.CompanyType, DTO.CompanyType]{
 			Request:     Req,
 			Middleware:  Mid,
-			Associations: []string{"Companies"},
+			Associations: []string{},
 		},
 	}
 }

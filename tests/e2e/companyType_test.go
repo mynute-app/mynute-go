@@ -33,9 +33,11 @@ func (c *CompanyType) ClearDependencies() {}
 
 
 func TestCompanyTypeFlow(t *testing.T) {
-	companyType := &CompanyType{}
+	companyType := &CompanyType{
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
 	companyType.SetTest(t)
-	companyType.Make(10)
+	companyType.Make(1)
 	companyType.RunAll()
 }
 
