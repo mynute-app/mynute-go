@@ -57,7 +57,7 @@ func TestCompanyFlow(t *testing.T) {
 		BaseE2EActions: &e2e.BaseE2EActions{},
 	}
 	company.SetTest(t)
-	company.Make(1)
+	company.Make(2)
 	company.RunAll()
 	company.ClearDependencies()
 }

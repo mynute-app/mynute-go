@@ -122,5 +122,3 @@ func (b *BaseE2EActions) RunAll() *BaseE2EActions {
 		ForceGetAllTesters(404)
 	return b
 }
-
-
