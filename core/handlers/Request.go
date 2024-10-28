@@ -8,23 +8,27 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-type Request struct {
+func Request (Gorm *Gorm) *Req {
+	return &Req{Gorm: Gorm}
+}
+
+type Req struct {
 	Gorm *Gorm
 }
 
 // Chainable method to set the Fiber context
-func (r *Request) FiberCtx(c fiber.Ctx) *ReqActions {
+func (r *Req) FiberCtx(c fiber.Ctx) *ReqActions {
 	return &ReqActions{
 		req: r,
-		res: &Response{Ctx: c},
+		res: Response(c),
 		ctx: c,
 	}
 }
 
 // ReqActions holds the intermediate data for method chaining
 type ReqActions struct {
-	req    *Request
-	res    *Response
+	req    *Req
+	res    *Res
 	ctx    fiber.Ctx
 	Error  error
 	Status int

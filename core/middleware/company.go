@@ -20,14 +20,15 @@ func Company(Gorm *handlers.Gorm) *Registry {
 	company := &companyMiddlewareActions{Gorm: Gorm}
 	registry := &Registry{}
 
-	registry.RegisterAction("Company", "POST", company.Create)
-	registry.RegisterAction("Company", "PATCH", company.Update)
+	registry.RegisterAction(namespace.CompanyKey.Name, "POST", company.Create)
+	registry.RegisterAction(namespace.CompanyKey.Name, "PATCH", company.Update)
 	// Register other actions similarly...
 	return registry
 }
 
 func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company *models.Company) (int, error) {
-	companyID := c.Params(string(namespace.GeneralKey.CompanyId))
+	companyID := c.Params(namespace.GeneralKey.CompanyId)
+
 	if companyID == "" {
 		return 400, errors.New("missing companyId")
 	}

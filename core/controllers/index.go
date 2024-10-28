@@ -12,7 +12,7 @@ var _ IController = (*BaseController[IController, IController])(nil)
 
 type BaseController[MODEL any, DTO any] struct {
 	Name         string
-	Request      *handlers.Request
+	Request      *handlers.Req
 	reqActions   *handlers.ReqActions
 	Middleware   *middleware.Registry
 	Associations []string

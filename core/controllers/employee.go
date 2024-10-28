@@ -3,6 +3,7 @@ package controllers
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
 
@@ -10,21 +11,22 @@ import (
 )
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
-type EmployeeController struct {
+type employeeController struct {
 	BaseController[models.Employee, DTO.Employee]
 }
 
-func NewEmployeeController(HTTP *handlers.HTTP, Mid *middleware.Registry) *EmployeeController {
-	return &EmployeeController{
+func Employee(Gorm *handlers.Gorm) *employeeController {
+	return &employeeController{
 		BaseController: BaseController[models.Employee, DTO.Employee]{
-			HTTP:         HTTP,
-			Middleware:   Mid,
+			Name: namespace.EmployeeKey.Name,
+			Request:      handlers.Request(Gorm),
+			Middleware:   middleware.Employee(Gorm),
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}
 }
 
 // Custom extension method to get an employee by email
-func (cc *EmployeeController) GetOneByEmail(c fiber.Ctx) error {
+func (cc *employeeController) GetOneByEmail(c fiber.Ctx) error {
 	return cc.GetBy("email", c)
 }

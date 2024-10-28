@@ -9,11 +9,18 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-type Employee struct {
+type EmployeeMiddlewareActions struct {
 	Gorm *handlers.Gorm
 }
 
-type EmployeeMiddlewareActions struct {}
+func Employee(Gorm *handlers.Gorm) *Registry {
+	employee := &EmployeeMiddlewareActions{Gorm: Gorm}
+	registry := &Registry{}
+
+	registry.RegisterAction(namespace.EmployeeKey.Name, "POST", employee.Create)
+
+	return registry
+}
 
 func (em *EmployeeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 	employee, err := lib.GetFromCtx[*models.Employee](c, namespace.GeneralKey.Model)
@@ -26,34 +33,4 @@ func (em *EmployeeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 	}
 	// Proceed to the next middleware or handler
 	return 0, nil
-}
-
-var employeeActs = EmployeeMiddlewareActions{}
-
-func (e *Employee) POST() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){employeeActs.Create}
-}
-
-func (e *Employee) PUT() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
-}
-
-func (e *Employee) DELETE() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
-}
-
-func (e *Employee) GET() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
-}
-
-func (e *Employee) PATCH() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
-}
-
-func (e *Employee) ForceDELETE() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
-}
-
-func (e *Employee) ForceGET() []func(fiber.Ctx) (int, error) {
-	return []func(fiber.Ctx) (int, error){}
 }

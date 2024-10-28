@@ -2,15 +2,6 @@ package middleware
 
 import "github.com/gofiber/fiber/v3"
 
-// type IMiddleware interface {
-// 	GET() []func(fiber.Ctx) (int, error)
-// 	POST() []func(fiber.Ctx) (int, error)
-// 	PATCH() []func(fiber.Ctx) (int, error)
-// 	DELETE() []func(fiber.Ctx) (int, error)
-// 	ForceGET() []func(fiber.Ctx) (int, error)
-// 	ForceDELETE() []func(fiber.Ctx) (int, error)
-// }
-
 // Central Registry for middleware actions
 type Registry struct {
 	actions map[string]map[string][]func(fiber.Ctx) (int, error)
