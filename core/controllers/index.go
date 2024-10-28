@@ -67,10 +67,10 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
 	var dto DTO
 	var changes map[string]interface{}
 	keys := namespace.GeneralKey
-	c.Locals(keys.Model, model)
-	c.Locals(keys.Dto, dto)
-	c.Locals(keys.ModelArr, modelArr)
-	c.Locals(keys.DtoArr, dtoArr)
+	middleware.ParseBodyToContext(c, keys.Model, &model)
+	middleware.ParseBodyToContext(c, keys.ModelArr, &modelArr)
+	c.Locals(keys.Dto, &dto)
+	c.Locals(keys.DtoArr, &dtoArr)
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, bc.Associations)
 }
@@ -106,6 +106,7 @@ func (bc *BaseController[MODEL, DTO]) UpdateOneById(c fiber.Ctx) error {
 }
 
 func (bc *BaseController[MODEL, DTO]) CreateOne(c fiber.Ctx) error {
+
 	bc.init(c)
 	bc.reqActions.CreateOne()
 	return nil

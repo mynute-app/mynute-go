@@ -19,7 +19,7 @@ import (
 
 func CompanyType(Gorm *handlers.Gorm) *Registry {
 	company := &companyTypeMiddlewareActions{Gorm: Gorm}
-	registry := &Registry{}
+	registry := NewRegistry()
 
 	registry.RegisterAction(namespace.CompanyTypeKey.Name, "POST", company.Create)
 	registry.RegisterAction(namespace.CompanyTypeKey.Name, "PATCH", company.Update)

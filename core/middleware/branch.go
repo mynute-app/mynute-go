@@ -10,7 +10,7 @@ import (
 
 func Branch(Gorm *handlers.Gorm) *Registry {
 	branch := &branchMiddlewareActions{Gorm: Gorm}
-	registry := &Registry{}
+	registry := NewRegistry()
 
 	registry.RegisterAction(namespace.BranchKey.Name, "POST", branch.Create)
 

@@ -15,7 +15,7 @@ type EmployeeMiddlewareActions struct {
 
 func Employee(Gorm *handlers.Gorm) *Registry {
 	employee := &EmployeeMiddlewareActions{Gorm: Gorm}
-	registry := &Registry{}
+	registry := NewRegistry()
 
 	registry.RegisterAction(namespace.EmployeeKey.Name, "POST", employee.Create)
 

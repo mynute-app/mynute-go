@@ -8,7 +8,7 @@ type Registry struct {
 }
 
 // Initialize a new registry
-func NewMiddlewareRegistry() *Registry {
+func NewRegistry() *Registry {
 	return &Registry{actions: make(map[string]map[string][]func(fiber.Ctx) (int, error))}
 }
 

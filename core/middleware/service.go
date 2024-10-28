@@ -15,7 +15,7 @@ type ServiceMiddlewareActions struct{
 
 func Service(Gorm *handlers.Gorm) *Registry {
 	service := &ServiceMiddlewareActions{Gorm: Gorm}
-	registry := &Registry{}
+	registry := NewRegistry()
 
 	registry.RegisterAction(namespace.ServiceKey.Name, "POST", service.Create)
 

@@ -6,19 +6,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func ParseBodyToContext[T any](key string, model T) func(c fiber.Ctx) (int, error) {
-	return func(c fiber.Ctx) (int, error) {
-		if err := lib.BodyParser(c.Body(), &model); err != nil {
-			return 500, err
-		}
-		c.Locals(key, model)
-		return 0, nil
+func ParseBodyToContext[T any](c fiber.Ctx, key string, model T) (int, error) {
+	if err := lib.BodyParser(c.Body(), &model); err != nil {
+		return 500, err
 	}
-}
-
-func AddToContext[T any](key string, model T) func(c fiber.Ctx) (int, error) {
-	return func(c fiber.Ctx) (int, error) {
-		c.Locals(key, model)
-		return 0, nil
-	}
+	c.Locals(key, model)
+	return 0, nil
 }
