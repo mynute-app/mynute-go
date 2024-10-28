@@ -12,11 +12,11 @@ type ServiceController struct {
 	BaseController[models.Service, DTO.Service]
 }
 
-func NewServiceController(Req *handlers.Request, Mid middleware.IMiddleware) *ServiceController {
+func NewServiceController(HTTP *handlers.HTTP, Mid *middleware.Registry) *ServiceController {
 	return &ServiceController{
 		BaseController: BaseController[models.Service, DTO.Service]{
-			Request:     Req,
-			Middleware:  Mid,
+			HTTP:         HTTP,
+			Middleware:   Mid,
 			Associations: []string{"ServiceType"},
 		},
 	}

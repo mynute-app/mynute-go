@@ -13,11 +13,11 @@ type CompanyTypeController struct {
 	BaseController[models.CompanyType, DTO.CompanyType]
 }
 
-func NewCompanyTypeController(Req *handlers.Request, Mid middleware.IMiddleware) *CompanyTypeController {
+func NewCompanyTypeController(HTTP *handlers.HTTP, Mid *middleware.Registry) *CompanyTypeController {
 	return &CompanyTypeController{
 		BaseController: BaseController[models.CompanyType, DTO.CompanyType]{
-			Request:     Req,
-			Middleware:  Mid,
+			HTTP:         HTTP,
+			Middleware:   Mid,
 			Associations: []string{},
 		},
 	}

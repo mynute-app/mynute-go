@@ -11,11 +11,11 @@ type BranchController struct {
 	BaseController[models.Branch, DTO.Branch]
 }
 
-func NewBranchController(Req *handlers.Request, Mid middleware.IMiddleware) *BranchController {
+func NewBranchController(HTTP *handlers.HTTP, Mid *middleware.Registry) *BranchController {
 	return &BranchController{
 		BaseController: BaseController[models.Branch, DTO.Branch]{
-			Request:     Req,
-			Middleware:  Mid,
+			HTTP:         HTTP,
+			Middleware:   Mid,
 			Associations: []string{"Company", "Employees", "Services"},
 		},
 	}

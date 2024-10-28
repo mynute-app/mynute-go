@@ -14,11 +14,11 @@ type EmployeeController struct {
 	BaseController[models.Employee, DTO.Employee]
 }
 
-func NewEmployeeController(Req *handlers.Request, Mid middleware.MiddlewareRegistry) *EmployeeController {
+func NewEmployeeController(HTTP *handlers.HTTP, Mid *middleware.Registry) *EmployeeController {
 	return &EmployeeController{
 		BaseController: BaseController[models.Employee, DTO.Employee]{
-			Request:     Req,
-			Middleware:  Mid,
+			HTTP:         HTTP,
+			Middleware:   Mid,
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}

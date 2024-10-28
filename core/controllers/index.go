@@ -44,8 +44,8 @@ func CreateRoutes(r fiber.Router, ci IController) {
 }
 
 func (bc *BaseController[MODEL, DTO]) init(c fiber.Ctx) {
-	bc.httpActions = bc.HTTP.FiberCtx(c)
 	bc.saveLocals(c)
+	bc.httpActions = bc.HTTP.FiberCtx(c)
 	bc.runMiddlewares(c)
 }
 
