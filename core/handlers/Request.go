@@ -11,59 +11,52 @@ type Request struct {
 	HTTP *HTTP
 }
 
-func (req *Request) CreateOne(c fiber.Ctx, model interface{}, dto interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
+func (req *Request) saveLocals(c fiber.Ctx, model interface{}, dto interface{}, assocs []string, changes map[string]interface{}) {
 	keys := namespace.GeneralKey
-	actions := req.HTTP.FiberCtx(c)
-	if err := lib.BodyParser(c.Body(), &model); err != nil {
-		actions.sendResponse.HttpError(500, err)
-	}
 	c.Locals(keys.Model, model)
 	c.Locals(keys.Dto, dto)
 	c.Locals(keys.Associations, assocs)
+	c.Locals(keys.Changes, changes)
+}
+
+func (req *Request) CreateOne(c fiber.Ctx, model interface{}, dto interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
+	req.saveLocals(c, model, dto, assocs, nil)
+	actions := req.HTTP.FiberCtx(c)
+	if err := lib.BodyParser(c.Body(), &model); err != nil {
+		actions.sendResponse.Http500(err)
+	}
 	actions.RunMiddlewares(mdws).CreateOne()
 }
 
 func (req *Request) GetBy(c fiber.Ctx, paramKey string, model interface{}, dto interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
-	keys := namespace.GeneralKey
+	req.saveLocals(c, model, dto, assocs, nil)
 	actions := req.HTTP.FiberCtx(c)
-	c.Locals(keys.Model, model)
-	c.Locals(keys.Dto, dto)
-	c.Locals(keys.Associations, assocs)
 	actions.RunMiddlewares(mdws).GetBy(paramKey)
 }
 
 func (req *Request) ForceGetBy(c fiber.Ctx, paramKey string, model interface{}, dto interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
-	keys := namespace.GeneralKey
+	req.saveLocals(c, model, dto, assocs, nil)
 	actions := req.HTTP.FiberCtx(c)
-	c.Locals(keys.Model, model)
-	c.Locals(keys.Dto, dto)
-	c.Locals(keys.Associations, assocs)
 	actions.RunMiddlewares(mdws).ForceGetBy(paramKey)
 }
 
 func (req *Request) DeleteOneById(c fiber.Ctx, model interface{}, mdws []func(fiber.Ctx) (int, error)) {
-	keys := namespace.GeneralKey
+	req.saveLocals(c, model, nil, nil, nil)
 	actions := req.HTTP.FiberCtx(c)
-	c.Locals(keys.Model, model)
 	actions.RunMiddlewares(mdws).DeleteOneById()
 }
 
 func (req *Request) ForceDeleteOneById(c fiber.Ctx, model interface{}, mdws []func(fiber.Ctx) (int, error)) {
-	keys := namespace.GeneralKey
+	req.saveLocals(c, model, nil, nil, nil)
 	actions := req.HTTP.FiberCtx(c)
-	c.Locals(keys.Model, model)
 	actions.RunMiddlewares(mdws).ForceDeleteOneById()
 }
 
 func (req *Request) UpdateOneById(c fiber.Ctx, model interface{}, dto interface{}, changes map[string]interface{}, assocs []string, mdws []func(fiber.Ctx) (int, error)) {
-	keys := namespace.GeneralKey
+	req.saveLocals(c, model, dto, assocs, changes)
 	actions := req.HTTP.FiberCtx(c)
 	if err := lib.BodyParser(c.Body(), &changes); err != nil {
 		actions.sendResponse.HttpError(500, err)
 	}
-	c.Locals(keys.Model, model)
-	c.Locals(keys.Dto, dto)
-	c.Locals(keys.Changes, changes)
-	c.Locals(keys.Associations, assocs)
 	actions.RunMiddlewares(mdws).UpdateOneById()
 }

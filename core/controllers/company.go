@@ -25,14 +25,12 @@ func (cc *CompanyController) GetOneByTaxId(c fiber.Ctx) error {
 }
 
 // Constructor for CompanyController
-func NewCompanyController(Req *handlers.Request, Mid middleware.IMiddleware) *CompanyController {
+func Company(HTTP *handlers.HTTP, Mid *middleware.Registry) *CompanyController {
 	return &CompanyController{
 		BaseController: BaseController[models.Company, DTO.Company]{
-			Request:     Req,
-			Middleware:  Mid,
+			HTTP:         HTTP,
+			Middleware:   Mid,
 			Associations: []string{"CompanyTypes", "Branches", "Employees", "Services"},
 		},
 	}
 }
-
-

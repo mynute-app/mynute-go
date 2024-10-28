@@ -9,10 +9,10 @@ import (
 )
 
 func Company(Gorm *handlers.Gorm, App *fiber.App) {
-	Middleware := &middleware.Company{Gorm: Gorm}
+	Middleware := middleware.Company(Gorm)
 	HTTP := &handlers.HTTP{Gorm: Gorm}
-	RequestHandler := &handlers.Request{HTTP: HTTP}
-	cc := controllers.NewCompanyController(RequestHandler, Middleware)
+	// RequestHandler := &handlers.Request{HTTP: HTTP}
+	cc := controllers.Company(HTTP, Middleware)
 
 	r := App.Group("/company")
 	r.Get("/name/:name", cc.GetOneByName) // ok

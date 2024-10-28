@@ -14,7 +14,7 @@ type EmployeeController struct {
 	BaseController[models.Employee, DTO.Employee]
 }
 
-func NewEmployeeController(Req *handlers.Request, Mid middleware.IMiddleware) *EmployeeController {
+func NewEmployeeController(Req *handlers.Request, Mid middleware.MiddlewareRegistry) *EmployeeController {
 	return &EmployeeController{
 		BaseController: BaseController[models.Employee, DTO.Employee]{
 			Request:     Req,

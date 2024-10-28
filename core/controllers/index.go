@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
 
@@ -10,8 +11,10 @@ import (
 var _ IController = (*BaseController[IController, IController])(nil)
 
 type BaseController[MODEL any, DTO any] struct {
-	Request      *handlers.Request
-	Middleware   middleware.IMiddleware
+	Name         string
+	HTTP         *handlers.HTTP
+	httpActions  *handlers.HttpActionChain
+	Middleware   *middleware.Registry
 	Associations []string
 }
 
@@ -40,44 +43,71 @@ func CreateRoutes(r fiber.Router, ci IController) {
 	id.Get("/force", ci.ForceGetOneById)       // ok
 }
 
+func (bc *BaseController[MODEL, DTO]) init(c fiber.Ctx) {
+	bc.httpActions = bc.HTTP.FiberCtx(c)
+	bc.saveLocals(c)
+	bc.runMiddlewares(c)
+}
+
+func (bc *BaseController[MODEL, DTO]) runMiddlewares(c fiber.Ctx) {
+	bc.saveLocals(c)
+	mdws := bc.Middleware.GetActions(bc.Name, c.Method())
+	for _, mdw := range mdws {
+		if s, err := mdw(c); err != nil {
+			bc.httpActions.SendError(s, err)
+			return
+		}
+	}
+}
+
+func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
+	var modelArr []MODEL
+	var dtoArr []DTO
+	var model MODEL
+	var dto DTO
+	var changes map[string]interface{}
+	keys := namespace.GeneralKey
+	c.Locals(keys.Model, model)
+	c.Locals(keys.Dto, dto)
+	c.Locals(keys.ModelArr, modelArr)
+	c.Locals(keys.DtoArr, dtoArr)
+	c.Locals(keys.Changes, changes)
+	c.Locals(keys.Associations, bc.Associations)
+}
+
 func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c fiber.Ctx) error {
-	var model []MODEL
-	var dto []DTO
-	bc.Request.GetBy(c, paramKey, &model, &dto, bc.Associations, bc.Middleware.GET())
+	bc.init(c)
+	bc.httpActions.GetBy(paramKey)
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx) error {
-	var model []MODEL
-	var dto []DTO
-	bc.Request.ForceGetBy(c, paramKey, &model, &dto, bc.Associations, bc.Middleware.ForceGET())
+	bc.init(c)
+	bc.httpActions.ForceGetBy(paramKey)
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) DeleteOneById(c fiber.Ctx) error {
-	var model MODEL
-	bc.Request.DeleteOneById(c, &model, bc.Middleware.DELETE())
+	bc.init(c)
+	bc.httpActions.DeleteOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceDeleteOneById(c fiber.Ctx) error {
-	var model MODEL
-	bc.Request.ForceDeleteOneById(c, &model, bc.Middleware.ForceDELETE())
+	bc.init(c)
+	bc.httpActions.ForceDeleteOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) UpdateOneById(c fiber.Ctx) error {
-	var model MODEL
-	var dto DTO
-	var changes map[string]interface{}
-	bc.Request.UpdateOneById(c, &model, &dto, changes, bc.Associations, bc.Middleware.PATCH())
+	bc.init(c)
+	bc.httpActions.UpdateOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) CreateOne(c fiber.Ctx) error {
-	var model MODEL
-	var dto DTO
-	bc.Request.CreateOne(c, &model, &dto, bc.Associations, bc.Middleware.POST())
+	bc.init(c)
+	bc.httpActions.CreateOne()
 	return nil
 }
 
