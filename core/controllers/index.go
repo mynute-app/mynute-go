@@ -12,8 +12,8 @@ var _ IController = (*BaseController[IController, IController])(nil)
 
 type BaseController[MODEL any, DTO any] struct {
 	Name         string
-	HTTP         *handlers.HTTP
-	httpActions  *handlers.HttpActionChain
+	Request      *handlers.Request
+	reqActions   *handlers.ReqActions
 	Middleware   *middleware.Registry
 	Associations []string
 }
@@ -45,7 +45,7 @@ func CreateRoutes(r fiber.Router, ci IController) {
 
 func (bc *BaseController[MODEL, DTO]) init(c fiber.Ctx) {
 	bc.saveLocals(c)
-	bc.httpActions = bc.HTTP.FiberCtx(c)
+	bc.reqActions = bc.Request.FiberCtx(c)
 	bc.runMiddlewares(c)
 }
 
@@ -54,7 +54,7 @@ func (bc *BaseController[MODEL, DTO]) runMiddlewares(c fiber.Ctx) {
 	mdws := bc.Middleware.GetActions(bc.Name, c.Method())
 	for _, mdw := range mdws {
 		if s, err := mdw(c); err != nil {
-			bc.httpActions.SendError(s, err)
+			bc.reqActions.SendError(s, err)
 			return
 		}
 	}
@@ -77,37 +77,37 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
 
 func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.GetBy(paramKey)
+	bc.reqActions.GetBy(paramKey)
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.ForceGetBy(paramKey)
+	bc.reqActions.ForceGetBy(paramKey)
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) DeleteOneById(c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.DeleteOneById()
+	bc.reqActions.DeleteOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) ForceDeleteOneById(c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.ForceDeleteOneById()
+	bc.reqActions.ForceDeleteOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) UpdateOneById(c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.UpdateOneById()
+	bc.reqActions.UpdateOneById()
 	return nil
 }
 
 func (bc *BaseController[MODEL, DTO]) CreateOne(c fiber.Ctx) error {
 	bc.init(c)
-	bc.httpActions.CreateOne()
+	bc.reqActions.CreateOne()
 	return nil
 }
 

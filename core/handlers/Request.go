@@ -8,37 +8,37 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-type HTTP struct {
+type Request struct {
 	Gorm *Gorm
 }
 
-// HttpActionChain holds the intermediate data for method chaining
-type HttpActionChain struct {
-	h            *HTTP
-	ctx          fiber.Ctx
-	sendResponse *lib.SendResponse
-	Error        error
-	Status       int
+// Chainable method to set the Fiber context
+func (r *Request) FiberCtx(c fiber.Ctx) *ReqActions {
+	return &ReqActions{
+		req: r,
+		res: &Response{Ctx: c},
+		ctx: c,
+	}
 }
 
-// Chainable method to set the Fiber context
-func (h *HTTP) FiberCtx(c fiber.Ctx) *HttpActionChain {
-	return &HttpActionChain{
-		h:            h,
-		sendResponse: &lib.SendResponse{Ctx: c},
-		ctx:          c,
-	}
+// ReqActions holds the intermediate data for method chaining
+type ReqActions struct {
+	req    *Request
+	res    *Response
+	ctx    fiber.Ctx
+	Error  error
+	Status int
 }
 
 // Centralized error handling
-func (ac *HttpActionChain) SendError(status int, err error) {
+func (ac *ReqActions) SendError(status int, err error) {
 	ac.Error = err
 	ac.Status = status
-	ac.sendResponse.HttpError(status, err)
+	ac.res.HttpError(status, err)
 }
 
 // Final Method that executes a GET action
-func (ac *HttpActionChain) GetBy(paramKey string) {
+func (ac *ReqActions) GetBy(paramKey string) {
 	if ac.Error != nil {
 		return
 	}
@@ -47,38 +47,38 @@ func (ac *HttpActionChain) GetBy(paramKey string) {
 
 	modelArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.ModelArr)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	dtoArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.DtoArr)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
 	if paramKey == "" {
-		if err := ac.h.Gorm.GetAll(modelArr, assocs); err != nil {
-			ac.sendResponse.Http500(err)
+		if err := ac.req.Gorm.GetAll(modelArr, assocs); err != nil {
+			ac.res.Http500(err)
 			return
 		}
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.h.Gorm.GetOneBy(paramKey, paramVal, modelArr, assocs); err != nil {
-			ac.sendResponse.Http404()
+		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, modelArr, assocs); err != nil {
+			ac.res.Http404()
 			return
 		}
 	}
 
-	ac.sendResponse.DTO(200, modelArr, dtoArr)
+	ac.res.DTO(200, modelArr, dtoArr)
 }
 
 // Final Method that executes a FORCE GET action
-func (ac *HttpActionChain) ForceGetBy(paramKey string) {
+func (ac *ReqActions) ForceGetBy(paramKey string) {
 	if ac.Error != nil {
 		return
 	}
@@ -87,66 +87,66 @@ func (ac *HttpActionChain) ForceGetBy(paramKey string) {
 
 	modelArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.ModelArr)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	dtoArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.DtoArr)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
 	if paramKey == "" {
-		if err := ac.h.Gorm.ForceGetAll(modelArr, assocs); err != nil {
-			ac.sendResponse.Http500(err)
+		if err := ac.req.Gorm.ForceGetAll(modelArr, assocs); err != nil {
+			ac.res.Http500(err)
 			return
 		}
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.h.Gorm.ForceGetOneBy(paramKey, paramVal, modelArr, assocs); err != nil {
-			ac.sendResponse.Http404()
+		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, modelArr, assocs); err != nil {
+			ac.res.Http404()
 			return
 		}
 	}
 
-	ac.sendResponse.DTO(200, modelArr, dtoArr)
+	ac.res.DTO(200, modelArr, dtoArr)
 }
 
 // Final Method that executes a CREATE action
-func (ac *HttpActionChain) CreateOne() {
+func (ac *ReqActions) CreateOne() {
 	if ac.Error != nil {
 		return
 	}
-	
+
 	keys := namespace.GeneralKey
 
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	if err := ac.h.Gorm.Create(model); err != nil {
-		ac.sendResponse.Http400(err)
+	if err := ac.req.Gorm.Create(model); err != nil {
+		ac.res.Http400(err)
 		return
 	}
 
 	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	ac.sendResponse.DTO(201, model, dto)
+	ac.res.DTO(201, model, dto)
 }
 
 // Final method that executes a DELETE action
-func (ac *HttpActionChain) DeleteOneById() {
+func (ac *ReqActions) DeleteOneById() {
 	if ac.Error != nil {
 		return
 	}
@@ -155,35 +155,35 @@ func (ac *HttpActionChain) DeleteOneById() {
 	id := ac.ctx.Params(string(keys.QueryId))
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	if err := ac.h.Gorm.GetOneBy("id", id, model, nil); err != nil {
+	if err := ac.req.Gorm.GetOneBy("id", id, model, nil); err != nil {
 		if err.Error() == "record not found" {
-			ac.sendResponse.Http404()
+			ac.res.Http404()
 			return
 		}
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	if err := ac.h.Gorm.DeleteOneById(id, model); err != nil {
+	if err := ac.req.Gorm.DeleteOneById(id, model); err != nil {
 		if err.Error() == "record not found" {
-			ac.sendResponse.Http404()
+			ac.res.Http404()
 			return
 		}
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
 	log.Printf("Deleted record with ID: %s", id)
 
-	ac.sendResponse.Http204()
+	ac.res.Http204()
 }
 
 // Final method that executes a FORCE DELETE action
-func (ac *HttpActionChain) ForceDeleteOneById() {
+func (ac *ReqActions) ForceDeleteOneById() {
 	if ac.Error != nil {
 		return
 	}
@@ -192,65 +192,65 @@ func (ac *HttpActionChain) ForceDeleteOneById() {
 	id := ac.ctx.Params(string(keys.QueryId))
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	if err := ac.h.Gorm.ForceGetOneBy("id", id, model, nil); err != nil {
+	if err := ac.req.Gorm.ForceGetOneBy("id", id, model, nil); err != nil {
 		if err.Error() == "record not found" {
-			ac.sendResponse.Http404()
+			ac.res.Http404()
 			return
 		}
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	if err := ac.h.Gorm.ForceDeleteOneById(id, model); err != nil {
+	if err := ac.req.Gorm.ForceDeleteOneById(id, model); err != nil {
 		if err.Error() == "record not found" {
-			ac.sendResponse.Http404()
+			ac.res.Http404()
 			return
 		}
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	ac.sendResponse.Http204()
+	ac.res.Http204()
 }
 
 // Final method that executes an UPDATE action
-func (ac *HttpActionChain) UpdateOneById() {
+func (ac *ReqActions) UpdateOneById() {
 	if ac.Error != nil {
 		return
 	}
 	keys := namespace.GeneralKey
 	associations, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
 	id := ac.ctx.Params(string(keys.QueryId))
 
-	if err := ac.h.Gorm.UpdateOneById(id, model, changes, associations); err != nil {
-		ac.sendResponse.Http400(err)
+	if err := ac.req.Gorm.UpdateOneById(id, model, changes, associations); err != nil {
+		ac.res.Http400(err)
 		return
 	}
 
 	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
 	if err != nil {
-		ac.sendResponse.Http500(err)
+		ac.res.Http500(err)
 		return
 	}
 
-	ac.sendResponse.DTO(200, model, dto)
+	ac.res.DTO(200, model, dto)
 }
