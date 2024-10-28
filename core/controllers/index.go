@@ -67,8 +67,11 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
 	var dto DTO
 	var changes map[string]interface{}
 	keys := namespace.GeneralKey
-	middleware.ParseBodyToContext(c, keys.Model, &model)
-	middleware.ParseBodyToContext(c, keys.ModelArr, &modelArr)
+	if s, err := middleware.ParseBodyToContext(c, keys.Model, &model); err != nil {
+		bc.reqActions.SendError(s, err)
+		return
+	}
+	c.Locals(keys.ModelArr, &modelArr)
 	c.Locals(keys.Dto, &dto)
 	c.Locals(keys.DtoArr, &dtoArr)
 	c.Locals(keys.Changes, changes)
