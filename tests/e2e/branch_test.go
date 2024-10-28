@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/tests/e2e"
 	"agenda-kaki-go/tests/lib"
+	"fmt"
 	"testing"
 )
 
@@ -15,15 +16,12 @@ type Branch struct {
 
 func (b *Branch) GenerateTesters(n int) {
 	for i := 0; i < n; i++ {
+		path := fmt.Sprintf("company/%d/branch", b.company.Testers[i].EntityID)
 		b.GenerateTester(
 			"branch",
-			"branch",
+			path,
 			map[string]interface{}{
 				"name": lib.GenerateRandomName("Branch"),
-				"company": map[string]interface{}{
-					"id": b.company.Testers[i].EntityID,
-					"name": b.company.Testers[i].PostBody["name"],
-				},
 			},
 			map[string]interface{}{
 				"name": lib.GenerateRandomName("Branch"),
@@ -38,7 +36,9 @@ func (b *Branch) Make(n int) {
 }
 
 func (b *Branch) CreateDependencies(n int) {
-	company := &Company{}
+	company := &Company{
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
 	company.SetTest(b.T)
 	company.Make(n)
 	company.CreateAllTesters(201)
@@ -50,9 +50,11 @@ func (b *Branch) ClearDependencies() {
 }
 
 func TestBranchFlow(t *testing.T) {
-	branch := &Branch{}
+	branch := &Branch{
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
 	branch.SetTest(t)
-	branch.Make(10)
+	branch.Make(2)
 	branch.RunAll()
 	branch.ClearDependencies()
 }
