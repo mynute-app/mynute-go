@@ -45,3 +45,6 @@ var EmployeeKey = TypeStruct{
 var ServiceKey = TypeStruct{
 	Name: "service",
 }
+var HolidaysKey = TypeStruct{
+	Name: "holidays",
+}
