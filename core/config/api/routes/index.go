@@ -14,4 +14,5 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Branch(gormHandler, App)
 	Service(gormHandler, App)
 	Employee(gormHandler, App)
+	Holidays(gormHandler, App)
 }
