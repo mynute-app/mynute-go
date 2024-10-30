@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/tests/lib"
 	"errors"
 	"fmt"
@@ -25,9 +26,14 @@ func (j *jsonWebToken) GetToken() string {
 
 // WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
 func (j *jsonWebToken) WhoAreYou() error {
+	saveUserData := func (value interface{}) {
+		j.C.Locals(namespace.GeneralKey.UserData, value)
+	}
+
 	// Retrieve the token from the Authorization header
 	tokenString := j.GetToken()
 	if tokenString == "" {
+		saveUserData(nil)
 		return j.C.Next()
 	}
 
@@ -48,14 +54,16 @@ func (j *jsonWebToken) WhoAreYou() error {
 	}
 
 	// Check token validity and extract claims
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Store claims (user data) in Fiber's Locals
-		j.C.Locals("userData", claims)
-		return nil
+	claims, ok := token.Claims.(jwt.MapClaims); if !ok || !token.Valid {
+		return j.Res.Http400(errors.New("invalid token")).Next()
 	}
 
-	return j.Res.Http400(errors.New("invalid token")).Next()
+	// Store claims (user data) in Fiber's Locals
+	saveUserData(claims)
+	return j.C.Next()
 }
+
+
 
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {

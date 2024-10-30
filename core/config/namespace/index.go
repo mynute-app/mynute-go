@@ -8,6 +8,7 @@ type GeneralStruct struct {
 	Dto          string
 	DtoArr       string
 	Associations string
+	UserData     string
 }
 
 var GeneralKey = GeneralStruct{
@@ -18,18 +19,19 @@ var GeneralKey = GeneralStruct{
 	Dto:          "dto_key",
 	DtoArr:       "dtoArr_key",
 	Associations: "associations_key",
+	UserData:     "user_data",
 }
 
 type QueryStruct struct {
-	Id string
+	Id        string
 	CompanyId string
-	BaseURL string
+	BaseURL   string
 }
 
 var QueryKey = QueryStruct{
-	Id: "id",
+	Id:        "id",
 	CompanyId: "companyId",
-	BaseURL: "http://localhost:3000",
+	BaseURL:   "http://localhost:3000",
 }
 
 type TypeStruct struct {
@@ -38,26 +40,26 @@ type TypeStruct struct {
 }
 
 var CompanyKey = TypeStruct{
-	Name: "company",
+	Name:  "company",
 	Model: "company_model",
 }
 
 var CompanyTypeKey = TypeStruct{
-	Name: "company_type",
+	Name:  "company_type",
 	Model: "company_type_model",
 }
 
 var BranchKey = TypeStruct{
-	Name: "branch",
+	Name:  "branch",
 	Model: "branch_model",
 }
 
 var EmployeeKey = TypeStruct{
-	Name: "employee",
+	Name:  "employee",
 	Model: "employee_model",
 }
 
 var ServiceKey = TypeStruct{
-	Name: "service",
+	Name:  "service",
 	Model: "service_model",
 }
