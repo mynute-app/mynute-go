@@ -19,7 +19,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	CompanyType(Gorm, rootRouter)
 
 	// CompanyId dependent routes
-	companyPrefix := fmt.Sprintf("/company/:%s", namespace.GeneralKey.CompanyId)
+	companyPrefix := fmt.Sprintf("/company/:%s", namespace.QueryKey.CompanyId)
 	companyCheck := middleware.GetCompany(Gorm)
 	companyRouter := rootRouter.Group(companyPrefix, companyCheck)
 	Branch(Gorm, companyRouter)

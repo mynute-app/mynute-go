@@ -30,7 +30,7 @@ func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
 	getCompany := func (c fiber.Ctx) error {
 		var company models.Company
 		res := handlers.Response(c)
-		companyID := c.Params(namespace.GeneralKey.CompanyId)
+		companyID := c.Params(namespace.QueryKey.CompanyId)
 
 		if companyID == "" {
 			return res.Http400(errors.New("missing companyId")).Next()

@@ -154,10 +154,11 @@ func (ac *ReqActions) DeleteOneById() {
 	if ac.Error != nil {
 		return
 	}
-	keys := namespace.GeneralKey
+	GeneralKey := namespace.GeneralKey
+	QueryKey := namespace.QueryKey
 
-	id := ac.ctx.Params(string(keys.QueryId))
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	id := ac.ctx.Params(QueryKey.Id)
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, GeneralKey.Model)
 	if err != nil {
 		ac.res.Http500(err)
 		return
@@ -191,10 +192,12 @@ func (ac *ReqActions) ForceDeleteOneById() {
 	if ac.Error != nil {
 		return
 	}
-	keys := namespace.GeneralKey
+	GeneralKey := namespace.GeneralKey
+	QueryKey := namespace.QueryKey
 
-	id := ac.ctx.Params(string(keys.QueryId))
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+
+	id := ac.ctx.Params(string(QueryKey.Id))
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, GeneralKey.Model)
 	if err != nil {
 		ac.res.Http500(err)
 		return
@@ -243,7 +246,7 @@ func (ac *ReqActions) UpdateOneById() {
 		return
 	}
 
-	id := ac.ctx.Params(string(keys.QueryId))
+	id := ac.ctx.Params(namespace.QueryKey.Id)
 
 	if err := ac.req.Gorm.UpdateOneById(id, model, changes, associations); err != nil {
 		ac.res.Http400(err)

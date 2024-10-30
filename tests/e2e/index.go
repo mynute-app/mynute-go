@@ -43,7 +43,7 @@ func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
 func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
 	tester := &handlers.Tester{
 		Entity:      path,
-		BaseURL:     namespace.GeneralKey.BaseURL,
+		BaseURL:     namespace.QueryKey.BaseURL,
 		RelatedPath: path,
 		PostBody:    postBody,
 		PatchBody:   patchBody,

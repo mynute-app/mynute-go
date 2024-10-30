@@ -37,7 +37,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(mySecret), nil
+		return mySecret, nil
 	}
 
 	// Parse and validate the token
@@ -58,16 +58,16 @@ func (j *jsonWebToken) WhoAreYou() error {
 }
 
 // getSecret retrieves the JWT secret from an environment variable
-func getSecret() string {
-	generateMySecret := func() string {
+func getSecret() []byte {
+	generateMySecret := func() []byte {
 		s := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomIntOfExactly(16))
-		return s
+		return []byte(s)
 	}
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		return generateMySecret() // Only for testing or development
 	}
-	return secret
+	return []byte(secret)
 }
 
 var mySecret = getSecret()
