@@ -28,7 +28,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	// Retrieve the token from the Authorization header
 	tokenString := j.GetToken()
 	if tokenString == "" {
-		return j.Res.Http400(errors.New("no token found")).Next()
+		return j.C.Next()
 	}
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
@@ -57,17 +57,15 @@ func (j *jsonWebToken) WhoAreYou() error {
 	return j.Res.Http400(errors.New("invalid token")).Next()
 }
 
-func generateMySecret() string {
-	secret := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomIntOfExactly(16))
-	return secret
-}
-
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() string {
+	generateMySecret := func() string {
+		s := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomIntOfExactly(16))
+		return s
+	}
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		// Optional: log or handle the missing environment variable
-		secret = generateMySecret() // Only for testing or development
+		return generateMySecret() // Only for testing or development
 	}
 	return secret
 }

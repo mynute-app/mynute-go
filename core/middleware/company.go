@@ -26,7 +26,7 @@ func Company(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-func GetCompany(Gorm *handlers.Gorm) func(fiber.Ctx) error {
+func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
 	getCompany := func (c fiber.Ctx) error {
 		var company models.Company
 		res := handlers.Response(c)
