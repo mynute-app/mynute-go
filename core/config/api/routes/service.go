@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Service(Gorm *handlers.Gorm, App *fiber.App) {
+func Service(Gorm *handlers.Gorm, r fiber.Router) {
 	cs := controllers.Service(Gorm)
-	r := App.Group("/service")
+	s := r.Group("/service")
 
-	controllers.CreateRoutes(r, cs)
+	controllers.CreateRoutes(s, cs)
 }

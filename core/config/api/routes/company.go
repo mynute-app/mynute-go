@@ -7,11 +7,11 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Company(Gorm *handlers.Gorm, App *fiber.App) {
+func Company(Gorm *handlers.Gorm, r fiber.Router) {
 	cc := controllers.Company(Gorm)
-	r := App.Group("/company")
-	r.Get("/name/:name", cc.GetOneByName) // ok
-	r.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
+	c := r.Group("/company")
+	c.Get("/name/:name", cc.GetOneByName) // ok
+	c.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
 
-	controllers.CreateRoutes(r, cc)
+	controllers.CreateRoutes(c, cc)
 }

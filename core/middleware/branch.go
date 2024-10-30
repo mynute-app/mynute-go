@@ -23,9 +23,9 @@ type branchMiddlewareActions struct {
 
 // Check if the company exists and attach the company ID to the branch.
 func (ba *branchMiddlewareActions) CheckCompany(c fiber.Ctx) (int, error) {
-	var company models.Company
-	if s, err := GetCompany(ba.Gorm, c, &company); err != nil {
-		return s, err
+	company, err := lib.GetFromCtx[*models.Company](c, namespace.CompanyKey.Model)
+	if err != nil {
+		return 500, err
 	}
 
 	if c.Method() == "GET" {

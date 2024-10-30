@@ -24,33 +24,44 @@ func (sr *Res) DTO(s int, source interface{}, dto interface{}) {
 	sr.send(s, dto)
 }
 
-func (sr *Res) HttpError(s int, err error) {
+func (sr *Res) Next() error {
+	return sr.Ctx.Next()
+}
+
+func (sr *Res) HttpError(s int, err error) *Res {
 	sr.send(s, err.Error())
+	return sr
 }
 
-func (sr *Res) Http400(err error) {
+func (sr *Res) Http400(err error) *Res {
 	sr.send(400, err.Error())
+	return sr
 }
 
-func (sr *Res) Http404() {
+func (sr *Res) Http404() *Res {
 	sr.sendStatus(404)
+	return sr
 }
 
-func (sr *Res) Http500(err error) {
+func (sr *Res) Http500(err error) *Res {
 	log.Printf("An internal error occurred! \n Error: %v", err)
 	sr.send(500, err.Error())
+	return sr
 }
 
-func (sr *Res) Http201(data any) {
+func (sr *Res) Http201(data any) *Res {
 	sr.send(201, data)
+	return sr
 }
 
-func (sr *Res) Http204() {
+func (sr *Res) Http204() *Res {
 	sr.sendStatus(204)
+	return sr
 }
 
-func (sr *Res) Http200(data any) {
+func (sr *Res) Http200(data any) *Res {
 	sr.send(200, data)
+	return sr
 }
 
 func (sr *Res) send(s int, data any) {

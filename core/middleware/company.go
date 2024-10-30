@@ -26,18 +26,24 @@ func Company(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-func GetCompany(Gorm *handlers.Gorm, c fiber.Ctx, company *models.Company) (int, error) {
-	companyID := c.Params(namespace.GeneralKey.CompanyId)
+func GetCompany(Gorm *handlers.Gorm) func(fiber.Ctx) error {
+	getCompany := func (c fiber.Ctx) error {
+		var company models.Company
+		res := handlers.Response(c)
+		companyID := c.Params(namespace.GeneralKey.CompanyId)
 
-	if companyID == "" {
-		return 400, errors.New("missing companyId")
+		if companyID == "" {
+			return res.Http400(errors.New("missing companyId")).Next()
+		}
+	
+		if err := Gorm.GetOneBy("id", companyID, &company, nil); err != nil {
+			return res.Http400(err).Next()
+		}
+
+		c.Locals(namespace.CompanyKey.Model, &company)
+		return c.Next()
 	}
-
-	if err := Gorm.GetOneBy("id", companyID, &company, nil); err != nil {
-		return 400, err
-	}
-
-	return 0, nil
+	return getCompany
 }
 
 func (ca *companyMiddlewareActions) Create(c fiber.Ctx) (int, error) {

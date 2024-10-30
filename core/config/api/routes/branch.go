@@ -7,8 +7,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Branch(Gorm *handlers.Gorm, App *fiber.App) {
+func Branch(Gorm *handlers.Gorm, r fiber.Router) {
 	cb := controllers.Branch(Gorm)
-	r := App.Group("/company/:companyId/branch")
-	controllers.CreateRoutes(r, cb)
+	b := r.Group("/company/:companyId/branch")
+	controllers.CreateRoutes(b, cb)
 }
