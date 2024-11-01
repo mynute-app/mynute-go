@@ -11,18 +11,11 @@ import (
 )
 
 func Build(DB *gorm.DB, App *fiber.App) {
-	Gorm := &handlers.Gorm{DB: DB}
-
-	// independent routes
-	rootRouter := App.Group("/", middleware.WhoAreYou)
-	Company(Gorm, rootRouter)
-	CompanyType(Gorm, rootRouter)
-
-	// CompanyId dependent routes
-	companyPrefix := fmt.Sprintf("/company/:%s", namespace.GeneralKey.CompanyId)
-	companyCheck := middleware.GetCompany(Gorm)
-	companyRouter := rootRouter.Group(companyPrefix, companyCheck)
-	Branch(Gorm, companyRouter)
-	Service(Gorm, companyRouter)
-	Employee(Gorm, companyRouter)
+	gormHandler := &handlers.Gorm{DB: DB}
+	Company(gormHandler, App)
+	CompanyType(gormHandler, App)
+	Branch(gormHandler, App)
+	Service(gormHandler, App)
+	Employee(gormHandler, App)
+	Holidays(gormHandler, App)  
 }
