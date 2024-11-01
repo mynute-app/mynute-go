@@ -28,6 +28,7 @@ var GeneralKey = TypeStruct{
 
 var CompanyKey = TypeStruct{
 	Name: "company",
+	Model: "company_model",
 }
 
 var CompanyTypeKey = TypeStruct{

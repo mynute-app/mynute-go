@@ -21,10 +21,11 @@ type branchMiddlewareActions struct {
 	Gorm *handlers.Gorm
 }
 
+// Check if the company exists and attach the company ID to the branch.
 func (ba *branchMiddlewareActions) CheckCompany(c fiber.Ctx) (int, error) {
-	var company models.Company
-	if s, err := GetCompany(ba.Gorm, c, &company); err != nil {
-		return s, err
+	company, err := lib.GetFromCtx[*models.Company](c, namespace.CompanyKey.Model)
+	if err != nil {
+		return 500, err
 	}
 
 	if c.Method() == "GET" {
@@ -42,13 +43,17 @@ func (ba *branchMiddlewareActions) CheckCompany(c fiber.Ctx) (int, error) {
 }
 
 func (ba *branchMiddlewareActions) Create(c fiber.Ctx) (int, error) {
-	service, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
+	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}
 	// Perform validation
-	if err := lib.ValidateName(service.Name, "service"); err != nil {
+	if err := lib.ValidateName(branch.Name, "branch"); err != nil {
 		return 400, err
+	}
+	// Check if the company exists
+	if s, err := ba.CheckCompany(c); err != nil {
+		return s, err
 	}
 	// Proceed to the next middleware or handler
 	return 0, nil
