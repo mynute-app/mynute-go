@@ -1,11 +1,11 @@
 package DTO
 
 type Branch struct {
-	ID        uint                `json:"id"`
-	CompanyID uint                `json:"company_id"`
-	Name      string              `json:"name"`
-	Employees []EmployeePopulated `json:"employees"`
-	Services  []ServicePopulated  `json:"services"`
+	ID        uint               `json:"id"`
+	CompanyID uint               `json:"company_id"`
+	Name      string             `json:"name"`
+	Employees []UserPopulated    `json:"employees"`
+	Services  []ServicePopulated `json:"services"`
 }
 
 type BranchPopulated struct {

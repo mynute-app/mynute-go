@@ -23,7 +23,7 @@ func Employee(Gorm *handlers.Gorm) *Registry {
 }
 
 func (em *EmployeeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
-	employee, err := lib.GetFromCtx[*models.Employee](c, namespace.GeneralKey.Model)
+	employee, err := lib.GetFromCtx[*models.User](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}

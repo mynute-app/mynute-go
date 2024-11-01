@@ -12,12 +12,12 @@ import (
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
 type employeeController struct {
-	BaseController[models.Employee, DTO.Employee]
+	BaseController[models.User, DTO.User]
 }
 
 func Employee(Gorm *handlers.Gorm) *employeeController {
 	return &employeeController{
-		BaseController: BaseController[models.Employee, DTO.Employee]{
+		BaseController: BaseController[models.User, DTO.User]{
 			Name: namespace.EmployeeKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.Employee(Gorm),

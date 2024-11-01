@@ -47,7 +47,7 @@ func Connect() *Database {
 }
 
 func (db *Database) Migrate() {
-	err := db.Gorm.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.Employee{}, &models.Service{}, &models.Appointment{}, &models.Holidays{})
+	err := db.Gorm.AutoMigrate(&models.Company{}, &models.CompanyType{}, &models.Branch{}, &models.User{}, &models.Service{}, &models.Appointment{}, &models.Holidays{})
 	if err != nil {
 		log.Fatal("Failed to migrate the database: ", err)
 	}

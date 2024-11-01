@@ -13,7 +13,7 @@ type TimeRange struct {
 }
 
 // Fourth step: Choosing the employee.
-type Employee struct {
+type User struct {
 	gorm.Model
 	Name           string        `gorm:"not null" json:"name"`
 	Surname        string        `gorm:"not null" json:"surname"`
@@ -29,7 +29,7 @@ type Employee struct {
 }
 
 // Check if the employee is available for a given service at a specific time.
-func (e *Employee) IsAvailable(service Service, requestedTime time.Time) bool {
+func (e *User) IsAvailable(service Service, requestedTime time.Time) bool {
 	serviceEnd := requestedTime.Add(time.Duration(service.Duration) * time.Minute)
 
 	for _, slot := range e.AvailableSlots {

@@ -1,6 +1,6 @@
 package DTO
 
-type Employee struct {
+type User struct {
 	ID        uint               `json:"id"`
 	CompanyID uint               `json:"company_id"`
 	Name      string             `json:"name"`
@@ -11,7 +11,7 @@ type Employee struct {
 	Services  []ServicePopulated `json:"services"`
 }
 
-type EmployeePopulated struct {
+type UserPopulated struct {
 	ID      uint   `json:"id"`
 	Name    string `json:"name"`
 	Surname string `json:"surname"`
