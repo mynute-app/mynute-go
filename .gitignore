@@ -4,3 +4,4 @@ postgres-data
 tmp
 __debug
 .exe
+.vscode/launch.json
