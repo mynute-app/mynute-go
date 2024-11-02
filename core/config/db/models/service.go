@@ -1,10 +1,8 @@
 package models
 
-import "gorm.io/gorm"
-
 // Third step: Choosing the service.
 type Service struct {
-	gorm.Model
+	GeneralResourceInfo
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Price       int32    `json:"price"`

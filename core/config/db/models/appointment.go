@@ -2,13 +2,11 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // Fifth step: Scheduling with service and employee availability.
 type Appointment struct {
-	gorm.Model
+	GeneralResourceInfo
 	ServiceID  uint      `json:"service_id"`
 	Service    Service   `gorm:"foreignKey:ServiceID"`
 	EmployeeID uint      `json:"employee_id"`

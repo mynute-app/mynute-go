@@ -1,11 +1,7 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type CompanyType struct {
-	gorm.Model
+	GeneralResourceInfo
 	Name        string `gorm:"not null;unique" json:"name"`
 	Description string `json:"description"`
 }
