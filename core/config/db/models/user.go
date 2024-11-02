@@ -15,17 +15,21 @@ type TimeRange struct {
 // Fourth step: Choosing the employee.
 type User struct {
 	gorm.Model
-	Name           string        `gorm:"not null" json:"name"`
-	Surname        string        `gorm:"not null" json:"surname"`
-	Role           string        `gorm:"not null" json:"role"`
-	Email          string        `gorm:"not null;unique" json:"email"`
-	Phone          string        `gorm:"not null;unique" json:"phone"`
-	CompanyID      uint          `json:"company_id"`                       // Foreign key to Company
-	Company        Company       `gorm:"constraint:OnDelete:CASCADE;"`     // Foreign key to Company
-	Branches       []Branch      `gorm:"many2many:branch_employees;"`      // Many-to-many relation with Branch
-	Services       []Service     `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
-	Appointment    []Appointment `gorm:"foreignKey:EmployeeID"`            // One-to-many relation
-	AvailableSlots []TimeRange   `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
+	Name         string        `gorm:"not null" json:"name"`
+	Surname      string        `gorm:"not null" json:"surname"`
+	Role         string        `gorm:"not null" json:"role"`
+	Email        string        `gorm:"not null;unique" json:"email"`
+	Phone        string        `gorm:"not null;unique" json:"phone"`
+	Password     string        `gorm:"not null" json:"password"`
+	Appointments []Appointment `gorm:"foreignKey:EmployeeID"` // One-to-many relation
+	EmployeeInfo
+}
+
+type EmployeeInfo struct {
+	Companies      []Company   `gorm:"many2many:employee_companies;"`     // Foreign key to Company
+	Branches       []Branch    `gorm:"many2many:employee_branches;"`      // Many-to-many relation with Branch
+	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
+	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
 }
 
 // Check if the employee is available for a given service at a specific time.
