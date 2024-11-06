@@ -6,7 +6,7 @@ type Company struct {
 	Name         string        `gorm:"not null;unique" json:"name"`
 	TaxID        string        `gorm:"not null;unique" json:"tax_id"`
 	CompanyTypes []CompanyType `gorm:"many2many:company_company_types;constraint:OnDelete:CASCADE" json:"company_types"`
-	Employees    []User        `gorm:"many2many:employee_companies;foreignKey:ID;joinForeignKey:CompanyID;References:ID;joinReferences:UserID"` // Many-to-many relation with User
-	Branches []Branch  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"` // Explicit foreign key definition
-	Services []Service `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"` // Explicit foreign key definition
+	Employees    []User        `gorm:"many2many:employee_companies;foreignKey:CompanyID"`                // Many-to-many relation with User
+	Branches     []Branch      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"` // Explicit foreign key definition
+	Services     []Service     `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"` // Explicit foreign key definition
 }
