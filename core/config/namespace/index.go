@@ -63,6 +63,8 @@ var ServiceKey = TypeStruct{
 	Name:  "service",
 	Model: "service_model",
 }
+
 var HolidaysKey = TypeStruct{
-	Name: "holidays",
+	Name:  "holidays",
+	Model: "holidays_model",
 }

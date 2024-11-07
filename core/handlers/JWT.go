@@ -63,8 +63,6 @@ func (j *jsonWebToken) WhoAreYou() error {
 	return j.C.Next()
 }
 
-
-
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {
 	generateMySecret := func() []byte {
