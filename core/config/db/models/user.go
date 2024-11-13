@@ -26,7 +26,7 @@ type User struct {
 }
 
 type EmployeeInfo struct {
-	CompanyID      uint        `json:"company_id"`                       // Foreign key to Company
+	CompanyID      *uint       `json:"company_id"`                       // Foreign key to Company
 	Company        Company     `gorm:"constraint:OnDelete:CASCADE;"`     // Relation to Company
 	Branches       []Branch    `gorm:"many2many:employee_branches;"`     // Many-to-many relation with Branch
 	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
