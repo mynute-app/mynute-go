@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Employee(Gorm *handlers.Gorm, r fiber.Router) {
-	ce := controllers.Employee(Gorm)
-	e := r.Group("/employee")
-
+func User(Gorm *handlers.Gorm, r fiber.Router) {
+	ce := controllers.User(Gorm)
+	e := r.Group("/user")
+	e.Post("/login", ce.Login) // ok
 	e.Get("/email/:email", ce.GetOneByEmail) // ok
 
 	controllers.CreateRoutes(e, ce)

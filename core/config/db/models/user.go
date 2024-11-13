@@ -16,10 +16,10 @@ type TimeRange struct {
 type User struct {
 	gorm.Model
 	Name         string        `gorm:"not null" json:"name"`
-	Surname      string        `gorm:"not null" json:"surname"`
-	Role         string        `gorm:"not null" json:"role"`
+	Surname      string        `json:"surname"`
+	Role         string        `json:"role"`
 	Email        string        `gorm:"not null;unique" json:"email"`
-	Phone        string        `gorm:"not null;unique" json:"phone"`
+	Phone        string        `gorm:"unique" json:"phone"`
 	Password     string        `gorm:"not null" json:"password"`
 	Appointments []Appointment `gorm:"foreignKey:EmployeeID"` // One-to-many relation
 	EmployeeInfo

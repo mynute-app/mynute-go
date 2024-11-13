@@ -16,7 +16,7 @@ type serviceController struct {
 func Service(Gorm *handlers.Gorm) *serviceController {
 	return &serviceController{
 		BaseController: BaseController[models.Service, DTO.Service]{
-			Name:         namespace.EmployeeKey.Name,
+			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.Service(Gorm),
 			Associations: []string{"ServiceType"},

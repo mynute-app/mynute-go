@@ -54,9 +54,9 @@ var BranchKey = TypeStruct{
 	Model: "branch_model",
 }
 
-var EmployeeKey = TypeStruct{
-	Name:  "employee",
-	Model: "employee_model",
+var UserKey = TypeStruct{
+	Name:  "user",
+	Model: "user_model",
 }
 
 var ServiceKey = TypeStruct{

@@ -15,7 +15,7 @@ type branchController struct {
 func Branch(Gorm *handlers.Gorm) *branchController {
 	return &branchController{
 		BaseController: BaseController[models.Branch, DTO.Branch]{
-			Name: namespace.EmployeeKey.Name,
+			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.Branch(Gorm),
 			Associations: []string{"Company", "Employees", "Services"},

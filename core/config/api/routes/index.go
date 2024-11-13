@@ -24,5 +24,5 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	companyRouter := rootRouter.Group(companyPrefix, companyCheck)
 	Branch(Gorm, companyRouter)
 	Service(Gorm, companyRouter)
-	Employee(Gorm, companyRouter)
+	User(Gorm, companyRouter)
 }

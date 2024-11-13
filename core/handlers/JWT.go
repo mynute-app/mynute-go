@@ -23,10 +23,15 @@ func JWT(c fiber.Ctx) *jsonWebToken {
 func (j *jsonWebToken) GetToken() string {
 	return j.C.Get("Authorization")
 }
+//create token
+func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(mySecret)
+}
 
 // WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
 func (j *jsonWebToken) WhoAreYou() error {
-	saveUserData := func (value interface{}) {
+	saveUserData := func(value interface{}) {
 		j.C.Locals(namespace.GeneralKey.UserData, value)
 	}
 
@@ -54,7 +59,8 @@ func (j *jsonWebToken) WhoAreYou() error {
 	}
 
 	// Check token validity and extract claims
-	claims, ok := token.Claims.(jwt.MapClaims); if !ok || !token.Valid {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
 		return j.Res.Http400(errors.New("invalid token")).Next()
 	}
 

@@ -9,3 +9,4 @@ import (
 func WhoAreYou(c fiber.Ctx) error {
 	return handlers.JWT(c).WhoAreYou()
 }
+
