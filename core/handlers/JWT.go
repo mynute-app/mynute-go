@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -23,10 +24,18 @@ func JWT(c fiber.Ctx) *jsonWebToken {
 func (j *jsonWebToken) GetToken() string {
 	return j.C.Get("Authorization")
 }
-//create token
+
+// create token
 func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(mySecret)
+}
+
+func (j *jsonWebToken) CreateClaims(user string) jwt.Claims {
+	return jwt.MapClaims{
+		"userId": user,
+		"exp":    time.Now().Add(time.Hour * 72).Unix(),
+	}
 }
 
 // WhoAreYou decrypts and validates the JWT token, saving user data in context if valid

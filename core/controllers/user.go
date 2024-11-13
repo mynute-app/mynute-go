@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -34,12 +35,23 @@ func (cc *userController) GetOneByEmail(c fiber.Ctx) error {
 // Custom extension method to login an user
 func (cc *userController) Login(c fiber.Ctx) error {
 	cc.init(c)
-	body := c.Locals(namespace.GeneralKey.Model).(DTO.User)
-	var user models.User
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
+	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
+	var userDatabase models.User
+	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
 		cc.reqActions.SendError(404, err)
 		return nil
 	}
+	if handlers.ComparePassword(userDatabase.Password, body.Password) {
+		cc.reqActions.Status = 401
+		return nil
+	}
+	claims := handlers.JWT(c).CreateClaims(userDatabase.Email)
+	token, err := handlers.JWT(c).CreateToken(claims)
+	if err != nil {
+		cc.reqActions.SendError(500, err)
+	}
+	log.Println("User logged in")
+	c.Response().Header.Set("Authorization", token)
 
-	return middleware.WhoAreYou(c)
+	return nil
 }
