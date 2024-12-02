@@ -21,5 +21,6 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Branch(Gorm, companyRouter)
 	Service(Gorm, companyRouter)
 	User(Gorm, App)
+	Auth(Gorm, App)
 	Holidays(Gorm, App)
 }
