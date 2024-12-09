@@ -37,7 +37,10 @@ func (sr *Res) Http400(err error) *Res {
 	sr.send(400, err.Error())
 	return sr
 }
-
+func (sr *Res) Http401(err error) error {
+	sr.send(401, err.Error())
+	return nil
+}
 func (sr *Res) Http404() *Res {
 	sr.sendStatus(404)
 	return sr

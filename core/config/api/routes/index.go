@@ -13,14 +13,14 @@ import (
 func Build(DB *gorm.DB, App *fiber.App) {
 	Gorm := &handlers.Gorm{DB: DB}
 	//will pass in the middleware and if not authenticated will return 401
-	authRouter := App.Group("/", middleware.WhoAreYou)
+	Auth(Gorm, App)
+	Holidays(Gorm, App)
 
 	companyPrefix := fmt.Sprintf("/company/:%s", namespace.QueryKey.CompanyId)
 	companyCheck := middleware.GetCompany(Gorm)
+	authRouter := App.Group("/", middleware.WhoAreYou)
 	companyRouter := authRouter.Group(companyPrefix, companyCheck)
 	Branch(Gorm, companyRouter)
 	Service(Gorm, companyRouter)
-	User(Gorm, App)
-	Auth(Gorm, App)
-	Holidays(Gorm, App)
+	User(Gorm, authRouter)
 }

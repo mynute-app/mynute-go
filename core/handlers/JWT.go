@@ -48,7 +48,8 @@ func (j *jsonWebToken) WhoAreYou() error {
 	tokenString := j.GetToken()
 	if tokenString == "" {
 		saveUserData(nil)
-		return j.C.Next()
+		
+		return j.Res.Http401(errors.New("missing token"))
 	}
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
@@ -64,13 +65,13 @@ func (j *jsonWebToken) WhoAreYou() error {
 	token, err := jwt.Parse(tokenString, keyFunc)
 
 	if err != nil {
-		return j.Res.Http400(err).Next()
+		return j.Res.Http401(err)
 	}
 
 	// Check token validity and extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return j.Res.Http400(errors.New("invalid token")).Next()
+		return j.Res.Http401(errors.New("invalid token"))
 	}
 
 	// Store claims (user data) in Fiber's Locals
