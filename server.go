@@ -2,7 +2,8 @@ package main
 
 import (
 	"agenda-kaki-go/core/config/api/routes"
-	"agenda-kaki-go/core/config/db"
+	database "agenda-kaki-go/core/config/db"
+	"agenda-kaki-go/core/handlers"
 	"log"
 
 	"github.com/gofiber/fiber/v3"
@@ -17,7 +18,7 @@ func main() {
 
 	// Close the database connection when the app closes
 	defer db.CloseDB()
-
+	handlers.NewAuth()
 	// Migrate the database
 	db.Migrate()
 

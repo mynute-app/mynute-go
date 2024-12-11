@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/luigiazoreng/goth_fiber"
 )
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
@@ -80,5 +81,32 @@ func (cc *authController) VerifyEmail(c fiber.Ctx) error {
 		cc.reqActions.SendError(409, errors.New("email already registered"))
 		return nil
 	}
+	return nil
+}
+
+func (cc *authController) BeginAuthProviderCallback(c fiber.Ctx) error {
+	log.Println("BeginAuthProviderCallback")
+	if err := gothfiber.BeginAuthHandler(c); err != nil {
+		cc.reqActions.SendError(500, err)
+		return nil
+	}
+
+	return nil
+}
+
+func (cc *authController) GetAuthCallbackFunction(c fiber.Ctx) error {
+	user, err := gothfiber.CompleteUserAuth(c)
+	if err != nil {
+		cc.reqActions.SendError(500, err)
+		return nil
+	}
+	log.Println("User logged in: ", user.Email)
+	c.Redirect().To("/")
+	return nil
+}
+
+func (cc *authController) LogoutProvider(c fiber.Ctx) error {
+	gothfiber.Logout(c)
+	c.Redirect().To("/")
 	return nil
 }
