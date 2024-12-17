@@ -100,7 +100,8 @@ func (cc *authController) GetAuthCallbackFunction(c fiber.Ctx) error {
 		cc.reqActions.SendError(500, err)
 		return nil
 	}
-	log.Println("User logged in: ", user.Email)
+	log.Println("User logged in callback: ", user.Email)
+	handlers.Auth(c).StoreUserSession()
 	c.Redirect().To("/")
 	return nil
 }
