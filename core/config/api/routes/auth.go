@@ -14,8 +14,8 @@ func Auth(Gorm *handlers.Gorm, r fiber.Router) {
 	e.Post("/register", ce.Register)
 	e.Post("/verify-email", ce.VerifyEmail)
 	e.Get("/logout", ce.LogoutProvider)
-	e.Get("/:provider", ce.BeginAuthProviderCallback)
-	e.Get("/:provider/callback", ce.GetAuthCallbackFunction)
+	e.Get("/oauth/:provider", ce.BeginAuthProviderCallback)
+	e.Get("/oauth/:provider/callback", ce.GetAuthCallbackFunction)
 
 	controllers.CreateRoutes(e, ce)
 }

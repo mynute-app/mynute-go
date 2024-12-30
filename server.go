@@ -19,14 +19,8 @@ func main() {
 	// Close the database connection when the app closes
 	defer db.CloseDB()
 
-	//begin session
-	session := handlers.NewCookieStore(handlers.SessionsOptions{
-		MaxAge:     3600,
-		CookiesKey: "agenda-kaki-go",
-		Secure:     false,
-		HttpOnly:   true,
-	})
-
+	//Initialize Auth handlers
+	session := handlers.NewCookieStore(handlers.SessionOpts())
 	handlers.NewAuth(session)
 
 	// Migrate the database

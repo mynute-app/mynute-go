@@ -85,12 +85,10 @@ func (cc *authController) VerifyEmail(c fiber.Ctx) error {
 }
 
 func (cc *authController) BeginAuthProviderCallback(c fiber.Ctx) error {
-	log.Println("BeginAuthProviderCallback")
 	if err := gothfiber.BeginAuthHandler(c); err != nil {
 		cc.reqActions.SendError(500, err)
 		return nil
 	}
-
 	return nil
 }
 
@@ -100,8 +98,7 @@ func (cc *authController) GetAuthCallbackFunction(c fiber.Ctx) error {
 		cc.reqActions.SendError(500, err)
 		return nil
 	}
-	log.Println("User logged in callback: ", user.Email)
-	handlers.Auth(c).StoreUserSession()
+	handlers.Auth(c).StoreUserSession(user)
 	c.Redirect().To("/")
 	return nil
 }

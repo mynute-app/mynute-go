@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gorilla/sessions"
@@ -11,12 +13,6 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	key    = "randomString"
-	MaxAge = 86400 * 30
-	IsProd = false
 )
 
 type Authentication struct {
@@ -53,20 +49,48 @@ func ComparePassword(hashedPassword, password string) bool {
 func NewAuth(session *sessions.CookieStore) {
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	googleUrl := os.Getenv("GOOGLE_URL_OAUTH")
 	gothic.Store = session
 	goth.UseProviders(
-		google.New(googleClientId, googleClientSecret, "http://localhost:3000/auth/google/callback"),
+		google.New(googleClientId, googleClientSecret, googleUrl),
 	)
 }
 
 func NewCookieStore(opts SessionsOptions) *sessions.CookieStore {
 	// Create a new cookie store
-	store := sessions.NewCookieStore([]byte(key))
+	store := sessions.NewCookieStore([]byte(opts.CookiesKey))
 	store.MaxAge(opts.MaxAge)
 	store.Options.Path = "/"
 	store.Options.HttpOnly = opts.HttpOnly
 	store.Options.Secure = opts.Secure
 	return store
+}
+
+func SessionOpts() SessionsOptions {
+    return SessionsOptions{
+        CookiesKey: os.Getenv("COOKIES_KEY"),
+        MaxAge: func() int {
+            intVal, err := strconv.Atoi(os.Getenv("MAX_AGE"))
+            if err != nil {
+                log.Fatalf("sessionsOptions MaxAge: %v", err)
+            }
+            return intVal
+        }(),
+        HttpOnly: func() bool {
+            b, err := strconv.ParseBool(os.Getenv("HTTP_ONLY_COOKIE"))
+            if err != nil {
+                log.Fatalf("sessionsOptions httpOnly: %v", err)
+            }
+            return b
+        }(),
+        Secure: func() bool {
+            b, err := strconv.ParseBool(os.Getenv("SECURE_COOKIE"))
+            if err != nil {
+                log.Fatalf("sessionsOptions secure: %v", err)
+            }
+            return b
+        }(),
+    }
 }
 
 func Auth(c fiber.Ctx) *Authentication {
@@ -77,30 +101,21 @@ func Auth(c fiber.Ctx) *Authentication {
 	}
 }
 
-func (a *Authentication) StoreUserSession() error {
-	// Login the user
-	session, err := gothfiber.SessionStore.Get(a.C)
+func (a *Authentication) StoreUserSession(us goth.User) error {
+	// Store the user session
+	err := gothfiber.StoreInSession("_gothic_session", us.AccessToken, a.C)
 	if err != nil {
-		return a.Res.Http401(err)
-	}
-	log.Println("User id: ", session.ID())
-
-	err = session.Save()
-	if err != nil {
-		return a.Res.Http401(err)
+		log.Println("Error storing user session", err)
 	}
 	return nil
 }
 
 func (a *Authentication) WhoAreYou() error {
 	// Check if the user is authenticated
-	us, err := gothfiber.GetFromSession("_gothic_session", a.C)
+	_, err := gothfiber.GetFromSession("_gothic_session", a.C)
 	if err != nil {
-		log.Println("User not authenticated", err)
-		log.Println(us)
-		return a.Res.Http401(err)
+		return a.Res.Http401(fmt.Errorf("user not authenticated"))
 	}
-	log.Println("User authenticated:", us)
 	return a.C.Next()
 
 }
