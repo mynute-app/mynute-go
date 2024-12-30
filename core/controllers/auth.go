@@ -66,6 +66,11 @@ func (cc *authController) Register(c fiber.Ctx) error {
 }
 
 func (cc *authController) VerifyEmail(c fiber.Ctx) error {
+
+	return nil
+}
+
+func (cc *authController) VerifyExistingAccount(c fiber.Ctx) error {
 	cc.init(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
@@ -84,6 +89,8 @@ func (cc *authController) VerifyEmail(c fiber.Ctx) error {
 	return nil
 }
 
+
+//OAUTH logics
 func (cc *authController) BeginAuthProviderCallback(c fiber.Ctx) error {
 	if err := gothfiber.BeginAuthHandler(c); err != nil {
 		cc.reqActions.SendError(500, err)

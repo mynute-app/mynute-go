@@ -1,16 +1,17 @@
 package DTO
 
 type User struct {
-	ID        uint               `json:"id"`
-	CompanyID uint               `json:"company_id"`
-	Name      string             `json:"name"`
-	Surname   string             `json:"surname"`
-	Email     string             `json:"email"`
-	Password string 		   `json:"password"`
-	Phone     string             `json:"phone"`
-	Branches  []BranchPopulated  `json:"branches"`
-	Services  []ServicePopulated `json:"services"`
-	Tag       []string           `json:"tag"`
+	ID               uint               `json:"id"`
+	CompanyID        uint               `json:"company_id"`
+	Name             string             `json:"name"`
+	Surname          string             `json:"surname"`
+	Email            string             `json:"email"`
+	Password         string             `json:"password"`
+	VerificationCode string             `json:"verification_code"`
+	Phone            string             `json:"phone"`
+	Branches         []BranchPopulated  `json:"branches"`
+	Services         []ServicePopulated `json:"services"`
+	Tag              []string           `json:"tag"`
 }
 
 // se usuario é super admin
