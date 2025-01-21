@@ -71,9 +71,9 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
 		bc.reqActions.SendError(s, err)
 		return
 	}
-	c.Locals(keys.ModelArr, &modelArr)
+	c.Locals(keys.ModelArr, modelArr)
 	c.Locals(keys.Dto, &dto)
-	c.Locals(keys.DtoArr, &dtoArr)
+	c.Locals(keys.DtoArr, dtoArr)
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, bc.Associations)
 }

@@ -22,7 +22,7 @@ func User(Gorm *handlers.Gorm) *userController {
 			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.User(Gorm),
-			Associations: []string{"Branches", "Services", "Appointment", "Company"},
+			Associations: []string{"Branches", "Services", "Appointments", "Company"},
 		},
 	}
 }

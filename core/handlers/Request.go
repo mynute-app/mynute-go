@@ -54,6 +54,11 @@ func (ac *ReqActions) GetBy(paramKey string) {
 		ac.res.Http500(err)
 		return
 	}
+	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	if err != nil {
+		ac.res.Http500(err)
+		return
+	}
 	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
 		ac.res.Http500(err)
@@ -64,21 +69,26 @@ func (ac *ReqActions) GetBy(paramKey string) {
 		ac.res.Http500(err)
 		return
 	}
+	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
+	if err != nil {
+		ac.res.Http500(err)
+		return
+	}
 
 	if paramKey == "" {
 		if err := ac.req.Gorm.GetAll(modelArr, assocs); err != nil {
 			ac.res.Http500(err)
 			return
 		}
+		ac.res.DTO(200, modelArr, dtoArr)
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, modelArr, assocs); err != nil {
+		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
 			ac.res.Http404()
 			return
 		}
+		ac.res.DTO(200, model, dto)
 	}
-
-	ac.res.DTO(200, modelArr, dtoArr)
 }
 
 // Final Method that executes a FORCE GET action
