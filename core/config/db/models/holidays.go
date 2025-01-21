@@ -2,10 +2,12 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Holidays struct {
-	GeneralResourceInfo
+	gorm.Model
 	Name        string    `gorm:"not null;index" json:"name"`
 	Date        time.Time `gorm:"not null" json:"date"`
 	Type        string    `gorm:"not null" json:"type"`
