@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -19,10 +20,10 @@ type User struct {
 	Surname         string `json:"surname"`
 	Role            string `json:"role"`
 	Email           string `gorm:"not null;unique" json:"email"`
-	Phone           string `gorm:"unique" json:"phone"`
+	Phone           string `gorm:"not null;unique" json:"phone"`
 	Password        string `gorm:"not null" json:"password"`
 	VerificatioCode string
-	Verified        bool `gorm:"not null"`
+	Verified        bool          `gorm:"not null"`
 	Appointments    []Appointment `gorm:"foreignKey:EmployeeID"` // One-to-many relation
 	EmployeeInfo
 }
@@ -48,4 +49,15 @@ func (e *User) IsAvailable(service Service, requestedTime time.Time) bool {
 		}
 	}
 	return false
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if u.Phone == "" {
+		return errors.New("phone is required")
+	} else if u.Password == "" {
+		return errors.New("password is required")
+	} else if u.Email == "" {
+		return errors.New("email is required")
+	}
+	return nil
 }

@@ -15,6 +15,8 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	//will pass in the middleware and if not authenticated will return 401
 	Auth(Gorm, App)
 	Holidays(Gorm, App)
+	CompanyType(Gorm, App)
+	Company(Gorm, App)
 
 	companyPrefix := fmt.Sprintf("/company/:%s", namespace.QueryKey.CompanyId)
 	companyCheck := middleware.GetCompany(Gorm)
