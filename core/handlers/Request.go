@@ -245,11 +245,11 @@ func (ac *ReqActions) UpdateOneById() {
 		ac.res.Http500(err)
 		return
 	}
-	changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
+	// changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes)
+	// if err != nil {
+	// 	ac.res.Http500(err)
+	// 	return
+	// }
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
 	if err != nil {
 		ac.res.Http500(err)
@@ -258,7 +258,7 @@ func (ac *ReqActions) UpdateOneById() {
 
 	id := ac.ctx.Params(namespace.QueryKey.Id)
 
-	if err := ac.req.Gorm.UpdateOneById(id, model, changes, associations); err != nil {
+	if err := ac.req.Gorm.UpdateOneById(id, model, model, associations); err != nil {
 		ac.res.Http400(err)
 		return
 	}
