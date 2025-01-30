@@ -14,6 +14,8 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
+require gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+
 require (
 	cloud.google.com/go/compute v1.20.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -41,4 +43,5 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
+	gopkg.in/mail.v2 v2.3.1
 )

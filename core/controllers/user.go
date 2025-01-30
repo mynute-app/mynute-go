@@ -41,7 +41,7 @@ func (cc *userController) Login(c fiber.Ctx) error {
 		cc.reqActions.SendError(404, err)
 		return nil
 	}
-	if handlers.ComparePassword(userDatabase.Password, body.Password) {
+	if handlers.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
 		cc.reqActions.Status = 401
 		return nil
 	}
