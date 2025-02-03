@@ -53,13 +53,13 @@ func (ms *GoMailService) SendEmail(mailReq *Mail) error {
 	m.SetHeader("To", mailReq.to...)
 
     // Set the subject and body based on the mail type
-    if mailReq.mtype == MailConfirmation {
-        m.SetHeader("Subject", "Email Confirmation")
-        m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your confirmation code is: "+mailReq.data.Code)
-    } else if mailReq.mtype == PassReset {
-        m.SetHeader("Subject", "Password Reset")
-        m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your password reset code is: "+mailReq.data.Code)
-    }
+    // if mailReq.mtype == MailConfirmation {
+    //     m.SetHeader("Subject", "Email Confirmation")
+    //     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your confirmation code is: "+mailReq.data.Code)
+    // } else if mailReq.mtype == PassReset {
+    //     m.SetHeader("Subject", "Password Reset")
+    //     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your password reset code is: "+mailReq.data.Code)
+    // }
 
     // Set up the SMTP server
     d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPUser, ms.configs.SMTPPass)
