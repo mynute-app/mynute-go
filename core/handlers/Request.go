@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func Request (Gorm *Gorm) *Req {
+func Request(Gorm *Gorm) *Req {
 	return &Req{Gorm: Gorm}
 }
 
@@ -74,9 +74,8 @@ func (ac *ReqActions) GetBy(paramKey string) {
 		ac.res.Http500(err)
 		return
 	}
-
 	if paramKey == "" {
-		if err := ac.req.Gorm.GetAll(modelArr, assocs); err != nil {
+		if err := ac.req.Gorm.GetAll(&modelArr, assocs); err != nil { // 🚨 Aqui pode estar o erro
 			ac.res.Http500(err)
 			return
 		}
@@ -216,7 +215,6 @@ func (ac *ReqActions) ForceDeleteOneById() {
 	}
 	GeneralKey := namespace.GeneralKey
 	QueryKey := namespace.QueryKey
-
 
 	id := ac.ctx.Params(string(QueryKey.Id))
 	model, err := lib.GetFromCtx[interface{}](ac.ctx, GeneralKey.Model)

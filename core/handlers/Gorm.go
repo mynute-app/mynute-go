@@ -117,15 +117,19 @@ func (p Gorm) ForceDeleteOneById(value string, model interface{}) error {
 
 // GetAll fetches all records
 func (p Gorm) GetAll(model interface{}, associations []string) error {
-	// Start with the base query
+	// Verifique se model é um ponteiro antes de chamar Find()
+	if model == nil {
+		return fmt.Errorf("model não pode ser nil")
+	}
+
 	query := p.DB
 
-	// Iterate over the preloads and apply each one
+	// Aplicar os Preloads
 	for _, preload := range associations {
 		query = query.Preload(preload)
 	}
 
-	// Fetch all records after applying all preloads
+	// **Certifique-se de que `model` é um ponteiro ao chamar Find()**
 	return query.Find(model).Error
 }
 

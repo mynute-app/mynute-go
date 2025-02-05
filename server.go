@@ -30,5 +30,5 @@ func main() {
 	routes.Build(db.Gorm, app)
 
 	// Start the server on port 3000
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":4000"))
 }
