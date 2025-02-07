@@ -75,7 +75,7 @@ func (ac *ReqActions) GetBy(paramKey string) {
 		return
 	}
 	if paramKey == "" {
-		if err := ac.req.Gorm.GetAll(&modelArr, assocs); err != nil { // 🚨 Aqui pode estar o erro
+		if err := ac.req.Gorm.GetAll(modelArr, assocs); err != nil { // 🚨 Aqui pode estar o erro
 			ac.res.Http500(err)
 			return
 		}

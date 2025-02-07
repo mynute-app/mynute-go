@@ -1,7 +1,7 @@
 package DTO
 
 type Company struct {
-	CompanyID	uint               `json:"company_id"` // Primary key
+	ID           uint               `json:"id"` // Primary key
 	Name         string             `json:"name"`
 	TaxID        string             `json:"tax_id"`
 	CompanyTypes []CompanyType      `json:"company_types"`

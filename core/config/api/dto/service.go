@@ -2,7 +2,7 @@ package DTO
 
 type Service struct {
 	ID          uint     `json:"id"`
-	CompanyID   uint     `json:"company_id"`
+	CompanyID   uint     `gorm:"not null"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Price       int32    `json:"price"`
