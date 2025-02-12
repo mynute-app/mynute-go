@@ -29,11 +29,11 @@ type User struct {
 }
 
 type EmployeeInfo struct {
-	CompanyID      uint       `gorm:"not null"`                         // Foreign key to Company
-	Company        Company     `gorm:"constraint:OnDelete:CASCADE;"`     // Relation to Company
-	Branches       []Branch    `gorm:"many2many:employee_branches;"`     // Many-to-many relation with Branch
-	Services       []Service   `gorm:"many2many:employee_services;"`     // Many-to-many relation with Service
-	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"` // Store availability as JSON in the database
+	CompanyID      uint        `gorm:"not null;index;foreignKey:CompanyID;references:ID" json:"company_id"` // Foreign key to Company
+	Company        Company     `gorm:"constraint:OnDelete:CASCADE;"`                                        // Relation to Company
+	Branches       []Branch    `gorm:"many2many:employee_branches;"`                                        // Many-to-many relation with Branch
+	Services       []Service   `gorm:"many2many:employee_services;"`                                        // Many-to-many relation with Service
+	AvailableSlots []TimeRange `gorm:"type:json" json:"available_slots"`                                    // Store availability as JSON in the database
 }
 
 // Check if the employee is available for a given service at a specific time.
