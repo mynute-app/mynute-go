@@ -5,7 +5,8 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
-	"github.com/gofiber/fiber/v3"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func Branch(Gorm *handlers.Gorm) *Registry {
@@ -22,7 +23,7 @@ type branchMiddlewareActions struct {
 }
 
 // Check if the company exists and attach the company ID to the branch.
-func (ba *branchMiddlewareActions) CheckCompany(c fiber.Ctx) (int, error) {
+func (ba *branchMiddlewareActions) CheckCompany(c *fiber.Ctx) (int, error) {
 	company, err := lib.GetFromCtx[*models.Company](c, namespace.CompanyKey.Model)
 	if err != nil {
 		return 500, err
@@ -42,7 +43,7 @@ func (ba *branchMiddlewareActions) CheckCompany(c fiber.Ctx) (int, error) {
 	return 0, nil
 }
 
-func (ba *branchMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+func (ba *branchMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err

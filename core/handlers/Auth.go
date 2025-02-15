@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/sessions"
 	gothfiber "github.com/luigiazoreng/goth_fiber"
 	"github.com/markbates/goth"
@@ -16,7 +16,7 @@ import (
 )
 
 type Authentication struct {
-	C           fiber.Ctx
+	C           *fiber.Ctx
 	Res         *Res
 	sessionName string
 }
@@ -67,33 +67,33 @@ func NewCookieStore(opts SessionsOptions) *sessions.CookieStore {
 }
 
 func SessionOpts() SessionsOptions {
-    return SessionsOptions{
-        CookiesKey: os.Getenv("COOKIES_KEY"),
-        MaxAge: func() int {
-            intVal, err := strconv.Atoi(os.Getenv("MAX_AGE"))
-            if err != nil {
-                log.Fatalf("sessionsOptions MaxAge: %v", err)
-            }
-            return intVal
-        }(),
-        HttpOnly: func() bool {
-            b, err := strconv.ParseBool(os.Getenv("HTTP_ONLY_COOKIE"))
-            if err != nil {
-                log.Fatalf("sessionsOptions httpOnly: %v", err)
-            }
-            return b
-        }(),
-        Secure: func() bool {
-            b, err := strconv.ParseBool(os.Getenv("SECURE_COOKIE"))
-            if err != nil {
-                log.Fatalf("sessionsOptions secure: %v", err)
-            }
-            return b
-        }(),
-    }
+	return SessionsOptions{
+		CookiesKey: os.Getenv("COOKIES_KEY"),
+		MaxAge: func() int {
+			intVal, err := strconv.Atoi(os.Getenv("MAX_AGE"))
+			if err != nil {
+				log.Fatalf("sessionsOptions MaxAge: %v", err)
+			}
+			return intVal
+		}(),
+		HttpOnly: func() bool {
+			b, err := strconv.ParseBool(os.Getenv("HTTP_ONLY_COOKIE"))
+			if err != nil {
+				log.Fatalf("sessionsOptions httpOnly: %v", err)
+			}
+			return b
+		}(),
+		Secure: func() bool {
+			b, err := strconv.ParseBool(os.Getenv("SECURE_COOKIE"))
+			if err != nil {
+				log.Fatalf("sessionsOptions secure: %v", err)
+			}
+			return b
+		}(),
+	}
 }
 
-func Auth(c fiber.Ctx) *Authentication {
+func Auth(c *fiber.Ctx) *Authentication {
 	return &Authentication{
 		C:           c,
 		Res:         &Res{Ctx: c},

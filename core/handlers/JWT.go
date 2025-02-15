@@ -8,16 +8,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type jsonWebToken struct {
-	C   fiber.Ctx
+	C   *fiber.Ctx
 	Res *Res
 }
 
-func JWT(c fiber.Ctx) *jsonWebToken {
+func JWT(c *fiber.Ctx) *jsonWebToken {
 	return &jsonWebToken{C: c, Res: Response(c)}
 }
 
@@ -48,7 +48,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	tokenString := j.GetToken()
 	if tokenString == "" {
 		saveUserData(nil)
-		
+
 		return j.Res.Http401(errors.New("missing token"))
 	}
 

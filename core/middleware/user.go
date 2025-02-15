@@ -17,7 +17,7 @@ func User(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-// func (em *EmployeeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+// func (em *EmployeeMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 // 	user, err := lib.GetFromCtx[*models.User](c, namespace.GeneralKey.Model)
 // 	if err != nil {
 // 		return 500, err

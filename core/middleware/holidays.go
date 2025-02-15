@@ -7,7 +7,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"log"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 type HolidaysMiddlewareActions struct {
@@ -22,7 +22,7 @@ func Holidays(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-func (hm *HolidaysMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+func (hm *HolidaysMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	Holidays, err := lib.GetFromCtx[*models.Holidays](c, namespace.GeneralKey.Model)
 	if err != nil {
 		log.Println(err)

@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"log"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Request(Gorm *Gorm) *Req {
@@ -17,7 +17,7 @@ type Req struct {
 }
 
 // Chainable method to set the Fiber context
-func (r *Req) FiberCtx(c fiber.Ctx) *ReqActions {
+func (r *Req) FiberCtx(c *fiber.Ctx) *ReqActions {
 	return &ReqActions{
 		req: r,
 		res: Response(c),
@@ -29,7 +29,7 @@ func (r *Req) FiberCtx(c fiber.Ctx) *ReqActions {
 type ReqActions struct {
 	req    *Req
 	res    *Res
-	ctx    fiber.Ctx
+	ctx    *fiber.Ctx
 	Error  error
 	Status int
 }

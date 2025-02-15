@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 var _ IController = (*BaseController[IController, IController])(nil)
@@ -19,16 +19,16 @@ type BaseController[MODEL any, DTO any] struct {
 }
 
 type IController interface {
-	GetBy(paramKey string, c fiber.Ctx) error
-	ForceGetBy(paramKey string, c fiber.Ctx) error
-	CreateOne(c fiber.Ctx) error
-	GetAll(c fiber.Ctx) error
-	GetOneById(c fiber.Ctx) error
-	UpdateOneById(c fiber.Ctx) error
-	DeleteOneById(c fiber.Ctx) error
-	ForceDeleteOneById(c fiber.Ctx) error
-	ForceGetOneById(c fiber.Ctx) error
-	ForceGetAll(c fiber.Ctx) error
+	GetBy(paramKey string, c *fiber.Ctx) error
+	ForceGetBy(paramKey string, c *fiber.Ctx) error
+	CreateOne(c *fiber.Ctx) error
+	GetAll(c *fiber.Ctx) error
+	GetOneById(c *fiber.Ctx) error
+	UpdateOneById(c *fiber.Ctx) error
+	DeleteOneById(c *fiber.Ctx) error
+	ForceDeleteOneById(c *fiber.Ctx) error
+	ForceGetOneById(c *fiber.Ctx) error
+	ForceGetAll(c *fiber.Ctx) error
 }
 
 func CreateRoutes(r fiber.Router, ci IController) {
@@ -43,13 +43,13 @@ func CreateRoutes(r fiber.Router, ci IController) {
 	id.Get("/force", ci.ForceGetOneById)       // ok
 }
 
-func (bc *BaseController[MODEL, DTO]) init(c fiber.Ctx) {
+func (bc *BaseController[MODEL, DTO]) init(c *fiber.Ctx) {
 	bc.saveLocals(c)
 	bc.reqActions = bc.Request.FiberCtx(c)
 	bc.runMiddlewares(c)
 }
 
-func (bc *BaseController[MODEL, DTO]) runMiddlewares(c fiber.Ctx) {
+func (bc *BaseController[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
 	bc.saveLocals(c)
 	mdws := bc.Middleware.GetActions(bc.Name, c.Method())
 	for _, mdw := range mdws {
@@ -60,7 +60,7 @@ func (bc *BaseController[MODEL, DTO]) runMiddlewares(c fiber.Ctx) {
 	}
 }
 
-func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
+func (bc *BaseController[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	var modelArr []MODEL
 	var dtoArr []DTO
 	var model MODEL
@@ -78,55 +78,55 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c fiber.Ctx) {
 	c.Locals(keys.Associations, bc.Associations)
 }
 
-func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {
 	bc.init(c)
 	bc.reqActions.GetBy(paramKey)
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c *fiber.Ctx) error {
 	bc.init(c)
 	bc.reqActions.ForceGetBy(paramKey)
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) DeleteOneById(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) DeleteOneById(c *fiber.Ctx) error {
 	bc.init(c)
 	bc.reqActions.DeleteOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceDeleteOneById(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) ForceDeleteOneById(c *fiber.Ctx) error {
 	bc.init(c)
 	bc.reqActions.ForceDeleteOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) UpdateOneById(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) UpdateOneById(c *fiber.Ctx) error {
 	bc.init(c)
 	bc.reqActions.UpdateOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) CreateOne(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) CreateOne(c *fiber.Ctx) error {
 
 	bc.init(c)
 	bc.reqActions.CreateOne()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) GetAll(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) GetAll(c *fiber.Ctx) error {
 	return bc.GetBy("", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) GetOneById(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) GetOneById(c *fiber.Ctx) error {
 	return bc.GetBy("id", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetOneById(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) ForceGetOneById(c *fiber.Ctx) error {
 	return bc.ForceGetBy("id", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetAll(c fiber.Ctx) error {
+func (bc *BaseController[MODEL, DTO]) ForceGetAll(c *fiber.Ctx) error {
 	return bc.ForceGetBy("", c)
 }

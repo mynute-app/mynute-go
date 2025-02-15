@@ -6,7 +6,7 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"fmt"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 

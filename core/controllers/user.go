@@ -8,7 +8,7 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"log"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
@@ -28,12 +28,12 @@ func User(Gorm *handlers.Gorm) *userController {
 }
 
 // Custom extension method to get an employee by email
-func (cc *userController) GetOneByEmail(c fiber.Ctx) error {
+func (cc *userController) GetOneByEmail(c *fiber.Ctx) error {
 	return cc.GetBy("email", c)
 }
 
 // Custom extension method to login an user
-func (cc *userController) Login(c fiber.Ctx) error {
+func (cc *userController) Login(c *fiber.Ctx) error {
 	cc.init(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 type companyMiddlewareActions struct {
@@ -27,7 +27,7 @@ func Company(Gorm *handlers.Gorm) *Registry {
 }
 
 func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
-	getCompany := func (c fiber.Ctx) error {
+	getCompany := func(c *fiber.Ctx) error {
 		var company models.Company
 		res := handlers.Response(c)
 		companyID := c.Params(namespace.QueryKey.CompanyId)
@@ -35,7 +35,7 @@ func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
 		if companyID == "" {
 			return res.Http400(errors.New("missing companyId")).Next()
 		}
-	
+
 		if err := Gorm.GetOneBy("id", companyID, &company, nil); err != nil {
 			return res.Http400(err).Next()
 		}
@@ -46,7 +46,7 @@ func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
 	return getCompany
 }
 
-func (ca *companyMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+func (ca *companyMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	company, err := lib.GetFromCtx[*models.Company](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
@@ -77,7 +77,7 @@ func (ca *companyMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 	return 0, nil
 }
 
-func (ca *companyMiddlewareActions) Update(c fiber.Ctx) (int, error) {
+func (ca *companyMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 	changes, err := lib.GetFromCtx[map[string]interface{}](c, namespace.GeneralKey.Changes)
 	if err != nil {
 		return 500, err

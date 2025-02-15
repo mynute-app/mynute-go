@@ -1,26 +1,26 @@
 package middleware
 
-import "github.com/gofiber/fiber/v3"
+import "github.com/gofiber/fiber/v2"
 
 // Central Registry for middleware actions
 type Registry struct {
-	actions map[string]map[string][]func(fiber.Ctx) (int, error)
+	actions map[string]map[string][]func(*fiber.Ctx) (int, error)
 }
 
 // Initialize a new registry
 func NewRegistry() *Registry {
-	return &Registry{actions: make(map[string]map[string][]func(fiber.Ctx) (int, error))}
+	return &Registry{actions: make(map[string]map[string][]func(*fiber.Ctx) (int, error))}
 }
 
 // Register middleware actions by resource and method
-func (mr *Registry) RegisterAction(resource, method string, action func(fiber.Ctx) (int, error)) {
+func (mr *Registry) RegisterAction(resource, method string, action func(*fiber.Ctx) (int, error)) {
 	if mr.actions[resource] == nil {
-		mr.actions[resource] = make(map[string][]func(fiber.Ctx) (int, error))
+		mr.actions[resource] = make(map[string][]func(*fiber.Ctx) (int, error))
 	}
 	mr.actions[resource][method] = append(mr.actions[resource][method], action)
 }
 
 // Retrieve middleware actions for a specific resource and method
-func (mr *Registry) GetActions(resource, method string) []func(fiber.Ctx) (int, error) {
+func (mr *Registry) GetActions(resource, method string) []func(*fiber.Ctx) (int, error) {
 	return mr.actions[resource][method]
 }

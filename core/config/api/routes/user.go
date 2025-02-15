@@ -4,13 +4,13 @@ import (
 	"agenda-kaki-go/core/controllers"
 	"agenda-kaki-go/core/handlers"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 func User(Gorm *handlers.Gorm, r fiber.Router) {
 	ce := controllers.User(Gorm)
 	e := r.Group("/user")
-	e.Post("/login", ce.Login) // ok
+	e.Post("/login", ce.Login)               // ok
 	e.Get("/email/:email", ce.GetOneByEmail) // ok
 
 	controllers.CreateRoutes(e, ce)

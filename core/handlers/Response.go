@@ -4,15 +4,15 @@ import (
 	"agenda-kaki-go/core/lib"
 	"log"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
-func Response(c fiber.Ctx) *Res {
+func Response(c *fiber.Ctx) *Res {
 	return &Res{Ctx: c}
 }
 
 type Res struct {
-	Ctx fiber.Ctx
+	Ctx *fiber.Ctx
 }
 
 // This function is used to send a response back to the client

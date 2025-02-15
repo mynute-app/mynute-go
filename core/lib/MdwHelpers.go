@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 // GetFromCtx retrieves an interface from Fiber context
-func GetFromCtx[T any](c fiber.Ctx, key string) (T, error) {
+func GetFromCtx[T any](c *fiber.Ctx, key string) (T, error) {
 	interfaceData := c.Locals(key)
 	var zero T
 
@@ -26,7 +26,7 @@ func GetFromCtx[T any](c fiber.Ctx, key string) (T, error) {
 }
 
 func InterfaceDataNotFound(interfaceName string) error {
-	errStr := fmt.Sprintf("%s data not found in fiber.Ctx", interfaceName)
+	errStr := fmt.Sprintf("%s data not found in *fiber.Ctx", interfaceName)
 	return errors.New(errStr)
 }
 

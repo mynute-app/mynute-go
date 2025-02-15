@@ -8,7 +8,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 // var _ IMiddleware = (*CompanyType)(nil)
@@ -33,7 +33,7 @@ type companyTypeMiddlewareActions struct {
 }
 
 // Middleware for Create operation
-func (cta *companyTypeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+func (cta *companyTypeMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
 	companyType, err := lib.GetFromCtx[*models.CompanyType](c, keys.Model)
@@ -51,7 +51,7 @@ func (cta *companyTypeMiddlewareActions) Create(c fiber.Ctx) (int, error) {
 }
 
 // Middleware for Update operation
-func (cta *companyTypeMiddlewareActions) Update(c fiber.Ctx) (int, error) {
+func (cta *companyTypeMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve changes from c.Locals
 	changes, err := lib.GetFromCtx[map[string]interface{}](c, keys.Changes)
@@ -81,7 +81,7 @@ func (cta *companyTypeMiddlewareActions) Update(c fiber.Ctx) (int, error) {
 }
 
 // Unified Middleware for Delete Validation
-func (cta *companyTypeMiddlewareActions) DeleteOneById(c fiber.Ctx) (int, error) {
+func (cta *companyTypeMiddlewareActions) DeleteOneById(c *fiber.Ctx) (int, error) {
 	companyTypeId := c.Params("id")
 
 	// Check if the company type is associated with any companies

@@ -4,7 +4,7 @@ import (
 	"agenda-kaki-go/core/controllers"
 	"agenda-kaki-go/core/handlers"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 func CompanyType(Gorm *handlers.Gorm, r fiber.Router) {
@@ -13,5 +13,4 @@ func CompanyType(Gorm *handlers.Gorm, r fiber.Router) {
 	c.Get("/name/:name", cct.GetOneByName) // ok
 
 	controllers.CreateRoutes(c, cct)
-	
 }

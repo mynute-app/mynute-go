@@ -6,10 +6,10 @@ import (
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/lib"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
-type ServiceMiddlewareActions struct{
+type ServiceMiddlewareActions struct {
 	Gorm *handlers.Gorm
 }
 
@@ -22,8 +22,7 @@ func Service(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-
-func (sm *ServiceMiddlewareActions) Create(c fiber.Ctx) (int, error) {
+func (sm *ServiceMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	service, err := lib.GetFromCtx[*models.Service](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
