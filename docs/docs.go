@@ -22,13 +22,198 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/company/name/{name}": {
+            "get": {
+                "description": "Retrieve a company by its name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get company by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company Name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Company"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/company/tax_id/{tax_id}": {
+            "get": {
+                "description": "Retrieve a company by its tax identification number",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get company by tax ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company Tax ID",
+                        "name": "tax_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Company"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "DTO.BranchPopulated": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "DTO.Company": {
+            "description": "Company DTO",
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.BranchPopulated"
+                    }
+                },
+                "company_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.CompanyType"
+                    }
+                },
+                "employees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.UserPopulated"
+                    }
+                },
+                "id": {
+                    "description": "Primary key",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ServicePopulated"
+                    }
+                },
+                "tax_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "DTO.CompanyType": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "DTO.ErrorResponse": {
+            "description": "Error Response Model",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Not Found"
+                }
+            }
+        },
+        "DTO.ServicePopulated": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "DTO.UserPopulated": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "surname": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "localhost:4000",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Fiber Example API",

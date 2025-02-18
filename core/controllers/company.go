@@ -15,12 +15,28 @@ type companyController struct {
 	BaseController[models.Company, DTO.Company]
 }
 
-// Custom extension method to get a company by name
+// GetOneByName retrieves a company by name
+// @Summary Get company by name
+// @Description Retrieve a company by its name
+// @Tags Company
+// @Param name path string true "Company Name"
+// @Produce json
+// @Success 200 {object} DTO.Company
+// @Failure 404 {object} DTO.ErrorResponse
+// @Router /company/name/{name} [get]
 func (cc *companyController) GetOneByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
-// Custom extension method to get a company by tax ID
+// GetOneByTaxId retrieves a company by tax ID
+// @Summary Get company by tax ID
+// @Description Retrieve a company by its tax identification number
+// @Tags Company
+// @Param tax_id path string true "Company Tax ID"
+// @Produce json
+// @Success 200 {object} DTO.Company
+// @Failure 404 {object} DTO.ErrorResponse
+// @Router /company/tax_id/{tax_id} [get]
 func (cc *companyController) GetOneByTaxId(c *fiber.Ctx) error {
 	return cc.GetBy("tax_id", c)
 }

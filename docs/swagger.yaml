@@ -1,5 +1,80 @@
 basePath: /
-host: localhost:8080
+definitions:
+  DTO.BranchPopulated:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  DTO.Company:
+    description: Company DTO
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchPopulated'
+        type: array
+      company_types:
+        items:
+          $ref: '#/definitions/DTO.CompanyType'
+        type: array
+      employees:
+        items:
+          $ref: '#/definitions/DTO.UserPopulated'
+        type: array
+      id:
+        description: Primary key
+        type: integer
+      name:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServicePopulated'
+        type: array
+      tax_id:
+        type: string
+    type: object
+  DTO.CompanyType:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  DTO.ErrorResponse:
+    description: Error Response Model
+    properties:
+      message:
+        example: Not Found
+        type: string
+    type: object
+  DTO.ServicePopulated:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+  DTO.UserPopulated:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      surname:
+        type: string
+    type: object
+host: localhost:4000
 info:
   contact:
     email: fiber@swagger.io
@@ -11,5 +86,51 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Fiber Example API
   version: "1.0"
-paths: {}
+paths:
+  /company/name/{name}:
+    get:
+      description: Retrieve a company by its name
+      parameters:
+      - description: Company Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Company'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get company by name
+      tags:
+      - Company
+  /company/tax_id/{tax_id}:
+    get:
+      description: Retrieve a company by its tax identification number
+      parameters:
+      - description: Company Tax ID
+        in: path
+        name: tax_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Company'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get company by tax ID
+      tags:
+      - Company
 swagger: "2.0"

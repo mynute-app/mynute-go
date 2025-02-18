@@ -1,5 +1,8 @@
 package DTO
 
+// @description Company DTO
+// @name CompanyDTO
+// @tag.name company.dto
 type Company struct {
 	ID           uint               `json:"id"` // Primary key
 	Name         string             `json:"name"`
@@ -9,7 +12,9 @@ type Company struct {
 	Branches     []BranchPopulated  `json:"branches"`
 	Services     []ServicePopulated `json:"services"`
 }
-
+// @description Company DTO Populated
+// @name CompanyPopulatedDTO
+// @tag.name company_populated.dto
 type CompanyPopulated struct {
 	ID    uint   `json:"id"`
 	Name  string `json:"name"`
