@@ -8,9 +8,8 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"errors"
 	"log"
-
 	"github.com/gofiber/fiber/v2"
-	gothfiber "github.com/luigiazoreng/goth_fiber"
+	"github.com/shareed2k/goth_fiber"
 )
 
 // EmployeeController embeds BaseController in order to extend it with the functions below
@@ -91,7 +90,7 @@ func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
 
 // OAUTH logics
 func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
-	if err := gothfiber.BeginAuthHandler(c); err != nil {
+	if err := goth_fiber.BeginAuthHandler(c); err != nil {
 		cc.reqActions.SendError(500, err)
 		return nil
 	}
@@ -99,18 +98,18 @@ func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
 }
 
 func (cc *authController) GetAuthCallbackFunction(c *fiber.Ctx) error {
-	user, err := gothfiber.CompleteUserAuth(c)
+	user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		cc.reqActions.SendError(500, err)
 		return nil
 	}
 	handlers.Auth(c).StoreUserSession(user)
-	c.Redirect().To("/")
+	c.Redirect("/")
 	return nil
 }
 
 func (cc *authController) LogoutProvider(c *fiber.Ctx) error {
-	gothfiber.Logout(c)
-	c.Redirect().To("/")
+	goth_fiber.Logout(c)
+	c.Redirect("/")
 	return nil
 }

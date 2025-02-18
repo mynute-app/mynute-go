@@ -5,10 +5,9 @@ import (
 	"log"
 	"os"
 	"strconv"
-
+	"github.com/shareed2k/goth_fiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/sessions"
-	gothfiber "github.com/luigiazoreng/goth_fiber"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -103,7 +102,7 @@ func Auth(c *fiber.Ctx) *Authentication {
 
 func (a *Authentication) StoreUserSession(us goth.User) error {
 	// Store the user session
-	err := gothfiber.StoreInSession("_gothic_session", us.AccessToken, a.C)
+	err := goth_fiber.StoreInSession("_gothic_session", us.AccessToken, a.C)
 	if err != nil {
 		log.Println("Error storing user session", err)
 	}
@@ -112,7 +111,7 @@ func (a *Authentication) StoreUserSession(us goth.User) error {
 
 func (a *Authentication) WhoAreYou() error {
 	// Check if the user is authenticated
-	_, err := gothfiber.GetFromSession("_gothic_session", a.C)
+	_, err := goth_fiber.GetFromSession("_gothic_session", a.C)
 	if err != nil {
 		return a.Res.Http401(fmt.Errorf("user not authenticated"))
 	}
