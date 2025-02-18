@@ -17,6 +17,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Holidays(Gorm, App)
 	CompanyType(Gorm, App)
 	Company(Gorm, App)
+	Swagger(App)
 
 	companyPrefix := fmt.Sprintf("/company/:%s", namespace.QueryKey.CompanyId)
 	companyCheck := middleware.GetCompany(Gorm)
