@@ -5,7 +5,7 @@ import (
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handlers"
 	"log"
-	_ "github.com/gofiber/swagger/example/docs"
+	_ "agenda-kaki-go/docs"
 	"github.com/gofiber/fiber/v2"
 )
 
