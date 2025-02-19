@@ -17,12 +17,23 @@ type companyMiddlewareActions struct {
 }
 
 func Company(Gorm *handlers.Gorm) *Registry {
-	company := &companyMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
-
-	registry.RegisterAction(namespace.CompanyKey.Name, "POST", company.Create)
-	registry.RegisterAction(namespace.CompanyKey.Name, "PATCH", company.Update)
-	// Register other actions similarly...
+	company := &companyMiddlewareActions{Gorm: Gorm}
+	var CompanyMiddleActions = []MiddlewareActions{
+		{
+			methods: []string{"POST", "PATCH", "DELETE"},
+			action:  WhoAreYou,
+		},
+		{
+			methods: "POST",
+			action: company.Create,
+		},
+		{
+			methods: "PATCH",
+			action: company.Update,
+		},
+	}
+	registry.RegisterActions(namespace.CompanyKey.Name, CompanyMiddleActions)
 	return registry
 }
 

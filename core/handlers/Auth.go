@@ -116,5 +116,4 @@ func (a *Authentication) WhoAreYou() error {
 		return a.Res.Http401(fmt.Errorf("user not authenticated"))
 	}
 	return a.C.Next()
-
 }

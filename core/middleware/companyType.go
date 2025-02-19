@@ -18,13 +18,28 @@ import (
 // }
 
 func CompanyType(Gorm *handlers.Gorm) *Registry {
-	company := &companyTypeMiddlewareActions{Gorm: Gorm}
+	companyType := &companyTypeMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
 
-	registry.RegisterAction(namespace.CompanyTypeKey.Name, "POST", company.Create)
-	registry.RegisterAction(namespace.CompanyTypeKey.Name, "PATCH", company.Update)
-	registry.RegisterAction(namespace.CompanyTypeKey.Name, "DELETE", company.DeleteOneById)
-
+	var CompanyTypeMiddleActions = []MiddlewareActions{
+		{
+			methods: []string{"POST", "PATCH", "DELETE"},
+			action:  WhoAreYou,
+		},
+		{
+			methods: "POST",
+			action: companyType.Create,
+		},
+		{
+			methods: "PATCH",
+			action: companyType.Update,
+		},
+		{
+			methods: "DELETE",
+			action: companyType.DeleteOneById,
+		},
+	}
+	registry.RegisterActions(namespace.CompanyTypeKey.Name, CompanyTypeMiddleActions)
 	return registry
 }
 

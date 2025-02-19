@@ -49,7 +49,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	if tokenString == "" {
 		saveUserData(nil)
 
-		return j.Res.Http401(errors.New("missing token"))
+		return j.Res.Http401(errors.New("missing auth token"))
 	}
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {

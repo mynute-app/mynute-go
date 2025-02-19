@@ -1,5 +1,7 @@
 package namespace
 
+import "fmt"
+
 type GeneralStruct struct {
 	Name         string
 	Model        string
@@ -28,10 +30,12 @@ type QueryStruct struct {
 	BaseURL   string
 }
 
+var AppPort = "4000"
+
 var QueryKey = QueryStruct{
 	Id:        "id",
 	CompanyId: "companyId",
-	BaseURL:   "http://localhost:3000",
+	BaseURL:   fmt.Sprintf("http://localhost:%s", AppPort),
 }
 
 type TypeStruct struct {

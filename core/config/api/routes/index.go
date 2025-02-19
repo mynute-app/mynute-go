@@ -17,13 +17,11 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Holidays(Gorm, App)
 	CompanyType(Gorm, App)
 	Company(Gorm, App)
+	User(Gorm, App)
 	Swagger(App)
-
 	companyPrefix := fmt.Sprintf("/company/:%s", namespace.QueryKey.CompanyId)
 	companyCheck := middleware.GetCompany(Gorm)
-	authRouter := App.Group("/", middleware.WhoAreYou)
-	companyRouter := authRouter.Group(companyPrefix, companyCheck)
+	companyRouter := App.Group(companyPrefix, companyCheck)
 	Branch(Gorm, companyRouter)
 	Service(Gorm, companyRouter)
-	User(Gorm, authRouter)
 }

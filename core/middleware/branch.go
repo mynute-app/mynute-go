@@ -12,9 +12,17 @@ import (
 func Branch(Gorm *handlers.Gorm) *Registry {
 	branch := &branchMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
-
-	registry.RegisterAction(namespace.BranchKey.Name, "POST", branch.Create)
-
+	var BranchMiddleActions = []MiddlewareActions{
+		{
+			methods: []string{"POST", "PUT", "DELETE"},
+			action:  WhoAreYou,
+		},
+		{
+			methods: "POST",
+			action: branch.Create,
+		},
+	}
+	registry.RegisterActions(namespace.BranchKey.Name, BranchMiddleActions)
 	return registry
 }
 
