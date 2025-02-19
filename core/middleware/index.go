@@ -12,12 +12,22 @@ func NewRegistry() *Registry {
 	return &Registry{actions: make(map[string]map[string][]func(*fiber.Ctx) (int, error))}
 }
 
-// Register middleware actions by resource and method
-func (mr *Registry) RegisterAction(resource, method string, action func(*fiber.Ctx) (int, error)) {
+// Register middleware actions by resource and method(s)
+func (mr *Registry) RegisterAction(resource string, methods interface{}, action func(*fiber.Ctx) (int, error)) {
 	if mr.actions[resource] == nil {
 		mr.actions[resource] = make(map[string][]func(*fiber.Ctx) (int, error))
 	}
-	mr.actions[resource][method] = append(mr.actions[resource][method], action)
+
+	switch m := methods.(type) {
+	case string:
+		mr.actions[resource][m] = append(mr.actions[resource][m], action)
+	case []string:
+		for _, method := range m {
+			mr.actions[resource][method] = append(mr.actions[resource][method], action)
+		}
+	default:
+		panic("methods must be either a string or a slice of strings")
+	}
 }
 
 // Retrieve middleware actions for a specific resource and method
