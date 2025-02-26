@@ -82,7 +82,7 @@ func (ac *ReqActions) GetBy(paramKey string) {
 		ac.res.DTO(200, modelArr, dtoArr)
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, &model, assocs); err != nil {
+		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, model, assocs); err != nil {
 			ac.res.Http404()
 			return
 		}

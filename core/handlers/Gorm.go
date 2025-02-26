@@ -54,24 +54,25 @@ func (p *Gorm) UpdateMany(v interface{}) error {
 }
 
 // GetOneBy fetches a single record by a specified parameter
+// GetOneBy fetches a single record by a specified parameter
 func (p Gorm) GetOneBy(param string, value string, model interface{}, associations []string) error {
-	// Start with the base query
 	query := p.DB
 
 	if query.Error != nil {
 		return query.Error
 	}
 
-	// Iterate over the preloads and apply each one
+	// Forcefully preload associations
 	for _, preload := range associations {
 		query = query.Preload(preload)
 	}
 
 	cond := fmt.Sprintf("%s = ?", param)
 
-	// Fetch the first record by the specified parameter after applying all preloads
-	return query.First(model, cond, value).Error
+	// Run query and return result
+	return query.Find(model, cond, value).Error
 }
+
 
 // ForceGetOneBy fetches a single record by a specified parameter, including soft-deleted records
 func (p Gorm) ForceGetOneBy(param string, value string, model interface{}, associations []string) error {
