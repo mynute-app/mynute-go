@@ -2,7 +2,7 @@ package DTO
 
 type User struct {
 	ID               uint               `json:"id"`
-	CompanyID        uint               `gorm:"not null"`
+	CompanyID        uint               `json:"company_id"` // ID da empresa
 	Name             string             `json:"name"`
 	Surname          string             `json:"surname"`
 	Email            string             `json:"email"`

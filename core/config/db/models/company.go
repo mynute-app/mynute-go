@@ -6,10 +6,10 @@ type Company struct {
 	gorm.Model
 	Name         string        `gorm:"not null;unique" json:"name"`
 	TaxID        string        `gorm:"not null;unique" json:"tax_id"`
-	CompanyTypes []CompanyType `gorm:"many2many:company_company_types" json:"company_types"`
-	Employees    []User        `gorm:"foreignKey:CompanyID" json:"employees"` // One-to-many relation with User
-	Branches     []Branch      `gorm:"foreignKey:CompanyID" json:"branches"`  // One-to-many relation with Branch
-	Services     []Service     `gorm:"foreignKey:CompanyID" json:"services"`  // One-to-many relation with Service
+	CompanyTypes []CompanyType `gorm:"many2many:company_company_types;constraint:OnDelete:CASCADE" json:"company_types"`
+	Employees    []User        `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"employees"` // One-to-many relation with User
+	Branches     []Branch      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"`  // One-to-many relation with Branch
+	Services     []Service     `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"`  // One-to-many relation with Service
 }
 
 type EntityPermissions struct {

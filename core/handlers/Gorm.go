@@ -70,7 +70,7 @@ func (p Gorm) GetOneBy(param string, value string, model interface{}, associatio
 	cond := fmt.Sprintf("%s = ?", param)
 
 	// Run query and return result
-	return query.Find(model, cond, value).Error
+	return query.First(model, cond, value).Error
 }
 
 
