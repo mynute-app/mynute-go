@@ -16,15 +16,15 @@ type TimeRange struct {
 // Fourth step: Choosing the employee.
 type User struct {
 	gorm.Model
-	Name            string `gorm:"not null" json:"name"`
-	Surname         string `json:"surname"`
-	Role            string `json:"role"`
-	Email           string `gorm:"not null;unique" json:"email"`
-	Phone           string `gorm:"not null;unique" json:"phone"`
-	Password        string `gorm:"not null" json:"password"`
-	VerificatioCode string
-	Verified        bool          `gorm:"not null"`
-	Appointments    []Appointment `gorm:"foreignKey:EmployeeID"` // One-to-many relation
+	Name             string        `gorm:"not null" json:"name"`
+	Surname          string        `json:"surname"`
+	Role             string        `json:"role"`
+	Email            string        `gorm:"not null;unique" json:"email"`
+	Phone            string        `gorm:"not null;unique" json:"phone"`
+	Password         string        `gorm:"not null" json:"password"`
+	VerificationCode string        `json:"verification_code"`
+	Verified         bool          `gorm:"not null" json:"verified"`
+	Appointments     []Appointment `gorm:"foreignKey:EmployeeID"` // One-to-many relation
 	EmployeeInfo
 }
 

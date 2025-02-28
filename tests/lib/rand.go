@@ -14,6 +14,28 @@ func GenerateRandomName(str string) string {
 	return fmt.Sprintf("Test %v %d", str, rand.Intn(100000))
 }
 
+func GenerateRandomString(length int) string {
+	// Define the character set to be used for generating the random string
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	// Initialize the random string
+	randomString := make([]byte, length)
+
+	// Generate a random string of the desired length
+	for i := range randomString {
+		randomString[i] = charset[rnd.Intn(len(charset))]
+	}
+
+	// Return the generated random string
+	return string(randomString)
+}
+
+func GenerateRandomEmail() string {
+	provider := "@gmail.com"
+	nick := fmt.Sprintf("test_user_email_%v", GenerateRandomIntOfExactly(5))
+	return fmt.Sprintf("%v%v", nick, provider)
+}
+
 func GenerateRandomIntOfExactly(length int) int {
 	// Create a new random source
 	

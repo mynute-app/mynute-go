@@ -12,6 +12,7 @@ var _ e2e.IEntity = (*Company)(nil)
 type Company struct {
 	*e2e.BaseE2EActions
 	companyType *CompanyType
+	user *User
 }
 
 func (c *Company) GenerateTesters(n int) {
@@ -46,6 +47,13 @@ func (c *Company) CreateDependencies(n int) {
 	companyType.Make(n)
 	companyType.CreateAllTesters(201)
 	c.companyType = companyType
+	user := &User {
+		BaseE2EActions: &e2e.BaseE2EActions{},
+	}
+	user.SetTest(c.T)
+	user.Make(n)
+	user.CreateAllTesters(201)
+	c.user = user
 }
 
 func (c *Company) ClearDependencies() {

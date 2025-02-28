@@ -21,12 +21,22 @@ func (c *User) Make(n int) {
 
 //TOOD: implement
 func (c *User) GenerateTesters(n int) {
-	for i := 0; i < n; i++ {
+	for range n {
 		c.GenerateTester(
-			"companyType",
-			"companyType",
-			map[string]interface{}{"name": lib.GenerateRandomName("EmployeeInfo")},
-			map[string]interface{}{"name": lib.GenerateRandomName("EmployeeInfo")},
+			"user",
+			"user",
+			map[string]interface{}{
+				"email":    lib.GenerateRandomEmail(),
+				"password": lib.GenerateRandomString(10),
+				"name": lib.GenerateRandomName("User Name"),
+				"surname": lib.GenerateRandomName("User Surname"),
+				"phone": lib.GenerateRandomIntOfExactly(10),
+				"verification_code": lib.GenerateRandomString(20),
+				"verified": false,
+			},
+			map[string]interface{}{
+				"verified": true,
+			},
 		)
 	}
 }
