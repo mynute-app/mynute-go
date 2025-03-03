@@ -9,6 +9,6 @@ import (
 
 func Branch(Gorm *handlers.Gorm, r fiber.Router) {
 	cb := controllers.Branch(Gorm)
-	b := r.Group("/company/:companyId/branch")
+	b := r.Group("/branch")
 	controllers.CreateRoutes(b, cb)
 }

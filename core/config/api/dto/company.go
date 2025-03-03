@@ -9,9 +9,10 @@ type Company struct {
 	TaxID        string             `json:"tax_id"`
 	CompanyTypes []CompanyType      `json:"company_types"`
 	Employees    []UserPopulated    `json:"employees"`
-	Branches     []BranchPopulated  `json:"branches"`
+	Branches     []Branch           `json:"branches"`
 	Services     []ServicePopulated `json:"services"`
 }
+
 // @description Company DTO Populated
 // @name CompanyPopulatedDTO
 // @tag.name company_populated.dto

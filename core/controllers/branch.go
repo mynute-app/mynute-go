@@ -18,7 +18,7 @@ func Branch(Gorm *handlers.Gorm) *branchController {
 			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.Branch(Gorm),
-			Associations: []string{"Company", "Employees", "Services"},
+			Associations: []string{"Employees", "Services"},
 		},
 	}
 }
