@@ -10,8 +10,10 @@ import (
 func Company(Gorm *handlers.Gorm, r fiber.Router) {
 	cc := controllers.Company(Gorm)
 	c := r.Group("/company")
-	c.Get("/name/:name", cc.GetOneByName)      // ok
-	c.Get("/tax_id/:tax_id", cc.GetOneByTaxId) // ok
-
-	controllers.CreateRoutes(c, cc)
+	c.Post("/", cc.CreateCompany) 	               // ok
+	c.Get("/:id", cc.GetCompanyById)               // ok
+	c.Get("/name/:name", cc.GetCompanyByName)      // ok
+	c.Get("/tax_id/:tax_id", cc.GetCompanyByTaxId) // ok
+	c.Patch("/:id", cc.UpdateCompanyById)          // ok
+	c.Delete("/:id", cc.DeleteCompanyById)         // ok
 }

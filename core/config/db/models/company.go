@@ -1,7 +1,7 @@
 package models
 
 import "gorm.io/gorm"
-
+// Company represents a company entity
 type Company struct {
 	gorm.Model
 	Name         string        `gorm:"not null;unique" json:"name"`
