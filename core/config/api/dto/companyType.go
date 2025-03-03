@@ -1,6 +1,6 @@
 package DTO
 
 type CompanyType struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID   uint   `json:"id" example:"1"`
+	Name string `json:"name" example:"Your Company Type Name"`
 }

@@ -21,7 +21,7 @@ type companyController struct {
 //	@Tags			Company
 //	@Accept			json
 //	@Produce		json
-//	@Param			company	body		DTO.Company	true	"Company"
+//	@Param			company	body		DTO.CreateCompany	true	"Company"
 //	@Success		200		{object}	DTO.Company
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]

@@ -1,16 +1,20 @@
 package DTO
 
-//	@description	Company DTO
-//	@name			CompanyDTO
-//	@tag.name		company.dto
+type CreateCompany struct {
+	Name         string        `json:"name" example:"Your Company Name"`
+	TaxID        string        `json:"tax_id" example:"00000000000000"`
+	CompanyTypes []CompanyType `json:"company_types"`
+}
+
+//	@description	Company Full DTO
+//	@name			CompanyFullDTO
+//	@tag.name		company.full.dto
 type Company struct {
-	ID           uint               `json:"id"` // Primary key
-	Name         string             `json:"name" example:"Your Company Name"`
-	TaxID        string             `json:"tax_id" example:"00000000000000"`
-	CompanyTypes []CompanyType      `json:"company_types"`
-	Employees    []UserPopulated    `json:"employees"`
-	Branches     []Branch           `json:"branches"`
-	Services     []ServicePopulated `json:"services"`
+	ID uint `json:"id"` // Primary key
+	CreateCompany
+	Employees []UserPopulated    `json:"employees"`
+	Branches  []Branch           `json:"branches"`
+	Services  []ServicePopulated `json:"services"`
 }
 
 //	@description	Company DTO Populated

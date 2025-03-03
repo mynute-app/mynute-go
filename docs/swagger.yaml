@@ -34,7 +34,7 @@ definitions:
         type: string
     type: object
   DTO.Company:
-    description: Company DTO
+    description: Company Full DTO
     properties:
       branches:
         items:
@@ -65,8 +65,23 @@ definitions:
   DTO.CompanyType:
     properties:
       id:
+        example: 1
         type: integer
       name:
+        example: Your Company Type Name
+        type: string
+    type: object
+  DTO.CreateCompany:
+    properties:
+      company_types:
+        items:
+          $ref: '#/definitions/DTO.CompanyType'
+        type: array
+      name:
+        example: Your Company Name
+        type: string
+      tax_id:
+        example: "00000000000000"
         type: string
     type: object
   DTO.ErrorResponse:
@@ -339,7 +354,7 @@ paths:
         name: company
         required: true
         schema:
-          $ref: '#/definitions/DTO.Company'
+          $ref: '#/definitions/DTO.CreateCompany'
       produces:
       - application/json
       responses:

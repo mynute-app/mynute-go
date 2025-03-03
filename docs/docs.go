@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Company"
+                            "$ref": "#/definitions/DTO.CreateCompany"
                         }
                     }
                 ],
@@ -614,7 +614,7 @@ const docTemplate = `{
             }
         },
         "DTO.Company": {
-            "description": "Company DTO",
+            "description": "Company Full DTO",
             "type": "object",
             "properties": {
                 "branches": {
@@ -659,10 +659,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Your Company Type Name"
+                }
+            }
+        },
+        "DTO.CreateCompany": {
+            "type": "object",
+            "properties": {
+                "company_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.CompanyType"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Your Company Name"
+                },
+                "tax_id": {
+                    "type": "string",
+                    "example": "00000000000000"
                 }
             }
         },
