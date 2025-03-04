@@ -38,17 +38,17 @@ func (cc *userController) Login(c *fiber.Ctx) error {
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
-		cc.reqActions.SendError(404, err)
+		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
 	if handlers.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
-		cc.reqActions.Status = 401
+		cc.AutoReqActions.Status = 401
 		return nil
 	}
 	claims := handlers.JWT(c).CreateClaims(userDatabase.Email)
 	token, err := handlers.JWT(c).CreateToken(claims)
 	if err != nil {
-		cc.reqActions.SendError(500, err)
+		cc.AutoReqActions.ActionFailed(500, err)
 	}
 	log.Println("User logged in")
 	c.Response().Header.Set("Authorization", token)

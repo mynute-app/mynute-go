@@ -17,7 +17,7 @@ type Res struct {
 
 // This function is used to send a response back to the client
 // using the Data Transfer Object (DTO) pattern.
-func (sr *Res) DTO(s int, source interface{}, dto interface{}) {
+func (sr *Res) DTO(s int, source any, dto any) {
 	if err := lib.ParseToDTO(source, dto); err != nil {
 		sr.Http500(err)
 	}
@@ -68,6 +68,10 @@ func (sr *Res) Http200(data any) *Res {
 }
 
 func (sr *Res) send(s int, data any) {
+	if data == nil {
+		sr.sendStatus(s)
+		return
+	}
 	if err := sr.Ctx.Status(s).JSON(data); err != nil {
 		sr.saveError(err)
 	}

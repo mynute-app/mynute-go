@@ -11,7 +11,7 @@ type Gorm struct {
 }
 
 // UpdateOneById updates a single record by its ID
-func (p *Gorm) UpdateOneById(value string, model interface{}, changes interface{}, associations []string) error {
+func (p *Gorm) UpdateOneById(value string, model any, changes any, associations []string) error {
 	// Start with the base query
 	query := p.DB.Model(model)
 
@@ -36,7 +36,7 @@ func (p *Gorm) UpdateOneById(value string, model interface{}, changes interface{
 }
 
 // Create creates a new record
-func (p *Gorm) Create(model interface{}) error {
+func (p *Gorm) Create(model any) error {
 	query := p.DB
 
 	if query.Error != nil {
@@ -47,7 +47,7 @@ func (p *Gorm) Create(model interface{}) error {
 }
 
 // UpdateMany updates multiple records
-func (p *Gorm) UpdateMany(v interface{}) error {
+func (p *Gorm) UpdateMany(v any) error {
 	// Expect that `v` is a slice of records. Use GORM's Save method for bulk updates.
 	// Note: GORM's `Save` updates the records if they already exist.
 	return p.DB.Model(v).Updates(v).Error
@@ -55,7 +55,7 @@ func (p *Gorm) UpdateMany(v interface{}) error {
 
 // GetOneBy fetches a single record by a specified parameter
 // GetOneBy fetches a single record by a specified parameter
-func (p Gorm) GetOneBy(param string, value string, model interface{}, associations []string) error {
+func (p Gorm) GetOneBy(param string, value string, model any, associations []string) error {
 	query := p.DB
 
 	if query.Error != nil {
@@ -73,9 +73,8 @@ func (p Gorm) GetOneBy(param string, value string, model interface{}, associatio
 	return query.First(model, cond, value).Error
 }
 
-
 // ForceGetOneBy fetches a single record by a specified parameter, including soft-deleted records
-func (p Gorm) ForceGetOneBy(param string, value string, model interface{}, associations []string) error {
+func (p Gorm) ForceGetOneBy(param string, value string, model any, associations []string) error {
 	// Start with the base query unscoped
 	query := p.DB.Unscoped()
 
@@ -91,7 +90,7 @@ func (p Gorm) ForceGetOneBy(param string, value string, model interface{}, assoc
 }
 
 // DeleteOneById deletes a single record by its ID
-func (p Gorm) DeleteOneById(value string, model interface{}) error {
+func (p Gorm) DeleteOneById(value string, model any) error {
 	query := p.DB
 
 	if query.Error != nil {
@@ -104,7 +103,7 @@ func (p Gorm) DeleteOneById(value string, model interface{}) error {
 }
 
 // ForceDeleteOneById deletes a single record by its ID, including soft-deleted records
-func (p Gorm) ForceDeleteOneById(value string, model interface{}) error {
+func (p Gorm) ForceDeleteOneById(value string, model any) error {
 	query := p.DB.Unscoped().Model(model)
 
 	if query.Error != nil {
@@ -117,7 +116,7 @@ func (p Gorm) ForceDeleteOneById(value string, model interface{}) error {
 }
 
 // GetAll fetches all records
-func (p Gorm) GetAll(model interface{}, associations []string) error {
+func (p Gorm) GetAll(model any, associations []string) error {
 	// Verifique se model é um ponteiro antes de chamar Find()
 	if model == nil {
 		return fmt.Errorf("model não pode ser nil")
@@ -135,7 +134,7 @@ func (p Gorm) GetAll(model interface{}, associations []string) error {
 }
 
 // ForceGetAll fetches all records, including soft-deleted records
-func (p Gorm) ForceGetAll(model interface{}, associations []string) error {
+func (p Gorm) ForceGetAll(model any, associations []string) error {
 	// Start with the base query unscoped
 	query := p.DB.Unscoped()
 

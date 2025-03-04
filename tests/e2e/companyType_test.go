@@ -17,8 +17,8 @@ func (c *CompanyType) GenerateTesters(n int) {
 		c.GenerateTester(
 			"companyType",
 			"companyType",
-			map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
-			map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+			map[string]any{"name": lib.GenerateRandomName("CompanyType")},
+			map[string]any{"name": lib.GenerateRandomName("CompanyType")},
 		)
 	}
 }
@@ -30,7 +30,6 @@ func (c *CompanyType) Make(n int) {
 func (c *CompanyType) CreateDependencies(n int) {}
 
 func (c *CompanyType) ClearDependencies() {}
-
 
 func TestCompanyTypeFlow(t *testing.T) {
 	companyType := &CompanyType{
@@ -60,8 +59,8 @@ func TestCompanyTypeFlow(t *testing.T) {
 // 			Entity:    "companyType",
 // 			RelatedPath: "companyType",
 // 			BaseURL:   namespace.GeneralKey.BaseURL,
-// 			PostBody:  map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
-// 			PatchBody: map[string]interface{}{"name": lib.GenerateRandomName("CompanyType")},
+// 			PostBody:  map[string]any{"name": lib.GenerateRandomName("CompanyType")},
+// 			PatchBody: map[string]any{"name": lib.GenerateRandomName("CompanyType")},
 // 		}
 // 		c.Testers = append(c.Testers, companyType)
 // 	}

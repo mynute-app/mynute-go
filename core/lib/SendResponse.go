@@ -12,7 +12,7 @@ type SendResponse struct {
 
 // This function is used to send a response back to the client
 // using the Data Transfer Object (DTO) pattern.
-func (sr *SendResponse) DTO(s int, source interface{}, dto interface{}) {
+func (sr *SendResponse) DTO(s int, source any, dto any) {
 	if err := ParseToDTO(source, dto); err != nil {
 		sr.Http500(err)
 	}

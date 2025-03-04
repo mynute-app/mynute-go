@@ -7,7 +7,7 @@ import (
 )
 
 // ConvertToDTO recursively converts a source struct or slice of structs to a destination DTO struct or slice of DTOs
-func ParseToDTO(source interface{}, dto interface{}) error {
+func ParseToDTO(source any, dto any) error {
 	sourceVal := reflect.ValueOf(source)
 	dtoVal := reflect.ValueOf(dto)
 
@@ -85,36 +85,36 @@ func copyMatchingFields(sourceVal, dtoVal reflect.Value) error {
 		// Look for a matching field in the source by name
 		sourceField := sourceVal.FieldByName(dtoFieldType.Name)
 
-        // If the source field is valid
-        if sourceField.IsValid() {
-            // Check if the field is a struct, and if so, recursively copy its fields
-            if sourceField.Kind() == reflect.Struct && dtoField.Kind() == reflect.Struct {
-                // Special handling for time.Time
-                if sourceField.Type() == reflect.TypeOf(time.Time{}) && dtoField.Type() == reflect.TypeOf(time.Time{}) {
-                    if dtoField.CanSet() {
-                        dtoField.Set(sourceField)
-                    } else {
-                        return errors.New("cannot set field: " + dtoFieldType.Name)
-                    }
-                } else {
-                    if err := copyMatchingFields(sourceField, dtoField); err != nil {
-                        return err
-                    }
-                }
-            } else if sourceField.Kind() == reflect.Slice && dtoField.Kind() == reflect.Slice {
-                if err := copySlice(sourceField, dtoField); err != nil {
-                    return err
-                }
-            } else if sourceField.Type() == dtoField.Type() {
-                // If the types match and it's not a struct or slice, directly copy the value
-                if dtoField.CanSet() {
-                    dtoField.Set(sourceField)
-                } else {
-                    return errors.New("cannot set field: " + dtoFieldType.Name)
-                }
-            }
-        }
-    }
+		// If the source field is valid
+		if sourceField.IsValid() {
+			// Check if the field is a struct, and if so, recursively copy its fields
+			if sourceField.Kind() == reflect.Struct && dtoField.Kind() == reflect.Struct {
+				// Special handling for time.Time
+				if sourceField.Type() == reflect.TypeOf(time.Time{}) && dtoField.Type() == reflect.TypeOf(time.Time{}) {
+					if dtoField.CanSet() {
+						dtoField.Set(sourceField)
+					} else {
+						return errors.New("cannot set field: " + dtoFieldType.Name)
+					}
+				} else {
+					if err := copyMatchingFields(sourceField, dtoField); err != nil {
+						return err
+					}
+				}
+			} else if sourceField.Kind() == reflect.Slice && dtoField.Kind() == reflect.Slice {
+				if err := copySlice(sourceField, dtoField); err != nil {
+					return err
+				}
+			} else if sourceField.Type() == dtoField.Type() {
+				// If the types match and it's not a struct or slice, directly copy the value
+				if dtoField.CanSet() {
+					dtoField.Set(sourceField)
+				} else {
+					return errors.New("cannot set field: " + dtoFieldType.Name)
+				}
+			}
+		}
+	}
 
 	return nil
 }

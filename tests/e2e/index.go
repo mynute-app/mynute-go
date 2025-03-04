@@ -17,7 +17,7 @@ type IEntity interface {
 var _ IBaseE2EActions = (*BaseE2EActions)(nil)
 
 type IBaseE2EActions interface {
-	GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions
+	GenerateTester(entity string, path string, postBody map[string]any, patchBody map[string]any) *BaseE2EActions
 	CreateAllTesters(s int) *BaseE2EActions
 	GetAllTesters(s int) *BaseE2EActions
 	ForceGetAllTesters(s int) *BaseE2EActions
@@ -27,11 +27,11 @@ type IBaseE2EActions interface {
 	GetOneByIdTesters(s int) *BaseE2EActions
 	ForceGetOneByIdTesters(s int) *BaseE2EActions
 	RunAll() *BaseE2EActions
-	SetTest (t *testing.T) *BaseE2EActions
+	SetTest(t *testing.T) *BaseE2EActions
 }
 
 type BaseE2EActions struct {
-	T *testing.T
+	T       *testing.T
 	Testers []*handlers.Tester
 }
 
@@ -40,7 +40,7 @@ func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
 	return b
 }
 
-func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]interface{}, patchBody map[string]interface{}) *BaseE2EActions {
+func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]any, patchBody map[string]any) *BaseE2EActions {
 	tester := &handlers.Tester{
 		Entity:      path,
 		BaseURL:     namespace.QueryKey.BaseURL,

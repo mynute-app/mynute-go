@@ -40,7 +40,7 @@ func (j *jsonWebToken) CreateClaims(user string) jwt.Claims {
 
 // WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
 func (j *jsonWebToken) WhoAreYou() error {
-	saveUserData := func(value interface{}) {
+	saveUserData := func(value any) {
 		j.C.Locals(namespace.GeneralKey.UserData, value)
 	}
 
@@ -52,7 +52,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 		return j.Res.Http401(errors.New("missing auth token"))
 	}
 
-	keyFunc := func(token *jwt.Token) (interface{}, error) {
+	keyFunc := func(token *jwt.Token) (any, error) {
 		// Validate the algorithm
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

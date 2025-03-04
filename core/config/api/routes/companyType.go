@@ -10,7 +10,9 @@ import (
 func CompanyType(Gorm *handlers.Gorm, r fiber.Router) {
 	cct := controllers.CompanyType(Gorm)
 	c := r.Group("/companyType")
-	c.Get("/name/:name", cct.GetOneByName) // ok
-
-	controllers.CreateRoutes(c, cct)
+	c.Post("/", cct.CreateCompanyType)             // ok
+	c.Get("/:id", cct.GetCompanyTypeById)          // ok
+	c.Get("/name/:name", cct.GetCompanyTypeByName) // ok
+	c.Patch("/:id", cct.UpdateCompanyTypeById)     // ok
+	c.Delete("/:id", cct.DeleteCompanyTypeById)    // ok
 }

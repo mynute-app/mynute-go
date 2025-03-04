@@ -12,7 +12,7 @@ var _ e2e.IEntity = (*Company)(nil)
 type Company struct {
 	*e2e.BaseE2EActions
 	companyType *CompanyType
-	user *User
+	user        *User
 }
 
 func (c *Company) GenerateTesters(n int) {
@@ -20,14 +20,14 @@ func (c *Company) GenerateTesters(n int) {
 		c.GenerateTester(
 			"company",
 			"company",
-			map[string]interface{}{
+			map[string]any{
 				"name":   lib.GenerateRandomName("Company"),
 				"tax_id": fmt.Sprintf("%v", lib.GenerateRandomIntOfExactly(14)),
-				"company_types": []map[string]interface{}{
+				"company_types": []map[string]any{
 					{"id": c.companyType.Testers[i].EntityID, "name": c.companyType.Testers[i].PostBody["name"]},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": lib.GenerateRandomName("Company"),
 			},
 		)
@@ -47,7 +47,7 @@ func (c *Company) CreateDependencies(n int) {
 	companyType.Make(n)
 	companyType.CreateAllTesters(201)
 	c.companyType = companyType
-	user := &User {
+	user := &User{
 		BaseE2EActions: &e2e.BaseE2EActions{},
 	}
 	user.SetTest(c.T)

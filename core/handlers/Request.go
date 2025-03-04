@@ -17,16 +17,16 @@ type Req struct {
 }
 
 // Chainable method to set the Fiber context
-func (r *Req) FiberCtx(c *fiber.Ctx) *ReqActions {
-	return &ReqActions{
+func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
+	return &AutoReqActions{
 		req: r,
 		res: Response(c),
 		ctx: c,
 	}
 }
 
-// ReqActions holds the intermediate data for method chaining
-type ReqActions struct {
+// AutoReqActions holds the intermediate data for method chaining
+type AutoReqActions struct {
 	req    *Req
 	res    *Res
 	ctx    *fiber.Ctx
@@ -34,250 +34,209 @@ type ReqActions struct {
 	Status int
 }
 
-// Centralized error handling
-func (ac *ReqActions) SendError(status int, err error) {
+// Struct to hold fetched values from context
+type ContextValues struct {
+	ModelArr any
+	Model    any
+	Assocs   []string
+	DtoArr   any
+	Dto      any
+}
+
+// Centralized method to fetch values from context
+func (ac *AutoReqActions) fetchContextValues() (*ContextValues, error) {
+	keys := namespace.GeneralKey
+
+	modelArr, err := lib.GetFromCtx[any](ac.ctx, keys.ModelArr)
+	if err != nil {
+		return nil, err
+	}
+	model, err := lib.GetFromCtx[any](ac.ctx, keys.Model)
+	if err != nil {
+		return nil, err
+	}
+	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
+	if err != nil {
+		return nil, err
+	}
+	dtoArr, err := lib.GetFromCtx[any](ac.ctx, keys.DtoArr)
+	if err != nil {
+		return nil, err
+	}
+	dto, err := lib.GetFromCtx[any](ac.ctx, keys.Dto)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ContextValues{
+		ModelArr: modelArr,
+		Model:    model,
+		Assocs:   assocs,
+		DtoArr:   dtoArr,
+		Dto:      dto,
+	}, nil
+}
+
+// Standardized success response
+func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
+	ac.Error = nil
+	ac.Status = status
+	ac.res.DTO(status, data, dto)
+}
+
+// Standardized failure response
+func (ac *AutoReqActions) ActionFailed(status int, err error) {
 	ac.Error = err
 	ac.Status = status
 	ac.res.HttpError(status, err)
 }
 
-// Final Method that executes a GET action
-func (ac *ReqActions) GetBy(paramKey string) {
+// Final method that executes a GET action
+func (ac *AutoReqActions) GetBy(paramKey string) {
 	if ac.Error != nil {
 		return
 	}
 
-	keys := namespace.GeneralKey
-
-	modelArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.ModelArr)
+	ctxValues, err := ac.fetchContextValues()
 	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	dtoArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.DtoArr)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	if paramKey == "" {
-		if err := ac.req.Gorm.GetAll(modelArr, assocs); err != nil { // 🚨 Aqui pode estar o erro
-			ac.res.Http500(err)
-			return
-		}
-		ac.res.DTO(200, modelArr, dtoArr)
-	} else {
-		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, model, assocs); err != nil {
-			ac.res.Http404()
-			return
-		}
-		ac.res.DTO(200, model, dto)
-	}
-}
-
-// Final Method that executes a FORCE GET action
-func (ac *ReqActions) ForceGetBy(paramKey string) {
-	if ac.Error != nil {
-		return
-	}
-
-	keys := namespace.GeneralKey
-
-	modelArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.ModelArr)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	dtoArr, err := lib.GetFromCtx[interface{}](ac.ctx, keys.DtoArr)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
-	if err != nil {
-		ac.res.Http500(err)
+		ac.ActionFailed(500, err)
 		return
 	}
 
 	if paramKey == "" {
-		if err := ac.req.Gorm.ForceGetAll(modelArr, assocs); err != nil {
-			ac.res.Http500(err)
+		if err := ac.req.Gorm.GetAll(ctxValues.ModelArr, ctxValues.Assocs); err != nil {
+			ac.ActionFailed(500, err)
 			return
 		}
-		ac.res.DTO(200, modelArr, dtoArr)
-		return
+		ac.ActionSuccess(200, ctxValues.ModelArr, ctxValues.DtoArr)
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, model, assocs); err != nil {
-			ac.res.Http404()
+		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, ctxValues.Model, ctxValues.Assocs); err != nil {
+			ac.ActionFailed(404, nil)
 			return
 		}
-		ac.res.DTO(200, model, dto)
-		return
+		ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
 	}
 }
 
-// Final Method that executes a CREATE action
-func (ac *ReqActions) CreateOne() {
+// Final method that executes a FORCE GET action
+func (ac *AutoReqActions) ForceGetBy(paramKey string) {
 	if ac.Error != nil {
 		return
 	}
 
-	keys := namespace.GeneralKey
-
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
+	ctxValues, err := ac.fetchContextValues()
 	if err != nil {
-		ac.res.Http500(err)
+		ac.ActionFailed(500, err)
 		return
 	}
 
-	if err := ac.req.Gorm.Create(model); err != nil {
-		ac.res.Http400(err)
+	if paramKey == "" {
+		if err := ac.req.Gorm.ForceGetAll(ctxValues.ModelArr, ctxValues.Assocs); err != nil {
+			ac.ActionFailed(500, err)
+			return
+		}
+		ac.ActionSuccess(200, ctxValues.ModelArr, ctxValues.DtoArr)
+	} else {
+		paramVal := ac.ctx.Params(paramKey)
+		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ctxValues.Model, ctxValues.Assocs); err != nil {
+			ac.ActionFailed(404, nil)
+			return
+		}
+		ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
+	}
+}
+
+// Final method that executes a CREATE action
+func (ac *AutoReqActions) CreateOne() {
+	if ac.Error != nil {
 		return
 	}
 
-	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
+	ctxValues, err := ac.fetchContextValues()
 	if err != nil {
-		ac.res.Http500(err)
+		ac.ActionFailed(500, err)
 		return
 	}
 
-	ac.res.DTO(201, model, dto)
+	if err := ac.req.Gorm.Create(ctxValues.Model); err != nil {
+		ac.ActionFailed(400, nil)
+		return
+	}
+
+	ac.ActionSuccess(201, ctxValues.Model, ctxValues.Dto)
 }
 
 // Final method that executes a DELETE action
-func (ac *ReqActions) DeleteOneById() {
+func (ac *AutoReqActions) DeleteOneById() {
 	if ac.Error != nil {
-		return
-	}
-	GeneralKey := namespace.GeneralKey
-	QueryKey := namespace.QueryKey
-
-	id := ac.ctx.Params(QueryKey.Id)
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, GeneralKey.Model)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-
-	if err := ac.req.Gorm.GetOneBy("id", id, model, nil); err != nil {
-		if err.Error() == "record not found" {
-			ac.res.Http404()
-			return
-		}
-		ac.res.Http500(err)
-		return
-	}
-
-	if err := ac.req.Gorm.DeleteOneById(id, model); err != nil {
-		if err.Error() == "record not found" {
-			ac.res.Http404()
-			return
-		}
-		ac.res.Http500(err)
-		return
-	}
-
-	log.Printf("Deleted record with ID: %s", id)
-
-	ac.res.Http204()
-}
-
-// Final method that executes a FORCE DELETE action
-func (ac *ReqActions) ForceDeleteOneById() {
-	if ac.Error != nil {
-		return
-	}
-	GeneralKey := namespace.GeneralKey
-	QueryKey := namespace.QueryKey
-
-	id := ac.ctx.Params(string(QueryKey.Id))
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, GeneralKey.Model)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-
-	if err := ac.req.Gorm.ForceGetOneBy("id", id, model, nil); err != nil {
-		if err.Error() == "record not found" {
-			ac.res.Http404()
-			return
-		}
-		ac.res.Http500(err)
-		return
-	}
-
-	if err := ac.req.Gorm.ForceDeleteOneById(id, model); err != nil {
-		if err.Error() == "record not found" {
-			ac.res.Http404()
-			return
-		}
-		ac.res.Http500(err)
-		return
-	}
-
-	ac.res.Http204()
-}
-
-// Final method that executes an UPDATE action
-func (ac *ReqActions) UpdateOneById() {
-	if ac.Error != nil {
-		return
-	}
-	keys := namespace.GeneralKey
-	associations, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
-	if err != nil {
-		ac.res.Http500(err)
-		return
-	}
-	// changes, err := lib.GetFromCtx[map[string]interface{}](ac.ctx, keys.Changes)
-	// if err != nil {
-	// 	ac.res.Http500(err)
-	// 	return
-	// }
-	model, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Model)
-	if err != nil {
-		ac.res.Http500(err)
 		return
 	}
 
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-
-	if err := ac.req.Gorm.UpdateOneById(id, model, model, associations); err != nil {
-		ac.res.Http400(err)
-		return
-	}
-
-	dto, err := lib.GetFromCtx[interface{}](ac.ctx, keys.Dto)
+	ctxValues, err := ac.fetchContextValues()
 	if err != nil {
-		ac.res.Http500(err)
+		ac.ActionFailed(500, err)
 		return
 	}
 
-	ac.res.DTO(200, model, dto)
+	if err := ac.req.Gorm.GetOneBy("id", id, ctxValues.Model, nil); err != nil {
+		ac.ActionFailed(404, nil)
+		return
+	}
+
+	if err := ac.req.Gorm.DeleteOneById(id, ctxValues.Model); err != nil {
+		ac.ActionFailed(500, err)
+		return
+	}
+
+	log.Printf("Deleted record with ID: %s", id)
+	ac.ActionSuccess(204, nil, nil)
+}
+
+// Final method that executes a FORCE DELETE action
+func (ac *AutoReqActions) ForceDeleteOneById() {
+	if ac.Error != nil {
+		return
+	}
+
+	id := ac.ctx.Params(namespace.QueryKey.Id)
+	ctxValues, err := ac.fetchContextValues()
+	if err != nil {
+		ac.ActionFailed(500, err)
+		return
+	}
+
+	if err := ac.req.Gorm.ForceGetOneBy("id", id, ctxValues.Model, nil); err != nil {
+		ac.ActionFailed(404, nil)
+		return
+	}
+
+	if err := ac.req.Gorm.ForceDeleteOneById(id, ctxValues.Model); err != nil {
+		ac.ActionFailed(500, err)
+		return
+	}
+
+	ac.ActionSuccess(204, nil, nil)
+}
+
+// Final method that executes an UPDATE action
+func (ac *AutoReqActions) UpdateOneById() {
+	if ac.Error != nil {
+		return
+	}
+
+	id := ac.ctx.Params(namespace.QueryKey.Id)
+	ctxValues, err := ac.fetchContextValues()
+	if err != nil {
+		ac.ActionFailed(500, err)
+		return
+	}
+
+	if err := ac.req.Gorm.UpdateOneById(id, ctxValues.Model, ctxValues.Model, ctxValues.Assocs); err != nil {
+		ac.ActionFailed(400, nil)
+		return
+	}
+
+	ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
 }

@@ -26,11 +26,11 @@ func Company(Gorm *handlers.Gorm) *Registry {
 		},
 		{
 			methods: "POST",
-			action: company.Create,
+			action:  company.Create,
 		},
 		{
 			methods: "PATCH",
-			action: company.Update,
+			action:  company.Update,
 		},
 	}
 	registry.RegisterActions(namespace.CompanyKey.Name, CompanyMiddleActions)
@@ -89,7 +89,7 @@ func (ca *companyMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 }
 
 func (ca *companyMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
-	changes, err := lib.GetFromCtx[map[string]interface{}](c, namespace.GeneralKey.Changes)
+	changes, err := lib.GetFromCtx[map[string]any](c, namespace.GeneralKey.Changes)
 	if err != nil {
 		return 500, err
 	}

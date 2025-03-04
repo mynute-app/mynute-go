@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"errors"
 	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/shareed2k/goth_fiber"
 )
@@ -34,18 +35,18 @@ func (cc *authController) Login(c *fiber.Ctx) error {
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
-		cc.reqActions.SendError(404, err)
+		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
 
 	if !handlers.ComparePassword(userDatabase.Password, body.Password) {
-		cc.reqActions.SendError(401, errors.New("invalid password"))
+		cc.AutoReqActions.ActionFailed(401, errors.New("invalid password"))
 		return nil
 	}
 	claims := handlers.JWT(c).CreateClaims(userDatabase.Email)
 	token, err := handlers.JWT(c).CreateToken(claims)
 	if err != nil {
-		cc.reqActions.SendError(500, err)
+		cc.AutoReqActions.ActionFailed(500, err)
 	}
 	log.Println("User logged in: ", userDatabase.Email)
 	c.Response().Header.Set("Authorization", token)
@@ -58,7 +59,7 @@ func (cc *authController) Register(c *fiber.Ctx) error {
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	body.Password, _ = handlers.HashPassword(body.Password)
 	if err := cc.Request.Gorm.Create(body); err != nil {
-		cc.reqActions.SendError(500, err)
+		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
 	}
 	return nil
@@ -75,14 +76,14 @@ func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
 		if err.Error() == "record not found" {
-			cc.reqActions.SendError(200, err)
+			cc.AutoReqActions.ActionFailed(200, err)
 			return nil
 		}
-		cc.reqActions.SendError(404, err)
+		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
 	if userDatabase.Email == body.Email {
-		cc.reqActions.SendError(409, errors.New("email already registered"))
+		cc.AutoReqActions.ActionFailed(409, errors.New("email already registered"))
 		return nil
 	}
 	return nil
@@ -91,7 +92,7 @@ func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
 // OAUTH logics
 func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	if err := goth_fiber.BeginAuthHandler(c); err != nil {
-		cc.reqActions.SendError(500, err)
+		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
 	}
 	return nil
@@ -100,7 +101,7 @@ func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
 func (cc *authController) GetAuthCallbackFunction(c *fiber.Ctx) error {
 	user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
-		cc.reqActions.SendError(500, err)
+		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
 	}
 	handlers.Auth(c).StoreUserSession(user)

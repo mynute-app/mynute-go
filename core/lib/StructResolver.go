@@ -6,9 +6,9 @@ import (
 )
 
 // Function to check the struct pointer and resolve the struct or slice
-func ResolvePointerStruct(v interface{}) (reflect.Value, error) {
+func ResolvePointerStruct(v any) (reflect.Value, error) {
 	val := reflect.ValueOf(v)
-	
+
 	// Ensure the value is a pointer
 	if val.Kind() != reflect.Ptr {
 		return val, errors.New("interface is not a pointer")
@@ -28,7 +28,7 @@ func ResolvePointerStruct(v interface{}) (reflect.Value, error) {
 }
 
 // Function to check and resolve a struct or slice
-func ResolveStruct(v interface{}) (reflect.Value, error) {
+func ResolveStruct(v any) (reflect.Value, error) {
 	val := reflect.ValueOf(v)
 
 	// Dereference the pointer if it's a pointer

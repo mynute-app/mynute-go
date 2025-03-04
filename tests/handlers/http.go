@@ -14,7 +14,7 @@ type HttpClient struct{}
 type httpActions struct {
 	Error          string
 	Status         int
-	ResBody        map[string]interface{}
+	ResBody        map[string]any
 	url            string
 	method         string
 	expectedStatus int
@@ -54,7 +54,7 @@ func (h *httpActions) Clear() {
 // and returns the response. If an error occurs, it sets the error message.
 // The response body is stored in ResBody, and the status code is stored in Status.
 // It will defer res.Body.Close() to ensure the response body is closed.
-func (h *httpActions) Send(body map[string]interface{}) *httpActions {
+func (h *httpActions) Send(body map[string]any) *httpActions {
 	h.Error = ""
 	h.test.Logf("sending %s request to %s", h.method, h.url)
 	h.test.Logf("body: %+v", body)
@@ -92,9 +92,9 @@ func (h *httpActions) Send(body map[string]interface{}) *httpActions {
 			h.test.Fatalf(h.Error)
 			return nil
 		}
-		var response map[string]interface{}
+		var response map[string]any
 		if err := json.Unmarshal(bodyBytes, &response); err != nil {
-			h.ResBody = map[string]interface{}{
+			h.ResBody = map[string]any{
 				"string": string(bodyBytes),
 			}
 		} else {

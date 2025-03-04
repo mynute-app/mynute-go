@@ -5,8 +5,8 @@ import (
 	"errors"
 )
 
-// ParseBody function to parse the request body into the provided struct (interface{})
-func BodyParser(b []byte, v interface{}) error {
+// ParseBody function to parse the request body into the provided struct (any)
+func BodyParser(b []byte, v any) error {
 	// Check if the body is empty
 	if len(b) == 0 {
 		return errors.New("empty request body")

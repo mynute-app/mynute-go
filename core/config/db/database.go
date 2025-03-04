@@ -47,21 +47,21 @@ func Connect() *Database {
 }
 
 func (db *Database) Migrate() {
-	models := []interface{}{
-			&models.CompanyType{},
-			&models.Company{},     // Must be migrated before Service
-			&models.Branch{},
-			&models.User{},
-			&models.Service{},
-			&models.Appointment{},
-			&models.Holidays{},
+	models := []any{
+		&models.CompanyType{},
+		&models.Company{}, // Must be migrated before Service
+		&models.Branch{},
+		&models.User{},
+		&models.Service{},
+		&models.Appointment{},
+		&models.Holidays{},
 	}
 
 	for _, model := range models {
-			log.Printf("Migrating: %T", model)
-			if err := db.Gorm.AutoMigrate(model); err != nil {
-					log.Fatalf("Failed to migrate %T: %v", model, err)
-			}
+		log.Printf("Migrating: %T", model)
+		if err := db.Gorm.AutoMigrate(model); err != nil {
+			log.Fatalf("Failed to migrate %T: %v", model, err)
+		}
 	}
 	log.Println("Migration completed successfully")
 }

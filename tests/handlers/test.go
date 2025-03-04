@@ -22,8 +22,8 @@ type Tester struct {
 	Entity         string
 	BaseURL        string
 	RelatedPath    string
-	PostBody       map[string]interface{}
-	PatchBody      map[string]interface{}
+	PostBody       map[string]any
+	PatchBody      map[string]any
 	EntityID       int
 	expectedStatus int
 }

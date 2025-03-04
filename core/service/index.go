@@ -1,4 +1,4 @@
-package controllers
+package service
 
 import (
 	"agenda-kaki-go/core/config/namespace"
@@ -8,17 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var _ IController = (*BaseController[IController, IController])(nil)
+var _ IService = (*BaseService[IService, IService])(nil)
 
-type BaseController[MODEL any, DTO any] struct {
-	Name           string
-	Request        *handlers.Req
-	AutoReqActions *handlers.AutoReqActions
-	Middleware     *middleware.Registry
-	Associations   []string
-}
-
-type IController interface {
+type IService interface {
 	GetBy(paramKey string, c *fiber.Ctx) error
 	ForceGetBy(paramKey string, c *fiber.Ctx) error
 	CreateOne(c *fiber.Ctx) error
@@ -31,7 +23,15 @@ type IController interface {
 	ForceGetAll(c *fiber.Ctx) error
 }
 
-func CreateRoutes(r fiber.Router, ci IController) {
+type BaseService[MODEL any, DTO any] struct {
+	Name           string
+	Request        *handlers.Req
+	AutoReqActions *handlers.AutoReqActions
+	Middleware     *middleware.Registry
+	Associations   []string
+}
+
+func CreateRoutes(r fiber.Router, ci IService) {
 	r.Post("/", ci.CreateOne)       // ok
 	r.Get("/", ci.GetAll)           // ok
 	r.Get("/force", ci.ForceGetAll) // ok
@@ -43,13 +43,13 @@ func CreateRoutes(r fiber.Router, ci IController) {
 	id.Get("/force", ci.ForceGetOneById)       // ok
 }
 
-func (bc *BaseController[MODEL, DTO]) init(c *fiber.Ctx) {
-	bc.saveLocals(c)
-	bc.AutoReqActions = bc.Request.SetAutomatedActions(c)
-	bc.runMiddlewares(c)
+func (bs *BaseService[MODEL, DTO]) SetAction(c *fiber.Ctx) {
+	bs.saveLocals(c)
+	bs.runMiddlewares(c)
+	bs.AutoReqActions = bs.Request.SetAutomatedActions(c)
 }
 
-func (bc *BaseController[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
+func (bc *BaseService[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
 	mdws := bc.Middleware.GetActions(bc.Name, c.Method())
 	for _, mdw := range mdws {
 		if s, err := mdw(c); err != nil {
@@ -59,7 +59,7 @@ func (bc *BaseController[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
 	}
 }
 
-func (bc *BaseController[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
+func (bc *BaseService[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	var modelArr []MODEL
 	var dtoArr []DTO
 	var model MODEL
@@ -77,54 +77,48 @@ func (bc *BaseController[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	c.Locals(keys.Associations, bc.Associations)
 }
 
-func (bc *BaseController[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {
 	bc.AutoReqActions.GetBy(paramKey)
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetBy(paramKey string, c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) ForceGetBy(paramKey string, c *fiber.Ctx) error {
 	bc.AutoReqActions.ForceGetBy(paramKey)
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) DeleteOneById(c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) DeleteOneById(c *fiber.Ctx) error {
 	bc.AutoReqActions.DeleteOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceDeleteOneById(c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) ForceDeleteOneById(c *fiber.Ctx) error {
 	bc.AutoReqActions.ForceDeleteOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) UpdateOneById(c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) UpdateOneById(c *fiber.Ctx) error {
 	bc.AutoReqActions.UpdateOneById()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) CreateOne(c *fiber.Ctx) error {
-	bc.init(c)
+func (bc *BaseService[MODEL, DTO]) CreateOne(c *fiber.Ctx) error {
 	bc.AutoReqActions.CreateOne()
 	return nil
 }
 
-func (bc *BaseController[MODEL, DTO]) GetAll(c *fiber.Ctx) error {
+func (bc *BaseService[MODEL, DTO]) GetAll(c *fiber.Ctx) error {
 	return bc.GetBy("", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) GetOneById(c *fiber.Ctx) error {
+func (bc *BaseService[MODEL, DTO]) GetOneById(c *fiber.Ctx) error {
 	return bc.GetBy("id", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetOneById(c *fiber.Ctx) error {
+func (bc *BaseService[MODEL, DTO]) ForceGetOneById(c *fiber.Ctx) error {
 	return bc.ForceGetBy("id", c)
 }
 
-func (bc *BaseController[MODEL, DTO]) ForceGetAll(c *fiber.Ctx) error {
+func (bc *BaseService[MODEL, DTO]) ForceGetAll(c *fiber.Ctx) error {
 	return bc.ForceGetBy("", c)
 }

@@ -12,8 +12,8 @@ type Registry struct {
 }
 
 type MiddlewareActions struct {
-	methods interface{}
-	action func(*fiber.Ctx) (int, error)
+	methods any
+	action  func(*fiber.Ctx) (int, error)
 }
 
 // Initialize a new registry
@@ -28,7 +28,7 @@ func (mr *Registry) RegisterActions(resource string, actions []MiddlewareActions
 }
 
 // Register middleware actions by resource and method(s)
-func (mr *Registry) RegisterAction(resource string, methods interface{}, action func(*fiber.Ctx) (int, error)) {
+func (mr *Registry) RegisterAction(resource string, methods any, action func(*fiber.Ctx) (int, error)) {
 	if mr.actions[resource] == nil {
 		mr.actions[resource] = make(map[string][]func(*fiber.Ctx) (int, error))
 	}

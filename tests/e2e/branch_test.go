@@ -20,10 +20,10 @@ func (b *Branch) GenerateTesters(n int) {
 		b.GenerateTester(
 			"branch",
 			path,
-			map[string]interface{}{
+			map[string]any{
 				"name": lib.GenerateRandomName("Branch"),
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": lib.GenerateRandomName("Branch"),
 			},
 		)
