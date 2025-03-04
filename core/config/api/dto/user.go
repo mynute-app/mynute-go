@@ -1,36 +1,23 @@
 package DTO
 
 type User struct {
-	ID               uint               `json:"id"`
-	CompanyID        uint               `json:"company_id"` // ID da empresa
-	Name             string             `json:"name"`
-	Surname          string             `json:"surname"`
-	Email            string             `json:"email"`
-	Password         string             `json:"password"`
-	VerificationCode string             `json:"verification_code"`
-	Phone            string             `json:"phone"`
+	ID               uint               `json:"id" example:"1"`
+	CompanyID        uint               `json:"company_id" example:"1"` // ID da empresa
+	Name             string             `json:"name" example:"John"`
+	Surname          string             `json:"surname" example:"Doe"`
+	Email            string             `json:"email" example:"john.doe@example.com"`
+	Password         string             `json:"password" example:"securepassword"`
+	VerificationCode string             `json:"verification_code" example:"123456"`
+	Phone            string             `json:"phone" example:"+1-555-555-5555"`
 	Branches         []BranchPopulated  `json:"branches"`
 	Services         []ServicePopulated `json:"services"`
-	Tag              []string           `json:"tag"`
+	Tag              []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
 }
 
-// se usuario é super admin
-// // Se sim, Ok
-// se usuario tem tag especifica ex: "branch-manager", "company-manager", "service-manager"
-// // Se ele tem tag especifica:
-// // Verificar se o ID do usuario está salvo no 'permissions' do recurso e do metodo utilizado.
-// // ex: PATCH branch/5
-// // permissions : { "PATCH": [1, 2, 3, 5], "DELETE": [1, 3, 6] }
-// // No caso, o usuario com ID 5 pode fazer PATCH na branch 5.
-// // Se sim, Ok
-// se não, retornar HTTP 403.
-
-// tag: ["super-admin", "branch-manager"]
-
 type UserPopulated struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
+	ID      uint   `json:"id" example:"1"`
+	Name    string `json:"name" example:"John"`
+	Surname string `json:"surname" example:"Doe"`
+	Email   string `json:"email" example:"john.doe@example.com"`
+	Phone   string `json:"phone" example:"+1-555-555-5555"`
 }

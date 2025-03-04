@@ -1,30 +1,30 @@
 package DTO
 
 type Branch struct {
-	ID           uint               `json:"id"`
-	CompanyID    uint               `gorm:"not null" json:"company_id"`
-	Name         string             `json:"name"`
+	ID           uint               `json:"id" example:"1"`
+	CompanyID    uint               `gorm:"not null" json:"company_id" example:"1"`
+	Name         string             `json:"name" example:"Main Branch"`
 	Employees    []UserPopulated    `json:"employees"`
 	Services     []ServicePopulated `json:"services"`
-	Street       string             `gorm:"not null" json:"street"`
-	Number       string             `gorm:"not null" json:"number"`
-	Complement   string             `json:"complement"`
-	Neighborhood string             `gorm:"not null" json:"neighborhood"`
-	ZipCode      string             `gorm:"not null" json:"zip_code"`
-	City         string             `gorm:"not null" json:"city"`
-	State        string             `gorm:"not null" json:"state"`
-	Country      string             `gorm:"not null" json:"country"`
+	Street       string             `gorm:"not null" json:"street" example:"123 Main St"`
+	Number       string             `gorm:"not null" json:"number" example:"456"`
+	Complement   string             `json:"complement" example:"Suite 100"`
+	Neighborhood string             `gorm:"not null" json:"neighborhood" example:"Downtown"`
+	ZipCode      string             `gorm:"not null" json:"zip_code" example:"10001"`
+	City         string             `gorm:"not null" json:"city" example:"New York"`
+	State        string             `gorm:"not null" json:"state" example:"NY"`
+	Country      string             `gorm:"not null" json:"country" example:"USA"`
 }
 
 type BranchPopulated struct {
-	ID           uint   `json:"id"`
-	Name         string `json:"name"`
-	Street       string `gorm:"not null" json:"street"`
-	Number       string `gorm:"not null" json:"number"`
-	Complement   string `json:"complement"`
-	Neighborhood string `gorm:"not null" json:"neighborhood"`
-	ZipCode      string `gorm:"not null" json:"zip_code"`
-	City         string `gorm:"not null" json:"city"`
-	State        string `gorm:"not null" json:"state"`
-	Country      string `gorm:"not null" json:"country"`
+	ID           uint   `json:"id" example:"1"`
+	Name         string `json:"name" example:"Main Branch"`
+	Street       string `gorm:"not null" json:"street" example:"123 Main St"`
+	Number       string `gorm:"not null" json:"number" example:"456"`
+	Complement   string `json:"complement" example:"Suite 100"`
+	Neighborhood string `gorm:"not null" json:"neighborhood" example:"Downtown"`
+	ZipCode      string `gorm:"not null" json:"zip_code" example:"10001"`
+	City         string `gorm:"not null" json:"city" example:"New York"`
+	State        string `gorm:"not null" json:"state" example:"NY"`
+	Country      string `gorm:"not null" json:"country" example:"USA"`
 }
