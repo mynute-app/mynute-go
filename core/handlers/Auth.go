@@ -2,16 +2,16 @@ package handlers
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"strconv"
-	"github.com/shareed2k/goth_fiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
+	"github.com/shareed2k/goth_fiber"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"os"
+	"strconv"
 )
 
 type Authentication struct {
@@ -39,10 +39,7 @@ func HashPassword(password string) (string, error) {
 func ComparePassword(hashedPassword, password string) bool {
 	// Compare the password with the hashed one
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func NewAuth(session *sessions.CookieStore) {

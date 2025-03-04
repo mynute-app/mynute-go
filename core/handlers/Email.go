@@ -22,17 +22,17 @@ type Mail struct {
 }
 
 type Configs struct {
-    MailVerifTemplateID string
-    PassResetTemplateID string
-    SMTPHost            string
-    SMTPPort            int
-    SMTPUser            string
-    SMTPPass            string
+	MailVerifTemplateID string
+	PassResetTemplateID string
+	SMTPHost            string
+	SMTPPort            int
+	SMTPUser            string
+	SMTPPass            string
 }
 
 const (
-    MailConfirmation = "MailConfirmation"
-    PassReset        = "PassReset"
+	MailConfirmation = "MailConfirmation"
+	PassReset        = "PassReset"
 )
 
 type MailService interface {
@@ -41,33 +41,33 @@ type MailService interface {
 }
 
 type GoMailService struct {
-	log *log.Logger
+	log     *log.Logger
 	configs *Configs
 }
 
 func (ms *GoMailService) SendEmail(mailReq *Mail) error {
 
 	m := gomail.NewMessage()
-    m.SetHeader("From", mailReq.from)
+	m.SetHeader("From", mailReq.from)
 
 	m.SetHeader("To", mailReq.to...)
 
-    // Set the subject and body based on the mail type
-    // if mailReq.mtype == MailConfirmation {
-    //     m.SetHeader("Subject", "Email Confirmation")
-    //     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your confirmation code is: "+mailReq.data.Code)
-    // } else if mailReq.mtype == PassReset {
-    //     m.SetHeader("Subject", "Password Reset")
-    //     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your password reset code is: "+mailReq.data.Code)
-    // }
+	// Set the subject and body based on the mail type
+	// if mailReq.mtype == MailConfirmation {
+	//     m.SetHeader("Subject", "Email Confirmation")
+	//     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your confirmation code is: "+mailReq.data.Code)
+	// } else if mailReq.mtype == PassReset {
+	//     m.SetHeader("Subject", "Password Reset")
+	//     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your password reset code is: "+mailReq.data.Code)
+	// }
 
-    // Set up the SMTP server
-    d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPUser, ms.configs.SMTPPass)
+	// Set up the SMTP server
+	d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPUser, ms.configs.SMTPPass)
 
-    // Send the email
-    if err := d.DialAndSend(m); err != nil {
-        return err
-    }
+	// Send the email
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }

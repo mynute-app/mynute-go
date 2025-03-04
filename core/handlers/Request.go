@@ -27,11 +27,13 @@ func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
 
 // AutoReqActions holds the intermediate data for method chaining
 type AutoReqActions struct {
-	req    *Req
-	res    *Res
-	ctx    *fiber.Ctx
-	Error  error
-	Status int
+	req      *Req
+	res      *Res
+	ctx      *fiber.Ctx
+	ctxVal   *ContextValues
+	mute_res bool
+	Error    error
+	Status   int
 }
 
 // Struct to hold fetched values from context
@@ -44,51 +46,61 @@ type ContextValues struct {
 }
 
 // Centralized method to fetch values from context
-func (ac *AutoReqActions) fetchContextValues() (*ContextValues, error) {
+func (ac *AutoReqActions) fetchContextValues() error {
 	keys := namespace.GeneralKey
 
 	modelArr, err := lib.GetFromCtx[any](ac.ctx, keys.ModelArr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	model, err := lib.GetFromCtx[any](ac.ctx, keys.Model)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	dtoArr, err := lib.GetFromCtx[any](ac.ctx, keys.DtoArr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	dto, err := lib.GetFromCtx[any](ac.ctx, keys.Dto)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &ContextValues{
+	ac.ctxVal = &ContextValues{
 		ModelArr: modelArr,
 		Model:    model,
 		Assocs:   assocs,
 		DtoArr:   dtoArr,
 		Dto:      dto,
-	}, nil
+	}
+
+	return nil
 }
 
 // Standardized success response
 func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
 	ac.Error = nil
 	ac.Status = status
-	ac.res.DTO(status, data, dto)
+	if !ac.mute_res {
+		ac.res.DTO(status, data, dto)
+	}
 }
 
 // Standardized failure response
 func (ac *AutoReqActions) ActionFailed(status int, err error) {
 	ac.Error = err
 	ac.Status = status
-	ac.res.HttpError(status, err)
+	if !ac.mute_res {
+		ac.res.HttpError(status, err)
+	}
+}
+
+func (ac *AutoReqActions) MuteResponse(mute bool) {
+	ac.mute_res = mute
 }
 
 // Final method that executes a GET action
@@ -97,25 +109,25 @@ func (ac *AutoReqActions) GetBy(paramKey string) {
 		return
 	}
 
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
 	if paramKey == "" {
-		if err := ac.req.Gorm.GetAll(ctxValues.ModelArr, ctxValues.Assocs); err != nil {
+		if err := ac.req.Gorm.GetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
 			ac.ActionFailed(500, err)
 			return
 		}
-		ac.ActionSuccess(200, ctxValues.ModelArr, ctxValues.DtoArr)
+		ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, ctxValues.Model, ctxValues.Assocs); err != nil {
+		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
 			ac.ActionFailed(404, nil)
 			return
 		}
-		ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
+		ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 	}
 }
 
@@ -125,25 +137,25 @@ func (ac *AutoReqActions) ForceGetBy(paramKey string) {
 		return
 	}
 
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
 	if paramKey == "" {
-		if err := ac.req.Gorm.ForceGetAll(ctxValues.ModelArr, ctxValues.Assocs); err != nil {
+		if err := ac.req.Gorm.ForceGetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
 			ac.ActionFailed(500, err)
 			return
 		}
-		ac.ActionSuccess(200, ctxValues.ModelArr, ctxValues.DtoArr)
+		ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ctxValues.Model, ctxValues.Assocs); err != nil {
+		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
 			ac.ActionFailed(404, nil)
 			return
 		}
-		ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
+		ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 	}
 }
 
@@ -153,18 +165,18 @@ func (ac *AutoReqActions) CreateOne() {
 		return
 	}
 
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
-	if err := ac.req.Gorm.Create(ctxValues.Model); err != nil {
+	if err := ac.req.Gorm.Create(ac.ctxVal.Model); err != nil {
 		ac.ActionFailed(400, nil)
 		return
 	}
 
-	ac.ActionSuccess(201, ctxValues.Model, ctxValues.Dto)
+	ac.ActionSuccess(201, ac.ctxVal.Model, ac.ctxVal.Dto)
 }
 
 // Final method that executes a DELETE action
@@ -174,18 +186,18 @@ func (ac *AutoReqActions) DeleteOneById() {
 	}
 
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
-	if err := ac.req.Gorm.GetOneBy("id", id, ctxValues.Model, nil); err != nil {
+	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
 		ac.ActionFailed(404, nil)
 		return
 	}
 
-	if err := ac.req.Gorm.DeleteOneById(id, ctxValues.Model); err != nil {
+	if err := ac.req.Gorm.DeleteOneById(id, ac.ctxVal.Model); err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
@@ -201,18 +213,18 @@ func (ac *AutoReqActions) ForceDeleteOneById() {
 	}
 
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
-	if err := ac.req.Gorm.ForceGetOneBy("id", id, ctxValues.Model, nil); err != nil {
+	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
 		ac.ActionFailed(404, nil)
 		return
 	}
 
-	if err := ac.req.Gorm.ForceDeleteOneById(id, ctxValues.Model); err != nil {
+	if err := ac.req.Gorm.ForceDeleteOneById(id, ac.ctxVal.Model); err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
@@ -227,16 +239,16 @@ func (ac *AutoReqActions) UpdateOneById() {
 	}
 
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	ctxValues, err := ac.fetchContextValues()
+	err := ac.fetchContextValues()
 	if err != nil {
 		ac.ActionFailed(500, err)
 		return
 	}
 
-	if err := ac.req.Gorm.UpdateOneById(id, ctxValues.Model, ctxValues.Model, ctxValues.Assocs); err != nil {
+	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
 		ac.ActionFailed(400, nil)
 		return
 	}
 
-	ac.ActionSuccess(200, ctxValues.Model, ctxValues.Dto)
+	ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 }
