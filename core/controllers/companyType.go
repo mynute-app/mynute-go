@@ -10,12 +10,39 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type companyTypeController struct {
+type companyType struct {
 	BaseController[models.CompanyType, DTO.CompanyType]
 }
 
-func CompanyType(Gorm *handlers.Gorm) *companyTypeController {
-	return &companyTypeController{
+// CreateCompanyType creates a company type
+// @Summary Create company type
+// @Description Create a company type
+// @Tags CompanyType
+// @Accept json
+// @Produce json
+// @Param company_type body DTO.CompanyType true "Company Type"
+// @Success 200 {object} DTO.CompanyType
+// @Failure 400 {object} DTO.ErrorResponse
+// @Router /company_type [post]
+func (cc *companyType) CreateCompanyType(c *fiber.Ctx) error {
+	return cc.CreateOne(c)
+}
+
+// GetCompanyTypeById retrieves a company type by ID
+// @Summary Get company type by ID
+// @Description Retrieve a company type by its ID
+// @Tags CompanyType
+// @Param id path string true "Company Type ID"
+// @Produce json
+// @Success 200 {object} DTO.CompanyType
+// @Failure 404 {object} DTO.ErrorResponse
+// @Router /company_type/{id} [get]
+func (cc *companyType) GetCompanyTypeByName(c *fiber.Ctx) error {
+	return cc.GetBy("name", c)
+}
+
+func CompanyType(Gorm *handlers.Gorm) *companyType {
+	return &companyType{
 		BaseController: BaseController[models.CompanyType, DTO.CompanyType]{
 			Name:         namespace.CompanyTypeKey.Name,
 			Request:      handlers.Request(Gorm),
@@ -23,9 +50,4 @@ func CompanyType(Gorm *handlers.Gorm) *companyTypeController {
 			Associations: []string{},
 		},
 	}
-}
-
-// Custom extension method to get a company type by name
-func (cc *companyTypeController) GetOneByName(c *fiber.Ctx) error {
-	return cc.GetBy("name", c)
 }

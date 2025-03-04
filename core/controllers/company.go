@@ -16,6 +16,7 @@ type companyController struct {
 }
 
 // CreateCompany creates a company
+//
 //	@Summary		Create company
 //	@Description	Create a company
 //	@Tags			Company
@@ -30,6 +31,7 @@ func (cc *companyController) CreateCompany(c *fiber.Ctx) error {
 }
 
 // GetOneById retrieves a company by ID
+//
 //	@Summary		Get company by ID
 //	@Description	Retrieve a company by its ID
 //	@Tags			Company
@@ -43,6 +45,7 @@ func (cc *companyController) GetCompanyById(c *fiber.Ctx) error {
 }
 
 // GetOneByName retrieves a company by name
+//
 //	@Summary		Get company by name
 //	@Description	Retrieve a company by its name
 //	@Tags			Company
@@ -56,6 +59,7 @@ func (cc *companyController) GetCompanyByName(c *fiber.Ctx) error {
 }
 
 // GetOneByTaxId retrieves a company by tax ID
+//
 //	@Summary		Get company by tax ID
 //	@Description	Retrieve a company by its tax identification number
 //	@Tags			Company
@@ -69,6 +73,7 @@ func (cc *companyController) GetCompanyByTaxId(c *fiber.Ctx) error {
 }
 
 // UpdateCompanyById updates a company by ID
+//
 //	@Summary		Update company by ID
 //	@Description	Update a company by its ID
 //	@Tags			Company
@@ -84,6 +89,7 @@ func (cc *companyController) UpdateCompanyById(c *fiber.Ctx) error {
 }
 
 // DeleteCompanyById deletes a company by ID
+//
 //	@Summary		Delete company by ID
 //	@Description	Delete a company by its ID
 //	@Tags			Company
