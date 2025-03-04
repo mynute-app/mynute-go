@@ -78,47 +78,57 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 }
 
 func (b *Base[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.GetBy(paramKey)
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) ForceGetBy(paramKey string, c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.ForceGetBy(paramKey)
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) DeleteOneById(c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.DeleteOneById()
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) ForceDeleteOneById(c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.ForceDeleteOneById()
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) UpdateOneById(c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.UpdateOneById()
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) CreateOne(c *fiber.Ctx) error {
+	b.SetAction(c)
 	b.AutoReqActions.CreateOne()
 	return nil
 }
 
 func (b *Base[MODEL, DTO]) GetAll(c *fiber.Ctx) error {
+	b.SetAction(c)
 	return b.GetBy("", c)
 }
 
 func (b *Base[MODEL, DTO]) GetOneById(c *fiber.Ctx) error {
+	b.SetAction(c)
 	return b.GetBy("id", c)
 }
 
 func (b *Base[MODEL, DTO]) ForceGetOneById(c *fiber.Ctx) error {
+	b.SetAction(c)
 	return b.ForceGetBy("id", c)
 }
 
 func (b *Base[MODEL, DTO]) ForceGetAll(c *fiber.Ctx) error {
+	b.SetAction(c)
 	return b.ForceGetBy("", c)
 }

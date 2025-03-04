@@ -65,7 +65,7 @@ func (cc *HolidaysController) GetHolidayByName(c *fiber.Ctx) error {
 //	@Tags			Holidays
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path	string	true	"Holiday ID"
+//	@Param			id		path		string			true	"Holiday ID"
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
 //	@Success		200		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse

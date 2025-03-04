@@ -3,34 +3,78 @@ definitions:
   DTO.Branch:
     properties:
       city:
+        example: New York
         type: string
       company_id:
+        example: 1
         type: integer
       complement:
+        example: Suite 100
         type: string
       country:
+        example: USA
         type: string
       employees:
         items:
           $ref: '#/definitions/DTO.UserPopulated'
         type: array
       id:
+        example: 1
         type: integer
       name:
+        example: Main Branch
         type: string
       neighborhood:
+        example: Downtown
         type: string
       number:
+        example: "456"
         type: string
       services:
         items:
           $ref: '#/definitions/DTO.ServicePopulated'
         type: array
       state:
+        example: NY
         type: string
       street:
+        example: 123 Main St
         type: string
       zip_code:
+        example: "10001"
+        type: string
+    type: object
+  DTO.BranchPopulated:
+    properties:
+      city:
+        example: New York
+        type: string
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      zip_code:
+        example: "10001"
         type: string
     type: object
   DTO.Company:
@@ -84,6 +128,28 @@ definitions:
         example: "00000000000000"
         type: string
     type: object
+  DTO.CreateUser:
+    properties:
+      company_id:
+        description: ID da empresa
+        example: 1
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: securepassword
+        type: string
+      phone:
+        example: +1-555-555-5555
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
   DTO.ErrorResponse:
     description: Error Response Model
     properties:
@@ -91,30 +157,133 @@ definitions:
         example: Not Found
         type: string
     type: object
+  DTO.Holidays:
+    properties:
+      date:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+      dayMonth:
+        example: 01-01
+        type: string
+      description:
+        example: Celebration of the first day of the new year
+        type: string
+      name:
+        example: New Year's Day
+        type: string
+      recurrent:
+        example: true
+        type: boolean
+      type:
+        example: Public
+        type: string
+    type: object
+  DTO.Service:
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.Branch'
+        type: array
+      company_id:
+        example: 1
+        type: integer
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      duration:
+        example: 60
+        type: integer
+      employees:
+        items:
+          $ref: '#/definitions/DTO.User'
+        type: array
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
   DTO.ServicePopulated:
     properties:
       description:
+        example: A 60-minute in-depth business consultation
         type: string
       duration:
+        example: 60
         type: integer
       id:
+        example: 1
         type: integer
       name:
+        example: Premium Consultation
         type: string
       price:
+        example: 150
         type: integer
+    type: object
+  DTO.User:
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchPopulated'
+        type: array
+      company_id:
+        description: ID da empresa
+        example: 1
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John
+        type: string
+      password:
+        example: securepassword
+        type: string
+      phone:
+        example: +1-555-555-5555
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServicePopulated'
+        type: array
+      surname:
+        example: Doe
+        type: string
+      tag:
+        example:
+        - '["super-admin"'
+        - ' "branch-manager"]'
+        items:
+          type: string
+        type: array
+      verification_code:
+        example: "123456"
+        type: string
     type: object
   DTO.UserPopulated:
     properties:
       email:
+        example: john.doe@example.com
         type: string
       id:
+        example: 1
         type: integer
       name:
+        example: John
         type: string
       phone:
+        example: +1-555-555-5555
         type: string
       surname:
+        example: Doe
         type: string
     type: object
 host: localhost:4000
@@ -130,6 +299,107 @@ info:
   title: Fiber Example API
   version: "1.0"
 paths:
+  /branch:
+    post:
+      consumes:
+      - application/json
+      description: Create a branch
+      parameters:
+      - description: Branch
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Branch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create branch
+      tags:
+      - Branch
+  /branch/{id}:
+    delete:
+      description: Delete a branch by its ID
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete branch by ID
+      tags:
+      - Branch
+    get:
+      description: Retrieve a branch by its ID
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get branch by ID
+      tags:
+      - Branch
+    put:
+      consumes:
+      - application/json
+      description: Update a branch
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Branch
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Branch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update branch
+      tags:
+      - Branch
   /company:
     post:
       consumes:
@@ -378,4 +648,384 @@ paths:
       summary: Update company type by ID
       tags:
       - CompanyType
+  /holidays:
+    post:
+      consumes:
+      - application/json
+      description: Create a holiday
+      parameters:
+      - description: Holiday
+        in: body
+        name: holiday
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Holidays'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create holiday
+      tags:
+      - Holidays
+  /holidays/{id}:
+    delete:
+      description: Delete a holiday by its ID
+      parameters:
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete holiday by ID
+      tags:
+      - Holidays
+    get:
+      description: Retrieve a holiday by its ID
+      parameters:
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get holiday by ID
+      tags:
+      - Holidays
+    put:
+      consumes:
+      - application/json
+      description: Update a holiday
+      parameters:
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Holiday
+        in: body
+        name: holiday
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Holidays'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update holiday
+      tags:
+      - Holidays
+  /holidays/name/{name}:
+    get:
+      description: Retrieve a holiday by its name
+      parameters:
+      - description: Holiday Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get holiday by name
+      tags:
+      - Holidays
+  /service:
+    post:
+      consumes:
+      - application/json
+      description: Create a service
+      parameters:
+      - description: Service
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Service'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create service
+      tags:
+      - Service
+  /service/{id}:
+    delete:
+      description: Delete a service by its ID
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete service by ID
+      tags:
+      - Service
+    get:
+      description: Retrieve a service by its ID
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get service by ID
+      tags:
+      - Service
+    patch:
+      consumes:
+      - application/json
+      description: Update a service by its ID
+      parameters:
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Service'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update service by ID
+      tags:
+      - Service
+  /service/name/{name}:
+    get:
+      description: Retrieve a service by its name
+      parameters:
+      - description: Service Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get service by name
+      tags:
+      - Service
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Create an user
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create user
+      tags:
+      - User
+  /user/{id}:
+    delete:
+      description: Delete an user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete user
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update an user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update user
+      tags:
+      - User
+  /user/email/{email}:
+    get:
+      description: Retrieve an user by its email
+      parameters:
+      - description: User Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get user by email
+      tags:
+      - User
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in an user
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Login
+      tags:
+      - User
 swagger: "2.0"

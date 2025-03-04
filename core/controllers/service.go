@@ -68,8 +68,8 @@ func (cc *serviceController) GetServiceByName(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
-//	@Success		200				{object}	DTO.Service
-//	@Failure		404				{object}	DTO.ErrorResponse
+//	@Success		200		{object}	DTO.Service
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [patch]
 func (cc *serviceController) UpdateServiceById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
