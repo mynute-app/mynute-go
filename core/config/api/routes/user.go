@@ -12,6 +12,4 @@ func User(Gorm *handlers.Gorm, r fiber.Router) {
 	e := r.Group("/user")
 	e.Post("/login", ce.Login)               // ok
 	e.Get("/email/:email", ce.GetOneByEmail) // ok
-
-	controllers.CreateRoutes(e, ce)
 }

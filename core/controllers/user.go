@@ -6,19 +6,20 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// EmployeeController embeds BaseController in order to extend it with the functions below
+// EmployeeController embeds service.Base in order to extend it with the functions below
 type userController struct {
-	BaseController[models.User, DTO.User]
+	service.Base[models.User, DTO.User]
 }
 
 func User(Gorm *handlers.Gorm) *userController {
 	return &userController{
-		BaseController: BaseController[models.User, DTO.User]{
+		Base: service.Base[models.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.User(Gorm),
@@ -34,7 +35,7 @@ func (cc *userController) GetOneByEmail(c *fiber.Ctx) error {
 
 // Custom extension method to login an user
 func (cc *userController) Login(c *fiber.Ctx) error {
-	cc.init(c)
+	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {

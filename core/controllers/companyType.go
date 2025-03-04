@@ -6,15 +6,17 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type companyType struct {
-	BaseController[models.CompanyType, DTO.CompanyType]
+	service.Base[models.CompanyType, DTO.CompanyType]
 }
 
 // CreateCompanyType creates a company type
+//
 //	@Summary		Create company type
 //	@Description	Create a company type
 //	@Tags			CompanyType
@@ -29,6 +31,7 @@ func (cc *companyType) CreateCompanyType(c *fiber.Ctx) error {
 }
 
 // GetCompanyTypeByName retrieves a company type by ID
+//
 //	@Summary		Get company type by ID
 //	@Description	Retrieve a company type by its ID
 //	@Tags			CompanyType
@@ -42,6 +45,7 @@ func (cc *companyType) GetCompanyTypeByName(c *fiber.Ctx) error {
 }
 
 // GetCompanyTypeById retrieves a company type by ID
+//
 //	@Summary		Get company type by ID
 //	@Description	Retrieve a company type by its ID
 //	@Tags			CompanyType
@@ -55,6 +59,7 @@ func (cc *companyType) GetCompanyTypeById(c *fiber.Ctx) error {
 }
 
 // UpdateCompanyTypeById updates a company type by ID
+//
 //	@Summary		Update company type by ID
 //	@Description	Update a company type by its ID
 //	@Tags			CompanyType
@@ -70,6 +75,7 @@ func (cc *companyType) UpdateCompanyTypeById(c *fiber.Ctx) error {
 }
 
 // DeleteCompanyTypeById deletes a company type by ID
+//
 //	@Summary		Delete company type by ID
 //	@Description	Delete a company type by its ID
 //	@Tags			CompanyType
@@ -84,7 +90,7 @@ func (cc *companyType) DeleteCompanyTypeById(c *fiber.Ctx) error {
 
 func CompanyType(Gorm *handlers.Gorm) *companyType {
 	return &companyType{
-		BaseController: BaseController[models.CompanyType, DTO.CompanyType]{
+		Base: service.Base[models.CompanyType, DTO.CompanyType]{
 			Name:         namespace.CompanyTypeKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.CompanyType(Gorm),

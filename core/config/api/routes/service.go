@@ -10,6 +10,9 @@ import (
 func Service(Gorm *handlers.Gorm, r fiber.Router) {
 	cs := controllers.Service(Gorm)
 	s := r.Group("/service")
-
-	controllers.CreateRoutes(s, cs)
+	s.Post("/", cs.CreateService)             // ok
+	s.Get("/:id", cs.GetServiceById)           // ok
+	s.Get("/name/:name", cs.GetServiceByName)  // ok
+	s.Patch("/:id", cs.UpdateServiceById)      // ok
+	s.Delete("/:id", cs.DeleteServiceById)     // ok
 }

@@ -6,13 +6,14 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// CompanyController embeds BaseController in order to extend it with the functions below
+// CompanyController embeds service.Base in order to extend it with the functions below
 type companyController struct {
-	BaseController[models.Company, DTO.Company]
+	service.Base[models.Company, DTO.Company]
 }
 
 // CreateCompany creates a company
@@ -105,7 +106,7 @@ func (cc *companyController) DeleteCompanyById(c *fiber.Ctx) error {
 // Constructor for CompanyController
 func Company(Gorm *handlers.Gorm) *companyController {
 	return &companyController{
-		BaseController: BaseController[models.Company, DTO.Company]{
+		Base: service.Base[models.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.Company(Gorm),

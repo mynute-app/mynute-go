@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handlers"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 	"errors"
 	"log"
 
@@ -13,14 +14,14 @@ import (
 	"github.com/shareed2k/goth_fiber"
 )
 
-// EmployeeController embeds BaseController in order to extend it with the functions below
+// EmployeeController embeds Base in order to extend it with the functions below
 type authController struct {
-	BaseController[models.User, DTO.User]
+	service.Base[models.User, DTO.User]
 }
 
 func Auth(Gorm *handlers.Gorm) *authController {
 	return &authController{
-		BaseController: BaseController[models.User, DTO.User]{
+		Base: service.Base[models.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handlers.Request(Gorm),
 			Middleware:   middleware.User(Gorm),
@@ -31,7 +32,7 @@ func Auth(Gorm *handlers.Gorm) *authController {
 
 // Custom extension method to login an user
 func (cc *authController) Login(c *fiber.Ctx) error {
-	cc.init(c)
+	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
@@ -55,7 +56,7 @@ func (cc *authController) Login(c *fiber.Ctx) error {
 }
 
 func (cc *authController) Register(c *fiber.Ctx) error {
-	cc.init(c)
+	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	body.Password, _ = handlers.HashPassword(body.Password)
 	if err := cc.Request.Gorm.Create(body); err != nil {
@@ -71,7 +72,7 @@ func (cc *authController) VerifyEmail(c *fiber.Ctx) error {
 }
 
 func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
-	cc.init(c)
+	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
 	var userDatabase models.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {

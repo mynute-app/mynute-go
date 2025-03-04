@@ -10,6 +10,8 @@ import (
 func Holidays(Gorm *handlers.Gorm, App *fiber.App) {
 	ce := controllers.Holidays(Gorm)
 	r := App.Group("/holidays")
-
-	controllers.CreateRoutes(r, ce)
+	r.Post("/", ce.CreateHoliday)
+	r.Get("/:id", ce.GetHolidayById)
+	r.Patch("/:id", ce.UpdateHolidayById)
+	r.Delete("/:id", ce.DeleteHolidayById)
 }

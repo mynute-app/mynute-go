@@ -17,6 +17,4 @@ func Auth(Gorm *handlers.Gorm, r fiber.Router) {
 	e.Get("/oauth/logout", ce.LogoutProvider)
 	e.Get("/oauth/:provider", ce.BeginAuthProviderCallback)
 	e.Get("/oauth/:provider/callback", ce.GetAuthCallbackFunction)
-
-	controllers.CreateRoutes(e, ce)
 }
