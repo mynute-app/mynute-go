@@ -51,7 +51,7 @@ func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
 //	@Tags			Branch
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string		true	"Branch ID"
+//	@Param			id		path		string				true	"Branch ID"
 //	@Param			branch	body		DTO.UpdateBranch	true	"Branch"
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse

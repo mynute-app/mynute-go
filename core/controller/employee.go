@@ -22,8 +22,8 @@ type employee_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		model.CreateEmployee	true	"Employee"
-//	@Success		200		{object}	model.Employee
-//	@Failure		400		{object}	model.ErrorResponse
+//	@Success		200			{object}	model.Employee
+//	@Failure		400			{object}	model.ErrorResponse
 //	@Router			/employee [post]
 func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
@@ -50,10 +50,10 @@ func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string		true	"Employee ID"
+//	@Param			id			path		string						true	"Employee ID"
 //	@Param			employee	body		model.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200		{object}	model.Employee
-//	@Failure		400		{object}	model.ErrorResponse
+//	@Success		200			{object}	model.Employee
+//	@Failure		400			{object}	model.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)

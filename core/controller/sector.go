@@ -23,8 +23,8 @@ type sector_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			sector	body		DTO.Sector	true	"Company Type"
-//	@Success		200				{object}	DTO.Sector
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Success		200		{object}	DTO.Sector
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/sector [post]
 func (cc *sector_controller) CreateCompanyType(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
@@ -67,8 +67,8 @@ func (cc *sector_controller) GetCompanyTypeById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			sector	body		DTO.Sector	true	"Company Type"
-//	@Success		200				{object}	DTO.Sector
-//	@Failure		404				{object}	DTO.ErrorResponse
+//	@Success		200		{object}	DTO.Sector
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [patch]
 func (cc *sector_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
