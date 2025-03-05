@@ -9,20 +9,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type EmployeeMiddlewareActions struct {
+type UserMiddlewareActions struct {
 	Gorm *handler.Gorm
 }
 
 func User(Gorm *handler.Gorm) *Registry {
-	// user := &EmployeeMiddlewareActions{Gorm: Gorm}
+	// user := &UserMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
-	user := &EmployeeMiddlewareActions{Gorm: Gorm}
+	user := &UserMiddlewareActions{Gorm: Gorm}
 	registry.RegisterAction(namespace.UserKey.Name, "POST", user.Create)
 
 	return registry
 }
 
-func (em *EmployeeMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
+func (em *UserMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	user, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
