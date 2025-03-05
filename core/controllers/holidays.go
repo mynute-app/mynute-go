@@ -69,7 +69,7 @@ func (cc *HolidaysController) GetHolidayByName(c *fiber.Ctx) error {
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
 //	@Success		200		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/holidays/{id} [put]
+//	@Router			/holidays/{id} [patch]
 func (cc *HolidaysController) UpdateHolidayById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }

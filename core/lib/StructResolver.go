@@ -2,6 +2,7 @@ package lib
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -23,6 +24,8 @@ func ResolvePointerStruct(v any) (reflect.Value, error) {
 	if val.Elem().Kind() == reflect.Struct {
 		return val.Elem(), nil
 	}
+
+	fmt.Printf("Resolved DTO Struct: %+v\n", val.Elem().Interface())
 
 	return val, errors.New("interface is not a pointer to a struct or slice")
 }

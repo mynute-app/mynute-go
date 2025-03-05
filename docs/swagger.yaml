@@ -115,6 +115,39 @@ definitions:
         example: Your Company Type Name
         type: string
     type: object
+  DTO.CreateBranch:
+    properties:
+      city:
+        example: New York
+        type: string
+      company_id:
+        example: 1
+        type: integer
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      zip_code:
+        example: "10001"
+        type: string
+    type: object
   DTO.CreateCompany:
     properties:
       company_types:
@@ -225,6 +258,18 @@ definitions:
         example: 150
         type: integer
     type: object
+  DTO.UpdateBranch:
+    properties:
+      company_id:
+        example: 1
+        type: integer
+      name:
+        example: Main Branch Updated
+        type: string
+      street:
+        example: 556 Main St
+        type: string
+    type: object
   DTO.User:
     properties:
       branches:
@@ -310,7 +355,7 @@ paths:
         name: branch
         required: true
         schema:
-          $ref: '#/definitions/DTO.Branch'
+          $ref: '#/definitions/DTO.CreateBranch'
       produces:
       - application/json
       responses:
@@ -370,7 +415,7 @@ paths:
       summary: Get branch by ID
       tags:
       - Branch
-    put:
+    patch:
       consumes:
       - application/json
       description: Update a branch
@@ -385,7 +430,7 @@ paths:
         name: branch
         required: true
         schema:
-          $ref: '#/definitions/DTO.Branch'
+          $ref: '#/definitions/DTO.UpdateBranch'
       produces:
       - application/json
       responses:
@@ -719,7 +764,7 @@ paths:
       summary: Get holiday by ID
       tags:
       - Holidays
-    put:
+    patch:
       consumes:
       - application/json
       description: Update a holiday
@@ -945,7 +990,7 @@ paths:
       summary: Delete user
       tags:
       - User
-    put:
+    patch:
       consumes:
       - application/json
       description: Update an user

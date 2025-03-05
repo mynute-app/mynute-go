@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"agenda-kaki-go/core/lib"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,6 +19,8 @@ type Res struct {
 // This function is used to send a response back to the client
 // using the Data Transfer Object (DTO) pattern.
 func (sr *Res) DTO(s int, source any, dto any) {
+	fmt.Printf("Source: %+v\n", source)
+	fmt.Printf("DTO: %+v\n", dto)
 	if err := lib.ParseToDTO(source, dto); err != nil {
 		sr.Http500(err)
 	}

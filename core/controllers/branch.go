@@ -22,7 +22,7 @@ type branchController struct {
 //	@Tags			Branch
 //	@Accept			json
 //	@Produce		json
-//	@Param			branch	body		DTO.Branch	true	"Branch"
+//	@Param			branch	body		DTO.CreateBranch	true	"Branch"
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
@@ -52,10 +52,10 @@ func (cc *branchController) GetBranchById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string		true	"Branch ID"
-//	@Param			branch	body		DTO.Branch	true	"Branch"
+//	@Param			branch	body		DTO.UpdateBranch	true	"Branch"
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/branch/{id} [put]
+//	@Router			/branch/{id} [patch]
 func (cc *branchController) UpdateBranchById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }

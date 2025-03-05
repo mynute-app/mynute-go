@@ -57,7 +57,7 @@ func (cc *userController) GetOneByEmail(c *fiber.Ctx) error {
 // @Param			user	body		DTO.User	true	"User"
 // @Success		200		{object}	DTO.User
 // @Failure		400		{object}	DTO.ErrorResponse
-// @Router			/user/{id} [put]
+// @Router			/user/{id} [patch]
 func (cc *userController) UpdateUserById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
@@ -87,7 +87,7 @@ func (cc *userController) DeleteUserById(c *fiber.Ctx) error {
 // @Success		200		{object}	DTO.User
 // @Failure		404		{object}	DTO.ErrorResponse
 // @Failure		401		{object}	DTO.ErrorResponse
-// @Router			/user/login [post] 
+// @Router			/user/login [post]
 func (cc *userController) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
