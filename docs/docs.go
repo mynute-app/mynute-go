@@ -1531,11 +1531,6 @@ const docTemplate = `{
         "DTO.CreateUser": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "description": "ID da empresa",
-                    "type": "integer",
-                    "example": 1
-                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -1546,7 +1541,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "securepassword"
+                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",
@@ -1774,11 +1769,6 @@ const docTemplate = `{
         "DTO.User": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "description": "ID da empresa",
-                    "type": "integer",
-                    "example": 1
-                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -1793,7 +1783,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "securepassword"
+                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",

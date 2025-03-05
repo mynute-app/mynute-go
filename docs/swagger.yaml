@@ -177,10 +177,6 @@ definitions:
     type: object
   DTO.CreateUser:
     properties:
-      company_id:
-        description: ID da empresa
-        example: 1
-        type: integer
       email:
         example: john.doe@example.com
         type: string
@@ -188,7 +184,7 @@ definitions:
         example: John
         type: string
       password:
-        example: securepassword
+        example: 1VerySecurePassword!
         type: string
       phone:
         example: +1-555-555-5555
@@ -350,10 +346,6 @@ definitions:
     type: object
   DTO.User:
     properties:
-      company_id:
-        description: ID da empresa
-        example: 1
-        type: integer
       email:
         example: john.doe@example.com
         type: string
@@ -364,7 +356,7 @@ definitions:
         example: John
         type: string
       password:
-        example: securepassword
+        example: 1VerySecurePassword!
         type: string
       phone:
         example: +1-555-555-5555

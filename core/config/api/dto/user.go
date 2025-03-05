@@ -1,11 +1,10 @@
 package DTO
 
 type CreateUser struct {
-	CompanyID uint   `json:"company_id" example:"1"` // ID da empresa
 	Name      string `json:"name" example:"John"`
 	Surname   string `json:"surname" example:"Doe"`
 	Email     string `json:"email" example:"john.doe@example.com"`
-	Password  string `json:"password" example:"securepassword"`
+	Password  string `json:"password" example:"1VerySecurePassword!"`
 	Phone     string `json:"phone" example:"+1-555-555-5555"`
 }
 
