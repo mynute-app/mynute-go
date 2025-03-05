@@ -25,7 +25,7 @@ type user_controller struct {
 // @Accept			json
 // @Produce		json
 // @Param			user	body		DTO.CreateUser	true	"User"
-// @Success		200		{object}	DTO.User
+// @Success		201		{object}	DTO.User
 // @Failure		400		{object}	DTO.ErrorResponse
 // @Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {

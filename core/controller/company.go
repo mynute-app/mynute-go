@@ -82,7 +82,7 @@ func (cc *company_controller) GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.Company	true	"Company"
-//	@Success		200		{object}	DTO.Company
+//	@Success		201		{object}	DTO.Company
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [patch]
 func (cc *company_controller) UpdateCompanyById(c *fiber.Ctx) error {

@@ -24,7 +24,7 @@ type service_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
-//	@Success		200		{object}	DTO.Service
+//	@Success		201		{object}	DTO.Service
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service [post]
 func (cc *service_controller) CreateService(c *fiber.Ctx) error {

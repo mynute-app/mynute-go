@@ -22,7 +22,7 @@ type employee_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
-//	@Success		200			{object}	DTO.Employee
+//	@Success		201			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {

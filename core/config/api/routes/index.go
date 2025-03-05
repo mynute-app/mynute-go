@@ -17,4 +17,5 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Branch(Gorm, App)
 	Service(Gorm, App)
 	Swagger(App)
+	Employee(Gorm, App)
 }

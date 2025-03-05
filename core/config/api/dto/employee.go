@@ -8,11 +8,11 @@ type UpdateEmployeeSwagger struct {
 type CreateEmployee struct {
 	Name      string `json:"name" example:"John"`
 	Surname   string `json:"surname" example:"Doe"`
-	Role      string `json:"role" example:"user"`
 	Email     string `json:"email" example:"john.doe@example.com"`
 	Phone     string `json:"phone" example:"+15555555555"`
 	Password  string `json:"password" example:"1VerySecurePassword!"`
-	CompanyID uint   `json:"company_id"`
+	CompanyID uint   `json:"company_id" example:"1"`
+	UserID    uint   `json:"user_id" example:"1"`
 }
 
 type Employee struct {
@@ -22,5 +22,5 @@ type Employee struct {
 	Verified         bool               `json:"verified" example:"false"`
 	Branches         []BranchPopulated  `json:"branches"`
 	Services         []ServicePopulated `json:"services"`
-	Tags              []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
+	Tags             []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
 }

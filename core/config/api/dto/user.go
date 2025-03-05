@@ -5,7 +5,7 @@ type CreateUser struct {
 	Surname   string `json:"surname" example:"Doe"`
 	Email     string `json:"email" example:"john.doe@example.com"`
 	Password  string `json:"password" example:"1VerySecurePassword!"`
-	Phone     string `json:"phone" example:"+1-555-555-5555"`
+	Phone     string `json:"phone" example:"+15555555555"`
 }
 
 type User struct {

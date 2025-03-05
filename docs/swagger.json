@@ -1494,7 +1494,8 @@
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "email": {
                     "type": "string",
@@ -1511,10 +1512,6 @@
                 "phone": {
                     "type": "string",
                     "example": "+15555555555"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
                 },
                 "surname": {
                     "type": "string",
@@ -1539,7 +1536,7 @@
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",
@@ -1557,7 +1554,8 @@
                     }
                 },
                 "company_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "email": {
                     "type": "string",
@@ -1577,10 +1575,6 @@
                 "phone": {
                     "type": "string",
                     "example": "+15555555555"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
                 },
                 "services": {
                     "type": "array",
@@ -1781,7 +1775,7 @@
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",

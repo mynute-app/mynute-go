@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
@@ -33,4 +34,19 @@ func (em *UserMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	}
 	// Proceed to the next middleware or handler
 	return 0, nil
+}
+
+func FindUserByEmail(Gorm *handler.Gorm) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		body, err := lib.GetFromCtx[DTO.CreateEmployee](c, namespace.RequestKey.Body)
+		if err != nil {
+			return err
+		}
+		user := &model.User{}
+		if err := Gorm.DB.Where("email = ?", body.Email).First(user).Error; err != nil {
+			return err
+		}
+		c.Locals(namespace.UserKey.Model, user)
+		return c.Next()
+	}
 }

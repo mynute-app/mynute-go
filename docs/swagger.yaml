@@ -155,6 +155,7 @@ definitions:
   DTO.CreateEmployee:
     properties:
       company_id:
+        example: 1
         type: integer
       email:
         example: john.doe@example.com
@@ -167,9 +168,6 @@ definitions:
         type: string
       phone:
         example: "+15555555555"
-        type: string
-      role:
-        example: user
         type: string
       surname:
         example: Doe
@@ -187,7 +185,7 @@ definitions:
         example: 1VerySecurePassword!
         type: string
       phone:
-        example: +1-555-555-5555
+        example: "+15555555555"
         type: string
       surname:
         example: Doe
@@ -200,6 +198,7 @@ definitions:
           $ref: '#/definitions/DTO.BranchPopulated'
         type: array
       company_id:
+        example: 1
         type: integer
       email:
         example: john.doe@example.com
@@ -214,9 +213,6 @@ definitions:
         type: string
       phone:
         example: "+15555555555"
-        type: string
-      role:
-        example: user
         type: string
       services:
         items:
@@ -359,7 +355,7 @@ definitions:
         example: 1VerySecurePassword!
         type: string
       phone:
-        example: +1-555-555-5555
+        example: "+15555555555"
         type: string
       surname:
         example: Doe

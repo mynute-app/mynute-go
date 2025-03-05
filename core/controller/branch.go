@@ -23,7 +23,7 @@ type branch_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			branch	body		DTO.CreateBranch	true	"Branch"
-//	@Success		200		{object}	DTO.Branch
+//	@Success		201		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
 func (cc *branch_controller) CreateBranch(c *fiber.Ctx) error {

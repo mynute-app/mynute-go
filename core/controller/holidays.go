@@ -23,7 +23,7 @@ type holidays_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
-//	@Success		200		{object}	DTO.Holidays
+//	@Success		201		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/holidays [post]
 func (cc *holidays_controller) CreateHoliday(c *fiber.Ctx) error {

@@ -1500,7 +1500,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "email": {
                     "type": "string",
@@ -1517,10 +1518,6 @@ const docTemplate = `{
                 "phone": {
                     "type": "string",
                     "example": "+15555555555"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
                 },
                 "surname": {
                     "type": "string",
@@ -1545,7 +1542,7 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",
@@ -1563,7 +1560,8 @@ const docTemplate = `{
                     }
                 },
                 "company_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "email": {
                     "type": "string",
@@ -1583,10 +1581,6 @@ const docTemplate = `{
                 "phone": {
                     "type": "string",
                     "example": "+15555555555"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
                 },
                 "services": {
                     "type": "array",
@@ -1787,7 +1781,7 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",
