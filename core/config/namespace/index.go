@@ -14,15 +14,17 @@ type GeneralStruct struct {
 }
 
 type RequestStruct struct {
-	Body      string
-	Path      string
-	AuthToken string
+	Body_Byte   string
+	Body_Parsed string
+	Path        string
+	Auth_Token  string
 }
 
 var RequestKey = RequestStruct{
-	Body:      "req_body",
-	Path:      "req_path",
-	AuthToken: "req_auth_token",
+	Body_Byte:   "req_body_byte",
+	Body_Parsed: "req_body_parsed",
+	Path:        "req_path",
+	Auth_Token:  "req_auth_token",
 }
 
 var GeneralKey = GeneralStruct{

@@ -10,14 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "email": "fiber@swagger.io"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -48,8 +41,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Branch"
                         }
@@ -384,8 +377,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Company"
                         }
@@ -424,8 +417,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Employee"
                         }
@@ -577,8 +570,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Holidays"
                         }
@@ -765,8 +758,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Sector"
                         }
@@ -918,8 +911,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Service"
                         }
@@ -1106,8 +1099,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
@@ -1158,6 +1151,11 @@ const docTemplate = `{
         },
         "/user/login": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Log in an user",
                 "consumes": [
                     "application/json"
@@ -1176,16 +1174,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.LoginUser"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.User"
-                        }
+                        "description": "OK"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -1522,6 +1517,10 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -1602,6 +1601,10 @@ const docTemplate = `{
                         " \"branch-manager\"]"
                     ]
                 },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "verification_code": {
                     "type": "string",
                     "example": "123456"
@@ -1648,6 +1651,19 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "Public"
+                }
+            }
+        },
+        "DTO.LoginUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1VerySecurePassword!"
                 }
             }
         },
@@ -1822,14 +1838,22 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Enter the token in the format: \u003ctoken\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:4000",
-	BasePath:         "/",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Fiber Example API",
 	Description:      "Swagger API for testing and debugging",

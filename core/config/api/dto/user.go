@@ -1,11 +1,15 @@
 package DTO
 
+type LoginUser struct {
+	Email    string `json:"email" example:"john.doe@example.com"`
+	Password string `json:"password" example:"1VerySecurePassword!"`
+}
 type CreateUser struct {
-	Name      string `json:"name" example:"John"`
-	Surname   string `json:"surname" example:"Doe"`
-	Email     string `json:"email" example:"john.doe@example.com"`
-	Password  string `json:"password" example:"1VerySecurePassword!"`
-	Phone     string `json:"phone" example:"+15555555555"`
+	Name     string `json:"name" example:"John"`
+	Surname  string `json:"surname" example:"Doe"`
+	Email    string `json:"email" example:"john.doe@example.com"`
+	Password string `json:"password" example:"1VerySecurePassword!"`
+	Phone    string `json:"phone" example:"+15555555555"`
 }
 
 type User struct {

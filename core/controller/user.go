@@ -19,75 +19,76 @@ type user_controller struct {
 
 // CreateUser creates an user
 //
-// @Summary		Create user
-// @Description	Create an user
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			user	body		DTO.CreateUser	true	"User"
-// @Success		201		{object}	DTO.User
-// @Failure		400		{object}	DTO.ErrorResponse
-// @Router			/user [post]
+//	@Summary		Create user
+//	@Description	Create an user
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body		DTO.CreateUser	true	"User"
+//	@Success		201		{object}	DTO.User
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
 // GetOneByEmail retrieves an user by email
 //
-// @Summary		Get user by email
-// @Description	Retrieve an user by its email
-// @Tags			User
-// @Param			email	path	string	true	"User Email"
-// @Produce		json
-// @Success		200	{object}	DTO.User
-// @Failure		404	{object}	DTO.ErrorResponse
-// @Router			/user/email/{email} [get]
+//	@Summary		Get user by email
+//	@Description	Retrieve an user by its email
+//	@Tags			User
+//	@Param			email	path	string	true	"User Email"
+//	@Produce		json
+//	@Success		200	{object}	DTO.User
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/user/email/{email} [get]
 func (cc *user_controller) GetOneByEmail(c *fiber.Ctx) error {
 	return cc.GetBy("email", c)
 }
 
 // UpdateUserById updates an user by ID
 //
-// @Summary		Update user
-// @Description	Update an user
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			id		path		string		true	"User ID"
-// @Param			user	body		DTO.User	true	"User"
-// @Success		200		{object}	DTO.User
-// @Failure		400		{object}	DTO.ErrorResponse
-// @Router			/user/{id} [patch]
+//	@Summary		Update user
+//	@Description	Update an user
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string		true	"User ID"
+//	@Param			user	body		DTO.User	true	"User"
+//	@Success		200		{object}	DTO.User
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Router			/user/{id} [patch]
 func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
 // DeleteUserById deletes an user by ID
 //
-// @Summary		Delete user
-// @Description	Delete an user
-// @Tags			User
-// @Param			id	path	string	true	"User ID"
-// @Produce		json
-// @Success		200	{object}	DTO.User
-// @Failure		404	{object}	DTO.ErrorResponse
-// @Router			/user/{id} [delete]
+//	@Summary		Delete user
+//	@Description	Delete an user
+//	@Tags			User
+//	@Param			id	path	string	true	"User ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.User
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/user/{id} [delete]
 func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
 // Login just logs an user in case the password is correct
 //
-// @Summary		Login
-// @Description	Log in an user
-// @Tags			User
-// @Accept			json
-// @Produce		json
-// @Param			user	body		DTO.User	true	"User"
-// @Success		200		{object}	DTO.User
-// @Failure		404		{object}	DTO.ErrorResponse
-// @Failure		401		{object}	DTO.ErrorResponse
-// @Router			/user/login [post]
+//	@Summary		Login
+//	@Description	Log in an user
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			user	body	DTO.LoginUser	true	"User"
+//	@Success		200
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		401	{object}	DTO.ErrorResponse
+//	@Router			/user/login [post]
 func (cc *user_controller) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)

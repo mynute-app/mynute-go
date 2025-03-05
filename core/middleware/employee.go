@@ -10,40 +10,54 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type EmployeeMiddlewareActions struct {
+type employee_middleware struct {
 	Gorm *handler.Gorm
 }
 
-func Employee(Gorm *handler.Gorm) *Registry {
-	registry := NewRegistry()
-	// employee := &EmployeeMiddlewareActions{Gorm: Gorm}
-	return registry
+func Employee(Gorm *handler.Gorm) *employee_middleware {
+	return &employee_middleware{Gorm: Gorm}
 }
 
-func SetEmployeeUserAccount(gorm *handler.Gorm) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body)
-		if err != nil {
-			return err
-		}
-		if body.UserID != 0 {
-			return c.Next() // Skip if user ID is already set
-		}
-		user, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
-		if err != nil {
-			return err
-		}
-		if user.ID != 0 {
-			body.UserID = user.ID // Set user ID if user is already created
-			c.Locals(namespace.RequestKey.Body, body)
-			return c.Next()
-		}
-		// Create an user account in case it doesn't exist
-		lib.ParseToDTO(body, user)
-		if err := gorm.DB.Create(user).Error; err != nil {
-			return err
-		}
+func (em *employee_middleware) SaveEmployeeCreateBody(c *fiber.Ctx) error {
+	body := &DTO.CreateEmployee{}
+	err := lib.BodyParser(c.Body(), body)
+	if err != nil {
+		return err
+	}
+	c.Locals(namespace.RequestKey.Body_Parsed, body)
+	return c.Next()
+}
+
+func (em *employee_middleware) FindUserWhenCreatingEmployee(c *fiber.Ctx) error {
+	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
+	if err != nil {
+		return err
+	}
+	user := &model.User{}
+	if err := em.Gorm.DB.Where("email = ?", body.Email).First(user).Error; err != nil {
+		return err
+	}
+	if user.ID != 0 {
 		body.UserID = user.ID
+		c.Locals(namespace.RequestKey.Body_Parsed, body)
 		return c.Next()
 	}
+	return c.Next()
+}
+
+func (em *employee_middleware) SetEmployeeUserAccount(c *fiber.Ctx) error {
+	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
+	if err != nil {
+		return err
+	}
+	if body.UserID != 0 {
+		return c.Next()
+	}
+	user := &model.User{}
+	lib.ParseToDTO(body, user)
+	if err := em.Gorm.DB.Create(user).Error; err != nil {
+		return err
+	}
+	body.UserID = user.ID
+	return c.Next()
 }
