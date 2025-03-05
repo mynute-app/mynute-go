@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
@@ -13,7 +13,7 @@ import (
 
 // CompanyController embeds service.Base in order to extend it with the functions below
 type companyController struct {
-	service.Base[models.Company, DTO.Company]
+	service.Base[model.Company, DTO.Company]
 }
 
 // CreateCompany creates a company
@@ -104,11 +104,11 @@ func (cc *companyController) DeleteCompanyById(c *fiber.Ctx) error {
 }
 
 // Constructor for CompanyController
-func Company(Gorm *handlers.Gorm) *companyController {
+func Company(Gorm *handler.Gorm) *companyController {
 	return &companyController{
-		Base: service.Base[models.Company, DTO.Company]{
+		Base: service.Base[model.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.Company(Gorm),
 			Associations: []string{"CompanyTypes", "Branches", "Employees", "Services"},
 		},

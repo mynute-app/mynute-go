@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/controllers"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/controller"
+	"agenda-kaki-go/core/handler"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Holidays(Gorm *handlers.Gorm, App *fiber.App) {
-	ce := controllers.Holidays(Gorm)
+func Holidays(Gorm *handler.Gorm, App *fiber.App) {
+	ce := controller.Holidays(Gorm)
 	r := App.Group("/holidays")
 	r.Post("/", ce.CreateHoliday)
 	r.Get("/:id", ce.GetHolidayById)

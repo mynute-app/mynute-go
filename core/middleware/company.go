@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
@@ -13,10 +13,10 @@ import (
 )
 
 type companyMiddlewareActions struct {
-	Gorm *handlers.Gorm
+	Gorm *handler.Gorm
 }
 
-func Company(Gorm *handlers.Gorm) *Registry {
+func Company(Gorm *handler.Gorm) *Registry {
 	registry := NewRegistry()
 	company := &companyMiddlewareActions{Gorm: Gorm}
 	var CompanyMiddleActions = []MiddlewareActions{
@@ -37,10 +37,10 @@ func Company(Gorm *handlers.Gorm) *Registry {
 	return registry
 }
 
-func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
+func GetCompany(Gorm *handler.Gorm) fiber.Handler {
 	getCompany := func(c *fiber.Ctx) error {
-		var company models.Company
-		res := handlers.Response(c)
+		var company model.Company
+		res := &lib.SendResponse{Ctx: c}
 		companyID := c.Params(namespace.QueryKey.CompanyId)
 
 		if companyID == "" {
@@ -58,7 +58,7 @@ func GetCompany(Gorm *handlers.Gorm) fiber.Handler {
 }
 
 func (ca *companyMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
-	company, err := lib.GetFromCtx[*models.Company](c, namespace.GeneralKey.Model)
+	company, err := lib.GetFromCtx[*model.Company](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -75,7 +75,7 @@ func (ca *companyMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 		if companyType.ID == 0 {
 			return 400, errors.New("company type ID is missing or invalid")
 		}
-		var model models.CompanyType
+		var model model.CompanyType
 		idStr := strconv.FormatUint(uint64(companyType.ID), 10)
 		if err := ca.Gorm.GetOneBy("id", idStr, &model, nil); err != nil {
 			errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
@@ -100,10 +100,10 @@ func (ca *companyMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 	} else if changes["tax_id"] != nil && !lib.ValidateTaxID(changes["tax_id"].(string)) {
 		return 400, errors.New("invalid tax ID")
 	} else if changes["company_types"] != nil {
-		companyTypes := changes["company_types"].([]models.CompanyType)
+		companyTypes := changes["company_types"].([]model.CompanyType)
 		for _, companyType := range companyTypes {
 			idStr := strconv.Itoa(int(companyType.ID))
-			if err := ca.Gorm.GetOneBy("id", idStr, models.CompanyType{}, nil); err != nil {
+			if err := ca.Gorm.GetOneBy("id", idStr, model.CompanyType{}, nil); err != nil {
 				errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
 				return 400, errors.New(errStr)
 			}

@@ -1,7 +1,12 @@
-package handlers
+package handler
 
 import (
+	"agenda-kaki-go/core/lib"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -9,14 +14,11 @@ import (
 	"github.com/markbates/goth/providers/google"
 	"github.com/shareed2k/goth_fiber"
 	"golang.org/x/crypto/bcrypt"
-	"log"
-	"os"
-	"strconv"
 )
 
 type Authentication struct {
 	C           *fiber.Ctx
-	Res         *Res
+	Res         *lib.SendResponse
 	sessionName string
 }
 
@@ -92,7 +94,7 @@ func SessionOpts() SessionsOptions {
 func Auth(c *fiber.Ctx) *Authentication {
 	return &Authentication{
 		C:           c,
-		Res:         &Res{Ctx: c},
+		Res:         &lib.SendResponse{Ctx: c},
 		sessionName: "user_session",
 	}
 }
@@ -110,7 +112,7 @@ func (a *Authentication) WhoAreYou() error {
 	// Check if the user is authenticated
 	_, err := goth_fiber.GetFromSession("_gothic_session", a.C)
 	if err != nil {
-		return a.Res.Http401(fmt.Errorf("user not authenticated"))
+		a.Res.Http401(fmt.Errorf("user not authenticated"))
 	}
 	return a.C.Next()
 }

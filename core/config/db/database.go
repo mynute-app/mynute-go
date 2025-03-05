@@ -1,7 +1,7 @@
 package database
 
 import (
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"fmt"
 	"log"
 	"os"
@@ -48,13 +48,13 @@ func Connect() *Database {
 
 func (db *Database) Migrate() {
 	models := []any{
-		&models.CompanyType{},
-		&models.Company{}, // Must be migrated before Service
-		&models.Branch{},
-		&models.User{},
-		&models.Service{},
-		&models.Appointment{},
-		&models.Holidays{},
+		&model.CompanyType{},
+		&model.Company{}, // Must be migrated before Service
+		&model.Branch{},
+		&model.User{},
+		&model.Service{},
+		&model.Appointment{},
+		&model.Holidays{},
 	}
 
 	for _, model := range models {

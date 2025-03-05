@@ -1,18 +1,18 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/controllers"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/controller"
+	"agenda-kaki-go/core/handler"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func User(Gorm *handlers.Gorm, r fiber.Router) {
-	ce := controllers.User(Gorm)
+func User(Gorm *handler.Gorm, r fiber.Router) {
+	ce := controller.User(Gorm)
 	e := r.Group("/user")
-	e.Post("/", ce.CreateUser)                    // ok
+	e.Post("/", ce.CreateUser)               // ok
 	e.Post("/login", ce.Login)               // ok
 	e.Get("/email/:email", ce.GetOneByEmail) // ok
-	e.Patch("/:id", ce.UpdateUserById)         // ok
-	e.Delete("/:id", ce.DeleteUserById)        // ok
+	e.Patch("/:id", ce.UpdateUserById)       // ok
+	e.Delete("/:id", ce.DeleteUserById)      // ok
 }

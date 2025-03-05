@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
@@ -12,7 +12,7 @@ import (
 )
 
 type branchController struct {
-	service.Base[models.Branch, DTO.Branch]
+	service.Base[model.Branch, DTO.Branch]
 }
 
 // CreateBranch creates a branch
@@ -75,11 +75,11 @@ func (cc *branchController) DeleteBranchById(c *fiber.Ctx) error {
 }
 
 // CreateBranch creates a branch
-func Branch(Gorm *handlers.Gorm) *branchController {
+func Branch(Gorm *handler.Gorm) *branchController {
 	return &branchController{
-		Base: service.Base[models.Branch, DTO.Branch]{
+		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.Branch(Gorm),
 			Associations: []string{"Employees", "Services"},
 		},

@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
@@ -13,7 +13,7 @@ import (
 
 // serviceController embeds service.Base in order to extend it with the functions below
 type serviceController struct {
-	service.Base[models.Service, DTO.Service]
+	service.Base[model.Service, DTO.Service]
 }
 
 // CreateService creates a service
@@ -90,11 +90,11 @@ func (cc *serviceController) DeleteServiceById(c *fiber.Ctx) error {
 }
 
 // Service returns a serviceController
-func Service(Gorm *handlers.Gorm) *serviceController {
+func Service(Gorm *handler.Gorm) *serviceController {
 	return &serviceController{
-		Base: service.Base[models.Service, DTO.Service]{
+		Base: service.Base[model.Service, DTO.Service]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.Service(Gorm),
 			Associations: []string{"ServiceType"},
 		},

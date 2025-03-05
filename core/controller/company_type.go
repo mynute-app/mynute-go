@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
@@ -12,7 +12,7 @@ import (
 )
 
 type companyType struct {
-	service.Base[models.CompanyType, DTO.CompanyType]
+	service.Base[model.CompanyType, DTO.CompanyType]
 }
 
 // CreateCompanyType creates a company type
@@ -88,11 +88,11 @@ func (cc *companyType) DeleteCompanyTypeById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-func CompanyType(Gorm *handlers.Gorm) *companyType {
+func CompanyType(Gorm *handler.Gorm) *companyType {
 	return &companyType{
-		Base: service.Base[models.CompanyType, DTO.CompanyType]{
+		Base: service.Base[model.CompanyType, DTO.CompanyType]{
 			Name:         namespace.CompanyTypeKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.CompanyType(Gorm),
 			Associations: []string{},
 		},

@@ -1,6 +1,7 @@
-package models
+package model
 
 import "gorm.io/gorm"
+
 // Company represents a company entity
 type Company struct {
 	gorm.Model

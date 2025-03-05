@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
@@ -12,7 +12,7 @@ import (
 )
 
 type HolidaysController struct {
-	service.Base[models.Holidays, DTO.Holidays]
+	service.Base[model.Holidays, DTO.Holidays]
 }
 
 // CreateHolidays creates a holiday
@@ -89,11 +89,11 @@ func (cc *HolidaysController) DeleteHolidayById(c *fiber.Ctx) error {
 }
 
 // Holidays creates a new HolidaysController
-func Holidays(Gorm *handlers.Gorm) *HolidaysController {
+func Holidays(Gorm *handler.Gorm) *HolidaysController {
 	return &HolidaysController{
-		Base: service.Base[models.Holidays, DTO.Holidays]{
+		Base: service.Base[model.Holidays, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.Holidays(Gorm),
 			Associations: []string{},
 		},

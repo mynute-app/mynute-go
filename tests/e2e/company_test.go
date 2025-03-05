@@ -1,8 +1,8 @@
 package e2e_test
 
 import (
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/tests/e2e"
-	"agenda-kaki-go/tests/lib"
 	"fmt"
 	"testing"
 )

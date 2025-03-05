@@ -1,4 +1,4 @@
-package models
+package model
 
 import "gorm.io/gorm"
 
@@ -10,6 +10,6 @@ type Service struct {
 	Price       int32    `json:"price"`
 	Duration    int      `json:"duration"`                                                                                         // Duration in minutes
 	CompanyID   uint     `gorm:"not null;index;foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" json:"company_id"` // Foreign key to Company
-	Users       []User   `gorm:"many2many:employee_services;" json:"users"`                                                                     // Many-to-many relation with Employee
-	Branches    []Branch `gorm:"many2many:branch_services;" json:"branches"`                                                                       // Many-to-many relation with Branch
+	Users       []User   `gorm:"many2many:employee_services;" json:"users"`                                                        // Many-to-many relation with Employee
+	Branches    []Branch `gorm:"many2many:branch_services;" json:"branches"`                                                       // Many-to-many relation with Branch
 }

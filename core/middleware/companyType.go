@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"errors"
 	"log"
@@ -14,16 +14,16 @@ import (
 // var _ IMiddleware = (*CompanyType)(nil)
 
 // type CompanyType struct {
-// 	Gorm *handlers.Gorm
+// 	Gorm *handler.Gorm
 // }
 
-func CompanyType(Gorm *handlers.Gorm) *Registry {
+func CompanyType(Gorm *handler.Gorm) *Registry {
 	companyType := &companyTypeMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
 
 	var CompanyTypeMiddleActions = []MiddlewareActions{
 		{
-			methods: []string{"POST", "PATCH", "DELETE"},
+			methods: []string{"PATCH", "DELETE"},
 			action:  WhoAreYou,
 		},
 		{
@@ -44,14 +44,14 @@ func CompanyType(Gorm *handlers.Gorm) *Registry {
 }
 
 type companyTypeMiddlewareActions struct {
-	Gorm *handlers.Gorm
+	Gorm *handler.Gorm
 }
 
 // Middleware for Create operation
 func (cta *companyTypeMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
-	companyType, err := lib.GetFromCtx[*models.CompanyType](c, keys.Model)
+	companyType, err := lib.GetFromCtx[*model.CompanyType](c, keys.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -86,7 +86,7 @@ func (cta *companyTypeMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 			return 400, err
 		}
 		// Check if the name already exists
-		var companyType models.CompanyType
+		var companyType model.CompanyType
 		if err := cta.Gorm.GetOneBy("name", name, &companyType, nil); err == nil {
 			return 400, errors.New("companyType.Name already exists")
 		}
@@ -100,7 +100,7 @@ func (cta *companyTypeMiddlewareActions) DeleteOneById(c *fiber.Ctx) (int, error
 	companyTypeId := c.Params("id")
 
 	// Check if the company type is associated with any companies
-	var companies []models.Company
+	var companies []model.Company
 	if err := cta.Gorm.DB.
 		Model(&companies).
 		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").

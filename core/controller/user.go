@@ -1,10 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"log"
@@ -14,7 +14,7 @@ import (
 
 // EmployeeController embeds service.Base in order to extend it with the functions below
 type userController struct {
-	service.Base[models.User, DTO.User]
+	service.Base[model.User, DTO.User]
 }
 
 // CreateUser creates an user
@@ -90,18 +90,18 @@ func (cc *userController) DeleteUserById(c *fiber.Ctx) error {
 // @Router			/user/login [post]
 func (cc *userController) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
-	var userDatabase models.User
+	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+	var userDatabase model.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
 		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
-	if handlers.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
+	if handler.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
 		cc.AutoReqActions.Status = 401
 		return nil
 	}
-	claims := handlers.JWT(c).CreateClaims(userDatabase.Email)
-	token, err := handlers.JWT(c).CreateToken(claims)
+	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
+	token, err := handler.JWT(c).CreateToken(claims)
 	if err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 	}
@@ -111,11 +111,11 @@ func (cc *userController) Login(c *fiber.Ctx) error {
 	return nil
 }
 
-func User(Gorm *handlers.Gorm) *userController {
+func User(Gorm *handler.Gorm) *userController {
 	return &userController{
-		Base: service.Base[models.User, DTO.User]{
+		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
+			Request:      handler.Request(Gorm),
 			Middleware:   middleware.User(Gorm),
 			Associations: []string{"Branches", "Services", "Appointments", "Company"},
 		},

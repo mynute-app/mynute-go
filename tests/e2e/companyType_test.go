@@ -1,8 +1,8 @@
 package e2e_test
 
 import (
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/tests/e2e"
-	"agenda-kaki-go/tests/lib"
 	"testing"
 )
 
@@ -46,7 +46,7 @@ func TestCompanyTypeFlow(t *testing.T) {
 
 // type companyTypeActios struct {
 // 	*CompanyType
-// 	Testers []handlers.Tester
+// 	Testers []handler.Tester
 // }
 
 // func (c *CompanyType) Init() *companyTypeActios {
@@ -55,7 +55,7 @@ func TestCompanyTypeFlow(t *testing.T) {
 
 // func (c *companyTypeActios) LoadTester(n int) *companyTypeActios {
 // 	for i := 0; i < n; i++ {
-// 		companyType := handlers.Tester{
+// 		companyType := handler.Tester{
 // 			Entity:    "companyType",
 // 			RelatedPath: "companyType",
 // 			BaseURL:   namespace.GeneralKey.BaseURL,

@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/tests/handlers"
+	handler "agenda-kaki-go/tests/handlers"
 	"fmt"
 	"testing"
 )
@@ -32,7 +32,7 @@ type IBaseE2EActions interface {
 
 type BaseE2EActions struct {
 	T       *testing.T
-	Testers []*handlers.Tester
+	Testers []*handler.Tester
 }
 
 func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
@@ -41,7 +41,7 @@ func (b *BaseE2EActions) SetTest(t *testing.T) *BaseE2EActions {
 }
 
 func (b *BaseE2EActions) GenerateTester(entity string, path string, postBody map[string]any, patchBody map[string]any) *BaseE2EActions {
-	tester := &handlers.Tester{
+	tester := &handler.Tester{
 		Entity:      path,
 		BaseURL:     namespace.QueryKey.BaseURL,
 		RelatedPath: path,

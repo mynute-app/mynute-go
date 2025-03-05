@@ -1,8 +1,9 @@
-package handlers
+package handler
 
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +21,7 @@ type Req struct {
 func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
 	return &AutoReqActions{
 		req: r,
-		res: Response(c),
+		res: &lib.SendResponse{Ctx: c},
 		ctx: c,
 	}
 }
@@ -28,7 +29,7 @@ func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
 // AutoReqActions holds the intermediate data for method chaining
 type AutoReqActions struct {
 	req      *Req
-	res      *Res
+	res      *lib.SendResponse
 	ctx      *fiber.Ctx
 	ctxVal   *ContextValues
 	mute_res bool
@@ -92,6 +93,7 @@ func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
 
 // Standardized failure response
 func (ac *AutoReqActions) ActionFailed(status int, err error) {
+	fmt.Printf("Error: %v\n", err)
 	ac.Error = err
 	ac.Status = status
 	if !ac.mute_res {
@@ -124,7 +126,7 @@ func (ac *AutoReqActions) GetBy(paramKey string) {
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
 		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-			ac.ActionFailed(404, nil)
+			ac.ActionFailed(404, err)
 			return
 		}
 		ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -152,7 +154,7 @@ func (ac *AutoReqActions) ForceGetBy(paramKey string) {
 	} else {
 		paramVal := ac.ctx.Params(paramKey)
 		if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-			ac.ActionFailed(404, nil)
+			ac.ActionFailed(404, err)
 			return
 		}
 		ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -172,7 +174,7 @@ func (ac *AutoReqActions) CreateOne() {
 	}
 
 	if err := ac.req.Gorm.Create(ac.ctxVal.Model); err != nil {
-		ac.ActionFailed(400, nil)
+		ac.ActionFailed(400, err)
 		return
 	}
 
@@ -193,7 +195,7 @@ func (ac *AutoReqActions) DeleteOneById() {
 	}
 
 	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
-		ac.ActionFailed(404, nil)
+		ac.ActionFailed(404, err)
 		return
 	}
 
@@ -220,7 +222,7 @@ func (ac *AutoReqActions) ForceDeleteOneById() {
 	}
 
 	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
-		ac.ActionFailed(404, nil)
+		ac.ActionFailed(404, err)
 		return
 	}
 
@@ -246,7 +248,7 @@ func (ac *AutoReqActions) UpdateOneById() {
 	}
 
 	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-		ac.ActionFailed(400, nil)
+		ac.ActionFailed(400, err)
 		return
 	}
 

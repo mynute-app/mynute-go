@@ -2,7 +2,7 @@ package service
 
 import (
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -25,8 +25,8 @@ type IService interface {
 
 type Base[MODEL any, DTO any] struct {
 	Name           string
-	Request        *handlers.Req
-	AutoReqActions *handlers.AutoReqActions
+	Request        *handler.Req
+	AutoReqActions *handler.AutoReqActions
 	Middleware     *middleware.Registry
 	Associations   []string
 }
