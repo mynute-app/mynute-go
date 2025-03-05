@@ -110,7 +110,7 @@ func Company(Gorm *handler.Gorm) *company_controller {
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
 			Middleware:   middleware.Company(Gorm),
-			Associations: []string{"CompanyTypes", "Branches", "Employees", "Services"},
+			Associations: []string{"Sectors", "Branches", "Employees", "Services"},
 		},
 	}
 }

@@ -48,7 +48,7 @@ func Connect() *Database {
 
 func (db *Database) Migrate() {
 	models := []any{
-		&model.CompanyType{},
+		&model.Sector{},
 		&model.Company{}, // Must be migrated before Service
 		&model.Branch{},
 		&model.User{},

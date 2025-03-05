@@ -399,7 +399,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/company_type": {
+        "/sector": {
             "post": {
                 "description": "Create a company type",
                 "consumes": [
@@ -409,17 +409,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Sector"
                 ],
                 "summary": "Create company type",
                 "parameters": [
                     {
                         "description": "Company Type",
-                        "name": "company_type",
+                        "name": "sector",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     }
                 ],
@@ -427,7 +427,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     },
                     "400": {
@@ -439,14 +439,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/company_type/{id}": {
+        "/sector/{id}": {
             "get": {
                 "description": "Retrieve a company type by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Sector"
                 ],
                 "summary": "Get company type by ID",
                 "parameters": [
@@ -462,7 +462,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     },
                     "404": {
@@ -479,7 +479,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Sector"
                 ],
                 "summary": "Delete company type by ID",
                 "parameters": [
@@ -495,7 +495,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     },
                     "404": {
@@ -515,7 +515,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Sector"
                 ],
                 "summary": "Update company type by ID",
                 "parameters": [
@@ -528,11 +528,11 @@ const docTemplate = `{
                     },
                     {
                         "description": "Company Type",
-                        "name": "company_type",
+                        "name": "sector",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     }
                 ],
@@ -540,7 +540,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     },
                     "404": {
@@ -1247,10 +1247,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/DTO.Branch"
                     }
                 },
-                "company_types": {
+                "sectors": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.CompanyType"
+                        "$ref": "#/definitions/DTO.Sector"
                     }
                 },
                 "employees": {
@@ -1279,7 +1279,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.CompanyType": {
+        "DTO.Sector": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1340,10 +1340,10 @@ const docTemplate = `{
         "DTO.CreateCompany": {
             "type": "object",
             "properties": {
-                "company_types": {
+                "sectors": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.CompanyType"
+                        "$ref": "#/definitions/DTO.Sector"
                     }
                 },
                 "name": {

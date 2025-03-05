@@ -84,9 +84,9 @@ definitions:
         items:
           $ref: '#/definitions/DTO.Branch'
         type: array
-      company_types:
+      sectors:
         items:
-          $ref: '#/definitions/DTO.CompanyType'
+          $ref: '#/definitions/DTO.Sector'
         type: array
       employees:
         items:
@@ -106,7 +106,7 @@ definitions:
         example: "00000000000000"
         type: string
     type: object
-  DTO.CompanyType:
+  DTO.Sector:
     properties:
       id:
         example: 1
@@ -150,9 +150,9 @@ definitions:
     type: object
   DTO.CreateCompany:
     properties:
-      company_types:
+      sectors:
         items:
-          $ref: '#/definitions/DTO.CompanyType'
+          $ref: '#/definitions/DTO.Sector'
         type: array
       name:
         example: Your Company Name
@@ -592,7 +592,7 @@ paths:
       summary: Get company by tax ID
       tags:
       - Company
-  /company_type:
+  /sector:
     post:
       consumes:
       - application/json
@@ -600,25 +600,25 @@ paths:
       parameters:
       - description: Company Type
         in: body
-        name: company_type
+        name: sector
         required: true
         schema:
-          $ref: '#/definitions/DTO.CompanyType'
+          $ref: '#/definitions/DTO.Sector'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CompanyType'
+            $ref: '#/definitions/DTO.Sector'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Create company type
       tags:
-      - CompanyType
-  /company_type/{id}:
+      - Sector
+  /sector/{id}:
     delete:
       description: Delete a company type by its ID
       parameters:
@@ -633,14 +633,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CompanyType'
+            $ref: '#/definitions/DTO.Sector'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Delete company type by ID
       tags:
-      - CompanyType
+      - Sector
     get:
       description: Retrieve a company type by its ID
       parameters:
@@ -655,14 +655,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CompanyType'
+            $ref: '#/definitions/DTO.Sector'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company type by ID
       tags:
-      - CompanyType
+      - Sector
     patch:
       consumes:
       - application/json
@@ -675,24 +675,24 @@ paths:
         type: string
       - description: Company Type
         in: body
-        name: company_type
+        name: sector
         required: true
         schema:
-          $ref: '#/definitions/DTO.CompanyType'
+          $ref: '#/definitions/DTO.Sector'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CompanyType'
+            $ref: '#/definitions/DTO.Sector'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Update company type by ID
       tags:
-      - CompanyType
+      - Sector
   /holidays:
     post:
       consumes:

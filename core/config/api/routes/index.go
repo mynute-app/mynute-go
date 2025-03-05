@@ -11,7 +11,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Gorm := &handler.Gorm{DB: DB}
 	Auth(Gorm, App)
 	Holidays(Gorm, App)
-	CompanyType(Gorm, App)
+	Sector(Gorm, App)
 	Company(Gorm, App)
 	User(Gorm, App)
 	Branch(Gorm, App)

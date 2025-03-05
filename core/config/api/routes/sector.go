@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func CompanyType(Gorm *handler.Gorm, r fiber.Router) {
-	cct := controller.CompanyType(Gorm)
-	c := r.Group("/company_type")
+func Sector(Gorm *handler.Gorm, r fiber.Router) {
+	cct := controller.Sector(Gorm)
+	c := r.Group("/sector")
 	c.Post("/", cct.CreateCompanyType)             // ok
 	c.Get("/:id", cct.GetCompanyTypeById)          // ok
 	c.Get("/name/:name", cct.GetCompanyTypeByName) // ok

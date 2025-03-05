@@ -11,22 +11,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type company_type_controller struct {
-	service.Base[model.CompanyType, DTO.CompanyType]
+type sector_controller struct {
+	service.Base[model.Sector, DTO.Sector]
 }
 
 // CreateCompanyType creates a company type
 //
 //	@Summary		Create company type
 //	@Description	Create a company type
-//	@Tags			CompanyType
+//	@Tags			Sector
 //	@Accept			json
 //	@Produce		json
-//	@Param			company_type	body		DTO.CompanyType	true	"Company Type"
-//	@Success		200				{object}	DTO.CompanyType
+//	@Param			sector	body		DTO.Sector	true	"Company Type"
+//	@Success		200				{object}	DTO.Sector
 //	@Failure		400				{object}	DTO.ErrorResponse
-//	@Router			/company_type [post]
-func (cc *company_type_controller) CreateCompanyType(c *fiber.Ctx) error {
+//	@Router			/sector [post]
+func (cc *sector_controller) CreateCompanyType(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -34,13 +34,13 @@ func (cc *company_type_controller) CreateCompanyType(c *fiber.Ctx) error {
 //
 //	@Summary		Get company type by ID
 //	@Description	Retrieve a company type by its ID
-//	@Tags			CompanyType
+//	@Tags			Sector
 //	@Param			id	path	string	true	"Company Type ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CompanyType
+//	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/company_type/{id} [get]
-func (cc *company_type_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
+//	@Router			/sector/{id} [get]
+func (cc *sector_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
@@ -48,13 +48,13 @@ func (cc *company_type_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
 //
 //	@Summary		Get company type by ID
 //	@Description	Retrieve a company type by its ID
-//	@Tags			CompanyType
+//	@Tags			Sector
 //	@Param			id	path	string	true	"Company Type ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CompanyType
+//	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/company_type/{id} [get]
-func (cc *company_type_controller) GetCompanyTypeById(c *fiber.Ctx) error {
+//	@Router			/sector/{id} [get]
+func (cc *sector_controller) GetCompanyTypeById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -62,15 +62,15 @@ func (cc *company_type_controller) GetCompanyTypeById(c *fiber.Ctx) error {
 //
 //	@Summary		Update company type by ID
 //	@Description	Update a company type by its ID
-//	@Tags			CompanyType
+//	@Tags			Sector
 //	@Param			id	path	string	true	"Company Type ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			company_type	body		DTO.CompanyType	true	"Company Type"
-//	@Success		200				{object}	DTO.CompanyType
+//	@Param			sector	body		DTO.Sector	true	"Company Type"
+//	@Success		200				{object}	DTO.Sector
 //	@Failure		404				{object}	DTO.ErrorResponse
-//	@Router			/company_type/{id} [patch]
-func (cc *company_type_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
+//	@Router			/sector/{id} [patch]
+func (cc *sector_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -78,22 +78,22 @@ func (cc *company_type_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete company type by ID
 //	@Description	Delete a company type by its ID
-//	@Tags			CompanyType
+//	@Tags			Sector
 //	@Param			id	path	string	true	"Company Type ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CompanyType
+//	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/company_type/{id} [delete]
-func (cc *company_type_controller) DeleteCompanyTypeById(c *fiber.Ctx) error {
+//	@Router			/sector/{id} [delete]
+func (cc *sector_controller) DeleteCompanyTypeById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-func CompanyType(Gorm *handler.Gorm) *company_type_controller {
-	return &company_type_controller{
-		Base: service.Base[model.CompanyType, DTO.CompanyType]{
+func Sector(Gorm *handler.Gorm) *sector_controller {
+	return &sector_controller{
+		Base: service.Base[model.Sector, DTO.Sector]{
 			Name:         namespace.CompanyTypeKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.CompanyType(Gorm),
+			Middleware:   middleware.Sector(Gorm),
 			Associations: []string{},
 		},
 	}

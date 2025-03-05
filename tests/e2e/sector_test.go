@@ -6,33 +6,33 @@ import (
 	"testing"
 )
 
-var _ e2e.IEntity = (*CompanyType)(nil)
+var _ e2e.IEntity = (*Sector)(nil)
 
-type CompanyType struct {
+type Sector struct {
 	*e2e.BaseE2EActions
 }
 
-func (c *CompanyType) GenerateTesters(n int) {
+func (c *Sector) GenerateTesters(n int) {
 	for i := 0; i < n; i++ {
 		c.GenerateTester(
 			"companyType",
 			"companyType",
-			map[string]any{"name": lib.GenerateRandomName("CompanyType")},
-			map[string]any{"name": lib.GenerateRandomName("CompanyType")},
+			map[string]any{"name": lib.GenerateRandomName("Sector")},
+			map[string]any{"name": lib.GenerateRandomName("Sector")},
 		)
 	}
 }
 
-func (c *CompanyType) Make(n int) {
+func (c *Sector) Make(n int) {
 	c.GenerateTesters(n)
 }
 
-func (c *CompanyType) CreateDependencies(n int) {}
+func (c *Sector) CreateDependencies(n int) {}
 
-func (c *CompanyType) ClearDependencies() {}
+func (c *Sector) ClearDependencies() {}
 
 func TestCompanyTypeFlow(t *testing.T) {
-	companyType := &CompanyType{
+	companyType := &Sector{
 		BaseE2EActions: &e2e.BaseE2EActions{},
 	}
 	companyType.SetTest(t)
@@ -40,17 +40,17 @@ func TestCompanyTypeFlow(t *testing.T) {
 	companyType.RunAll()
 }
 
-// type CompanyType struct {
+// type Sector struct {
 // 	T *testing.T
 // }
 
 // type companyTypeActios struct {
-// 	*CompanyType
+// 	*Sector
 // 	Testers []handler.Tester
 // }
 
-// func (c *CompanyType) Init() *companyTypeActios {
-// 	return &companyTypeActios{CompanyType: c}
+// func (c *Sector) Init() *companyTypeActios {
+// 	return &companyTypeActios{Sector: c}
 // }
 
 // func (c *companyTypeActios) LoadTester(n int) *companyTypeActios {
@@ -59,8 +59,8 @@ func TestCompanyTypeFlow(t *testing.T) {
 // 			Entity:    "companyType",
 // 			RelatedPath: "companyType",
 // 			BaseURL:   namespace.GeneralKey.BaseURL,
-// 			PostBody:  map[string]any{"name": lib.GenerateRandomName("CompanyType")},
-// 			PatchBody: map[string]any{"name": lib.GenerateRandomName("CompanyType")},
+// 			PostBody:  map[string]any{"name": lib.GenerateRandomName("Sector")},
+// 			PatchBody: map[string]any{"name": lib.GenerateRandomName("Sector")},
 // 		}
 // 		c.Testers = append(c.Testers, companyType)
 // 	}

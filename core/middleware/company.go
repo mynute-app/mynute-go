@@ -67,15 +67,15 @@ func (ca *companyMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 		return 400, err
 	} else if !lib.ValidateTaxID(company.TaxID) {
 		return 400, errors.New("invalid tax ID")
-	} else if len(company.CompanyTypes) == 0 {
+	} else if len(company.Sectors) == 0 {
 		return 400, errors.New("company type is required")
 	}
 
-	for _, companyType := range company.CompanyTypes {
+	for _, companyType := range company.Sectors {
 		if companyType.ID == 0 {
 			return 400, errors.New("company type ID is missing or invalid")
 		}
-		var model model.CompanyType
+		var model model.Sector
 		idStr := strconv.FormatUint(uint64(companyType.ID), 10)
 		if err := ca.Gorm.GetOneBy("id", idStr, &model, nil); err != nil {
 			errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
@@ -99,11 +99,11 @@ func (ca *companyMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 		}
 	} else if changes["tax_id"] != nil && !lib.ValidateTaxID(changes["tax_id"].(string)) {
 		return 400, errors.New("invalid tax ID")
-	} else if changes["company_types"] != nil {
-		companyTypes := changes["company_types"].([]model.CompanyType)
+	} else if changes["sectors"] != nil {
+		companyTypes := changes["sectors"].([]model.Sector)
 		for _, companyType := range companyTypes {
 			idStr := strconv.Itoa(int(companyType.ID))
-			if err := ca.Gorm.GetOneBy("id", idStr, model.CompanyType{}, nil); err != nil {
+			if err := ca.Gorm.GetOneBy("id", idStr, model.Sector{}, nil); err != nil {
 				errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
 				return 400, errors.New(errStr)
 			}

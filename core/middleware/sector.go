@@ -11,13 +11,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// var _ IMiddleware = (*CompanyType)(nil)
+// var _ IMiddleware = (*Sector)(nil)
 
-// type CompanyType struct {
+// type Sector struct {
 // 	Gorm *handler.Gorm
 // }
 
-func CompanyType(Gorm *handler.Gorm) *Registry {
+func Sector(Gorm *handler.Gorm) *Registry {
 	companyType := &companyTypeMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
 
@@ -51,7 +51,7 @@ type companyTypeMiddlewareActions struct {
 func (cta *companyTypeMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	keys := namespace.GeneralKey
 	// Retrieve companyType from c.Locals
-	companyType, err := lib.GetFromCtx[*model.CompanyType](c, keys.Model)
+	companyType, err := lib.GetFromCtx[*model.Sector](c, keys.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -86,7 +86,7 @@ func (cta *companyTypeMiddlewareActions) Update(c *fiber.Ctx) (int, error) {
 			return 400, err
 		}
 		// Check if the name already exists
-		var companyType model.CompanyType
+		var companyType model.Sector
 		if err := cta.Gorm.GetOneBy("name", name, &companyType, nil); err == nil {
 			return 400, errors.New("companyType.Name already exists")
 		}
@@ -103,8 +103,8 @@ func (cta *companyTypeMiddlewareActions) DeleteOneById(c *fiber.Ctx) (int, error
 	var companies []model.Company
 	if err := cta.Gorm.DB.
 		Model(&companies).
-		Joins("JOIN company_company_types ON companies.id = company_company_types.company_id").
-		Where("company_company_types.company_type_id = ?", companyTypeId).
+		Joins("JOIN company_sectors ON companies.id = company_sectors.company_id").
+		Where("company_sectors.sector_id = ?", companyTypeId).
 		Find(&companies).Error; err != nil {
 		return 500, err
 	}

@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-type CompanyType struct {
+type Sector struct {
 	gorm.Model
 	Name        string `gorm:"not null;unique" json:"name"`
 	Description string `json:"description"`
