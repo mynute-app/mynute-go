@@ -15,12 +15,12 @@ import (
 )
 
 // EmployeeController embeds Base in order to extend it with the functions below
-type authController struct {
+type auth_controller struct {
 	service.Base[model.User, DTO.User]
 }
 
-func Auth(Gorm *handler.Gorm) *authController {
-	return &authController{
+func Auth(Gorm *handler.Gorm) *auth_controller {
+	return &auth_controller{
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
@@ -31,7 +31,7 @@ func Auth(Gorm *handler.Gorm) *authController {
 }
 
 // Custom extension method to login an user
-func (cc *authController) Login(c *fiber.Ctx) error {
+func (cc *auth_controller) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
 	var userDatabase model.User
@@ -55,7 +55,7 @@ func (cc *authController) Login(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) Register(c *fiber.Ctx) error {
+func (cc *auth_controller) Register(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
 	body.Password, _ = handler.HashPassword(body.Password)
@@ -66,12 +66,12 @@ func (cc *authController) Register(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) VerifyEmail(c *fiber.Ctx) error {
+func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 
 	return nil
 }
 
-func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
+func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
 	var userDatabase model.User
@@ -91,7 +91,7 @@ func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
 }
 
 // OAUTH logics
-func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
+func (cc *auth_controller) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	if err := goth_fiber.BeginAuthHandler(c); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
@@ -99,7 +99,7 @@ func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) GetAuthCallbackFunction(c *fiber.Ctx) error {
+func (cc *auth_controller) GetAuthCallbackFunction(c *fiber.Ctx) error {
 	user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
@@ -110,7 +110,7 @@ func (cc *authController) GetAuthCallbackFunction(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) LogoutProvider(c *fiber.Ctx) error {
+func (cc *auth_controller) LogoutProvider(c *fiber.Ctx) error {
 	goth_fiber.Logout(c)
 	c.Redirect("/")
 	return nil

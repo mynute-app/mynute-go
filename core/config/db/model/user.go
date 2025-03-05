@@ -13,13 +13,17 @@ type TimeRange struct {
 	End   time.Time `json:"end"`
 }
 
+type CreateUser struct {
+	Name     string `gorm:"not null" json:"name" example:"John"`
+	Surname  string `json:"surname" example:"Doe"`
+	Role     string `json:"role" example:"user"`
+	Email    string `gorm:"not null;unique" json:"email" example:"john.doe@example.com"`
+	Phone    string `gorm:"not null;unique" json:"phone" example:"+15555555555"`
+	Password string `gorm:"not null" json:"password" example:"1VerySecurePassword!"`
+}
+
 type GeneralUserInfo struct {
-	Name             string      `gorm:"not null" json:"name"`
-	Surname          string      `json:"surname"`
-	Role             string      `json:"role"`
-	Email            string      `gorm:"not null;unique" json:"email"`
-	Phone            string      `gorm:"not null;unique" json:"phone"`
-	Password         string      `gorm:"not null" json:"password"`
+	CreateUser
 	VerificationCode string      `json:"verification_code"`
 	Verified         bool        `gorm:"not null" json:"verified"`
 	AvailableSlots   []TimeRange `gorm:"type:json" json:"available_slots"`

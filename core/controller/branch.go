@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type branchController struct {
+type branch_controller struct {
 	service.Base[model.Branch, DTO.Branch]
 }
 
@@ -26,7 +26,7 @@ type branchController struct {
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
-func (cc *branchController) CreateBranch(c *fiber.Ctx) error {
+func (cc *branch_controller) CreateBranch(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -40,7 +40,7 @@ func (cc *branchController) CreateBranch(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [get]
-func (cc *branchController) GetBranchById(c *fiber.Ctx) error {
+func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -56,7 +56,7 @@ func (cc *branchController) GetBranchById(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [patch]
-func (cc *branchController) UpdateBranchById(c *fiber.Ctx) error {
+func (cc *branch_controller) UpdateBranchById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -70,13 +70,13 @@ func (cc *branchController) UpdateBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
-func (cc *branchController) DeleteBranchById(c *fiber.Ctx) error {
+func (cc *branch_controller) DeleteBranchById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
 // CreateBranch creates a branch
-func Branch(Gorm *handler.Gorm) *branchController {
-	return &branchController{
+func Branch(Gorm *handler.Gorm) *branch_controller {
+	return &branch_controller{
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),

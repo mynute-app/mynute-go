@@ -13,7 +13,7 @@ import (
 )
 
 // EmployeeController embeds service.Base in order to extend it with the functions below
-type userController struct {
+type user_controller struct {
 	service.Base[model.User, DTO.User]
 }
 
@@ -28,7 +28,7 @@ type userController struct {
 // @Success		200		{object}	DTO.User
 // @Failure		400		{object}	DTO.ErrorResponse
 // @Router			/user [post]
-func (cc *userController) CreateUser(c *fiber.Ctx) error {
+func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -42,7 +42,7 @@ func (cc *userController) CreateUser(c *fiber.Ctx) error {
 // @Success		200	{object}	DTO.User
 // @Failure		404	{object}	DTO.ErrorResponse
 // @Router			/user/email/{email} [get]
-func (cc *userController) GetOneByEmail(c *fiber.Ctx) error {
+func (cc *user_controller) GetOneByEmail(c *fiber.Ctx) error {
 	return cc.GetBy("email", c)
 }
 
@@ -58,7 +58,7 @@ func (cc *userController) GetOneByEmail(c *fiber.Ctx) error {
 // @Success		200		{object}	DTO.User
 // @Failure		400		{object}	DTO.ErrorResponse
 // @Router			/user/{id} [patch]
-func (cc *userController) UpdateUserById(c *fiber.Ctx) error {
+func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -72,7 +72,7 @@ func (cc *userController) UpdateUserById(c *fiber.Ctx) error {
 // @Success		200	{object}	DTO.User
 // @Failure		404	{object}	DTO.ErrorResponse
 // @Router			/user/{id} [delete]
-func (cc *userController) DeleteUserById(c *fiber.Ctx) error {
+func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
@@ -88,7 +88,7 @@ func (cc *userController) DeleteUserById(c *fiber.Ctx) error {
 // @Failure		404		{object}	DTO.ErrorResponse
 // @Failure		401		{object}	DTO.ErrorResponse
 // @Router			/user/login [post]
-func (cc *userController) Login(c *fiber.Ctx) error {
+func (cc *user_controller) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
 	var userDatabase model.User
@@ -111,8 +111,8 @@ func (cc *userController) Login(c *fiber.Ctx) error {
 	return nil
 }
 
-func User(Gorm *handler.Gorm) *userController {
-	return &userController{
+func User(Gorm *handler.Gorm) *user_controller {
+	return &user_controller{
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),

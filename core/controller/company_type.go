@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type companyType struct {
+type company_type_controller struct {
 	service.Base[model.CompanyType, DTO.CompanyType]
 }
 
@@ -26,7 +26,7 @@ type companyType struct {
 //	@Success		200				{object}	DTO.CompanyType
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/company_type [post]
-func (cc *companyType) CreateCompanyType(c *fiber.Ctx) error {
+func (cc *company_type_controller) CreateCompanyType(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -40,7 +40,7 @@ func (cc *companyType) CreateCompanyType(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.CompanyType
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company_type/{id} [get]
-func (cc *companyType) GetCompanyTypeByName(c *fiber.Ctx) error {
+func (cc *company_type_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
@@ -54,7 +54,7 @@ func (cc *companyType) GetCompanyTypeByName(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.CompanyType
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company_type/{id} [get]
-func (cc *companyType) GetCompanyTypeById(c *fiber.Ctx) error {
+func (cc *company_type_controller) GetCompanyTypeById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -70,7 +70,7 @@ func (cc *companyType) GetCompanyTypeById(c *fiber.Ctx) error {
 //	@Success		200				{object}	DTO.CompanyType
 //	@Failure		404				{object}	DTO.ErrorResponse
 //	@Router			/company_type/{id} [patch]
-func (cc *companyType) UpdateCompanyTypeById(c *fiber.Ctx) error {
+func (cc *company_type_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -84,12 +84,12 @@ func (cc *companyType) UpdateCompanyTypeById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.CompanyType
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company_type/{id} [delete]
-func (cc *companyType) DeleteCompanyTypeById(c *fiber.Ctx) error {
+func (cc *company_type_controller) DeleteCompanyTypeById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-func CompanyType(Gorm *handler.Gorm) *companyType {
-	return &companyType{
+func CompanyType(Gorm *handler.Gorm) *company_type_controller {
+	return &company_type_controller{
 		Base: service.Base[model.CompanyType, DTO.CompanyType]{
 			Name:         namespace.CompanyTypeKey.Name,
 			Request:      handler.Request(Gorm),
