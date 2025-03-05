@@ -21,9 +21,9 @@ type employee_controller struct {
 //	@Tags			Employee
 //	@Accept			json
 //	@Produce		json
-//	@Param			employee	body		model.CreateEmployee	true	"Employee"
-//	@Success		200			{object}	model.Employee
-//	@Failure		400			{object}	model.ErrorResponse
+//	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
+//	@Success		200			{object}	DTO.Employee
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
@@ -36,8 +36,8 @@ func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			id	path	string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	model.Employee
-//	@Failure		404	{object}	model.ErrorResponse
+//	@Success		200	{object}	DTO.Employee
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
 func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
@@ -51,9 +51,9 @@ func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
-//	@Param			employee	body		model.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200			{object}	model.Employee
-//	@Failure		400			{object}	model.ErrorResponse
+//	@Param			employee	body		DTO.UpdateEmployeeSwagger	true	"Employee"
+//	@Success		200			{object}	DTO.Employee
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
@@ -66,8 +66,8 @@ func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			id	path	string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	model.Employee
-//	@Failure		404	{object}	model.ErrorResponse
+//	@Success		200	{object}	DTO.Employee
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
 func (cc *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)

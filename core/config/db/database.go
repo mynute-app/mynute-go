@@ -55,6 +55,7 @@ func (db *Database) Migrate() {
 		&model.Service{},
 		&model.Appointment{},
 		&model.Holidays{},
+		&model.Employee{},
 	}
 
 	for _, model := range models {

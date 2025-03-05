@@ -84,10 +84,6 @@ definitions:
         items:
           $ref: '#/definitions/DTO.Branch'
         type: array
-      sectors:
-        items:
-          $ref: '#/definitions/DTO.Sector'
-        type: array
       employees:
         items:
           $ref: '#/definitions/DTO.UserPopulated'
@@ -98,21 +94,16 @@ definitions:
       name:
         example: Your Company Name
         type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
       services:
         items:
           $ref: '#/definitions/DTO.ServicePopulated'
         type: array
       tax_id:
         example: "00000000000000"
-        type: string
-    type: object
-  DTO.Sector:
-    properties:
-      id:
-        example: 1
-        type: integer
-      name:
-        example: Your Company Type Name
         type: string
     type: object
   DTO.CreateBranch:
@@ -150,15 +141,38 @@ definitions:
     type: object
   DTO.CreateCompany:
     properties:
+      name:
+        example: Your Company Name
+        type: string
       sectors:
         items:
           $ref: '#/definitions/DTO.Sector'
         type: array
-      name:
-        example: Your Company Name
-        type: string
       tax_id:
         example: "00000000000000"
+        type: string
+    type: object
+  DTO.CreateEmployee:
+    properties:
+      company_id:
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: 1VerySecurePassword!
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      role:
+        example: user
+        type: string
+      surname:
+        example: Doe
         type: string
     type: object
   DTO.CreateUser:
@@ -182,6 +196,52 @@ definitions:
       surname:
         example: Doe
         type: string
+    type: object
+  DTO.Employee:
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchPopulated'
+        type: array
+      company_id:
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        type: integer
+      name:
+        example: John
+        type: string
+      password:
+        example: 1VerySecurePassword!
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      role:
+        example: user
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServicePopulated'
+        type: array
+      surname:
+        example: Doe
+        type: string
+      tag:
+        example:
+        - '["super-admin"'
+        - ' "branch-manager"]'
+        items:
+          type: string
+        type: array
+      verification_code:
+        example: "123456"
+        type: string
+      verified:
+        example: false
+        type: boolean
     type: object
   DTO.ErrorResponse:
     description: Error Response Model
@@ -209,6 +269,15 @@ definitions:
         type: boolean
       type:
         example: Public
+        type: string
+    type: object
+  DTO.Sector:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Your Company Type Name
         type: string
     type: object
   DTO.Service:
@@ -270,12 +339,17 @@ definitions:
         example: 556 Main St
         type: string
     type: object
+  DTO.UpdateEmployeeSwagger:
+    properties:
+      name:
+        example: John
+        type: string
+      surname:
+        example: Clark
+        type: string
+    type: object
   DTO.User:
     properties:
-      branches:
-        items:
-          $ref: '#/definitions/DTO.BranchPopulated'
-        type: array
       company_id:
         description: ID da empresa
         example: 1
@@ -295,23 +369,15 @@ definitions:
       phone:
         example: +1-555-555-5555
         type: string
-      services:
-        items:
-          $ref: '#/definitions/DTO.ServicePopulated'
-        type: array
       surname:
         example: Doe
         type: string
-      tag:
-        example:
-        - '["super-admin"'
-        - ' "branch-manager"]'
-        items:
-          type: string
-        type: array
       verification_code:
         example: "123456"
         type: string
+      verified:
+        example: false
+        type: boolean
     type: object
   DTO.UserPopulated:
     properties:
@@ -592,37 +658,37 @@ paths:
       summary: Get company by tax ID
       tags:
       - Company
-  /sector:
+  /employee:
     post:
       consumes:
       - application/json
-      description: Create a company type
+      description: Create an employee
       parameters:
-      - description: Company Type
+      - description: Employee
         in: body
-        name: sector
+        name: employee
         required: true
         schema:
-          $ref: '#/definitions/DTO.Sector'
+          $ref: '#/definitions/DTO.CreateEmployee'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Sector'
+            $ref: '#/definitions/DTO.Employee'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Create company type
+      summary: Create employee
       tags:
-      - Sector
-  /sector/{id}:
+      - Employee
+  /employee/{id}:
     delete:
-      description: Delete a company type by its ID
+      description: Delete an employee by its ID
       parameters:
-      - description: Company Type ID
+      - description: Employee ID
         in: path
         name: id
         required: true
@@ -633,18 +699,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Sector'
+            $ref: '#/definitions/DTO.Employee'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Delete company type by ID
+      summary: Delete employee by ID
       tags:
-      - Sector
+      - Employee
     get:
-      description: Retrieve a company type by its ID
+      description: Retrieve an employee by its ID
       parameters:
-      - description: Company Type ID
+      - description: Employee ID
         in: path
         name: id
         required: true
@@ -655,44 +721,44 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Sector'
+            $ref: '#/definitions/DTO.Employee'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Get company type by ID
+      summary: Get employee by ID
       tags:
-      - Sector
+      - Employee
     patch:
       consumes:
       - application/json
-      description: Update a company type by its ID
+      description: Update an employee
       parameters:
-      - description: Company Type ID
+      - description: Employee ID
         in: path
         name: id
         required: true
         type: string
-      - description: Company Type
+      - description: Employee
         in: body
-        name: sector
+        name: employee
         required: true
         schema:
-          $ref: '#/definitions/DTO.Sector'
+          $ref: '#/definitions/DTO.UpdateEmployeeSwagger'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Sector'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/DTO.Employee'
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Update company type by ID
+      summary: Update employee
       tags:
-      - Sector
+      - Employee
   /holidays:
     post:
       consumes:
@@ -817,6 +883,107 @@ paths:
       summary: Get holiday by name
       tags:
       - Holidays
+  /sector:
+    post:
+      consumes:
+      - application/json
+      description: Create a company type
+      parameters:
+      - description: Company Type
+        in: body
+        name: sector
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Sector'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create company type
+      tags:
+      - Sector
+  /sector/{id}:
+    delete:
+      description: Delete a company type by its ID
+      parameters:
+      - description: Company Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete company type by ID
+      tags:
+      - Sector
+    get:
+      description: Retrieve a company type by its ID
+      parameters:
+      - description: Company Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get company type by ID
+      tags:
+      - Sector
+    patch:
+      consumes:
+      - application/json
+      description: Update a company type by its ID
+      parameters:
+      - description: Company Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Company Type
+        in: body
+        name: sector
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Sector'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update company type by ID
+      tags:
+      - Sector
   /service:
     post:
       consumes:

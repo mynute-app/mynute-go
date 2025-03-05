@@ -24,16 +24,17 @@ type CreateUser struct {
 
 type GeneralUserInfo struct {
 	CreateUser
-	VerificationCode string      `json:"verification_code"`
-	Verified         bool        `gorm:"not null" json:"verified"`
-	AvailableSlots   []TimeRange `gorm:"type:json" json:"available_slots"`
 }
 
 // Fourth step: Choosing the employee.
 type User struct {
 	gorm.Model
-	GeneralUserInfo
-	Appointments []Appointment `gorm:"foreignKey:UserID"` // One-to-many relation
+	CreateUser
+	Tags             []string      `gorm:"type:json" json:"tags"` // Tags for the user
+	VerificationCode string        `json:"verification_code"`
+	Verified         bool          `gorm:"not null" json:"verified"`
+	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
+	Appointments     []Appointment `gorm:"foreignKey:UserID"` // One-to-many relation
 }
 
 // Check if the employee is available for a given service at a specific time.
