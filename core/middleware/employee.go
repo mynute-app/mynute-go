@@ -22,20 +22,11 @@ func Employee(Gorm *handler.Gorm) *employee_middleware {
 func (em *employee_middleware) CreateEmployee() []fiber.Handler {
 	return []fiber.Handler{
 		em.Auth.WhoAreYou,
-		em.SaveBody,
+		em.Auth.DenyUnauthorized,
+		lib.SaveBodyOnCtx[DTO.CreateEmployee],
 		em.FindUser,
 		em.LinkEmployeeWithUser,
 	}
-}
-
-func (em *employee_middleware) SaveBody(c *fiber.Ctx) error {
-	body := &DTO.CreateEmployee{}
-	err := lib.BodyParser(c.Body(), body)
-	if err != nil {
-		return err
-	}
-	c.Locals(namespace.RequestKey.Body_Parsed, body)
-	return c.Next()
 }
 
 func (em *employee_middleware) FindUser(c *fiber.Ctx) error {

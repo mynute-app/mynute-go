@@ -171,6 +171,11 @@ const docTemplate = `{
         },
         "/company": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a company",
                 "consumes": [
                     "application/json"
@@ -183,6 +188,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create company",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Company",
                         "name": "company",
@@ -197,7 +209,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Company"
+                            "$ref": "#/definitions/DTO.CreateCompany"
                         }
                     },
                     "400": {
@@ -205,6 +217,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -394,6 +409,11 @@ const docTemplate = `{
         },
         "/employee": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create an employee",
                 "consumes": [
                     "application/json"
@@ -406,6 +426,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create employee",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Employee",
                         "name": "employee",
@@ -428,6 +455,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }

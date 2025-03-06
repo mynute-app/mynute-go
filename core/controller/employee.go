@@ -18,6 +18,9 @@ type employee_controller struct {
 //	@Summary		Create employee
 //	@Description	Create an employee
 //	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header	string	true	"Authorization"
+//  @Failure		401			{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"

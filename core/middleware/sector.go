@@ -18,28 +18,7 @@ import (
 // }
 
 func Sector(Gorm *handler.Gorm) *Registry {
-	companyType := &companyTypeMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
-
-	var CompanyTypeMiddleActions = []MiddlewareActions{
-		{
-			methods: []string{"PATCH", "DELETE"},
-			action:  WhoAreYou,
-		},
-		{
-			methods: "POST",
-			action:  companyType.Create,
-		},
-		{
-			methods: "PATCH",
-			action:  companyType.Update,
-		},
-		{
-			methods: "DELETE",
-			action:  companyType.DeleteOneById,
-		},
-	}
-	registry.RegisterActions(namespace.CompanyTypeKey.Name, CompanyTypeMiddleActions)
 	return registry
 }
 

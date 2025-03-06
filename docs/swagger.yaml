@@ -513,6 +513,11 @@ paths:
       - application/json
       description: Create a company
       parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Company
         in: body
         name: company
@@ -525,11 +530,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CreateCompany'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Create company
       tags:
       - Company
@@ -660,6 +669,11 @@ paths:
       - application/json
       description: Create an employee
       parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Employee
         in: body
         name: employee
@@ -677,6 +691,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Create employee
       tags:
       - Employee

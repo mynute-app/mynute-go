@@ -163,6 +163,11 @@
         },
         "/company": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a company",
                 "consumes": [
                     "application/json"
@@ -175,6 +180,13 @@
                 ],
                 "summary": "Create company",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Company",
                         "name": "company",
@@ -189,7 +201,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Company"
+                            "$ref": "#/definitions/DTO.CreateCompany"
                         }
                     },
                     "400": {
@@ -197,6 +209,9 @@
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -386,6 +401,11 @@
         },
         "/employee": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create an employee",
                 "consumes": [
                     "application/json"
@@ -398,6 +418,13 @@
                 ],
                 "summary": "Create employee",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Employee",
                         "name": "employee",
@@ -420,6 +447,9 @@
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }

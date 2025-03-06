@@ -104,6 +104,6 @@ func (sr *SendResponse) sendStatus(s int) error {
 }
 
 func (sr *SendResponse) saveError(err error) *SendResponse {
-	log.Printf("An error occurred! \n Error: %v", err)
+	log.Printf("An error occurred!\n>>> %v", err)
 	return sr
 }

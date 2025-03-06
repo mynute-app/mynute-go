@@ -48,8 +48,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	tokenString := j.GetToken()
 	if tokenString == "" {
 		saveUserData(nil)
-
-		j.Res.Http401(errors.New("missing auth token"))
+		return errors.New("missing auth token")
 	}
 
 	keyFunc := func(token *jwt.Token) (any, error) {
@@ -65,18 +64,20 @@ func (j *jsonWebToken) WhoAreYou() error {
 	token, err := jwt.Parse(tokenString, keyFunc)
 
 	if err != nil {
-		j.Res.Http401(err)
+		return err
+	} else if token == nil {
+		return errors.New("invalid token")
 	}
 
 	// Check token validity and extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		j.Res.Http401(errors.New("invalid token"))
+		return errors.New("invalid token")
 	}
 
 	// Store claims (user data) in Fiber's Locals
 	saveUserData(claims)
-	return j.C.Next()
+	return nil
 }
 
 // getSecret retrieves the JWT secret from an environment variable

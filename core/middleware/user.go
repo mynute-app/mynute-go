@@ -22,6 +22,15 @@ func User(Gorm *handler.Gorm) *Registry {
 	return registry
 }
 
+func (em *UserMiddlewareActions) GetUserByEmail(c *fiber.Ctx) error {
+	user := &model.User{}
+	if err := em.Gorm.DB.Where("email = ?", c.Params("email")).First(user).Error; err != nil {
+		return err
+	}
+	c.Locals(namespace.UserKey.Model, user)
+	return c.Next()
+}
+
 func (em *UserMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	user, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
 	if err != nil {

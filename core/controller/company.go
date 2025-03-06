@@ -20,10 +20,13 @@ type company_controller struct {
 //	@Summary		Create company
 //	@Description	Create a company
 //	@Tags			Company
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header	string	true	"Authorization"
+//  @Failure		401			{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"
-//	@Success		200		{object}	DTO.Company
+//	@Success		200		{object}	DTO.CreateCompany
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {

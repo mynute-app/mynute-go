@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"errors"
 	"fmt"
 
@@ -23,6 +24,17 @@ func GetFromCtx[T any](c *fiber.Ctx, key string) (T, error) {
 	}
 
 	return zero, InvalidDataType(key)
+}
+
+// SaveBody parses the request body and saves it to the Fiber context
+func SaveBodyOnCtx[Body any](c *fiber.Ctx) error {
+	var body Body
+	err := BodyParser(c.Body(), body)
+	if err != nil {
+		return err
+	}
+	c.Locals(namespace.RequestKey.Body_Parsed, body)
+	return c.Next()
 }
 
 func InterfaceDataNotFound(interfaceName string) error {
