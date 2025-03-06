@@ -65,7 +65,24 @@ func (cc *auth_controller) Register(c *fiber.Ctx) error {
 }
 
 func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
-
+	cc.SetAction(c)
+	userId := c.Params("id")
+	validationCode := c.Params("code")
+	var userDatabase model.User
+	if err := cc.Request.Gorm.GetOneBy("id", userId, &userDatabase, []string{}); err != nil {
+		cc.AutoReqActions.ActionFailed(500, err)
+	}
+	if userDatabase.VerificationCode != validationCode {
+		cc.AutoReqActions.ActionFailed(401, errors.New("invalid validation code"))
+	}
+	if userDatabase.Verified {
+		cc.AutoReqActions.ActionFailed(409, errors.New("account already verified"))
+	}
+	userDatabase.Verified = true
+	if err := cc.Request.Gorm.UpdateOneById(userId, model.User{}, &userDatabase, []string{}); err != nil {
+		cc.AutoReqActions.ActionFailed(500, err)
+	}
+	cc.AutoReqActions.ActionSuccess(200, nil, nil)
 	return nil
 }
 
