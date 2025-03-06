@@ -406,6 +406,36 @@ info:
   title: Fiber Example API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in an user
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.LoginUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Login
+      tags:
+      - Auth
   /branch:
     post:
       consumes:
@@ -1212,36 +1242,6 @@ paths:
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get user by email
-      tags:
-      - User
-  /user/login:
-    post:
-      consumes:
-      - application/json
-      description: Log in an user
-      parameters:
-      - description: User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/DTO.LoginUser'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Login
       tags:
       - User
 securityDefinitions:

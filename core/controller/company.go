@@ -21,8 +21,8 @@ type company_controller struct {
 //	@Description	Create a company
 //	@Tags			Company
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header	string	true	"Authorization"
-//  @Failure		401			{object}	nil
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"

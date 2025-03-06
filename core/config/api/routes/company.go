@@ -11,9 +11,8 @@ import (
 func Company(Gorm *handler.Gorm, r fiber.Router) {
 	cc := controller.Company(Gorm)
 	c := r.Group("/company")
-	mdw := middleware.Company(Gorm)
-	CreateCompanyRoutine := append(mdw.CreateCompany(), cc.CreateCompany)
-	c.Post("/", CreateCompanyRoutine...)                  // ok
+	cm := middleware.Company(Gorm)
+	c.Post("/", append(cm.CreateCompany(), cc.CreateCompany)...)                  // ok
 	c.Get("/:id", cc.GetCompanyById)               // ok
 	c.Get("/name/:name", cc.GetCompanyByName)      // ok
 	c.Get("/tax_id/:tax_id", cc.GetCompanyByTaxId) // ok

@@ -11,7 +11,6 @@ func User(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.User(Gorm)
 	e := r.Group("/user")
 	e.Post("/", ce.CreateUser)               // ok
-	e.Post("/login", ce.Login)               // ok
 	e.Get("/email/:email", ce.GetOneByEmail) // ok
 	e.Patch("/:id", ce.UpdateUserById)       // ok
 	e.Delete("/:id", ce.DeleteUserById)      // ok
