@@ -2,6 +2,8 @@ package handler
 
 import (
 	"log"
+	"os"
+	"strconv"
 
 	gomail "gopkg.in/mail.v2"
 )
@@ -11,8 +13,6 @@ type MailData struct {
 	Code     string
 }
 
-type MailType int
-
 type Mail struct {
 	from    string
 	to      []string
@@ -21,6 +21,7 @@ type Mail struct {
 	mtype   MailType
 	data    *MailData
 }
+type MailType int
 
 type Configs struct {
 	MailVerifTemplateID string
@@ -36,23 +37,39 @@ const (
 	PassReset        = "PassReset"
 )
 
+var EmailRequestTest = &Mail{
+	from:    "hello@demomailtrap.com",
+	to:      []string{"luigiazoreng@gmail.com"},
+	subject: "Test",
+	body:    "Test",
+	mtype:   2,
+	data: &MailData{Username: "Test User",
+		Code: "123456"},
+}
+
 type MailService interface {
 	SendMail(mailReq *Mail) error
-	NewMail(from string, to []string, subject string, mailType MailType, data *MailData) *Mail
+	NewMail(from string, to []string, subject string, mailType int, data *MailData) *Mail
 }
 
 type GoMailService struct {
-	log     *log.Logger
 	configs *Configs
 }
 
+func NewGoMailService(configs *Configs) *GoMailService {
+	setConfigs(configs)
+	return &GoMailService{configs}
+
+}
 func (ms *GoMailService) SendEmail(mailReq *Mail) error {
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", mailReq.from)
+	message := gomail.NewMessage()
+	message.SetHeader("From", mailReq.from)
+	message.SetHeader("To", mailReq.to...)
 
-	m.SetHeader("To", mailReq.to...)
-
+	log.Println("Sending email to: ", mailReq.to)
+	message.SetBody("text/html", mailReq.body)
+	message.SetHeader("Subject", mailReq.subject)
 	// Set the subject and body based on the mail type
 	// if mailReq.mtype == MailConfirmation {
 	//     m.SetHeader("Subject", "Email Confirmation")
@@ -66,9 +83,20 @@ func (ms *GoMailService) SendEmail(mailReq *Mail) error {
 	d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPUser, ms.configs.SMTPPass)
 
 	// Send the email
-	if err := d.DialAndSend(m); err != nil {
+	if err := d.DialAndSend(message); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func setConfigs(configs *Configs) {
+	var err error
+	configs.SMTPPort, err = strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		log.Fatal("SMTP_PORT must be an integer")
+	}
+	configs.SMTPHost = os.Getenv("SMTP_HOST")
+	configs.SMTPUser = os.Getenv("SMTP_USER")
+	configs.SMTPPass = os.Getenv("SMTP_PASS")
 }

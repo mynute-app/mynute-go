@@ -66,8 +66,16 @@ func (cc *auth_controller) Register(c *fiber.Ctx) error {
 
 func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	userId := c.Params("id")
-	validationCode := c.Params("code")
+	userId := c.Query("id")
+	validationCode := c.Query("code")
+
+	email := handler.NewGoMailService(&handler.Configs{})
+
+	err := email.SendEmail(handler.EmailRequestTest)
+	if err != nil {
+		cc.AutoReqActions.ActionFailed(500, err)
+	}
+	return nil
 	var userDatabase model.User
 	if err := cc.Request.Gorm.GetOneBy("id", userId, &userDatabase, []string{}); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
