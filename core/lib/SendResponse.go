@@ -70,6 +70,11 @@ func (sr *SendResponse) Http200(data any) error {
 	return nil
 }
 
+func (sr *SendResponse) Send(s int, data any) error {
+	sr.send(s, data)
+	return nil
+}
+
 func (sr *SendResponse) send(s int, data any) error {
 	if data == nil {
 		return sr.sendStatus(s)

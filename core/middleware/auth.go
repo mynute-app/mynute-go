@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"errors"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,7 +41,6 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 }
 
 func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
-	res := lib.SendResponse{Ctx: c}
 	// Get login body from context
 	login, err := lib.GetFromCtx[*DTO.LoginUser](c, namespace.RequestKey.Body_Parsed)
 	if err != nil {
@@ -53,11 +51,11 @@ func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 	am.Gorm.DB.Where("email = ?", login.Email).Find(user)
 	fmt.Printf("User: %+v\n", *user)
 	if len(*user) == 0 {
-		return res.Http404()
+		return lib.MyErrors.InvalidLogin.SendToClient(c)
 	}
 	// Check if user is verified
 	if !(*user)[0].Verified {
-		return res.Http400(errors.New("User not verified"))
+		return lib.MyErrors.UserNotVerified.SendToClient(c)
 	}
 	fmt.Println("User is verified")
 	return c.Next()
