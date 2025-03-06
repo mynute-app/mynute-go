@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/service"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -75,41 +74,29 @@ func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-// Login just logs an user in case the password is correct
-//
-//	@Summary		Login
-//	@Description	Log in an user
-//	@Tags			User
-//	@Accept			json
-//	@Produce		json
-//	@Security		ApiKeyAuth
-//	@Param			user	body	DTO.LoginUser	true	"User"
-//	@Success		200
-//	@Failure		404	{object}	DTO.ErrorResponse
-//	@Failure		401	{object}	DTO.ErrorResponse
-//	@Router			/user/login [post]
-func (cc *user_controller) Login(c *fiber.Ctx) error {
-	cc.SetAction(c)
-	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
-	var userDatabase model.User
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
-		cc.AutoReqActions.ActionFailed(404, err)
-		return nil
-	}
-	if handler.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
-		cc.AutoReqActions.Status = 401
-		return nil
-	}
-	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
-	token, err := handler.JWT(c).CreateToken(claims)
-	if err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
-	}
-	log.Println("User logged in")
-	c.Response().Header.Set("Authorization", token)
 
-	return nil
-}
+// func (cc *user_controller) Login(c *fiber.Ctx) error {
+// 	cc.SetAction(c)
+// 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+// 	var userDatabase model.User
+// 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
+// 		cc.AutoReqActions.ActionFailed(404, err)
+// 		return nil
+// 	}
+// 	if handler.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
+// 		cc.AutoReqActions.Status = 401
+// 		return nil
+// 	}
+// 	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
+// 	token, err := handler.JWT(c).CreateToken(claims)
+// 	if err != nil {
+// 		cc.AutoReqActions.ActionFailed(500, err)
+// 	}
+// 	log.Println("User logged in")
+// 	c.Response().Header.Set("Authorization", token)
+
+// 	return nil
+// }
 
 func User(Gorm *handler.Gorm) *user_controller {
 	return &user_controller{

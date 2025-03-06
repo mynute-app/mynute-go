@@ -27,7 +27,7 @@ type auth_mdw_routines struct {
 
 func (am *auth_middleware) Login() []fiber.Handler {
 	return []fiber.Handler{
-		lib.SaveBodyOnCtx[*DTO.LoginUser],
+		lib.SaveBodyOnCtx[DTO.LoginUser],
 		am.DenyLoginFromUnverified,
 	}
 }
@@ -46,11 +46,12 @@ func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 	// Get login body from context
 	login, err := lib.GetFromCtx[*DTO.LoginUser](c, namespace.RequestKey.Body_Parsed)
 	if err != nil {
-		return res.Http500(err)
+		return err
 	}
 	// Get user from email
 	user := &[]model.User{}
 	am.Gorm.DB.Where("email = ?", login.Email).Find(user)
+	fmt.Printf("User: %+v\n", *user)
 	if len(*user) == 0 {
 		return res.Http404()
 	}
