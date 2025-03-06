@@ -72,9 +72,8 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
-
-	if !handler.ComparePassword(userDatabase.Password, body.Password) {
-		cc.AutoReqActions.ActionFailed(401, errors.New("invalid password"))
+	if handler.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
+		cc.AutoReqActions.Status = 401
 		return nil
 	}
 	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
@@ -86,6 +85,28 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 
 	return nil
 }
+// func (cc *auth_controller) Login(c *fiber.Ctx) error {
+// 	cc.SetAction(c)
+// 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+// 	var userDatabase model.User
+// 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
+// 		cc.AutoReqActions.ActionFailed(404, err)
+// 		return nil
+// 	}
+
+// 	if !handler.ComparePassword(userDatabase.Password, body.Password) {
+// 		cc.AutoReqActions.ActionFailed(401, errors.New("invalid password"))
+// 		return nil
+// 	}
+// 	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
+// 	token, err := handler.JWT(c).CreateToken(claims)
+// 	if err != nil {
+// 		cc.AutoReqActions.ActionFailed(500, err)
+// 	}
+// 	c.Response().Header.Set("Authorization", token)
+
+// 	return nil
+// }
 
 func (cc *auth_controller) Register(c *fiber.Ctx) error {
 	cc.SetAction(c)
