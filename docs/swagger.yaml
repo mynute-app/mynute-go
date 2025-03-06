@@ -435,7 +435,11 @@ paths:
       - ApiKeyAuth: []
       summary: Login
       tags:
+<<<<<<< HEAD
       - Auth
+=======
+      - Authentication
+>>>>>>> d65953c1b6f204260874cff5c1a46893ca6be96b
   /branch:
     post:
       consumes:
