@@ -20,6 +20,15 @@ func Company(Gorm *handler.Gorm) *company_middleware {
 	return &company_middleware{Gorm: Gorm}
 }
 
+func (cm *company_middleware) CreateCompany() []fiber.Handler {
+	auth := Auth(cm.Gorm)
+	return []fiber.Handler{
+		auth.WhoAreYou,
+		auth.DenyUnauthorized,
+		cm.ValidateProps,
+	}
+}
+
 func (cm *company_middleware) GetCompany(c *fiber.Ctx) error {
 	var company model.Company
 	res := &lib.SendResponse{Ctx: c}
@@ -30,7 +39,7 @@ func (cm *company_middleware) GetCompany(c *fiber.Ctx) error {
 	}
 
 	if err := cm.Gorm.GetOneBy("id", companyID, &company, nil); err != nil {
-		return res.Http400(err).Next()
+		return res.Http400(err)
 	}
 
 	c.Locals(namespace.CompanyKey.Model, &company)
@@ -45,25 +54,25 @@ func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
 	res := &lib.SendResponse{Ctx: c}
 	err = lib.ValidateName(company.Name, "company")
 	if err != nil {
-		return res.Http400(err).Next()
+		return res.Http400(err)
 	} else if !lib.ValidateTaxID(company.TaxID) {
-		return res.Http400(errors.New("invalid tax ID")).Next()
+		return res.Http400(errors.New("invalid tax ID"))
 	} else if len(company.Sectors) == 0 {
-		return res.Http400(errors.New("company type is required")).Next()
+		return res.Http400(errors.New("company type is required"))
 	}
 
 	for _, companyType := range company.Sectors {
 		if companyType.ID == 0 {
-			return res.Http400(errors.New("company type ID is missing or invalid")).Next()
+			return res.Http400(errors.New("company type ID is missing or invalid"))
 		}
 		var model model.Sector
 		idStr := strconv.FormatUint(uint64(companyType.ID), 10)
 		if err := cm.Gorm.GetOneBy("id", idStr, &model, nil); err != nil {
 			errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
-			return res.Http400(errors.New(errStr)).Next()
+			return res.Http400(errors.New(errStr))
 		}
 		if model.Name != companyType.Name {
-			return res.Http400(errors.New("company type name passed does not match the ID provided")).Next()
+			return res.Http400(errors.New("company type name passed does not match the ID provided"))
 		}
 	}
 	return c.Next()

@@ -1007,16 +1007,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
+                        "description": "OK"
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             },
@@ -1058,10 +1052,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             }
@@ -1091,8 +1082,8 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
@@ -1210,16 +1201,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.User"
-                        }
+                        "description": "OK"
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             },

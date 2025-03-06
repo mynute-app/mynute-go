@@ -3,7 +3,6 @@ package handler
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,7 +92,6 @@ func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
 
 // Standardized failure response
 func (ac *AutoReqActions) ActionFailed(status int, err error) {
-	fmt.Printf("Error: %v\n", err)
 	ac.Error = err
 	ac.Status = status
 	if !ac.mute_res {
@@ -178,7 +176,7 @@ func (ac *AutoReqActions) CreateOne() {
 		return
 	}
 
-	ac.ActionSuccess(201, ac.ctxVal.Model, ac.ctxVal.Dto)
+	ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 }
 
 // Final method that executes a DELETE action
@@ -205,7 +203,7 @@ func (ac *AutoReqActions) DeleteOneById() {
 	}
 
 	log.Printf("Deleted record with ID: %s", id)
-	ac.ActionSuccess(204, nil, nil)
+	ac.ActionSuccess(200, nil, nil)
 }
 
 // Final method that executes a FORCE DELETE action

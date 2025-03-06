@@ -24,7 +24,7 @@ type user_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		DTO.CreateUser	true	"User"
-//	@Success		201		{object}	DTO.User
+//	@Success		200		{object}	DTO.User
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
@@ -68,8 +68,8 @@ func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 //	@Tags			User
 //	@Param			id	path	string	true	"User ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.User
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Success		200	{object}	nil
+//	@Failure		404	{object}	nil
 //	@Router			/user/{id} [delete]
 func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)

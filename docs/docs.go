@@ -1015,16 +1015,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
+                        "description": "OK"
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             },
@@ -1066,10 +1060,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             }
@@ -1099,8 +1090,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
@@ -1218,16 +1209,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.User"
-                        }
+                        "description": "OK"
                     },
                     "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
+                        "description": "Not Found"
                     }
                 }
             },

@@ -1020,12 +1020,8 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/DTO.Service'
         "404":
           description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
       summary: Delete service by ID
       tags:
       - Service
@@ -1076,8 +1072,6 @@ paths:
             $ref: '#/definitions/DTO.Service'
         "404":
           description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
       summary: Update service by ID
       tags:
       - Service
@@ -1119,8 +1113,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/DTO.User'
         "400":
@@ -1144,12 +1138,8 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/DTO.User'
         "404":
           description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
       summary: Delete user
       tags:
       - User

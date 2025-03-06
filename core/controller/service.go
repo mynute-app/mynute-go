@@ -68,7 +68,7 @@ func (cc *service_controller) GetServiceByName(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
 //	@Success		200		{object}	DTO.Service
-//	@Failure		404		{object}	DTO.ErrorResponse
+//	@Failure		404		{object}	nil
 //	@Router			/service/{id} [patch]
 func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
@@ -81,8 +81,8 @@ func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Param			id	path	string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Service
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Success		200	{object}	nil
+//	@Failure		404	{object}	nil
 //	@Router			/service/{id} [delete]
 func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
