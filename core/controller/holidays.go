@@ -5,7 +5,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -94,7 +93,6 @@ func Holidays(Gorm *handler.Gorm) *holidays_controller {
 		Base: service.Base[model.Holidays, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.Holidays(Gorm),
 			Associations: []string{},
 		},
 	}

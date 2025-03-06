@@ -5,7 +5,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -80,7 +79,6 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.Branch(Gorm),
 			Associations: []string{"Employees", "Services"},
 		},
 	}

@@ -12,13 +12,23 @@ import (
 
 type employee_middleware struct {
 	Gorm *handler.Gorm
+	Auth *auth_middleware
 }
 
 func Employee(Gorm *handler.Gorm) *employee_middleware {
-	return &employee_middleware{Gorm: Gorm}
+	return &employee_middleware{Gorm: Gorm, Auth: Auth(Gorm)}
 }
 
-func (em *employee_middleware) SaveEmployeeCreateBody(c *fiber.Ctx) error {
+func (em *employee_middleware) CreateEmployee() []fiber.Handler {
+	return []fiber.Handler{
+		em.Auth.WhoAreYou,
+		em.SaveBody,
+		em.FindUser,
+		em.LinkEmployeeWithUser,
+	}
+}
+
+func (em *employee_middleware) SaveBody(c *fiber.Ctx) error {
 	body := &DTO.CreateEmployee{}
 	err := lib.BodyParser(c.Body(), body)
 	if err != nil {
@@ -28,7 +38,7 @@ func (em *employee_middleware) SaveEmployeeCreateBody(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func (em *employee_middleware) FindUserWhenCreatingEmployee(c *fiber.Ctx) error {
+func (em *employee_middleware) FindUser(c *fiber.Ctx) error {
 	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
 	if err != nil {
 		return err
@@ -37,23 +47,23 @@ func (em *employee_middleware) FindUserWhenCreatingEmployee(c *fiber.Ctx) error 
 	if err := em.Gorm.DB.Where("email = ?", body.Email).First(user).Error; err != nil {
 		return err
 	}
-	if user.ID != 0 {
-		body.UserID = user.ID
-		c.Locals(namespace.RequestKey.Body_Parsed, body)
-		return c.Next()
-	}
+	c.Locals(namespace.UserKey.Model, user)
 	return c.Next()
 }
 
-func (em *employee_middleware) SetEmployeeUserAccount(c *fiber.Ctx) error {
+func (em *employee_middleware) LinkEmployeeWithUser(c *fiber.Ctx) error {
 	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
 	if err != nil {
 		return err
 	}
-	if body.UserID != 0 {
+	user, err := lib.GetFromCtx[*model.User](c, namespace.UserKey.Model)
+	if err != nil {
+		return err
+	}
+	if user.ID != 0 {
+		body.UserID = user.ID
 		return c.Next()
 	}
-	user := &model.User{}
 	lib.ParseToDTO(body, user)
 	if err := em.Gorm.DB.Create(user).Error; err != nil {
 		return err

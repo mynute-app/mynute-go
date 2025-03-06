@@ -5,7 +5,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -109,7 +108,6 @@ func Company(Gorm *handler.Gorm) *company_controller {
 		Base: service.Base[model.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.Company(Gorm),
 			Associations: []string{"Sectors", "Branches", "Employees", "Services"},
 		},
 	}

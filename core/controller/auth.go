@@ -5,7 +5,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"errors"
 	"log"
@@ -24,7 +23,6 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.User(Gorm),
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}

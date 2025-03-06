@@ -27,7 +27,6 @@ type Base[MODEL any, DTO any] struct {
 	Name           string
 	Request        *handler.Req
 	AutoReqActions *handler.AutoReqActions
-	Middleware     *middleware.Registry
 	Associations   []string
 }
 
@@ -46,18 +45,17 @@ func CreateRoutes(r fiber.Router, ci IService) {
 func (b *Base[MODEL, DTO]) SetAction(c *fiber.Ctx) {
 	b.saveLocals(c)
 	b.AutoReqActions = b.Request.SetAutomatedActions(c)
-	b.runMiddlewares(c)
 }
 
-func (b *Base[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
-	mdws := b.Middleware.GetActions(b.Name, c.Method())
-	for _, mdw := range mdws {
-		if s, err := mdw(c); err != nil {
-			b.AutoReqActions.ActionFailed(s, err)
-			return
-		}
-	}
-}
+// func (b *Base[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
+// 	mdws := b.Middleware.GetActions(b.Name, c.Method())
+// 	for _, mdw := range mdws {
+// 		if s, err := mdw(c); err != nil {
+// 			b.AutoReqActions.ActionFailed(s, err)
+// 			return
+// 		}
+// 	}
+// }
 
 func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	var modelArr []MODEL

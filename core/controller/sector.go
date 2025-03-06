@@ -5,7 +5,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,7 +92,6 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 		Base: service.Base[model.Sector, DTO.Sector]{
 			Name:         namespace.CompanyTypeKey.Name,
 			Request:      handler.Request(Gorm),
-			Middleware:   middleware.Sector(Gorm),
 			Associations: []string{},
 		},
 	}
