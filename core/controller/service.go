@@ -1,19 +1,18 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
-	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// serviceController embeds service.Base in order to extend it with the functions below
-type serviceController struct {
-	service.Base[models.Service, DTO.Service]
+// service_controller embeds service.Base in order to extend it with the functions below
+type service_controller struct {
+	service.Base[model.Service, DTO.Service]
 }
 
 // CreateService creates a service
@@ -24,10 +23,10 @@ type serviceController struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
-//	@Success		200		{object}	DTO.Service
+//	@Success		201		{object}	DTO.Service
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service [post]
-func (cc *serviceController) CreateService(c *fiber.Ctx) error {
+func (cc *service_controller) CreateService(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -41,7 +40,7 @@ func (cc *serviceController) CreateService(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [get]
-func (cc *serviceController) GetServiceById(c *fiber.Ctx) error {
+func (cc *service_controller) GetServiceById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -55,7 +54,7 @@ func (cc *serviceController) GetServiceById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/name/{name} [get]
-func (cc *serviceController) GetServiceByName(c *fiber.Ctx) error {
+func (cc *service_controller) GetServiceByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
@@ -71,7 +70,7 @@ func (cc *serviceController) GetServiceByName(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Service
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [patch]
-func (cc *serviceController) UpdateServiceById(c *fiber.Ctx) error {
+func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -85,17 +84,16 @@ func (cc *serviceController) UpdateServiceById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [delete]
-func (cc *serviceController) DeleteServiceById(c *fiber.Ctx) error {
+func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-// Service returns a serviceController
-func Service(Gorm *handlers.Gorm) *serviceController {
-	return &serviceController{
-		Base: service.Base[models.Service, DTO.Service]{
+// Service returns a service_controller
+func Service(Gorm *handler.Gorm) *service_controller {
+	return &service_controller{
+		Base: service.Base[model.Service, DTO.Service]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
-			Middleware:   middleware.Service(Gorm),
+			Request:      handler.Request(Gorm),
 			Associations: []string{"ServiceType"},
 		},
 	}

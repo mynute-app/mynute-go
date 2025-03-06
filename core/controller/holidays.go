@@ -1,18 +1,17 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
-	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-type HolidaysController struct {
-	service.Base[models.Holidays, DTO.Holidays]
+type holidays_controller struct {
+	service.Base[model.Holidays, DTO.Holidays]
 }
 
 // CreateHolidays creates a holiday
@@ -23,10 +22,10 @@ type HolidaysController struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
-//	@Success		200		{object}	DTO.Holidays
+//	@Success		201		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/holidays [post]
-func (cc *HolidaysController) CreateHoliday(c *fiber.Ctx) error {
+func (cc *holidays_controller) CreateHoliday(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -40,7 +39,7 @@ func (cc *HolidaysController) CreateHoliday(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Holidays
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/holidays/{id} [get]
-func (cc *HolidaysController) GetHolidayById(c *fiber.Ctx) error {
+func (cc *holidays_controller) GetHolidayById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -54,7 +53,7 @@ func (cc *HolidaysController) GetHolidayById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Holidays
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/holidays/name/{name} [get]
-func (cc *HolidaysController) GetHolidayByName(c *fiber.Ctx) error {
+func (cc *holidays_controller) GetHolidayByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
@@ -69,8 +68,8 @@ func (cc *HolidaysController) GetHolidayByName(c *fiber.Ctx) error {
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
 //	@Success		200		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/holidays/{id} [put]
-func (cc *HolidaysController) UpdateHolidayById(c *fiber.Ctx) error {
+//	@Router			/holidays/{id} [patch]
+func (cc *holidays_controller) UpdateHolidayById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -84,17 +83,16 @@ func (cc *HolidaysController) UpdateHolidayById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Holidays
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/holidays/{id} [delete]
-func (cc *HolidaysController) DeleteHolidayById(c *fiber.Ctx) error {
+func (cc *holidays_controller) DeleteHolidayById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-// Holidays creates a new HolidaysController
-func Holidays(Gorm *handlers.Gorm) *HolidaysController {
-	return &HolidaysController{
-		Base: service.Base[models.Holidays, DTO.Holidays]{
+// Holidays creates a new holidays_controller
+func Holidays(Gorm *handler.Gorm) *holidays_controller {
+	return &holidays_controller{
+		Base: service.Base[model.Holidays, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
-			Request:      handlers.Request(Gorm),
-			Middleware:   middleware.Holidays(Gorm),
+			Request:      handler.Request(Gorm),
 			Associations: []string{},
 		},
 	}

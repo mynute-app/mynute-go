@@ -1,15 +1,15 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Branch(Gorm *handlers.Gorm) *Registry {
+func Branch(Gorm *handler.Gorm) *Registry {
 	branch := &branchMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
 	var BranchMiddleActions = []MiddlewareActions{
@@ -19,7 +19,7 @@ func Branch(Gorm *handlers.Gorm) *Registry {
 		},
 		{
 			methods: "POST",
-			action: branch.Create,
+			action:  branch.Create,
 		},
 	}
 	registry.RegisterActions(namespace.BranchKey.Name, BranchMiddleActions)
@@ -27,12 +27,12 @@ func Branch(Gorm *handlers.Gorm) *Registry {
 }
 
 type branchMiddlewareActions struct {
-	Gorm *handlers.Gorm
+	Gorm *handler.Gorm
 }
 
 // Check if the company exists and attach the company ID to the branch.
 func (ba *branchMiddlewareActions) CheckCompany(c *fiber.Ctx) (int, error) {
-	company, err := lib.GetFromCtx[*models.Company](c, namespace.CompanyKey.Model)
+	company, err := lib.GetFromCtx[*model.Company](c, namespace.CompanyKey.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -41,7 +41,7 @@ func (ba *branchMiddlewareActions) CheckCompany(c *fiber.Ctx) (int, error) {
 		return 0, nil
 	}
 
-	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
+	branch, err := lib.GetFromCtx[*model.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -52,7 +52,7 @@ func (ba *branchMiddlewareActions) CheckCompany(c *fiber.Ctx) (int, error) {
 }
 
 func (ba *branchMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
-	branch, err := lib.GetFromCtx[*models.Branch](c, namespace.GeneralKey.Model)
+	branch, err := lib.GetFromCtx[*model.Branch](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}

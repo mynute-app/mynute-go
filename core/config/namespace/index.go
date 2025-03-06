@@ -13,6 +13,20 @@ type GeneralStruct struct {
 	UserData     string
 }
 
+type RequestStruct struct {
+	Body_Byte   string
+	Body_Parsed string
+	Path        string
+	Auth_Token  string
+}
+
+var RequestKey = RequestStruct{
+	Body_Byte:   "req_body_byte",
+	Body_Parsed: "req_body_parsed",
+	Path:        "req_path",
+	Auth_Token:  "req_auth_token",
+}
+
 var GeneralKey = GeneralStruct{
 	Name:         "name_key",
 	Model:        "model_key",
@@ -49,8 +63,8 @@ var CompanyKey = TypeStruct{
 }
 
 var CompanyTypeKey = TypeStruct{
-	Name:  "company_type",
-	Model: "company_type_model",
+	Name:  "sector",
+	Model: "sector_model",
 }
 
 var BranchKey = TypeStruct{

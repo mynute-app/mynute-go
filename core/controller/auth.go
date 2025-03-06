@@ -1,11 +1,10 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
-	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/service"
 	"errors"
 	"log"
@@ -15,37 +14,36 @@ import (
 )
 
 // EmployeeController embeds Base in order to extend it with the functions below
-type authController struct {
-	service.Base[models.User, DTO.User]
+type auth_controller struct {
+	service.Base[model.User, DTO.User]
 }
 
-func Auth(Gorm *handlers.Gorm) *authController {
-	return &authController{
-		Base: service.Base[models.User, DTO.User]{
+func Auth(Gorm *handler.Gorm) *auth_controller {
+	return &auth_controller{
+		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
-			Middleware:   middleware.User(Gorm),
+			Request:      handler.Request(Gorm),
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}
 }
 
 // Custom extension method to login an user
-func (cc *authController) Login(c *fiber.Ctx) error {
+func (cc *auth_controller) Login(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
-	var userDatabase models.User
+	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+	var userDatabase model.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
 		cc.AutoReqActions.ActionFailed(404, err)
 		return nil
 	}
 
-	if !handlers.ComparePassword(userDatabase.Password, body.Password) {
+	if !handler.ComparePassword(userDatabase.Password, body.Password) {
 		cc.AutoReqActions.ActionFailed(401, errors.New("invalid password"))
 		return nil
 	}
-	claims := handlers.JWT(c).CreateClaims(userDatabase.Email)
-	token, err := handlers.JWT(c).CreateToken(claims)
+	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
+	token, err := handler.JWT(c).CreateToken(claims)
 	if err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 	}
@@ -55,10 +53,10 @@ func (cc *authController) Login(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) Register(c *fiber.Ctx) error {
+func (cc *auth_controller) Register(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
-	body.Password, _ = handlers.HashPassword(body.Password)
+	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+	body.Password, _ = handler.HashPassword(body.Password)
 	if err := cc.Request.Gorm.Create(body); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
@@ -66,11 +64,11 @@ func (cc *authController) Register(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) VerifyEmail(c *fiber.Ctx) error {
+func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 	cc.SetAction(c)
 	userId := c.Params("id")
-	validationCode := c.Params("code")	
-	var userDatabase models.User
+	validationCode := c.Params("code")
+	var userDatabase model.User
 	if err := cc.Request.Gorm.GetOneBy("id", userId, &userDatabase, []string{}); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 	}
@@ -81,17 +79,17 @@ func (cc *authController) VerifyEmail(c *fiber.Ctx) error {
 		cc.AutoReqActions.ActionFailed(409, errors.New("account already verified"))
 	}
 	userDatabase.Verified = true
-	if err := cc.Request.Gorm.UpdateOneById(userId, models.User{}, &userDatabase, []string{}); err != nil {
+	if err := cc.Request.Gorm.UpdateOneById(userId, model.User{}, &userDatabase, []string{}); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 	}
 	cc.AutoReqActions.ActionSuccess(200, nil, nil)
 	return nil
 }
 
-func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
+func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	body := c.Locals(namespace.GeneralKey.Model).(*models.User)
-	var userDatabase models.User
+	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
+	var userDatabase model.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
 		if err.Error() == "record not found" {
 			cc.AutoReqActions.ActionFailed(200, err)
@@ -108,7 +106,7 @@ func (cc *authController) VerifyExistingAccount(c *fiber.Ctx) error {
 }
 
 // OAUTH logics
-func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
+func (cc *auth_controller) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	if err := goth_fiber.BeginAuthHandler(c); err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
@@ -116,18 +114,18 @@ func (cc *authController) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	return nil
 }
 
-func (cc *authController) GetAuthCallbackFunction(c *fiber.Ctx) error {
+func (cc *auth_controller) GetAuthCallbackFunction(c *fiber.Ctx) error {
 	user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		cc.AutoReqActions.ActionFailed(500, err)
 		return nil
 	}
-	handlers.Auth(c).StoreUserSession(user)
+	handler.Auth(c).StoreUserSession(user)
 	c.Redirect("/")
 	return nil
 }
 
-func (cc *authController) LogoutProvider(c *fiber.Ctx) error {
+func (cc *auth_controller) LogoutProvider(c *fiber.Ctx) error {
 	goth_fiber.Logout(c)
 	c.Redirect("/")
 	return nil

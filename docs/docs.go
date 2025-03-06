@@ -10,14 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "email": "fiber@swagger.io"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -43,13 +36,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Branch"
+                            "$ref": "#/definitions/DTO.CreateBranch"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Branch"
                         }
@@ -97,51 +90,6 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
-                "description": "Update a branch",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Update branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Branch",
-                        "name": "branch",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Branch"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Branch"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "delete": {
                 "description": "Delete a branch by its ID",
                 "produces": [
@@ -169,6 +117,51 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update a branch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch"
+                ],
+                "summary": "Update branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Branch",
+                        "name": "branch",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.UpdateBranch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Branch"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -384,8 +377,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Company"
                         }
@@ -399,9 +392,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/company_type": {
+        "/employee": {
             "post": {
-                "description": "Create a company type",
+                "description": "Create an employee",
                 "consumes": [
                     "application/json"
                 ],
@@ -409,25 +402,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Employee"
                 ],
-                "summary": "Create company type",
+                "summary": "Create employee",
                 "parameters": [
                     {
-                        "description": "Company Type",
-                        "name": "company_type",
+                        "description": "Employee",
+                        "name": "employee",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.CreateEmployee"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "400": {
@@ -439,20 +432,20 @@ const docTemplate = `{
                 }
             }
         },
-        "/company_type/{id}": {
+        "/employee/{id}": {
             "get": {
-                "description": "Retrieve a company type by its ID",
+                "description": "Retrieve an employee by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Employee"
                 ],
-                "summary": "Get company type by ID",
+                "summary": "Get employee by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "Employee ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -462,7 +455,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "404": {
@@ -474,18 +467,18 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete a company type by its ID",
+                "description": "Delete an employee by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Employee"
                 ],
-                "summary": "Delete company type by ID",
+                "summary": "Delete employee by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "Employee ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -495,7 +488,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "404": {
@@ -507,7 +500,7 @@ const docTemplate = `{
                 }
             },
             "patch": {
-                "description": "Update a company type by its ID",
+                "description": "Update an employee",
                 "consumes": [
                     "application/json"
                 ],
@@ -515,24 +508,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CompanyType"
+                    "Employee"
                 ],
-                "summary": "Update company type by ID",
+                "summary": "Update employee",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "Employee ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Company Type",
-                        "name": "company_type",
+                        "description": "Employee",
+                        "name": "employee",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.UpdateEmployeeSwagger"
                         }
                     }
                 ],
@@ -540,11 +533,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CompanyType"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -577,8 +570,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Holidays"
                         }
@@ -661,7 +654,40 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
+            "delete": {
+                "description": "Delete a holiday by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Holidays"
+                ],
+                "summary": "Delete holiday by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Holiday ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Holidays"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
                 "description": "Update a holiday",
                 "consumes": [
                     "application/json"
@@ -705,20 +731,62 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "delete": {
-                "description": "Delete a holiday by its ID",
+            }
+        },
+        "/sector": {
+            "post": {
+                "description": "Create a company type",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Holidays"
+                    "Sector"
                 ],
-                "summary": "Delete holiday by ID",
+                "summary": "Create company type",
+                "parameters": [
+                    {
+                        "description": "Company Type",
+                        "name": "sector",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sector/{id}": {
+            "get": {
+                "description": "Retrieve a company type by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sector"
+                ],
+                "summary": "Get company type by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Holiday ID",
+                        "description": "Company Type ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -728,7 +796,85 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a company type by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sector"
+                ],
+                "summary": "Delete company type by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company Type ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update a company type by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sector"
+                ],
+                "summary": "Update company type by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company Type ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Company Type",
+                        "name": "sector",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
                         }
                     },
                     "404": {
@@ -765,8 +911,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.Service"
                         }
@@ -953,8 +1099,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
@@ -1005,6 +1151,11 @@ const docTemplate = `{
         },
         "/user/login": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Log in an user",
                 "consumes": [
                     "application/json"
@@ -1023,16 +1174,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.LoginUser"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.User"
-                        }
+                        "description": "OK"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -1050,7 +1198,40 @@ const docTemplate = `{
             }
         },
         "/user/{id}": {
-            "put": {
+            "delete": {
+                "description": "Delete an user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.User"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
                 "description": "Update an user",
                 "consumes": [
                     "application/json"
@@ -1089,39 +1270,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete an user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Delete user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.User"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1247,12 +1395,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/DTO.Branch"
                     }
                 },
-                "company_types": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.CompanyType"
-                    }
-                },
                 "employees": {
                     "type": "array",
                     "items": {
@@ -1267,6 +1409,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Your Company Name"
                 },
+                "sectors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Sector"
+                    }
+                },
                 "services": {
                     "type": "array",
                     "items": {
@@ -1279,31 +1427,63 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.CompanyType": {
+        "DTO.CreateBranch": {
             "type": "object",
             "properties": {
-                "id": {
+                "city": {
+                    "type": "string",
+                    "example": "New York"
+                },
+                "company_id": {
                     "type": "integer",
                     "example": 1
                 },
+                "complement": {
+                    "type": "string",
+                    "example": "Suite 100"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "USA"
+                },
                 "name": {
                     "type": "string",
-                    "example": "Your Company Type Name"
+                    "example": "Main Branch"
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Downtown"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "456"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "NY"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "zip_code": {
+                    "type": "string",
+                    "example": "10001"
                 }
             }
         },
         "DTO.CreateCompany": {
             "type": "object",
             "properties": {
-                "company_types": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.CompanyType"
-                    }
-                },
                 "name": {
                     "type": "string",
                     "example": "Your Company Name"
+                },
+                "sectors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Sector"
+                    }
                 },
                 "tax_id": {
                     "type": "string",
@@ -1311,11 +1491,10 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.CreateUser": {
+        "DTO.CreateEmployee": {
             "type": "object",
             "properties": {
                 "company_id": {
-                    "description": "ID da empresa",
                     "type": "integer",
                     "example": 1
                 },
@@ -1329,15 +1508,110 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "securepassword"
+                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "DTO.CreateUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1VerySecurePassword!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
+        "DTO.Employee": {
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.BranchPopulated"
+                    }
+                },
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1VerySecurePassword!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ServicePopulated"
+                    }
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "tag": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"super-admin\"",
+                        " \"branch-manager\"]"
+                    ]
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "verification_code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
@@ -1377,6 +1651,32 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "Public"
+                }
+            }
+        },
+        "DTO.LoginUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1VerySecurePassword!"
+                }
+            }
+        },
+        "DTO.Sector": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Your Company Type Name"
                 }
             }
         },
@@ -1446,20 +1746,39 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.User": {
+        "DTO.UpdateBranch": {
             "type": "object",
             "properties": {
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchPopulated"
-                    }
-                },
                 "company_id": {
-                    "description": "ID da empresa",
                     "type": "integer",
                     "example": 1
                 },
+                "name": {
+                    "type": "string",
+                    "example": "Main Branch Updated"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "556 Main St"
+                }
+            }
+        },
+        "DTO.UpdateEmployeeSwagger": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Clark"
+                }
+            }
+        },
+        "DTO.User": {
+            "type": "object",
+            "properties": {
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -1474,35 +1793,23 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "securepassword"
+                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.ServicePopulated"
-                    }
+                    "example": "+15555555555"
                 },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
                 },
-                "tag": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "[\"super-admin\"",
-                        " \"branch-manager\"]"
-                    ]
-                },
                 "verification_code": {
                     "type": "string",
                     "example": "123456"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
@@ -1531,14 +1838,22 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Enter the token in the format: \u003ctoken\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:4000",
-	BasePath:         "/",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Fiber Example API",
 	Description:      "Swagger API for testing and debugging",

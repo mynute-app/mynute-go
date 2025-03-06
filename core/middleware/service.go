@@ -1,19 +1,19 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type ServiceMiddlewareActions struct {
-	Gorm *handlers.Gorm
+	Gorm *handler.Gorm
 }
 
-func Service(Gorm *handlers.Gorm) *Registry {
+func Service(Gorm *handler.Gorm) *Registry {
 	service := &ServiceMiddlewareActions{Gorm: Gorm}
 	registry := NewRegistry()
 
@@ -23,7 +23,7 @@ func Service(Gorm *handlers.Gorm) *Registry {
 }
 
 func (sm *ServiceMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
-	service, err := lib.GetFromCtx[*models.Service](c, namespace.GeneralKey.Model)
+	service, err := lib.GetFromCtx[*model.Service](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return 500, err
 	}
@@ -34,4 +34,3 @@ func (sm *ServiceMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
 	// Proceed to the next middleware or handler
 	return 0, nil
 }
-

@@ -1,18 +1,17 @@
-package controllers
+package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/models"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handlers"
-	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-type branchController struct {
-	service.Base[models.Branch, DTO.Branch]
+type branch_controller struct {
+	service.Base[model.Branch, DTO.Branch]
 }
 
 // CreateBranch creates a branch
@@ -22,11 +21,11 @@ type branchController struct {
 //	@Tags			Branch
 //	@Accept			json
 //	@Produce		json
-//	@Param			branch	body		DTO.Branch	true	"Branch"
-//	@Success		200		{object}	DTO.Branch
+//	@Param			branch	body		DTO.CreateBranch	true	"Branch"
+//	@Success		201		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
-func (cc *branchController) CreateBranch(c *fiber.Ctx) error {
+func (cc *branch_controller) CreateBranch(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
@@ -40,7 +39,7 @@ func (cc *branchController) CreateBranch(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [get]
-func (cc *branchController) GetBranchById(c *fiber.Ctx) error {
+func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
@@ -51,12 +50,12 @@ func (cc *branchController) GetBranchById(c *fiber.Ctx) error {
 //	@Tags			Branch
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string		true	"Branch ID"
-//	@Param			branch	body		DTO.Branch	true	"Branch"
+//	@Param			id		path		string				true	"Branch ID"
+//	@Param			branch	body		DTO.UpdateBranch	true	"Branch"
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/branch/{id} [put]
-func (cc *branchController) UpdateBranchById(c *fiber.Ctx) error {
+//	@Router			/branch/{id} [patch]
+func (cc *branch_controller) UpdateBranchById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
@@ -70,17 +69,16 @@ func (cc *branchController) UpdateBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
-func (cc *branchController) DeleteBranchById(c *fiber.Ctx) error {
+func (cc *branch_controller) DeleteBranchById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
 // CreateBranch creates a branch
-func Branch(Gorm *handlers.Gorm) *branchController {
-	return &branchController{
-		Base: service.Base[models.Branch, DTO.Branch]{
+func Branch(Gorm *handler.Gorm) *branch_controller {
+	return &branch_controller{
+		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
-			Request:      handlers.Request(Gorm),
-			Middleware:   middleware.Branch(Gorm),
+			Request:      handler.Request(Gorm),
 			Associations: []string{"Employees", "Services"},
 		},
 	}

@@ -1,15 +1,15 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/controllers"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/controller"
+	"agenda-kaki-go/core/handler"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CompanyType(Gorm *handlers.Gorm, r fiber.Router) {
-	cct := controllers.CompanyType(Gorm)
-	c := r.Group("/companyType")
+func Sector(Gorm *handler.Gorm, r fiber.Router) {
+	cct := controller.Sector(Gorm)
+	c := r.Group("/sector")
 	c.Post("/", cct.CreateCompanyType)             // ok
 	c.Get("/:id", cct.GetCompanyTypeById)          // ok
 	c.Get("/name/:name", cct.GetCompanyTypeByName) // ok

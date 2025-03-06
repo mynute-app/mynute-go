@@ -1,8 +1,8 @@
-package handlers
+package handler
 
 import (
 	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/tests/lib"
+	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
 	"os"
@@ -14,11 +14,11 @@ import (
 
 type jsonWebToken struct {
 	C   *fiber.Ctx
-	Res *Res
+	Res *lib.SendResponse
 }
 
 func JWT(c *fiber.Ctx) *jsonWebToken {
-	return &jsonWebToken{C: c, Res: Response(c)}
+	return &jsonWebToken{C: c, Res: &lib.SendResponse{Ctx: c}}
 }
 
 func (j *jsonWebToken) GetToken() string {
@@ -49,7 +49,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	if tokenString == "" {
 		saveUserData(nil)
 
-		return j.Res.Http401(errors.New("missing auth token"))
+		j.Res.Http401(errors.New("missing auth token"))
 	}
 
 	keyFunc := func(token *jwt.Token) (any, error) {
@@ -65,13 +65,13 @@ func (j *jsonWebToken) WhoAreYou() error {
 	token, err := jwt.Parse(tokenString, keyFunc)
 
 	if err != nil {
-		return j.Res.Http401(err)
+		j.Res.Http401(err)
 	}
 
 	// Check token validity and extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return j.Res.Http401(errors.New("invalid token"))
+		j.Res.Http401(errors.New("invalid token"))
 	}
 
 	// Store claims (user data) in Fiber's Locals

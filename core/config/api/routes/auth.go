@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/controllers"
-	"agenda-kaki-go/core/handlers"
+	"agenda-kaki-go/core/controller"
+	"agenda-kaki-go/core/handler"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Auth(Gorm *handlers.Gorm, r fiber.Router) {
-	ce := controllers.Auth(Gorm)
+func Auth(Gorm *handler.Gorm, r fiber.Router) {
+	ce := controller.Auth(Gorm)
 	e := r.Group("/auth")
 	e.Post("/login", ce.Login) // ok
 	e.Post("/register", ce.Register)

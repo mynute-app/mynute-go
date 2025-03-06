@@ -1,15 +1,16 @@
-package models
+package model
 
 import "gorm.io/gorm"
+
 // Company represents a company entity
 type Company struct {
 	gorm.Model
-	Name         string        `gorm:"not null;unique" json:"name"`
-	TaxID        string        `gorm:"not null;unique" json:"tax_id"`
-	CompanyTypes []CompanyType `gorm:"many2many:company_company_types;constraint:OnDelete:CASCADE" json:"company_types"`
-	Employees    []User        `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"employees"` // One-to-many relation with User
-	Branches     []Branch      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"`  // One-to-many relation with Branch
-	Services     []Service     `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"`  // One-to-many relation with Service
+	Name      string     `gorm:"not null;unique" json:"name"`
+	TaxID     string     `gorm:"not null;unique" json:"tax_id"`
+	Sectors   []Sector   `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE" json:"sectors"`
+	Employees []Employee `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"employees"` // One-to-many relation with User
+	Branches  []Branch   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"`  // One-to-many relation with Branch
+	Services  []Service  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"`  // One-to-many relation with Service
 }
 
 type EntityPermissions struct {

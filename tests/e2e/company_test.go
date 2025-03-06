@@ -1,8 +1,8 @@
 package e2e_test
 
 import (
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/tests/e2e"
-	"agenda-kaki-go/tests/lib"
 	"fmt"
 	"testing"
 )
@@ -11,7 +11,7 @@ var _ e2e.IEntity = (*Company)(nil)
 
 type Company struct {
 	*e2e.BaseE2EActions
-	companyType *CompanyType
+	companyType *Sector
 	user        *User
 }
 
@@ -23,7 +23,7 @@ func (c *Company) GenerateTesters(n int) {
 			map[string]any{
 				"name":   lib.GenerateRandomName("Company"),
 				"tax_id": fmt.Sprintf("%v", lib.GenerateRandomIntOfExactly(14)),
-				"company_types": []map[string]any{
+				"sectors": []map[string]any{
 					{"id": c.companyType.Testers[i].EntityID, "name": c.companyType.Testers[i].PostBody["name"]},
 				},
 			},
@@ -40,7 +40,7 @@ func (c *Company) Make(n int) {
 }
 
 func (c *Company) CreateDependencies(n int) {
-	companyType := &CompanyType{
+	companyType := &Sector{
 		BaseE2EActions: &e2e.BaseE2EActions{},
 	}
 	companyType.SetTest(c.T)

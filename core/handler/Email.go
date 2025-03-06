@@ -1,8 +1,9 @@
-package handlers
+package handler
 
 import (
-	gomail "gopkg.in/mail.v2"
 	"log"
+
+	gomail "gopkg.in/mail.v2"
 )
 
 type MailData struct {
