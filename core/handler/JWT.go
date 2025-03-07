@@ -41,7 +41,7 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 // WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
 func (j *jsonWebToken) WhoAreYou() error {
 	saveUserData := func(value any) {
-		j.C.Locals(namespace.GeneralKey.UserData, value)
+		j.C.Locals(namespace.RequestKey.Auth_Claims, value)
 	}
 
 	// Retrieve the token from the Authorization header

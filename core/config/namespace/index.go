@@ -10,7 +10,6 @@ type GeneralStruct struct {
 	Dto          string
 	DtoArr       string
 	Associations string
-	UserData     string
 }
 
 type RequestStruct struct {
@@ -18,6 +17,7 @@ type RequestStruct struct {
 	Body_Parsed string
 	Path        string
 	Auth_Token  string
+	Auth_Claims string
 }
 
 var RequestKey = RequestStruct{
@@ -25,6 +25,7 @@ var RequestKey = RequestStruct{
 	Body_Parsed: "req_body_parsed",
 	Path:        "req_path",
 	Auth_Token:  "req_auth_token",
+	Auth_Claims: "req_auth_claims",
 }
 
 var GeneralKey = GeneralStruct{
@@ -35,7 +36,6 @@ var GeneralKey = GeneralStruct{
 	Dto:          "dto_key",
 	DtoArr:       "dtoArr_key",
 	Associations: "associations_key",
-	UserData:     "user_data",
 }
 
 type QueryStruct struct {

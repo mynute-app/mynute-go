@@ -19,11 +19,12 @@ func Employee(Gorm *handler.Gorm) *employee_middleware {
 	return &employee_middleware{Gorm: Gorm, Auth: Auth(Gorm)}
 }
 
-func (em *employee_middleware) CreateEmployee() []fiber.Handler {
+func (em *employee_middleware) Create() []fiber.Handler {
 	return []fiber.Handler{
 		em.Auth.WhoAreYou,
 		em.Auth.DenyUnauthorized,
 		lib.SaveBodyOnCtx[DTO.CreateEmployee],
+		lib.MatchUserTokenWithCompanyID,
 		em.FindUser,
 		em.LinkEmployeeWithUser,
 	}

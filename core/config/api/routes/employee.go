@@ -12,8 +12,7 @@ func Employee(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.Employee(Gorm)
 	e := r.Group("/employee")
 	em := middleware.Employee(Gorm)
-	CreateEmployeeRoutine := append(em.CreateEmployee(), ce.CreateEmployee)
-	e.Post("/", CreateEmployeeRoutine...) // ok
+	e.Post("/", append(em.Create(), ce.CreateEmployee)...) // ok
 	e.Get("/:id", ce.GetEmployeeById)                                                    // ok
 	e.Patch("/:id", ce.UpdateEmployeeById)                                               // ok
 	e.Delete("/:id", ce.DeleteEmployeeById)                                              // ok

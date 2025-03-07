@@ -36,6 +36,8 @@ type ErrorTypes struct {
 	EmailExists           ErrorStruct
 	InvalidUserName       ErrorStruct
 	InvalidEmail          ErrorStruct
+	CompanyIDNotFound     ErrorStruct
+	Unauthroized          ErrorStruct
 }
 
 // MyErrors defines a list of predefined errors
@@ -75,5 +77,17 @@ var MyErrors = ErrorTypes{
 		DescriptionBr: "Email inválido",
 		ID:            6,
 		HTTPStatus:    400,
+	},
+	CompanyIDNotFound: ErrorStruct{
+		DescriptionEn: "Company ID not found at the request body",
+		DescriptionBr: "ID da empresa não encontrado no corpo da requisição",
+		ID:            7,
+		HTTPStatus:    400,
+	},
+	Unauthroized: ErrorStruct{
+		DescriptionEn: "You are not authorized to access this resource",
+		DescriptionBr: "Você não está autorizado a acessar este recurso",
+		ID:            8,
+		HTTPStatus:    401,
 	},
 }
