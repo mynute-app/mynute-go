@@ -17,6 +17,8 @@ type User struct {
 	CreateUser
 	VerificationCode string `json:"verification_code" example:"123456"`
 	Verified         bool   `json:"verified" example:"false"`
+	EmployeeID       uint   `json:"employee_id" example:"1"`
+	CompanyID        uint   `json:"company_id" example:"1"`
 }
 
 type UserPopulated struct {

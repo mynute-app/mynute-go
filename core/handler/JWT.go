@@ -31,10 +31,10 @@ func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
 	return token.SignedString(mySecret)
 }
 
-func (j *jsonWebToken) CreateClaims(user string) jwt.Claims {
+func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	return jwt.MapClaims{
-		"userId": user,
-		"exp":    time.Now().Add(time.Hour * 72).Unix(),
+		"data": data,
+		"exp":  time.Now().Add(time.Hour * 72).Unix(),
 	}
 }
 

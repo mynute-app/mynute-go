@@ -16,11 +16,23 @@ type CreateEmployee struct {
 }
 
 type Employee struct {
-	ID uint `json:"id"`
 	CreateEmployee
+	ID               uint               `json:"id"`
 	VerificationCode string             `json:"verification_code" example:"123456"`
 	Verified         bool               `json:"verified" example:"false"`
 	Branches         []BranchPopulated  `json:"branches"`
 	Services         []ServicePopulated `json:"services"`
 	Tags             []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
+}
+
+type EmployeePopulated struct {
+	ID               uint     `json:"id" example:"1"`
+	Name             string   `json:"name" example:"John"`
+	Surname          string   `json:"surname" example:"Doe"`
+	Email            string   `json:"email" example:"john.doe@example.com"`
+	Phone            string   `json:"phone" example:"+1-555-555-5555"`
+	Tags             []string `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
+	VerificationCode string   `json:"verification_code" example:"123456"`
+	Verified         bool     `json:"verified" example:"false"`
+	CompanyID        uint     `json:"company_id" example:"1"`
 }
