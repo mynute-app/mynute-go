@@ -5,3 +5,4 @@ tmp
 __debug
 .exe
 .vscode/launch.json
+.vscode/settings.json
