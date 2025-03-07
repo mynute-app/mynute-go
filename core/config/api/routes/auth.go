@@ -12,8 +12,7 @@ func Auth(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.Auth(Gorm)
 	e := r.Group("/auth")
 	Auth := middleware.Auth(Gorm)
-	LoginRoutine := append(Auth.Login(), ce.Login)
-	e.Post("/login", LoginRoutine...) // ok
+	e.Post("/login", append(Auth.Login(), ce.Login)...) // ok
 	e.Post("/register", ce.Register)
 	e.Post("/verify-existing-account", ce.VerifyExistingAccount)
 	e.Get("/verifyemail", ce.VerifyEmail)
