@@ -33,6 +33,9 @@ type ErrorTypes struct {
 	InterfaceDataNotFound ErrorStruct
 	InvalidLogin          ErrorStruct
 	UserNotVerified       ErrorStruct
+	EmailExists           ErrorStruct
+	InvalidUserName       ErrorStruct
+	InvalidEmail          ErrorStruct
 }
 
 // MyErrors defines a list of predefined errors
@@ -54,5 +57,23 @@ var MyErrors = ErrorTypes{
 		DescriptionBr: "Usuário não verificado",
 		ID:            3,
 		HTTPStatus:    401,
+	},
+	EmailExists: ErrorStruct{
+		DescriptionEn: "Email already exists",
+		DescriptionBr: "Email já cadastrado",
+		ID:            4,
+		HTTPStatus:    409,
+	},
+	InvalidUserName: ErrorStruct{
+		DescriptionEn: "Invalid user name",
+		DescriptionBr: "Nome de usuário inválido",
+		ID:            5,
+		HTTPStatus:    400,
+	},
+	InvalidEmail: ErrorStruct{
+		DescriptionEn: "Invalid email",
+		DescriptionBr: "Email inválido",
+		ID:            6,
+		HTTPStatus:    400,
 	},
 }

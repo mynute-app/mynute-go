@@ -13,15 +13,10 @@ import (
 
 type auth_middleware struct {
 	Gorm *handler.Gorm
-	Routine *auth_mdw_routines
 }
 
 func Auth(Gorm *handler.Gorm) *auth_middleware {
 	return &auth_middleware{Gorm: Gorm}
-}
-
-type auth_mdw_routines struct {
-	Login *func () []fiber.Handler
 }
 
 func (am *auth_middleware) Login() []fiber.Handler {

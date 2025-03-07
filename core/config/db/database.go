@@ -51,11 +51,11 @@ func (db *Database) Migrate() {
 		&model.Sector{},
 		&model.Company{}, // Must be migrated before Service
 		&model.Branch{},
-		&model.User{},
-		&model.Service{},
 		&model.Appointment{},
 		&model.Holidays{},
+		&model.User{},
 		&model.Employee{},
+		&model.Service{},
 	}
 
 	for _, model := range models {

@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/shareed2k/goth_fiber"
@@ -27,7 +28,6 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 		},
 	}
 }
-
 
 // func (cc *user_controller) Login(c *fiber.Ctx) error {
 // 	cc.SetAction(c)
@@ -73,9 +73,10 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 		// cc.AutoReqActions.ActionFailed(404, err)
 		return lib.MyErrors.InvalidLogin.SendToClient(c)
 	}
-	if handler.ComparePassword(user.Password, body.Password) && user.Verified {
+	if !handler.ComparePassword(user.Password, body.Password) {
 		return lib.MyErrors.InvalidLogin.SendToClient(c)
 	}
+	fmt.Printf("Passwords match! User password: %v | Body password: %v\n", user.Password, body.Password)
 	jwt := handler.JWT(c)
 	claims := jwt.CreateClaims(user)
 	token, err := jwt.CreateToken(claims)
@@ -85,6 +86,7 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 	c.Response().Header.Set("Authorization", token)
 	return nil
 }
+
 // func (cc *auth_controller) Login(c *fiber.Ctx) error {
 // 	cc.SetAction(c)
 // 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)

@@ -18,3 +18,7 @@ func ValidateName(name string, structStr string) error {
 func ValidateTaxID(taxID string) bool {
 	return regexp.MustCompile(`^\d{14}$`).MatchString(taxID)
 }
+
+func ValidateEmail(email string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).MatchString(email)
+}

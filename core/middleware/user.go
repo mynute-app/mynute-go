@@ -9,37 +9,93 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type UserMiddlewareActions struct {
+type user_middleware struct {
 	Gorm *handler.Gorm
 }
 
-func User(Gorm *handler.Gorm) *Registry {
-	// user := &UserMiddlewareActions{Gorm: Gorm}
-	registry := NewRegistry()
-	// user := &UserMiddlewareActions{Gorm: Gorm}
-	// registry.RegisterAction(namespace.UserKey.Name, "POST", user.Create)
-
-	return registry
+func User(Gorm *handler.Gorm) *user_middleware {
+	return &user_middleware{Gorm: Gorm}
 }
 
-func (em *UserMiddlewareActions) GetUserByEmail(c *fiber.Ctx) error {
-	user := &model.User{}
-	if err := em.Gorm.DB.Where("email = ?", c.Params("email")).First(user).Error; err != nil {
+func (um *user_middleware) Create() []fiber.Handler {
+	return []fiber.Handler{
+		lib.SaveBodyOnCtx[*model.User],
+		um.VerifyEmailExists,
+		um.ValidateProps,
+		um.HashPassword,
+	}
+}
+
+func (um *user_middleware) VerifyEmailExists(c *fiber.Ctx) error {
+	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+	if err != nil {
 		return err
 	}
-	c.Locals(namespace.UserKey.Model, user)
+	if err := um.Gorm.DB.Where("email = ?", body.Email).First(&model.User{}).Error; err == nil {
+		return lib.MyErrors.EmailExists.SendToClient(c)
+	}
 	return c.Next()
 }
 
-func (em *UserMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
-	user, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+func (um *user_middleware) ValidateProps(c *fiber.Ctx) error {
+	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
 	if err != nil {
-		return 500, err
+		return err
 	}
-	// Perform validation
-	if err := lib.ValidateName(user.Name, "user"); err != nil {
-		return 400, err
+	if err := lib.ValidateName(body.Name, "user"); err != nil {
+		return lib.MyErrors.InvalidUserName.SendToClient(c)
 	}
-	// Proceed to the next middleware or handler
-	return 0, nil
+	if valid := lib.ValidateEmail(body.Email); !valid {
+		return lib.MyErrors.InvalidEmail.SendToClient(c)
+	}
+	return c.Next()
 }
+
+func (um *user_middleware) HashPassword(c *fiber.Ctx) error {
+	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+	if err != nil {
+		return err
+	}
+	hashed, err := handler.HashPassword(body.Password)
+	if err != nil {
+		return err
+	}
+	body.Password = hashed
+	return c.Next()
+}
+
+
+// type UserMiddlewareActions struct {
+// 	Gorm *handler.Gorm
+// }
+
+// func User(Gorm *handler.Gorm) *Registry {
+// 	// user := &UserMiddlewareActions{Gorm: Gorm}
+// 	registry := NewRegistry()
+// 	// user := &UserMiddlewareActions{Gorm: Gorm}
+// 	// registry.RegisterAction(namespace.UserKey.Name, "POST", user.Create)
+
+// 	return registry
+// }
+
+// func (em *UserMiddlewareActions) GetUserByEmail(c *fiber.Ctx) error {
+// 	user := &model.User{}
+// 	if err := em.Gorm.DB.Where("email = ?", c.Params("email")).First(user).Error; err != nil {
+// 		return err
+// 	}
+// 	c.Locals(namespace.UserKey.Model, user)
+// 	return c.Next()
+// }
+
+// func (em *UserMiddlewareActions) Create(c *fiber.Ctx) (int, error) {
+// 	user, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+// 	if err != nil {
+// 		return 500, err
+// 	}
+// 	// Perform validation
+// 	if err := lib.ValidateName(user.Name, "user"); err != nil {
+// 		return 400, err
+// 	}
+// 	// Proceed to the next middleware or handler
+// 	return 0, nil
+// }

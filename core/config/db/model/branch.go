@@ -7,7 +7,7 @@ type Branch struct {
 	gorm.Model
 	Name         string    `gorm:"not null" json:"name"`
 	CompanyID    uint      `gorm:"not null" json:"company_id"`  // Foreign key to Company
-	Employees    []User    `gorm:"many2many:branch_employees;"` // Many-to-many relation with Employee
+	Employees    []Employee    `gorm:"many2many:branch_employees;"` // Many-to-many relation with Employee
 	Services     []Service `gorm:"many2many:branch_services;"`  // Many-to-many relation with Service
 	Street       string    `gorm:"not null" json:"street"`
 	Number       string    `gorm:"not null" json:"number"`
