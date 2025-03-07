@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,9 +27,14 @@ func GetFromCtx[T any](c *fiber.Ctx, key string) (T, error) {
 	return zero, InvalidDataType(key)
 }
 
-// SaveBody is a fiber.Handler middleware that parses 
+// SaveBody is a fiber.Handler middleware that parses
 // the request body and saves it to the Fiber context
 func SaveBodyOnCtx[Body any](c *fiber.Ctx) error {
+	// Check if body is a pointer. It can not be.
+	if reflect.TypeOf((*Body)(nil)).Elem().Kind() == reflect.Ptr {
+		return errors.New("at SaveBodyOnCtx function: body type cannot be a pointer")
+	}
+
 	var body Body
 	err := BodyParser(c.Body(), &body)
 	if err != nil {
@@ -36,6 +42,10 @@ func SaveBodyOnCtx[Body any](c *fiber.Ctx) error {
 	}
 	c.Locals(namespace.RequestKey.Body_Parsed, &body)
 	return c.Next()
+}
+
+func GetBodyFromCtx[Body any](c *fiber.Ctx) (Body, error) {
+	return GetFromCtx[Body](c, namespace.RequestKey.Body_Parsed)
 }
 
 func InterfaceDataNotFound(interfaceName string) error {

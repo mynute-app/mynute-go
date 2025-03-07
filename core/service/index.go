@@ -64,7 +64,7 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	var dto DTO
 	var changes map[string]any
 	keys := namespace.GeneralKey
-	if s, err := middleware.ParseBodyToContext(c, keys.Model, &model); err != nil {
+	if s, err := middleware.ParseBodyToContext(c, &model); err != nil {
 		b.AutoReqActions.ActionFailed(s, err)
 		return
 	}

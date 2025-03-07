@@ -30,7 +30,7 @@ func (em *employee_middleware) CreateEmployee() []fiber.Handler {
 }
 
 func (em *employee_middleware) FindUser(c *fiber.Ctx) error {
-	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
+	body, err := lib.GetBodyFromCtx[*DTO.CreateEmployee](c)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (em *employee_middleware) FindUser(c *fiber.Ctx) error {
 }
 
 func (em *employee_middleware) LinkEmployeeWithUser(c *fiber.Ctx) error {
-	body, err := lib.GetFromCtx[*DTO.CreateEmployee](c, namespace.RequestKey.Body_Parsed)
+	body, err := lib.GetBodyFromCtx[*DTO.CreateEmployee](c)
 	if err != nil {
 		return err
 	}

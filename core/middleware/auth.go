@@ -44,15 +44,15 @@ func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 	// Get user from email
 	user := &[]model.User{}
 	am.Gorm.DB.Where("email = ?", login.Email).Find(user)
-	fmt.Printf("User: %+v\n", *user)
 	if len(*user) == 0 {
+		fmt.Printf("User %v not found\n", login.Email)
 		return lib.MyErrors.InvalidLogin.SendToClient(c)
 	}
 	// Check if user is verified
 	if !(*user)[0].Verified {
+		fmt.Printf("User %v is not verified\n", login.Email)
 		return lib.MyErrors.UserNotVerified.SendToClient(c)
 	}
-	fmt.Println("User is verified")
 	return c.Next()
 }
 

@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,7 +19,7 @@ func User(Gorm *handler.Gorm) *user_middleware {
 
 func (um *user_middleware) Create() []fiber.Handler {
 	return []fiber.Handler{
-		lib.SaveBodyOnCtx[*model.User],
+		lib.SaveBodyOnCtx[model.User],
 		um.VerifyEmailExists,
 		um.ValidateProps,
 		um.HashPassword,
@@ -27,18 +27,23 @@ func (um *user_middleware) Create() []fiber.Handler {
 }
 
 func (um *user_middleware) VerifyEmailExists(c *fiber.Ctx) error {
-	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+	body, err := lib.GetBodyFromCtx[*model.User](c)
 	if err != nil {
 		return err
 	}
-	if err := um.Gorm.DB.Where("email = ?", body.Email).First(&model.User{}).Error; err == nil {
+	users := &[]model.User{}
+	if err := um.Gorm.DB.Where("email = ?", body.Email).Find(users).Error; err != nil {
+		return err
+	}
+	if len(*users) > 0 {
 		return lib.MyErrors.EmailExists.SendToClient(c)
 	}
+	fmt.Printf("Email %v is unique\n", body.Email)
 	return c.Next()
 }
 
 func (um *user_middleware) ValidateProps(c *fiber.Ctx) error {
-	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+	body, err := lib.GetBodyFromCtx[*model.User](c)
 	if err != nil {
 		return err
 	}
@@ -52,7 +57,7 @@ func (um *user_middleware) ValidateProps(c *fiber.Ctx) error {
 }
 
 func (um *user_middleware) HashPassword(c *fiber.Ctx) error {
-	body, err := lib.GetFromCtx[*model.User](c, namespace.GeneralKey.Model)
+	body, err := lib.GetBodyFromCtx[*model.User](c)
 	if err != nil {
 		return err
 	}
@@ -60,10 +65,10 @@ func (um *user_middleware) HashPassword(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Hashed password: %s\n", hashed)
 	body.Password = hashed
 	return c.Next()
 }
-
 
 // type UserMiddlewareActions struct {
 // 	Gorm *handler.Gorm

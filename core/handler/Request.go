@@ -55,7 +55,10 @@ func (ac *AutoReqActions) fetchContextValues() error {
 	}
 	model, err := lib.GetFromCtx[any](ac.ctx, keys.Model)
 	if err != nil {
-		return err
+		model, err = lib.GetBodyFromCtx[any](ac.ctx)
+		if err != nil {
+			return err
+		}
 	}
 	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
