@@ -28,8 +28,13 @@ func Connect() *Database {
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB_NAME")
 	port := os.Getenv("POSTGRES_PORT")
+	app_env := os.Getenv("APP_ENV")
 	sslmode := "disable" // You can modify this based on your setup
 	timeZone := "UTC"    // Default timezone
+
+	if app_env == "test" {
+		dbName = fmt.Sprintf("%s-%s", dbName, app_env)
+	}
 
 	// Build the DSN (Data Source Name)
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
