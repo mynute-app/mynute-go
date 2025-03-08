@@ -83,7 +83,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {
 	generateMySecret := func() []byte {
-		s := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomIntOfExactly(16))
+		s := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomInt(16))
 		return []byte(s)
 	}
 	secret := os.Getenv("JWT_SECRET")
