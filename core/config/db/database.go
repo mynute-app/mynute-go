@@ -79,3 +79,29 @@ func (db *Database) CloseDB() {
 	}
 	sqlDB.Close()
 }
+
+func (db *Database) ClearDB() {
+	// Avoid this in production
+	if os.Getenv("APP_ENV") != "test" {
+		log.Fatal("ClearDB should only be used in test environment")
+	}
+
+	models := []any{
+		&model.Sector{},
+		&model.Company{},
+		&model.Branch{},
+		&model.Appointment{},
+		&model.Holidays{},
+		&model.User{},
+		&model.Employee{},
+		&model.Service{},
+	}
+
+	for _, model := range models {
+		log.Printf("Clearing: %T", model)
+		if err := db.Gorm.Migrator().DropTable(model); err != nil {
+			log.Fatalf("Failed to clear %T: %v", model, err)
+		}
+	}
+	log.Println("Clearing completed successfully")
+}
