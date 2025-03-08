@@ -15,6 +15,18 @@ type Database struct {
 	Gorm *gorm.DB
 }
 
+var models = []any{
+	&model.Sector{},
+	&model.Company{}, // Must be migrated before Service
+	&model.Branch{},
+	&model.Appointment{},
+	&model.Holidays{},
+	&model.User{},
+	&model.Employee{},
+	&model.Service{},
+}
+
+
 func Connect() *Database {
 	// Load environment variables from .env file
 	err := godotenv.Load()
@@ -52,17 +64,6 @@ func Connect() *Database {
 }
 
 func (db *Database) Migrate() {
-	models := []any{
-		&model.Sector{},
-		&model.Company{}, // Must be migrated before Service
-		&model.Branch{},
-		&model.Appointment{},
-		&model.Holidays{},
-		&model.User{},
-		&model.Employee{},
-		&model.Service{},
-	}
-
 	for _, model := range models {
 		log.Printf("Migrating: %T", model)
 		if err := db.Gorm.AutoMigrate(model); err != nil {
@@ -81,20 +82,8 @@ func (db *Database) CloseDB() {
 }
 
 func (db *Database) ClearDB() {
-	// Avoid this in production
 	if os.Getenv("APP_ENV") != "test" {
 		log.Fatal("ClearDB should only be used in test environment")
-	}
-
-	models := []any{
-		&model.Sector{},
-		&model.Company{},
-		&model.Branch{},
-		&model.Appointment{},
-		&model.Holidays{},
-		&model.User{},
-		&model.Employee{},
-		&model.Service{},
 	}
 
 	for _, model := range models {
