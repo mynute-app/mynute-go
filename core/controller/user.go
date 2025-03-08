@@ -23,11 +23,12 @@ type user_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		DTO.CreateUser	true	"User"
-//	@Success		200		{object}	DTO.User
+//	@Success		200		{object}	DTO.CreatedUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+	var DTO DTO.CreatedUser
+	return cc.SetDTO(c, &DTO).CreateOne(c)
 }
 
 // GetOneByEmail retrieves an user by email
