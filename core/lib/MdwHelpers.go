@@ -52,7 +52,7 @@ func ParseBodyToModel[Model any](c *fiber.Ctx) error {
 	}
 	var model Model
 	parse(body, &model)
-	c.Locals(namespace.RequestKey.Model, &model)
+	c.Locals(namespace.GeneralKey.Model, &model)
 	return c.Next()
 }
 
