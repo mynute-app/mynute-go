@@ -6,13 +6,17 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Database struct {
 	Gorm *gorm.DB
+}
+
+type Test struct {
+	*Database
+	name string
 }
 
 var models = []any{
@@ -26,14 +30,8 @@ var models = []any{
 	&model.Service{},
 }
 
-
+// Connects to the database
 func Connect() *Database {
-	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file: ", err)
-	}
-
 	// Get environment variables
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
@@ -46,7 +44,11 @@ func Connect() *Database {
 
 	if app_env == "test" {
 		dbName = fmt.Sprintf("%s-%s", dbName, app_env)
+	} else if app_env != "production" && app_env != "dev" {
+		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
+
+	fmt.Printf("Running in %s environment. Database: %s\n", app_env, dbName)
 
 	// Build the DSN (Data Source Name)
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
@@ -62,7 +64,7 @@ func Connect() *Database {
 
 	return &Database{Gorm: db}
 }
-
+// Migrate the database schema
 func (db *Database) Migrate() {
 	for _, model := range models {
 		log.Printf("Migrating: %T", model)
@@ -72,25 +74,30 @@ func (db *Database) Migrate() {
 	}
 	log.Println("Migration completed successfully")
 }
-
-func (db *Database) CloseDB() {
+// Close connection to the database
+func (db *Database) Disconnect() {
 	sqlDB, err := db.Gorm.DB()
 	if err != nil {
 		log.Fatal("Failed to close the database: ", err)
 	}
 	sqlDB.Close()
 }
-
-func (db *Database) ClearDB() {
+func (db *Database) Test() *Test {
+	dbName := os.Getenv("POSTGRES_DB_NAME")
+	app_env := os.Getenv("APP_ENV")
+	dbName = fmt.Sprintf("%s-%s", dbName, app_env)
+	return &Test{Database: db, name: dbName}
+}
+// Clear the database. Only in test environment
+func (t *Test) Clear() {
 	if os.Getenv("APP_ENV") != "test" {
-		log.Fatal("ClearDB should only be used in test environment")
+		return
 	}
-
 	for _, model := range models {
 		log.Printf("Clearing: %T", model)
-		if err := db.Gorm.Migrator().DropTable(model); err != nil {
+		if err := t.Gorm.Migrator().DropTable(model); err != nil {
 			log.Fatalf("Failed to clear %T: %v", model, err)
 		}
 	}
-	log.Println("Clearing completed successfully")
+	fmt.Printf("Erased all tables on %s database.\n", t.name)
 }
