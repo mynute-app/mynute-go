@@ -1,13 +1,12 @@
 package middleware
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"errors"
-	"fmt"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,6 +24,7 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 	return []fiber.Handler{
 		auth.WhoAreYou,
 		auth.DenyUnauthorized,
+		lib.SaveBodyOnCtx[DTO.CreateCompany],
 		cm.ValidateProps,
 	}
 }
@@ -47,34 +47,22 @@ func (cm *company_middleware) GetCompany(c *fiber.Ctx) error {
 }
 
 func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
-	company, err := lib.GetFromCtx[*model.Company](c, namespace.GeneralKey.Model)
+	body, err := lib.GetBodyFromCtx[*DTO.CreateCompany](c)
 	if err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	err = lib.ValidateName(company.Name, "company")
+	err = lib.ValidateName(body.Name, "company")
 	if err != nil {
 		return res.Http400(err)
-	} else if !lib.ValidateTaxID(company.TaxID) {
+	} else if !lib.ValidateTaxID(body.TaxID) {
 		return res.Http400(errors.New("invalid tax ID"))
-	} else if len(company.Sectors) == 0 {
-		return res.Http400(errors.New("company type is required"))
 	}
-
-	for _, companyType := range company.Sectors {
-		if companyType.ID == 0 {
-			return res.Http400(errors.New("company type ID is missing or invalid"))
-		}
-		var model model.Sector
-		idStr := strconv.FormatUint(uint64(companyType.ID), 10)
-		if err := cm.Gorm.GetOneBy("id", idStr, &model, nil); err != nil {
-			errStr := fmt.Sprintf("company type with ID %s does not exist", idStr)
-			return res.Http400(errors.New(errStr))
-		}
-		if model.Name != companyType.Name {
-			return res.Http400(errors.New("company type name passed does not match the ID provided"))
-		}
-	}
+	// Parse body into company model and save it into context as model
+	company := model.Company{}
+	company.Name = body.Name
+	company.TaxID = body.TaxID
+	c.Locals(namespace.GeneralKey.Model, &company)
 	return c.Next()
 }
 

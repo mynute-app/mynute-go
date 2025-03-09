@@ -81,11 +81,11 @@ definitions:
     properties:
       branches:
         items:
-          $ref: '#/definitions/DTO.Branch'
+          $ref: '#/definitions/DTO.BranchPopulated'
         type: array
       employees:
         items:
-          $ref: '#/definitions/DTO.UserPopulated'
+          $ref: '#/definitions/DTO.EmployeePopulated'
         type: array
       id:
         description: Primary key
@@ -143,10 +143,6 @@ definitions:
       name:
         example: Your Company Name
         type: string
-      sectors:
-        items:
-          $ref: '#/definitions/DTO.Sector'
-        type: array
       tax_id:
         example: "00000000000000"
         type: string
@@ -258,6 +254,40 @@ definitions:
         example: false
         type: boolean
     type: object
+  DTO.EmployeePopulated:
+    properties:
+      company_id:
+        example: 1
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John
+        type: string
+      phone:
+        example: +1-555-555-5555
+        type: string
+      surname:
+        example: Doe
+        type: string
+      tag:
+        example:
+        - '["super-admin"'
+        - ' "branch-manager"]'
+        items:
+          type: string
+        type: array
+      verification_code:
+        example: "123456"
+        type: string
+      verified:
+        example: false
+        type: boolean
+    type: object
   DTO.ErrorResponse:
     description: Error Response Model
     properties:
@@ -297,11 +327,14 @@ definitions:
     type: object
   DTO.Sector:
     properties:
+      description:
+        example: The Company Sector Description
+        type: string
       id:
         example: 1
         type: integer
       name:
-        example: Your Company Type Name
+        example: Your Company Sector Name
         type: string
     type: object
   DTO.Service:

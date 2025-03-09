@@ -1407,13 +1407,13 @@ const docTemplate = `{
                 "branches": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.Branch"
+                        "$ref": "#/definitions/DTO.BranchPopulated"
                     }
                 },
                 "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.UserPopulated"
+                        "$ref": "#/definitions/DTO.EmployeePopulated"
                     }
                 },
                 "id": {
@@ -1493,12 +1493,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Your Company Name"
-                },
-                "sectors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Sector"
-                    }
                 },
                 "tax_id": {
                     "type": "string",
@@ -1655,6 +1649,53 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.EmployeePopulated": {
+            "type": "object",
+            "properties": {
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1-555-555-5555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "tag": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"super-admin\"",
+                        " \"branch-manager\"]"
+                    ]
+                },
+                "verification_code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
         "DTO.ErrorResponse": {
             "description": "Error Response Model",
             "type": "object",
@@ -1710,13 +1751,17 @@ const docTemplate = `{
         "DTO.Sector": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "The Company Sector Description"
+                },
                 "id": {
                     "type": "integer",
                     "example": 1
                 },
                 "name": {
                     "type": "string",
-                    "example": "Your Company Type Name"
+                    "example": "Your Company Sector Name"
                 }
             }
         },
