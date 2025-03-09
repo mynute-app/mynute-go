@@ -73,7 +73,7 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	if hasDto := c.Locals(keys.Dto); hasDto == nil {
 		c.Locals(keys.Dto, &dto)
 	}
-	if hasDtoArr := c.Locals(keys.DtoArr); hasDtoArr != nil {
+	if hasDtoArr := c.Locals(keys.DtoArr); hasDtoArr == nil {
 		c.Locals(keys.DtoArr, &dtoArr)
 	}
 	c.Locals(keys.Changes, changes)

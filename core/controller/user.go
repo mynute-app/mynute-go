@@ -104,7 +104,7 @@ func User(Gorm *handler.Gorm) *user_controller {
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Services", "Appointments", "Company"},
+			Associations: []string{"Appointments"},
 		},
 	}
 }
