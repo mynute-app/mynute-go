@@ -32,17 +32,33 @@ func GenerateRandomString(length int) string {
 
 func GenerateRandomEmail() string {
 	provider := "@gmail.com"
-	nick := fmt.Sprintf("test_user_email_%v", GenerateRandomIntOfExactly(5))
+	nick := fmt.Sprintf("test_user_email_%v", GenerateRandomInt(5))
 	return fmt.Sprintf("%v%v", nick, provider)
 }
 
-func GenerateRandomIntOfExactly(length int) int {
+func GenerateRandomInt(length int) int {
 	// Create a new random source
-	
+
 	// Define the lower and upper bounds based on the desired length
 	lowerBound := int(math.Pow10(length - 1)) // 10^(n-1)
 	upperBound := int(math.Pow10(length)) - 1 // 10^n - 1
 
 	// Generate a random number in the range [lowerBound, upperBound]
 	return rnd.Intn(upperBound-lowerBound+1) + lowerBound
+}
+
+func GenerateRandomStrNumber(length int) string {
+	// Define the character set to be used for generating the random string
+	charset := "0123456789"
+
+	// Initialize the random string
+	randomString := make([]byte, length)
+
+	// Generate a random string of the desired length
+	for i := range randomString {
+		randomString[i] = charset[rnd.Intn(len(charset))]
+	}
+
+	// Return the generated random string
+	return string(randomString)
 }

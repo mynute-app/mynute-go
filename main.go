@@ -1,23 +1,14 @@
 package main
 
-import (
-	"agenda-kaki-go/core/config/api/routes"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handler"
-	_ "agenda-kaki-go/docs"
-	"log"
-
-	"github.com/gofiber/fiber/v2"
-)
+import "agenda-kaki-go/core"
 
 //	@title						Fiber Example API
 //	@version					1.0
 //	@description				Swagger API for testing and debugging
 //	@termsOfService				http://swagger.io/terms/
-//	@securityDefinitions.apikey	ApiKeyAuth 
-//	@in							header 
-//	@name						Authorization 
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						Authorization
 //	@description				Enter the token in the format: <token>
 //	@contact.name				API Support
 //	@contact.email				fiber@swagger.io
@@ -26,25 +17,5 @@ import (
 //	@host						localhost:4000
 //	@BasePath					/
 func main() {
-	// Initialize a new Fiber app
-	app := fiber.New()
-
-	// Initialize the database
-	db := database.Connect()
-
-	// Close the database connection when the app closes
-	defer db.CloseDB()
-
-	//Initialize Auth handlers
-	session := handler.NewCookieStore(handler.SessionOpts())
-	handler.NewAuth(session)
-
-	// Migrate the database
-	db.Migrate()
-
-	// Initialize the router
-	routes.Build(db.Gorm, app)
-
-	// Start the server
-	log.Fatal(app.Listen(":" + namespace.AppPort))
+	core.NewServer().Run("listen")
 }

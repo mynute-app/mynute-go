@@ -23,11 +23,7 @@
                     "application/json"
                 ],
                 "tags": [
-<<<<<<< HEAD
                     "Auth"
-=======
-                    "Authentication"
->>>>>>> d65953c1b6f204260874cff5c1a46893ca6be96b
                 ],
                 "summary": "Login",
                 "parameters": [
@@ -1167,7 +1163,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.CreatedUser"
                         }
                     },
                     "400": {
@@ -1560,6 +1556,31 @@
                 }
             }
         },
+        "DTO.CreatedUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
         "DTO.Employee": {
             "type": "object",
             "properties": {
@@ -1790,9 +1811,17 @@
         "DTO.User": {
             "type": "object",
             "properties": {
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
+                },
+                "employee_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "id": {
                     "type": "integer",
@@ -1801,10 +1830,6 @@
                 "name": {
                     "type": "string",
                     "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",

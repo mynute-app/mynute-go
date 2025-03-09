@@ -83,7 +83,7 @@ func (h *httpActions) Send(body map[string]any) *httpActions {
 		defer res.Body.Close()
 	}
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
-		h.Error = fmt.Sprintf("expected status code %d, got %d", h.expectedStatus, res.StatusCode)
+		h.Error = fmt.Sprintf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
 	}
 	if res.ContentLength != 0 && res.Body != nil {
 		bodyBytes, err := io.ReadAll(res.Body)

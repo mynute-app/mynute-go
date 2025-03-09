@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -69,10 +70,37 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 		return
 	}
 	c.Locals(keys.ModelArr, &modelArr)
-	c.Locals(keys.Dto, &dto)
-	c.Locals(keys.DtoArr, &dtoArr)
+	if hasDto := c.Locals(keys.Dto); hasDto == nil {
+		c.Locals(keys.Dto, &dto)
+	}
+	if hasDtoArr := c.Locals(keys.DtoArr); hasDtoArr == nil {
+		c.Locals(keys.DtoArr, &dtoArr)
+	}
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, b.Associations)
+}
+
+func (b *Base[MODEL, DTO]) SetDTO(c *fiber.Ctx, newDTO any) *Base[MODEL, DTO] {
+	keys := namespace.GeneralKey
+
+	// Store single DTO instance
+	c.Locals(keys.Dto, newDTO)
+
+	// Dynamically create a slice of the same type as newDTO
+	newDtoType := reflect.TypeOf(newDTO)
+
+	// Handle pointer types properly
+	if newDtoType.Kind() == reflect.Ptr {
+		newDtoType = newDtoType.Elem()
+	}
+
+	// Create an empty slice of the same type
+	newDtoArr := reflect.MakeSlice(reflect.SliceOf(newDtoType), 0, 0).Interface()
+
+	// Store the slice in Fiber locals
+	c.Locals(keys.DtoArr, &newDtoArr)
+
+	return b
 }
 
 func (b *Base[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {

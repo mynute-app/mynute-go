@@ -22,10 +22,6 @@ type CreateUser struct {
 	Password string `gorm:"not null" json:"password" example:"1VerySecurePassword!"`
 }
 
-type GeneralUserInfo struct {
-	CreateUser
-}
-
 // Fourth step: Choosing the employee.
 type User struct {
 	gorm.Model

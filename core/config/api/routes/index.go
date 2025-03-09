@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
-
+// Builds all available routes for the application
 func Build(DB *gorm.DB, App *fiber.App) {
 	Gorm := &handler.Gorm{DB: DB}
 	Auth(Gorm, App)

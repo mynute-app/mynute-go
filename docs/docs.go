@@ -1171,7 +1171,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.CreatedUser"
                         }
                     },
                     "400": {
@@ -1564,6 +1564,31 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.CreatedUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
         "DTO.Employee": {
             "type": "object",
             "properties": {
@@ -1794,9 +1819,17 @@ const docTemplate = `{
         "DTO.User": {
             "type": "object",
             "properties": {
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
+                },
+                "employee_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "id": {
                     "type": "integer",
@@ -1805,10 +1838,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1VerySecurePassword!"
                 },
                 "phone": {
                     "type": "string",

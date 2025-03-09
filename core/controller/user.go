@@ -23,11 +23,12 @@ type user_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		DTO.CreateUser	true	"User"
-//	@Success		200		{object}	DTO.User
+//	@Success		200		{object}	DTO.CreatedUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+	var DTO DTO.CreatedUser
+	return cc.SetDTO(c, &DTO).CreateOne(c)
 }
 
 // GetOneByEmail retrieves an user by email
@@ -103,7 +104,7 @@ func User(Gorm *handler.Gorm) *user_controller {
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Services", "Appointments", "Company"},
+			Associations: []string{"Appointments"},
 		},
 	}
 }

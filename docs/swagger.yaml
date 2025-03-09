@@ -193,6 +193,24 @@ definitions:
         example: Doe
         type: string
     type: object
+  DTO.CreatedUser:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
   DTO.Employee:
     properties:
       branches:
@@ -356,17 +374,20 @@ definitions:
     type: object
   DTO.User:
     properties:
+      company_id:
+        example: 1
+        type: integer
       email:
         example: john.doe@example.com
         type: string
+      employee_id:
+        example: 1
+        type: integer
       id:
         example: 1
         type: integer
       name:
         example: John
-        type: string
-      password:
-        example: 1VerySecurePassword!
         type: string
       phone:
         example: "+15555555555"
@@ -435,11 +456,7 @@ paths:
       - ApiKeyAuth: []
       summary: Login
       tags:
-<<<<<<< HEAD
       - Auth
-=======
-      - Authentication
->>>>>>> d65953c1b6f204260874cff5c1a46893ca6be96b
   /branch:
     post:
       consumes:
@@ -1168,7 +1185,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.User'
+            $ref: '#/definitions/DTO.CreatedUser'
         "400":
           description: Bad Request
           schema:
