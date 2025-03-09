@@ -53,8 +53,8 @@ func (s *Server) parallel() *Server {
 }
 
 // Runs the server in two modes: test and listen
-// @test: starts the server in a goroutine. This is useful for unit testing.
-// @listen: starts the server and listens for incoming requests. This is useful for production or normal dev.
+//	@test:		starts the server in a goroutine. This is useful for unit testing.
+//	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {
 	if in == "test" {
 		app_env := os.Getenv("APP_ENV")

@@ -1,6 +1,9 @@
 package main
 
-import "agenda-kaki-go/core"
+import (
+	"agenda-kaki-go/core"
+	_ "agenda-kaki-go/docs"
+)
 
 //	@title						Fiber Example API
 //	@version					1.0
