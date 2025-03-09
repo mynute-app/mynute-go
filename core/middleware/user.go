@@ -4,7 +4,6 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -38,7 +37,6 @@ func (um *user_middleware) VerifyEmailExists(c *fiber.Ctx) error {
 	if len(*users) > 0 {
 		return lib.MyErrors.EmailExists.SendToClient(c)
 	}
-	fmt.Printf("Email %v is unique\n", body.Email)
 	return c.Next()
 }
 
@@ -65,7 +63,6 @@ func (um *user_middleware) HashPassword(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Hashed password: %s\n", hashed)
 	body.Password = hashed
 	return c.Next()
 }
