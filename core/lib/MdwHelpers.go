@@ -27,6 +27,35 @@ func GetFromCtx[T any](c *fiber.Ctx, key string) (T, error) {
 	return zero, InvalidDataType(key)
 }
 
+// This function will parse all matching fields from source to target
+// - It will only parse fields that have the same name and type
+// - It will not parse fields that are not present in the target
+// - It will not parse fields that are not exported
+func parse(source any, target any) {
+	sourceValue := reflect.ValueOf(source).Elem()
+	targetValue := reflect.ValueOf(target).Elem()
+
+	for i := 0; i < sourceValue.NumField(); i++ {
+		sourceField := sourceValue.Field(i)
+		targetField := targetValue.FieldByName(sourceValue.Type().Field(i).Name)
+
+		if targetField.IsValid() && targetField.CanSet() && targetField.Type() == sourceField.Type() {
+			targetField.Set(sourceField)
+		}
+	}
+}
+
+func ParseBodyToModel[Model any](c *fiber.Ctx) error {
+	body, err := GetBodyFromCtx[any](c)
+	if err != nil {
+		return err
+	}
+	var model Model
+	parse(body, &model)
+	c.Locals(namespace.RequestKey.Model, &model)
+	return c.Next()
+}
+
 // SaveBody is a fiber.Handler middleware that parses
 // the request body and saves it to the Fiber context
 func SaveBodyOnCtx[Body any](c *fiber.Ctx) error {
