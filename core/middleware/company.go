@@ -25,6 +25,7 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 		auth.WhoAreYou,
 		auth.DenyUnauthorized,
 		lib.SaveBodyOnCtx[DTO.CreateCompany],
+		lib.ParseBodyToModel[model.Company],
 		cm.ValidateProps,
 	}
 }
@@ -47,22 +48,17 @@ func (cm *company_middleware) GetCompany(c *fiber.Ctx) error {
 }
 
 func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
-	body, err := lib.GetBodyFromCtx[*DTO.CreateCompany](c)
+	company, err := lib.GetFromCtx[model.Company](c, namespace.GeneralKey.Model)
 	if err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	err = lib.ValidateName(body.Name, "company")
+	err = lib.ValidateName(company.Name, "company")
 	if err != nil {
 		return res.Http400(err)
-	} else if !lib.ValidateTaxID(body.TaxID) {
+	} else if !lib.ValidateTaxID(company.TaxID) {
 		return res.Http400(errors.New("invalid tax ID"))
 	}
-	// Parse body into company model and save it into context as model
-	company := model.Company{}
-	company.Name = body.Name
-	company.TaxID = body.TaxID
-	c.Locals(namespace.GeneralKey.Model, &company)
 	return c.Next()
 }
 
