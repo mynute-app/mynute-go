@@ -36,12 +36,31 @@ func (u *User) Update(t *testing.T, body map[string]any) {
 	http.Send(body)
 }
 
+func (u *User) GetByEmail(t *testing.T, email string) map[string]any {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(namespace.QueryKey.BaseURL + "/user/email/" + email)
+	http.ExpectStatus(200)
+	http.Send(nil)
+	return http.ResBody
+}
+
+func (u *User) Delete(t *testing.T, id string) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("DELETE")
+	http.URL(namespace.QueryKey.BaseURL + "/user/" + id)
+	http.ExpectStatus(200)
+	http.Send(nil)
+}
+
 func Test_User(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	user := &User{}
 	user_created := user.Create(t)
 	user.Update(t, user_created)
+	user.GetByEmail(t, user_created["email"].(string))
+	user.Delete(t, fmt.Sprintf("%v", user_created["id"].(float64)))
 }
 
 func Test_User_Create_Success(t *testing.T) {
