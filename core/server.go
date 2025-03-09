@@ -31,6 +31,10 @@ func NewServer() *Server {
 }
 
 func (s *Server) Shutdown() {
+	// Check if server is already running
+	if s.App.Handler() == nil {
+		return
+	}
 	if err := s.App.Shutdown(); err != nil {
 		fmt.Printf("Server did not shutdown gracefully: %v", err)
 	}
@@ -47,6 +51,7 @@ func (s *Server) parallel() *Server {
 	}()
 	return s
 }
+
 // Runs the server in two modes: test and listen
 // @test: starts the server in a goroutine. This is useful for unit testing.
 // @listen: starts the server and listens for incoming requests. This is useful for production or normal dev.
@@ -56,6 +61,8 @@ func (s *Server) Run(in string) *Server {
 		if app_env != "test" {
 			log.Fatalf("Server run for tests must have APP_ENV as 'test'. Currently is '%s'.\nPlease, set APP_ENV=test at .env file", app_env)
 		}
+		s.Db.Test().Clear()
+		s.Db.Migrate()
 		s.parallel()
 	} else if in == "listen" {
 		log.Fatal(s.App.Listen(":" + namespace.AppPort))

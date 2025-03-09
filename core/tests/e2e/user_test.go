@@ -6,20 +6,13 @@ import (
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
-	"os"
 	"testing"
 )
 
-func Test_Debug_CWD(t *testing.T) {
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get working directory: %v", err)
-	}
-	fmt.Println("Current Working Directory:", dir)
+type User struct {
 }
 
-func Test_User_Create_Success(t *testing.T) {
-	server := core.NewServer().Run("test")
+func (u *User) Create(t *testing.T) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL(namespace.QueryKey.BaseURL + "/user")
@@ -31,7 +24,31 @@ func Test_User_Create_Success(t *testing.T) {
 		"password": "1VerySecurePassword!",
 		"phone":    lib.GenerateRandomStrNumber(11), // 55977747309
 	})
+	return http.ResBody
+}
+
+func (u *User) Update(t *testing.T, body map[string]any) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("PATCH")
+	user_id := body["id"].(float64)
+	http.URL(namespace.QueryKey.BaseURL + "/user/" + fmt.Sprintf("%v",user_id))
+	http.ExpectStatus(200)
+	http.Send(body)
+}
+
+func Test_User(t *testing.T) {
+	server := core.NewServer().Run("test")
 	defer server.Shutdown()
+	user := &User{}
+	user_created := user.Create(t)
+	user.Update(t, user_created)
+}
+
+func Test_User_Create_Success(t *testing.T) {
+	server := core.NewServer().Run("test")
+	user := &User{}
+	user.Create(t)
+	server.Shutdown()
 }
 
 func Test_Login_Success(t *testing.T) {
