@@ -139,11 +139,11 @@ func (cc *auth_controller) Register(c *fiber.Ctx) error {
 //	@Router			/auth/verify-email/{id}/{code} [get]
 func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	id := c.Query("id")
-	// validationCode := c.Query("code")
+	id := c.Params("id")
+	// validationCode := c.Params("code")
 	var user model.User
-	if err := cc.Request.Gorm.GetOneBy("id", id, &user, []string{}); err != nil {
-		return lib.MyErrors.InterfaceDataNotFound.SendToClient(c)
+	if err := cc.Request.Gorm.GetOneBy("id", id, &user, UserAssociations); err != nil {
+		return lib.MyErrors.UserNotFoundById.SendToClient(c)
 	}
 	// if userDatabase.VerificationCode != validationCode {
 	// 	return lib.MyErrors.InvalidLogin.SendToClient(c)
@@ -152,7 +152,7 @@ func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 		return lib.MyErrors.UserNotVerified.SendToClient(c)
 	}
 	user.Verified = true
-	if err := cc.Request.Gorm.UpdateOneById(id, &user, &user, cc.Associations); err != nil {
+	if err := cc.Request.Gorm.UpdateOneById(id, &user, &user, UserAssociations); err != nil {
 		return err
 	}
 	return nil

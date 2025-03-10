@@ -25,7 +25,12 @@ type CreateUser struct {
 // Fourth step: Choosing the employee.
 type User struct {
 	gorm.Model
-	CreateUser
+	Name     string `gorm:"not null" json:"name" example:"John"`
+	Surname  string `json:"surname" example:"Doe"`
+	Role     string `json:"role" example:"user"`
+	Email    string `gorm:"not null;unique" json:"email" example:"john.doe@example.com"`
+	Phone    string `gorm:"not null;unique" json:"phone" example:"+15555555555"`
+	Password string `gorm:"not null" json:"password" example:"1VerySecurePassword!"`
 	Tags             []string      `gorm:"type:json" json:"tags"` // Tags for the user
 	VerificationCode string        `json:"verification_code"`
 	Verified         bool          `gorm:"not null" json:"verified"`

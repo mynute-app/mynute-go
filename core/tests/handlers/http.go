@@ -15,6 +15,7 @@ type httpActions struct {
 	Error          string
 	Status         int
 	ResBody        map[string]any
+	ResHeaders     map[string][]string
 	url            string
 	method         string
 	expectedStatus int
@@ -54,7 +55,7 @@ func (h *httpActions) Clear() {
 // and returns the response. If an error occurs, it sets the error message.
 // The response body is stored in ResBody, and the status code is stored in Status.
 // It will defer res.Body.Close() to ensure the response body is closed.
-func (h *httpActions) Send(body map[string]any) *httpActions {
+func (h *httpActions) Send(body any) *httpActions {
 	h.Error = ""
 	h.test.Logf("sending %s request to %s", h.method, h.url)
 	h.test.Logf("body: %+v", body)
@@ -85,6 +86,7 @@ func (h *httpActions) Send(body map[string]any) *httpActions {
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
 		h.Error = fmt.Sprintf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
 	}
+	h.ResHeaders = res.Header
 	if res.ContentLength != 0 && res.Body != nil {
 		bodyBytes, err := io.ReadAll(res.Body)
 		if err != nil {

@@ -6,7 +6,7 @@ type LoginUser struct {
 }
 
 type CreatedUser struct {
-	ID      uint   `json:"id" example:"1"`
+	ID      uint `json:"id" example:"1"`
 	Name    string `json:"name" example:"John"`
 	Surname string `json:"surname" example:"Doe"`
 	Email   string `json:"email" example:"john.doe@example.com"`
@@ -22,11 +22,11 @@ type CreateUser struct {
 }
 
 type User struct {
-	ID uint `json:"id" example:"1"`
-	Name    string `json:"name" example:"John"`
-	Surname string `json:"surname" example:"Doe"`
-	Email   string `json:"email" example:"john.doe@example.com"`
-	Phone   string `json:"phone" example:"+15555555555"`
+	ID               uint   `json:"id" example:"1"`
+	Name             string `json:"name" example:"John"`
+	Surname          string `json:"surname" example:"Doe"`
+	Email            string `json:"email" example:"john.doe@example.com"`
+	Phone            string `json:"phone" example:"+15555555555"`
 	VerificationCode string `json:"verification_code" example:"123456"`
 	Verified         bool   `json:"verified" example:"false"`
 	EmployeeID       uint   `json:"employee_id" example:"1"`
