@@ -38,6 +38,7 @@ type ErrorTypes struct {
 	InvalidEmail          ErrorStruct
 	CompanyIDNotFound     ErrorStruct
 	Unauthroized          ErrorStruct
+	UserNotFoundById        ErrorStruct
 }
 
 // MyErrors defines a list of predefined errors
@@ -89,5 +90,11 @@ var MyErrors = ErrorTypes{
 		DescriptionBr: "Você não está autorizado a acessar este recurso",
 		ID:            8,
 		HTTPStatus:    401,
+	},
+	UserNotFoundById: ErrorStruct{
+		DescriptionEn: "Could not find user by ID",
+		DescriptionBr: "Não foi possível encontrar o usuário pelo ID",
+		ID:            9,
+		HTTPStatus:    404,
 	},
 }

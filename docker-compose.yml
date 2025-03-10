@@ -6,8 +6,8 @@ services:
     image: postgres:17.0
     restart: always
     volumes:
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh 
       - ./postgres-data:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -15,6 +15,7 @@ services:
       APP_ENV: ${APP_ENV}
     ports:
       - "${POSTGRES_PORT}:5432"
+    command: [ "bash", "-c", "docker-entrypoint.sh postgres & sleep 5 && bash /docker-entrypoint-initdb.d/init-db.sh && wait" ]
 
   pgadmin:
     container_name: pgadmin4-kaki

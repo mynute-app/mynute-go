@@ -124,33 +124,37 @@ func (cc *auth_controller) Register(c *fiber.Ctx) error {
 	return nil
 }
 
+// Verify the user's email
+//
+//	@Summary		Verify email
+//	@Description	Verify an user's email
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	query	string	true	"User ID"
+//	@Param			code	query	string	true	"Validation code"
+//	@Success		200
+//	@Failure		401	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/auth/verify-email/{id}/{code} [get]
 func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 	cc.SetAction(c)
-	userId := c.Query("id")
-	validationCode := c.Query("code")
-
-	email := handler.NewGoMailService(&handler.Configs{})
-
-	err := email.SendEmail(handler.EmailRequestTest)
-	if err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
+	id := c.Query("id")
+	// validationCode := c.Query("code")
+	var user model.User
+	if err := cc.Request.Gorm.GetOneBy("id", id, &user, []string{}); err != nil {
+		return lib.MyErrors.InterfaceDataNotFound.SendToClient(c)
 	}
-	return nil
-	var userDatabase model.User
-	if err := cc.Request.Gorm.GetOneBy("id", userId, &userDatabase, []string{}); err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
+	// if userDatabase.VerificationCode != validationCode {
+	// 	return lib.MyErrors.InvalidLogin.SendToClient(c)
+	// }
+	if user.Verified {
+		return lib.MyErrors.UserNotVerified.SendToClient(c)
 	}
-	if userDatabase.VerificationCode != validationCode {
-		cc.AutoReqActions.ActionFailed(401, errors.New("invalid validation code"))
+	user.Verified = true
+	if err := cc.Request.Gorm.UpdateOneById(id, &user, &user, cc.Associations); err != nil {
+		return err
 	}
-	if userDatabase.Verified {
-		cc.AutoReqActions.ActionFailed(409, errors.New("account already verified"))
-	}
-	userDatabase.Verified = true
-	if err := cc.Request.Gorm.UpdateOneById(userId, model.User{}, &userDatabase, []string{}); err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
-	}
-	cc.AutoReqActions.ActionSuccess(200, nil, nil)
 	return nil
 }
 
