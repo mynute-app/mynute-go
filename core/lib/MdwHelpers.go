@@ -69,12 +69,12 @@ func SaveBodyOnCtx[Body any](c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	c.Locals(namespace.RequestKey.Body_Parsed, &body)
+	c.Locals(namespace.GeneralKey.Model, &body)
 	return c.Next()
 }
 
 func GetBodyFromCtx[Body any](c *fiber.Ctx) (Body, error) {
-	return GetFromCtx[Body](c, namespace.RequestKey.Body_Parsed)
+	return GetFromCtx[Body](c, namespace.GeneralKey.Model)
 }
 
 func GetClaimsFromCtx(c *fiber.Ctx) (map[string]interface{}, error) {
