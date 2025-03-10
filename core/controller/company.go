@@ -26,7 +26,7 @@ type company_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"
-//	@Success		200		{object}	DTO.CreateCompany
+//	@Success		200		{object}	DTO.Company
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {

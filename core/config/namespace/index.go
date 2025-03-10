@@ -14,7 +14,6 @@ type GeneralStruct struct {
 
 type RequestStruct struct {
 	Body_Byte   string
-	Body_Parsed string
 	Path        string
 	Auth_Token  string
 	Auth_Claims string
@@ -22,7 +21,6 @@ type RequestStruct struct {
 
 var RequestKey = RequestStruct{
 	Body_Byte:   "req_body_byte",
-	Body_Parsed: "req_body_parsed",
 	Path:        "req_path",
 	Auth_Token:  "req_auth_token",
 	Auth_Claims: "req_auth_claims",

@@ -8,11 +8,11 @@ import (
 )
 
 func ParseBodyToContext[T any](c *fiber.Ctx, model T) (int, error) {
+	bodyKey := namespace.GeneralKey.Model
 	// Ignore in case the body has been already parsed into context.
-	if b := c.Locals(namespace.RequestKey.Body_Parsed); b != nil {
+	if b := c.Locals(bodyKey); b != nil {
 		return 0, nil
 	}
-	bodyKey := namespace.RequestKey.Body_Parsed
 	method := c.Method()
 	if method != "POST" && method != "PUT" && method != "PATCH" {
 		c.Locals(bodyKey, model)

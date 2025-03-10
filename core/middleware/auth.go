@@ -3,7 +3,6 @@ package middleware
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
@@ -37,7 +36,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 	// Get login body from context
-	login, err := lib.GetFromCtx[*DTO.LoginUser](c, namespace.RequestKey.Body_Parsed)
+	login, err := lib.GetBodyFromCtx[*DTO.LoginUser](c)
 	if err != nil {
 		return err
 	}

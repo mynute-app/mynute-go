@@ -614,7 +614,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CreateCompany'
+            $ref: '#/definitions/DTO.Company'
         "400":
           description: Bad Request
           schema:

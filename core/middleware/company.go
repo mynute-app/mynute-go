@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
@@ -24,8 +23,7 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 	return []fiber.Handler{
 		auth.WhoAreYou,
 		auth.DenyUnauthorized,
-		lib.SaveBodyOnCtx[DTO.CreateCompany],
-		lib.ParseBodyToModel[model.Company],
+		lib.SaveBodyOnCtx[model.Company],
 		cm.ValidateProps,
 	}
 }
@@ -48,7 +46,7 @@ func (cm *company_middleware) GetCompany(c *fiber.Ctx) error {
 }
 
 func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
-	company, err := lib.GetFromCtx[model.Company](c, namespace.GeneralKey.Model)
+	company, err := lib.GetBodyFromCtx[*model.Company](c)
 	if err != nil {
 		return err
 	}

@@ -257,7 +257,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateCompany"
+                            "$ref": "#/definitions/DTO.Company"
                         }
                     },
                     "400": {
