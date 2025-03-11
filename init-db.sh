@@ -3,25 +3,6 @@ set -e
 
 echo "Initializing PostgreSQL database script..."
 
-# # Maximum time to wait for PostgreSQL to be ready (in seconds)
-# MAX_WAIT=10
-# SECONDS_WAITED=0
-
-# # Wait for PostgreSQL to be ready
-# echo "Waiting for PostgreSQL to start..."
-# until pg_isready -h localhost -p 5432 -U "$POSTGRES_USER"; do
-#   sleep 5
-#   SECONDS_WAITED=$((SECONDS_WAITED + 2))
-#   echo "Still waiting for PostgreSQL... ($SECONDS_WAITED seconds elapsed)"
-  
-#   if [ "$SECONDS_WAITED" -ge "$MAX_WAIT" ]; then
-#     echo "❌   Error: PostgreSQL did not start within $MAX_WAIT seconds. Exiting."
-#     exit 1
-#   fi
-# done
-
-# echo "✅   PostgreSQL is ready!"
-
 # Ensure the main database exists before running any commands
 echo "Checking if main database '$POSTGRES_DB' exists..."
 MAIN_DB_EXISTS=$(psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'")
