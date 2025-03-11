@@ -119,7 +119,6 @@ func (h *httpActions) Send(body any) *httpActions {
 			h.ResBody = response
 		}
 	}
-	h.test.Logf("response: %+v", h.ResBody)
 	if h.Error != "" {
 		h.test.Fatalf(h.Error)
 	}

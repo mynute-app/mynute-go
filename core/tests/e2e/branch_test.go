@@ -32,6 +32,7 @@ func Test_Branch(t *testing.T) {
 	branch.Update(t, 200)
 	branch.GetById(t, 200)
 	branch.GetByName(t, 200)
+	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
 

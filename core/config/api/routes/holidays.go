@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Holidays(Gorm *handler.Gorm, App *fiber.App) {
+func Holidays(Gorm *handler.Gorm, App fiber.Router) {
 	ce := controller.Holidays(Gorm)
 	r := App.Group("/holidays")
 	r.Post("/", ce.CreateHoliday)

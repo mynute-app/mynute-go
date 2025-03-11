@@ -3,7 +3,6 @@ package core
 import (
 	"agenda-kaki-go/core/config/api/routes"
 	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
@@ -45,10 +44,16 @@ func (s *Server) Shutdown() {
 
 func (s *Server) parallel() *Server {
 	go func() {
-		if err := s.App.Listen(":" + namespace.AppPort); err != nil {
-			log.Fatalf("Server failed to start: %v", err)
-		}
+		s.listen()
 	}()
+	return s
+}
+
+func (s *Server) listen() *Server {
+	app_port := os.Getenv("APP_PORT")
+	if err := s.App.Listen(":" + app_port); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 	return s
 }
 
@@ -65,7 +70,9 @@ func (s *Server) Run(in string) *Server {
 		s.Db.Migrate()
 		s.parallel()
 	} else if in == "listen" {
-		log.Fatal(s.App.Listen(":" + namespace.AppPort))
+		s.listen()
+	} else {
+		log.Fatalf("Server run mode not recognized. Please, use 'test' or 'listen' as argument.")
 	}
 	return s
 }

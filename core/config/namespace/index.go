@@ -1,6 +1,9 @@
 package namespace
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type GeneralStruct struct {
 	Name         string
@@ -42,7 +45,7 @@ type QueryStruct struct {
 	BaseURL   string
 }
 
-var AppPort = "4000"
+var AppPort = os.Getenv("APP_PORT")
 
 var QueryKey = QueryStruct{
 	Id:        "id",

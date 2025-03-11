@@ -15,21 +15,21 @@ until pg_isready -h localhost -p 5432 -U "$POSTGRES_USER"; do
   echo "Still waiting for PostgreSQL... ($SECONDS_WAITED seconds elapsed)"
   
   if [ "$SECONDS_WAITED" -ge "$MAX_WAIT" ]; then
-    echo "❌ Error: PostgreSQL did not start within $MAX_WAIT seconds. Exiting."
+    echo "❌   Error: PostgreSQL did not start within $MAX_WAIT seconds. Exiting."
     exit 1
   fi
 done
 
-echo "✅ PostgreSQL is ready!"
+echo "✅   PostgreSQL is ready!"
 
 # Ensure the main database exists before running any commands
 echo "Checking if main database '$POSTGRES_DB' exists..."
 MAIN_DB_EXISTS=$(psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'")
 
 if [ "$MAIN_DB_EXISTS" == "1" ]; then
-  echo "✅ Main database '$POSTGRES_DB' already exists."
+  echo "✅   Main database '$POSTGRES_DB' already exists."
 else
-  echo "🚀 Creating main database: $POSTGRES_DB"
+  echo "🚀   Creating main database: $POSTGRES_DB"
   psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$POSTGRES_DB\";"
 fi
 
@@ -41,13 +41,13 @@ if [ "$APP_ENV" == "test" ]; then
   TEST_DB_EXISTS=$(psql -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$TEST_DB'")
 
   if [ "$TEST_DB_EXISTS" == "1" ]; then
-    echo "✅ Test database '$TEST_DB' already exists. Skipping creation."
+    echo "✅   Test database '$TEST_DB' already exists. Skipping creation."
   else
-    echo "🚀 Creating test database: $TEST_DB"
+    echo "🚀   Creating test database: $TEST_DB"
     psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$TEST_DB\";"
   fi
 else
   echo "APP_ENV is not 'test'. Skipping test database creation."
 fi
 
-echo "🎉 Database initialization script complete."
+echo "🎉   Database initialization script complete."

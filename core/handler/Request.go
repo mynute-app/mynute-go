@@ -3,7 +3,6 @@ package handler
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"log"
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
@@ -210,7 +209,6 @@ func (ac *AutoReqActions) DeleteOneById() {
 		return
 	}
 
-	log.Printf("Deleted record with ID: %s", id)
 	ac.ActionSuccess(200, nil, nil)
 }
 

@@ -8,7 +8,6 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 	"errors"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/shareed2k/goth_fiber"
@@ -85,7 +84,6 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("User %v logged in\n", user.Email)
 	c.Response().Header.Set("Authorization", token)
 	return nil
 }

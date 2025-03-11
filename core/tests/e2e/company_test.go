@@ -63,6 +63,7 @@ func (c *Company) GetById(t *testing.T, status int) map[string]any {
 	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
 	http.ExpectStatus(status)
 	http.Send(nil)
+	t.Log(http.ResBody)
 	return http.ResBody
 }
 
