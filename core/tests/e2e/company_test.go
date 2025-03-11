@@ -20,19 +20,19 @@ func Test_Company(t *testing.T) {
 	user.VerifyEmail(t)
 	user.Login(t)
 	company := &Company{}
-	company.Create(t, user)
-	company.Update(t, map[string]any{
-		"name": "Updated Company Name",
-	})
-	company.Get(t)
-	company.Delete(t)
+	company.Create(t, 200, user)
+	company.created.Name = "Updated Company Name"
+	company.Update(t, 200)
+	company.GetById(t, 200)
+	company.GetByName(t, 200)
+	company.Delete(t, 200)
 }
 
-func (c *Company) Create(t *testing.T, user *User) map[string]any {
+func (c *Company) Create(t *testing.T, status int, user *User) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/company")
-	http.ExpectStatus(200)
+	http.ExpectStatus(status)
 	http.Header("Authorization", user.auth_token)
 	http.Send(model.CreateCompany{
 		Name:  "Test Company",
@@ -46,28 +46,37 @@ func (c *Company) Create(t *testing.T, user *User) map[string]any {
 	return http.ResBody
 }
 
-func (c *Company) Get(t *testing.T) map[string]any {
+func (c *Company) GetByName(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
-	http.ExpectStatus(200)
+	http.URL(fmt.Sprintf("/company/name/%s", c.created.Name))
+	http.ExpectStatus(status)
 	http.Send(nil)
 	return http.ResBody
 }
 
-func (c *Company) Update(t *testing.T, data map[string]any) map[string]any {
+func (c *Company) GetById(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("PATCH")
+	http.Method("GET")
 	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
-	http.ExpectStatus(200)
-	http.Send(data)
+	http.ExpectStatus(status)
+	http.Send(nil)
 	return http.ResBody
 }
 
-func (c *Company) Delete(t *testing.T) {
+func (c *Company) Update(t *testing.T, status int) map[string]any {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("PATCH")
+	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
+	http.ExpectStatus(status)
+	http.Send(c.created)
+	return http.ResBody
+}
+
+func (c *Company) Delete(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
-	http.ExpectStatus(200)
+	http.ExpectStatus(status)
 	http.Send(nil)
 }

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"log"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -122,8 +123,15 @@ func (ac *AutoReqActions) GetBy(paramKey string) {
 		}
 		ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	} else {
+		// Get the parameter value from the context
 		paramVal := ac.ctx.Params(paramKey)
-		if err := ac.req.Gorm.GetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
+		// Decode URL-encoded characters
+		cleanedParamVal, err := url.QueryUnescape(paramVal)
+		if err != nil {
+			ac.ActionFailed(500, err)
+			return
+		}
+		if err := ac.req.Gorm.GetOneBy(paramKey, cleanedParamVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
 			ac.ActionFailed(404, err)
 			return
 		}
