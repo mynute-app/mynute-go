@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Initializing PostgreSQL database script..."
+echo ">>> Initializing PostgreSQL database script <<<"
 
 # Ensure the main database exists before running any commands
 echo "Checking if main database '$POSTGRES_DB' exists..."
