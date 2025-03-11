@@ -22,6 +22,7 @@ type httpActions struct {
 	expectedStatus int
 	test           *testing.T
 	httpRes        *http.Response
+	headers        http.Header // Store headers before sending the request
 }
 
 func (c *HttpClient) SetTest(t *testing.T) *httpActions {
@@ -37,7 +38,10 @@ func (h *httpActions) Method(method string) *httpActions {
 }
 
 func (h *httpActions) Header(key, value string) *httpActions {
-	h.httpRes.Header.Set(key, value)
+	if h.headers == nil {
+		h.headers = http.Header{}
+	}
+	h.headers.Set(key, value)
 	return h
 }
 
@@ -74,11 +78,16 @@ func (h *httpActions) Send(body any) *httpActions {
 	}
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
 	req, err := http.NewRequest(h.method, h.url, bodyBuffer)
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		h.Error = fmt.Sprintf("failed to create request: %v", err)
 		h.test.Fatalf(h.Error)
 		return nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+	for key, values := range h.headers {
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
 	}
 	client := &http.Client{}
 	res, err := client.Do(req)
