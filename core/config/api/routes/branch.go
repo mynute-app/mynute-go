@@ -12,6 +12,7 @@ func Branch(Gorm *handler.Gorm, r fiber.Router) {
 	b := r.Group("/branch")
 	b.Post("/", cb.CreateBranch)          // ok
 	b.Get("/:id", cb.GetBranchById)       // ok
+	b.Get("/name/:name", cb.GetBranchByName) // ok
 	b.Patch("/:id", cb.UpdateBranchById)  // ok
 	b.Delete("/:id", cb.DeleteBranchById) // ok
 }

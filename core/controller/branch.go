@@ -43,6 +43,20 @@ func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
+// GetBranchByName retrieves a branch by name
+//
+//	@Summary		Get branch by name
+//	@Description	Retrieve a branch by its name
+//	@Tags			Branch
+//	@Param			name	path	string	true	"Branch Name"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Branch
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/branch/name/{name} [get]
+func (cc *branch_controller) GetBranchByName(c *fiber.Ctx) error {
+	return cc.GetBy("name", c)
+}
+
 // UpdateBranch updates a branch by ID
 //
 //	@Summary		Update branch

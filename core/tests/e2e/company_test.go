@@ -10,17 +10,19 @@ import (
 
 type Company struct {
 	created model.Company
+	auth_token string
 }
 
 func Test_Company(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	user := &User{}
-	user.Create(t)
-	user.VerifyEmail(t)
-	user.Login(t)
+	user.Create(t, 200)
+	user.VerifyEmail(t, 200)
+	user.Login(t, 200)
 	company := &Company{}
-	company.Create(t, 200, user)
+	company.auth_token = user.auth_token
+	company.Create(t, 200)
 	company.created.Name = "Updated Company Name"
 	company.Update(t, 200)
 	company.GetById(t, 200)
@@ -28,12 +30,12 @@ func Test_Company(t *testing.T) {
 	company.Delete(t, 200)
 }
 
-func (c *Company) Create(t *testing.T, status int, user *User) map[string]any {
+func (c *Company) Create(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/company")
 	http.ExpectStatus(status)
-	http.Header("Authorization", user.auth_token)
+	http.Header("Authorization", c.auth_token)
 	http.Send(model.CreateCompany{
 		Name:  "Test Company",
 		TaxID: "41915230000168",

@@ -19,25 +19,27 @@ func Test_User(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	user := &User{}
-	user.Create(t)
-	user.VerifyEmail(t)
-	user.Login(t)
-	user.Update(t, map[string]any{})
-	user.GetByEmail(t)
-	user.Delete(t)
+	user.Create(t, 200)
+	user.VerifyEmail(t, 200)
+	user.Login(t, 200)
+	user.created.Name = "Updated User Name"
+	user.created.Surname = "Updated User Surname"
+	user.Update(t, 200)
+	user.GetByEmail(t, 200)
+	user.Delete(t, 200)
 }
 
-func (u *User) Create(t *testing.T) map[string]any {
+func (u *User) Create(t *testing.T, s int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/user")
-	http.ExpectStatus(200)
-	http.Send(map[string]any{
-		"email":    "test@email.com",
-		"name":     lib.GenerateRandomName("User Name"),
-		"surname":  lib.GenerateRandomName("User Surname"),
-		"password": "1VerySecurePassword!",
-		"phone":    lib.GenerateRandomStrNumber(11), // 55977747309
+	http.ExpectStatus(s)
+	http.Send(model.CreateUser{
+		Email:    "test@email.com",
+		Name:     lib.GenerateRandomName("User Name"),
+		Surname:  lib.GenerateRandomName("User Surname"),
+		Password: "1VerySecurePassword!",
+		Phone:    lib.GenerateRandomStrNumber(11), // 55977747309
 	})
 
 	id := fmt.Sprintf("%v", http.ResBody["id"].(float64))
@@ -59,44 +61,44 @@ func (u *User) Create(t *testing.T) map[string]any {
 	return http.ResBody
 }
 
-func (u *User) Update(t *testing.T, body map[string]any) {
+func (u *User) Update(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
 	http.URL("/user/" + fmt.Sprintf("%v", u.created.ID))
-	http.ExpectStatus(200)
-	http.Send(body)
+	http.ExpectStatus(s)
+	http.Send(u.created)
 }
 
-func (u *User) GetByEmail(t *testing.T) map[string]any {
+func (u *User) GetByEmail(t *testing.T, s int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
 	http.URL("/user/email/" + u.created.Email)
-	http.ExpectStatus(200)
+	http.ExpectStatus(s)
 	http.Send(nil)
 	return http.ResBody
 }
 
-func (u *User) Delete(t *testing.T) {
+func (u *User) Delete(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/user/%v", u.created.ID))
-	http.ExpectStatus(200)
+	http.ExpectStatus(s)
 	http.Send(nil)
 }
 
-func (u *User) VerifyEmail(t *testing.T) {
+func (u *User) VerifyEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/auth/verify-email/%v/%s", u.created.ID, "12345"))
-	http.ExpectStatus(200)
+	http.ExpectStatus(s)
 	http.Send(nil)
 }
 
-func (u *User) Login(t *testing.T) {
+func (u *User) Login(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/auth/login")
-	http.ExpectStatus(200)
+	http.ExpectStatus(s)
 	http.Send(map[string]any{
 		"email":    u.created.Email,
 		"password": "1VerySecurePassword!",
@@ -112,7 +114,7 @@ func (u *User) Login(t *testing.T) {
 func Test_User_Create_Success(t *testing.T) {
 	server := core.NewServer().Run("test")
 	user := &User{}
-	user.Create(t)
+	user.Create(t, 200)
 	server.Shutdown()
 }
 
