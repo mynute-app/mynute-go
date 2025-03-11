@@ -71,12 +71,15 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - "${GRAFANA_ALIAS_PORT}:${GRAFANA_PORT}"
     depends_on:
       - prometheus
     networks:
       - kaki-network
-
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      
 networks:
   kaki-network:
 
