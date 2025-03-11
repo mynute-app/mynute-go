@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -46,8 +46,10 @@ func (h *httpActions) Header(key, value string) *httpActions {
 }
 
 func (h *httpActions) URL(url string) *httpActions {
-	fullURL := fmt.Sprintf(namespace.QueryKey.BaseURL + url)
-	h.url = fullURL
+	AppPort := os.Getenv("APP_PORT")
+	BaseUrl := fmt.Sprintf("http://localhost:%s", AppPort)
+	FullUrl := fmt.Sprintf(BaseUrl + url)
+	h.url = FullUrl
 	return h
 }
 

@@ -73,10 +73,10 @@ func (cc *auth_controller) Login(c *fiber.Ctx) error {
 	var user model.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
 		// cc.AutoReqActions.ActionFailed(404, err)
-		return lib.MyErrors.InvalidLogin.SendToClient(c)
+		return lib.Error.Auth.InvalidLogin.SendToClient(c)
 	}
 	if !handler.ComparePassword(user.Password, body.Password) {
-		return lib.MyErrors.InvalidLogin.SendToClient(c)
+		return lib.Error.Auth.InvalidLogin.SendToClient(c)
 	}
 	jwt := handler.JWT(c)
 	claims := jwt.CreateClaims(user)
@@ -141,13 +141,13 @@ func (cc *auth_controller) VerifyEmail(c *fiber.Ctx) error {
 	// validationCode := c.Params("code")
 	var user model.User
 	if err := cc.Request.Gorm.GetOneBy("id", id, &user, UserAssociations); err != nil {
-		return lib.MyErrors.UserNotFoundById.SendToClient(c)
+		return lib.Error.User.NotFoundById.SendToClient(c)
 	}
 	// if userDatabase.VerificationCode != validationCode {
 	// 	return lib.MyErrors.InvalidLogin.SendToClient(c)
 	// }
 	if user.Verified {
-		return lib.MyErrors.UserNotVerified.SendToClient(c)
+		return lib.Error.User.NotVerified.SendToClient(c)
 	}
 	user.Verified = true
 	if err := cc.Request.Gorm.UpdateOneById(id, &user, &user, UserAssociations); err != nil {

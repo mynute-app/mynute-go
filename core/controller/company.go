@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +31,30 @@ type company_controller struct {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+	res := &lib.SendResponse{Ctx: c}
+	auth_claims, err := lib.GetClaimsFromCtx(c)
+	if err != nil {
+		return err
+	}
+	user_id, ok := auth_claims["id"].(string)
+	if !ok {
+		return err
+	}
+	user := &model.User{};
+	if err := cc.Request.Gorm.GetOneBy("id", user_id, user, nil); err != nil {
+		return err
+	}
+	company := &model.Company{}
+	c.BodyParser(company)
+	if err := cc.Request.Gorm.DB.Create(company).Error; err != nil {
+		return res.Http400(err)
+	}
+	user.CompanyID = company.ID
+	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
+		return err
+	}
+	res.DTO(200, company, DTO.Company{})
+	return nil
 }
 
 // GetOneById retrieves a company by ID

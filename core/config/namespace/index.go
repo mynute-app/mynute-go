@@ -1,10 +1,5 @@
 package namespace
 
-import (
-	"fmt"
-	"os"
-)
-
 type GeneralStruct struct {
 	Name         string
 	Model        string
@@ -42,15 +37,11 @@ var GeneralKey = GeneralStruct{
 type QueryStruct struct {
 	Id        string
 	CompanyId string
-	BaseURL   string
 }
-
-var AppPort = os.Getenv("APP_PORT")
 
 var QueryKey = QueryStruct{
 	Id:        "id",
 	CompanyId: "companyId",
-	BaseURL:   fmt.Sprintf("http://localhost:%s", AppPort),
 }
 
 type TypeStruct struct {

@@ -1,6 +1,5 @@
 .env
-pgadmin-data
-postgres-data
+*-data
 tmp
 __debug
 .exe

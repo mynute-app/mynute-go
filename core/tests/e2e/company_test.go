@@ -23,6 +23,7 @@ func Test_Company(t *testing.T) {
 	company := &Company{}
 	company.auth_token = user.auth_token
 	company.Create(t, 200)
+	user.GetByEmail(t, 200)
 	company.created.Name = "Updated Company Name"
 	company.Update(t, 200)
 	company.GetById(t, 200)

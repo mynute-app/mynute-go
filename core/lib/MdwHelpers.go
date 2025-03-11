@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // GetFromCtx retrieves an interface from Fiber context
@@ -77,8 +78,8 @@ func GetBodyFromCtx[Body any](c *fiber.Ctx) (Body, error) {
 	return GetFromCtx[Body](c, namespace.GeneralKey.Model)
 }
 
-func GetClaimsFromCtx(c *fiber.Ctx) (map[string]interface{}, error) {
-	return GetFromCtx[map[string]interface{}](c, namespace.RequestKey.Auth_Claims)
+func GetClaimsFromCtx(c *fiber.Ctx) (jwt.MapClaims, error) {
+	return GetFromCtx[jwt.MapClaims](c, namespace.RequestKey.Auth_Claims)
 }
 
 func InterfaceDataNotFound(interfaceName string) error {
@@ -99,7 +100,7 @@ func MatchUserTokenWithCompanyID(c *fiber.Ctx) error {
 	}
 	companyID, ok := body["company_id"]
 	if !ok {
-		return MyErrors.CompanyIDNotFound.SendToClient(c)
+		return Error.Company.IdNotFound.SendToClient(c)
 	}
 	claims, err := GetClaimsFromCtx(c)
 	if err != nil {
@@ -107,10 +108,10 @@ func MatchUserTokenWithCompanyID(c *fiber.Ctx) error {
 	}
 	userCompanyID, ok := claims["company_id"]
 	if !ok {
-		return MyErrors.CompanyIDNotFound.SendToClient(c)
+		return Error.Company.IdNotFound.SendToClient(c)
 	}
 	if companyID != userCompanyID {
-		return MyErrors.Unauthroized.SendToClient(c)
+		return Error.User.Unauthroized.SendToClient(c)
 	}
 	return c.Next()
 }

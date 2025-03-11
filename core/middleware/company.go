@@ -24,6 +24,8 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 		auth.WhoAreYou,
 		auth.DenyUnauthorized,
 		lib.SaveBodyOnCtx[model.Company],
+		cm.CheckUserAvailability,
+		cm.DenyCnpj,
 		cm.ValidateProps,
 	}
 }
@@ -56,6 +58,36 @@ func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
 		return res.Http400(err)
 	} else if !lib.ValidateTaxID(company.TaxID) {
 		return res.Http400(errors.New("invalid tax ID"))
+	}
+	return c.Next()
+}
+
+func (cm *company_middleware) CheckUserAvailability(c *fiber.Ctx) error {
+	companies := []model.Company{}
+	user, err := lib.GetClaimsFromCtx(c)
+	if err != nil {
+		return err
+	}
+	userID, ok := user["id"].(float64)
+	if !ok {
+		return errors.New("invalid token")
+	}
+	cm.Gorm.DB.Where("user_id = ?", uint(userID)).Find(&companies)
+	if len(companies) > 0 {
+		return lib.Error.User.CompanyLimit.SendToClient(c)
+	}
+	return c.Next()
+}
+
+func (cm *company_middleware) DenyCnpj(c *fiber.Ctx) error {
+	company, err := lib.GetBodyFromCtx[*model.Company](c)
+	if err != nil {
+		return err
+	}
+	companies := []model.Company{}
+	cm.Gorm.DB.Where("tax_id = ?", company.TaxID).Find(&companies)
+	if len(companies) > 0 {
+		return lib.Error.Company.CnpjAlreadyExists.SendToClient(c)
 	}
 	return c.Next()
 }

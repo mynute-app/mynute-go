@@ -35,7 +35,7 @@ func (um *user_middleware) VerifyEmailExists(c *fiber.Ctx) error {
 		return err
 	}
 	if len(*users) > 0 {
-		return lib.MyErrors.EmailExists.SendToClient(c)
+		return lib.Error.User.EmailExists.SendToClient(c)
 	}
 	return c.Next()
 }
@@ -46,10 +46,10 @@ func (um *user_middleware) ValidateProps(c *fiber.Ctx) error {
 		return err
 	}
 	if err := lib.ValidateName(body.Name, "user"); err != nil {
-		return lib.MyErrors.InvalidUserName.SendToClient(c)
+		return lib.Error.User.InvalidUserName.SendToClient(c)
 	}
 	if valid := lib.ValidateEmail(body.Email); !valid {
-		return lib.MyErrors.InvalidEmail.SendToClient(c)
+		return lib.Error.User.InvalidEmail.SendToClient(c)
 	}
 	return c.Next()
 }
