@@ -3,7 +3,6 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -31,7 +30,7 @@ func Test_User(t *testing.T) {
 func (u *User) Create(t *testing.T) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(namespace.QueryKey.BaseURL + "/user")
+	http.URL("/user")
 	http.ExpectStatus(200)
 	http.Send(map[string]any{
 		"email":    "test@email.com",
@@ -63,7 +62,7 @@ func (u *User) Create(t *testing.T) map[string]any {
 func (u *User) Update(t *testing.T, body map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL(namespace.QueryKey.BaseURL + "/user/" + fmt.Sprintf("%v", u.created.ID))
+	http.URL("/user/" + fmt.Sprintf("%v", u.created.ID))
 	http.ExpectStatus(200)
 	http.Send(body)
 }
@@ -71,7 +70,7 @@ func (u *User) Update(t *testing.T, body map[string]any) {
 func (u *User) GetByEmail(t *testing.T) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(namespace.QueryKey.BaseURL + "/user/email/" + u.created.Email)
+	http.URL("/user/email/" + u.created.Email)
 	http.ExpectStatus(200)
 	http.Send(nil)
 	return http.ResBody
@@ -80,7 +79,7 @@ func (u *User) GetByEmail(t *testing.T) map[string]any {
 func (u *User) Delete(t *testing.T) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(namespace.QueryKey.BaseURL + fmt.Sprintf("/user/%v", u.created.ID))
+	http.URL(fmt.Sprintf("/user/%v", u.created.ID))
 	http.ExpectStatus(200)
 	http.Send(nil)
 }
@@ -88,7 +87,7 @@ func (u *User) Delete(t *testing.T) {
 func (u *User) VerifyEmail(t *testing.T) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(namespace.QueryKey.BaseURL + fmt.Sprintf("/auth/verify-email/%v/%s", u.created.ID, "12345"))
+	http.URL(fmt.Sprintf("/auth/verify-email/%v/%s", u.created.ID, "12345"))
 	http.ExpectStatus(200)
 	http.Send(nil)
 }
@@ -96,7 +95,7 @@ func (u *User) VerifyEmail(t *testing.T) {
 func (u *User) Login(t *testing.T) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(namespace.QueryKey.BaseURL + "/auth/login")
+	http.URL("/auth/login")
 	http.ExpectStatus(200)
 	http.Send(map[string]any{
 		"email":    u.created.Email,
@@ -120,7 +119,7 @@ func Test_User_Create_Success(t *testing.T) {
 func Test_Login_Success(t *testing.T) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(namespace.QueryKey.BaseURL + "/login")
+	http.URL("/login")
 	http.ExpectStatus(200)
 	http.Send(map[string]any{
 		"email":    "test@email.com",

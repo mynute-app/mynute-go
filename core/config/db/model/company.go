@@ -3,6 +3,11 @@ package model
 import "gorm.io/gorm"
 
 // Company represents a company entity
+
+type CreateCompany struct {
+	Name  string `json:"name"`
+	TaxID string `json:"tax_id"`
+}
 type Company struct {
 	gorm.Model
 	Name      string     `gorm:"not null;unique" json:"name"`
