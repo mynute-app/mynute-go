@@ -16,7 +16,7 @@ services:
       APP_ENV: ${APP_ENV}
     ports:
       - "${POSTGRES_PORT}:5432"
-    command: [ "bash", "-c", "docker-entrypoint.sh postgres & sleep 5 && bash /docker-entrypoint-initdb.d/init-db.sh && wait" ]
+    command: [ "bash", "-c", "docker-entrypoint.sh postgres & sleep 60 && bash /docker-entrypoint-initdb.d/init-db.sh && wait" ]
     networks:
       - kaki-network
 
