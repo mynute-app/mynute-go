@@ -36,14 +36,14 @@ func Connect() *Database {
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB_NAME")
+	dbName := os.Getenv("POSTGRES_DB")
 	port := os.Getenv("POSTGRES_PORT")
 	app_env := os.Getenv("APP_ENV")
 	sslmode := "disable" // You can modify this based on your setup
 	timeZone := "UTC"    // Default timezone
 
 	if app_env == "test" {
-		dbName = fmt.Sprintf("%s-%s", dbName, app_env)
+		dbName = os.Getenv("POSTGRES_DB_TEST")
 	} else if app_env != "production" && app_env != "dev" {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
