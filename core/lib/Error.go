@@ -44,6 +44,8 @@ type ErrorTypes struct {
 
 type AuthErrors struct {
 	InvalidLogin ErrorStruct
+	NoToken      ErrorStruct
+	InvalidToken ErrorStruct
 }
 
 type UserErrors struct {
@@ -53,7 +55,6 @@ type UserErrors struct {
 	InvalidEmail    ErrorStruct
 	Unauthroized    ErrorStruct
 	NotFoundById    ErrorStruct
-	InvalidToken    ErrorStruct
 	CompanyLimit    ErrorStruct
 }
 
@@ -78,6 +79,16 @@ var Error = ErrorCategory{
 		InvalidLogin: ErrorStruct{
 			DescriptionEn: "Invalid login",
 			DescriptionBr: "Login inválido",
+			HTTPStatus:    401,
+		},
+		NoToken: ErrorStruct{
+			DescriptionEn: "No token provided",
+			DescriptionBr: "Nenhum token fornecido",
+			HTTPStatus:    401,
+		},
+		InvalidToken: ErrorStruct{
+			DescriptionEn: "Invalid token",
+			DescriptionBr: "Token inválido",
 			HTTPStatus:    401,
 		},
 	},
@@ -111,11 +122,6 @@ var Error = ErrorCategory{
 			DescriptionEn: "Could not find user by ID",
 			DescriptionBr: "Não foi possível encontrar o usuário pelo ID",
 			HTTPStatus:    404,
-		},
-		InvalidToken: ErrorStruct{
-			DescriptionEn: "Invalid token",
-			DescriptionBr: "Token inválido",
-			HTTPStatus:    401,
 		},
 		CompanyLimit: ErrorStruct{
 			DescriptionEn: "User already has a company associated",

@@ -38,7 +38,6 @@ func LoggerMiddleware(logger *slog.Logger) fiber.Handler {
 		logger.Info("API Request",
 			"method", c.Method(),
 			"path", c.Path(),
-			"status", c.Response().StatusCode(),
 			"duration_ms", duration.Milliseconds(),
 			"ip", c.IP(),
 			"error", errorString(err),
@@ -66,5 +65,5 @@ func errorString(err error) string {
 	if err != nil {
 		return err.Error()
 	}
-	return "none"
+	return ""
 }

@@ -78,8 +78,28 @@ func GetBodyFromCtx[Body any](c *fiber.Ctx) (Body, error) {
 	return GetFromCtx[Body](c, namespace.GeneralKey.Model)
 }
 
-func GetClaimsFromCtx(c *fiber.Ctx) (jwt.MapClaims, error) {
-	return GetFromCtx[jwt.MapClaims](c, namespace.RequestKey.Auth_Claims)
+func GetClaimsFromCtx(c *fiber.Ctx) (map[string]any, error) {
+	MapClaims, err := GetFromCtx[jwt.MapClaims](c, namespace.RequestKey.Auth_Claims)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := MapClaims["data"].(map[string]any)
+	if !ok {
+		return nil, errors.New("could not find 'data' object in jwt.MapClaims")
+	}
+	return data, nil
+}
+
+func GetUserIdFromClaims(c *fiber.Ctx) (string, error) {
+	claims, err := GetClaimsFromCtx(c)
+	if err != nil {
+		return "", err
+	}
+	userID, ok := claims["ID"].(float64)
+	if !ok {
+		return "", errors.New("could not find user ID in jwt.MapClaims")
+	}
+	return fmt.Sprintf("%v", int(userID)), nil
 }
 
 func InterfaceDataNotFound(interfaceName string) error {

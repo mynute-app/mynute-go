@@ -64,15 +64,13 @@ func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
 
 func (cm *company_middleware) CheckUserAvailability(c *fiber.Ctx) error {
 	companies := []model.Company{}
-	user, err := lib.GetClaimsFromCtx(c)
+	user_id, err := lib.GetUserIdFromClaims(c)
 	if err != nil {
 		return err
 	}
-	userID, ok := user["id"].(float64)
-	if !ok {
-		return errors.New("invalid token")
+	if err := cm.Gorm.DB.Where("user_id = ?", user_id).Find(&companies).Error; err != nil {
+		return err
 	}
-	cm.Gorm.DB.Where("user_id = ?", uint(userID)).Find(&companies)
 	if len(companies) > 0 {
 		return lib.Error.User.CompanyLimit.SendToClient(c)
 	}

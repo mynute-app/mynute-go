@@ -3,7 +3,6 @@ package handler
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -48,7 +47,7 @@ func (j *jsonWebToken) WhoAreYou() error {
 	tokenString := j.GetToken()
 	if tokenString == "" {
 		saveUserData(nil)
-		return errors.New("missing auth token")
+		return lib.Error.Auth.NoToken.SendToClient(j.C)
 	}
 
 	keyFunc := func(token *jwt.Token) (any, error) {
@@ -66,13 +65,13 @@ func (j *jsonWebToken) WhoAreYou() error {
 	if err != nil {
 		return err
 	} else if token == nil {
-		return errors.New("invalid token")
+		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
 	}
 
 	// Check token validity and extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return errors.New("invalid token")
+		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
 	}
 
 	// Store claims (user data) in Fiber's Locals
