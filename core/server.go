@@ -5,8 +5,10 @@ import (
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +21,9 @@ type Server struct {
 
 // Creates a new server instance
 func NewServer() *Server {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	app := fiber.New()
+	app.Use(middleware.LoggerMiddleware(logger))
 	lib.LoadEnv()
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())
