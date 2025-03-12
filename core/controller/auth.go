@@ -129,8 +129,8 @@ func (cc *auth_controller) Register(c *fiber.Ctx) error {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	query	string	true	"User ID"
-//	@Param			code	query	string	true	"Validation code"
+//	@Param			id		path	string	true	"User ID"
+//	@Param			code	path	string	true	"Validation code"
 //	@Success		200
 //	@Failure		401	{object}	DTO.ErrorResponse
 //	@Failure		404	{object}	DTO.ErrorResponse

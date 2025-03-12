@@ -28,6 +28,10 @@ func NewServer() *Server {
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())
 	handler.NewAuth(session)
+	app_env := os.Getenv("APP_ENV")
+	if app_env == "test" {
+		db.Test().Clear()
+	}
 	db.Migrate()
 	routes.Build(db.Gorm, app)
 	return &Server{App: app, Db: db}
@@ -70,8 +74,6 @@ func (s *Server) Run(in string) *Server {
 		if app_env != "test" {
 			log.Fatalf("Server run for tests must have APP_ENV as 'test'. Currently is '%s'.\nPlease, set APP_ENV=test at .env file", app_env)
 		}
-		s.Db.Test().Clear()
-		s.Db.Migrate()
 		s.parallel()
 	} else if in == "listen" {
 		s.listen()

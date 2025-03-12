@@ -39,7 +39,7 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 		Name:     lib.GenerateRandomName("User Name"),
 		Surname:  lib.GenerateRandomName("User Surname"),
 		Password: "1VerySecurePassword!",
-		Phone:    lib.GenerateRandomStrNumber(11), // 55977747309
+		Phone:    lib.GenerateRandomStrNumber(11),
 	})
 
 	id := fmt.Sprintf("%v", http.ResBody["id"].(float64))

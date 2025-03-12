@@ -490,6 +490,38 @@ paths:
       summary: Login
       tags:
       - Auth
+  /auth/verify-email/{id}/{code}:
+    get:
+      consumes:
+      - application/json
+      description: Verify an user's email
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Validation code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Verify email
+      tags:
+      - Auth
   /branch:
     post:
       consumes:
@@ -589,6 +621,29 @@ paths:
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Update branch
+      tags:
+      - Branch
+  /branch/name/{name}:
+    get:
+      description: Retrieve a branch by its name
+      parameters:
+      - description: Branch Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get branch by name
       tags:
       - Branch
   /company:
