@@ -41,23 +41,9 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 		Password: "1VerySecurePassword!",
 		Phone:    lib.GenerateRandomStrNumber(11),
 	})
-
-	id := fmt.Sprintf("%v", http.ResBody["id"].(float64))
-	email, ok := http.ResBody["email"].(string)
-	if id == "" {
-		t.Errorf("User ID is empty")
-	} else if !ok {
-		t.Errorf("Email not found in user_created")
-	} else if email == "" {
-		t.Errorf("Email is empty")
-	}
-	u.created = model.User{
-		Email:   email,
-		Name:    http.ResBody["name"].(string),
-		Surname: http.ResBody["surname"].(string),
-		Phone:   http.ResBody["phone"].(string),
-	}
-	u.created.ID = uint(http.ResBody["id"].(float64))
+	created := model.User{}
+	http.ParseResponse(&created)
+	u.created = created
 	return http.ResBody
 }
 
