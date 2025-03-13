@@ -49,7 +49,23 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
 		return err
 	}
-	res.DTO(200, company, DTO.Company{})
+	employee := &model.Employee{}
+	employee.UserID = user.ID
+	employee.CompanyID = company.ID
+	if err := cc.Request.Gorm.DB.Create(employee).Error; err != nil {
+		return err
+	}
+	user.EmployeeID = &employee.ID
+	user.CompanyID = &company.ID
+	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
+		return err
+	}
+	// add a employee to the company
+	company.Employees = append(company.Employees, *employee)
+	if err := cc.Request.Gorm.DB.Save(company).Error; err != nil {
+		return err
+	}
+	res.DTO(200, company, &DTO.Company{})
 	return nil
 }
 

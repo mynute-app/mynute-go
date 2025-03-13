@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -62,6 +63,24 @@ func (h *httpActions) Clear() {
 	h.Error = ""
 	h.Status = 0
 	h.ResBody = nil
+}
+
+func (h *httpActions) ParseResponse(to interface{}) {
+	if reflect.TypeOf(to).Kind() != reflect.Ptr {
+		h.test.Fatalf("expected a pointer to a struct")
+	}
+	if h.ResBody == nil {
+		h.test.Fatalf("response body is nil")
+	}
+	resBodyBytes, err := json.Marshal(h.ResBody)
+	if err != nil {
+		h.Error = fmt.Sprintf("failed to marshal response body: %v", err)
+		h.test.Fatalf(h.Error)
+	}
+	if err := json.Unmarshal(resBodyBytes, to); err != nil {
+		h.Error = fmt.Sprintf("failed to unmarshal response body: %v", err)
+		h.test.Fatalf(h.Error)
+	}
 }
 
 // Send sends a request to the specified URL with the specified body

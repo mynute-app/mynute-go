@@ -41,11 +41,9 @@ func (c *Company) Create(t *testing.T, status int) map[string]any {
 		Name:  "Test Company",
 		TaxID: "41915230000168",
 	})
-	c.created = model.Company{
-		Name:  http.ResBody["name"].(string),
-		TaxID: http.ResBody["tax_id"].(string),
-	}
-	c.created.ID = uint(http.ResBody["id"].(float64))
+	created := model.Company{}
+	http.ParseResponse(&created)
+	c.created = created
 	return http.ResBody
 }
 

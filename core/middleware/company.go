@@ -24,7 +24,6 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 		auth.WhoAreYou,
 		auth.DenyUnauthorized,
 		lib.SaveBodyOnCtx[model.Company],
-		cm.CheckUserAvailability,
 		cm.DenyCnpj,
 		cm.ValidateProps,
 	}
@@ -58,21 +57,6 @@ func (cm *company_middleware) ValidateProps(c *fiber.Ctx) error {
 		return res.Http400(err)
 	} else if !lib.ValidateTaxID(company.TaxID) {
 		return res.Http400(errors.New("invalid tax ID"))
-	}
-	return c.Next()
-}
-
-func (cm *company_middleware) CheckUserAvailability(c *fiber.Ctx) error {
-	companies := []model.Company{}
-	user_id, err := lib.GetUserIdFromClaims(c)
-	if err != nil {
-		return err
-	}
-	if err := cm.Gorm.DB.Where("user_id = ?", user_id).Find(&companies).Error; err != nil {
-		return err
-	}
-	if len(companies) > 0 {
-		return lib.Error.User.CompanyLimit.SendToClient(c)
 	}
 	return c.Next()
 }
