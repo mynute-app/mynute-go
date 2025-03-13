@@ -36,8 +36,8 @@ type User struct {
 	Verified         bool          `gorm:"not null" json:"verified"`
 	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
 	Appointments     []Appointment `gorm:"foreignKey:UserID"` // One-to-many relation
-	EmployeeID       uint          `json:"employee_id"`
-	CompanyID        uint          `json:"company_id"`
+	EmployeeID       *uint          `json:"employee_id"`
+	CompanyID        *uint          `json:"company_id"`
 }
 
 // Check if the employee is available for a given service at a specific time.

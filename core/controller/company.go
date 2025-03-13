@@ -45,7 +45,7 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Create(company).Error; err != nil {
 		return res.Http400(err)
 	}
-	user.CompanyID = company.ID
+	user.CompanyID = &company.ID
 	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
 		return err
 	}
