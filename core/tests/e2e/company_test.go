@@ -41,9 +41,7 @@ func (c *Company) Create(t *testing.T, status int) map[string]any {
 		Name:  "Test Company",
 		TaxID: "41915230000168",
 	})
-	created := model.Company{}
-	http.ParseResponse(&created)
-	c.created = created
+	http.ParseResponse(&c.created)
 	return http.ResBody
 }
 

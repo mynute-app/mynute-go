@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"reflect"
@@ -72,14 +71,16 @@ func (h *httpActions) ParseResponse(to interface{}) {
 	if h.ResBody == nil {
 		h.test.Fatalf("response body is nil")
 	}
+
+	// Marshal the map into JSON bytes
 	resBodyBytes, err := json.Marshal(h.ResBody)
 	if err != nil {
-		h.Error = fmt.Sprintf("failed to marshal response body: %v", err)
-		h.test.Fatalf(h.Error)
+		h.test.Fatalf("failed to marshal response body: %v", err)
 	}
+
+	// Unmarshal JSON bytes directly into your struct
 	if err := json.Unmarshal(resBodyBytes, to); err != nil {
-		h.Error = fmt.Sprintf("failed to unmarshal response body: %v", err)
-		h.test.Fatalf(h.Error)
+		h.test.Fatalf("failed to unmarshal response body: %v", err)
 	}
 }
 
@@ -93,15 +94,13 @@ func (h *httpActions) Send(body any) *httpActions {
 	h.test.Logf("body: %+v", body)
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
-		h.Error = fmt.Sprintf("failed to marshal payload: %v", err)
-		h.test.Fatalf(h.Error)
+		h.test.Fatalf("failed to marshal payload: %v", err)
 		return nil
 	}
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
 	req, err := http.NewRequest(h.method, h.url, bodyBuffer)
 	if err != nil {
-		h.Error = fmt.Sprintf("failed to create request: %v", err)
-		h.test.Fatalf(h.Error)
+		h.test.Fatalf("failed to create request: %v", err)
 		return nil
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -113,35 +112,28 @@ func (h *httpActions) Send(body any) *httpActions {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		h.Error = fmt.Sprintf("failed to send request: %v", err)
-		h.test.Fatalf(h.Error)
+		h.test.Fatalf("failed to send request: %v", err)
 		return nil
 	}
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
-		h.Error = fmt.Sprintf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
+		h.test.Fatalf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
 	}
 	h.ResHeaders = res.Header
 	if res.ContentLength != 0 && res.Body != nil {
-		bodyBytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			h.Error = fmt.Sprintf("failed to read response body: %v", err)
-			h.test.Fatalf(h.Error)
-			return nil
+		// bodyBytes, err := io.ReadAll()
+		// if err != nil {
+		// 	h.Error = fmt.Sprintf("failed to read response body: %v", err)
+		// 	h.test.Fatalf(h.Error)
+		// 	return nil
+		// }
+		decoder := json.NewDecoder(res.Body)
+		decoder.UseNumber()
+		if err := decoder.Decode(&h.ResBody); err != nil {
+			h.test.Fatalf("failed to unmarshal response body: %v", err)
 		}
-		var response map[string]any
-		if err := json.Unmarshal(bodyBytes, &response); err != nil {
-			h.ResBody = map[string]any{
-				"string": string(bodyBytes),
-			}
-		} else {
-			h.ResBody = response
-		}
-	}
-	if h.Error != "" {
-		h.test.Fatalf(h.Error)
 	}
 	h.Status = res.StatusCode
 	h.httpRes = res

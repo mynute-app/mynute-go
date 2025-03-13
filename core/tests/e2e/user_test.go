@@ -41,9 +41,7 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 		Password: "1VerySecurePassword!",
 		Phone:    lib.GenerateRandomStrNumber(11),
 	})
-	created := model.User{}
-	http.ParseResponse(&created)
-	u.created = created
+	http.ParseResponse(&u.created)
 	return http.ResBody
 }
 

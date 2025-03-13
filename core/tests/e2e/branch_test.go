@@ -53,18 +53,7 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 		State:        "Test State",
 		Country:      "Test Country",
 	})
-	b.created = model.Branch{
-		Name:         http.ResBody["name"].(string),
-		CompanyID:    uint(http.ResBody["company_id"].(float64)),
-		Street:       http.ResBody["street"].(string),
-		Number:       http.ResBody["number"].(string),
-		Neighborhood: http.ResBody["neighborhood"].(string),
-		ZipCode:      http.ResBody["zip_code"].(string),
-		City:         http.ResBody["city"].(string),
-		State:        http.ResBody["state"].(string),
-		Country:      http.ResBody["country"].(string),
-	}
-	b.created.ID = uint(http.ResBody["id"].(float64))
+	http.ParseResponse(&b.created)
 	return http.ResBody
 }
 
