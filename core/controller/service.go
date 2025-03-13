@@ -22,7 +22,7 @@ type service_controller struct {
 //	@Tags			Service
 //	@Accept			json
 //	@Produce		json
-//	@Param			service	body		DTO.Service	true	"Service"
+//	@Param			service	body		DTO.CreateService	true	"Service"
 //	@Success		201		{object}	DTO.Service
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service [post]
@@ -94,7 +94,7 @@ func Service(Gorm *handler.Gorm) *service_controller {
 		Base: service.Base[model.Service, DTO.Service]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"ServiceType"},
+			Associations: []string{"Company", "Branches", "Employees"},
 		},
 	}
 }

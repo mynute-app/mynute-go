@@ -1,0 +1,99 @@
+package e2e_test
+
+import (
+	"agenda-kaki-go/core"
+	"agenda-kaki-go/core/config/db/model"
+	handler "agenda-kaki-go/core/tests/handlers"
+	"fmt"
+	"testing"
+)
+
+type Service struct {
+	created    model.Service
+	auth_token string
+	company    *Company
+}
+
+func Test_Service(t *testing.T) {
+	server := core.NewServer().Run("test")
+	defer server.Shutdown()
+	user := &User{}
+	user.Create(t, 200)
+	user.VerifyEmail(t, 200)
+	user.Login(t, 200)
+	company := &Company{}
+	company.auth_token = user.auth_token
+	company.Create(t, 200)
+	service := &Service{}
+	service.auth_token = user.auth_token
+	service.company = company
+	service.Create(t, 200)
+	service.created.Name = "Updated Service Name"
+	service.Update(t, 200)
+	service.GetById(t, 200)
+	service.GetByName(t, 200)
+	branch := &Branch{}
+	branch.auth_token = user.auth_token
+	branch.company = company
+	branch.Create(t, 200)
+	branch.created.Services = append(branch.created.Services, service.created)
+	branch.Update(t, 200)
+	service.Delete(t, 200)
+	branch.Delete(t, 200)
+}
+
+
+func (s *Service) Create(t *testing.T, status int) map[string]any {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/service")
+	http.ExpectStatus(status)
+	http.Header("Authorization", s.auth_token)
+	http.Send(model.CreateService{
+		Name:        "Test Service",
+		Description: "Test Description",
+		CompanyID:   s.company.created.ID,
+		Price:       100,
+		Duration:    60,
+	})
+	http.ParseResponse(&s.created)
+	return http.ResBody
+}
+
+func (s *Service) Update(t *testing.T, status int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("PATCH")
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.ExpectStatus(status)
+	http.Header("Authorization", s.auth_token)
+	http.Send(s.created)
+}
+
+func (s *Service) GetById(t *testing.T, status int) map[string]any {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.ExpectStatus(status)
+	http.Header("Authorization", s.auth_token)
+	http.Send(nil)
+	return http.ResBody
+}
+
+func (s *Service) GetByName(t *testing.T, status int) map[string]any {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL("/service/name/" + s.created.Name)
+	http.ExpectStatus(status)
+	http.Header("Authorization", s.auth_token)
+	http.Send(nil)
+	return http.ResBody
+}
+
+func (s *Service) Delete(t *testing.T, status int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("DELETE")
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.ExpectStatus(status)
+	http.Header("Authorization", s.auth_token)
+	http.Send(nil)
+}

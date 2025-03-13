@@ -1067,7 +1067,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Service"
+                            "$ref": "#/definitions/DTO.CreateService"
                         }
                     }
                 ],
@@ -1613,6 +1613,31 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "DTO.CreateService": {
+            "type": "object",
+            "properties": {
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "A 60-minute in-depth business consultation"
+                },
+                "duration": {
+                    "type": "integer",
+                    "example": 60
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Premium Consultation"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 150
                 }
             }
         },

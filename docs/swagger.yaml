@@ -171,6 +171,24 @@ definitions:
         example: 1
         type: integer
     type: object
+  DTO.CreateService:
+    properties:
+      company_id:
+        example: 1
+        type: integer
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      duration:
+        example: 60
+        type: integer
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
   DTO.CreateUser:
     properties:
       email:
@@ -1148,7 +1166,7 @@ paths:
         name: service
         required: true
         schema:
-          $ref: '#/definitions/DTO.Service'
+          $ref: '#/definitions/DTO.CreateService'
       produces:
       - application/json
       responses:
