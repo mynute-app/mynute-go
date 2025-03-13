@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Employee struct {
 	gorm.Model
-	Tags           []string      `gorm:"type:bjson" json:"tag"`
+	Tags           []string      `gorm:"type:json" json:"tag"`
 	CompanyID      uint          `gorm:"not null;index;foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" json:"company_id"`
 	Company        Company       `gorm:"constraint:OnDelete:CASCADE;"`
 	UserID         uint          `gorm:"not null;index;foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE;" json:"user_id"`
