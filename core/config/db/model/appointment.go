@@ -9,10 +9,23 @@ import (
 // Fifth step: Scheduling with service and employee availability.
 type Appointment struct {
 	gorm.Model
-	ServiceID  uint      `gorm:"not null;index;foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;" json:"service_id"`
-	EmployeeID uint      `gorm:"not null;index;foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;" json:"employee_id"`
-	UserID     uint      `gorm:"not null;index;foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE;" json:"user_id"`
-	BranchID   uint      `gorm:"not null;index;foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;" json:"branch_id"`
+
+	ServiceID  uint      `gorm:"not null;index" json:"service_id"`
+	Service    Service   `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
+
+	EmployeeID uint      `gorm:"not null;index" json:"employee_id"`
+	Employee   Employee  `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
+
+	UserID     uint      `gorm:"not null;index" json:"user_id"`
+	User       User      `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE;"`
+
+	BranchID   uint      `gorm:"not null;index" json:"branch_id"`
+	Branch     Branch    `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
+
+	CompanyID  uint      `gorm:"not null;index" json:"company_id"`
+	Company    Company   `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;"`
+
 	StartTime  time.Time `gorm:"not null" json:"start_time"`
 	EndTime    time.Time `gorm:"not null" json:"end_time"`
 }
+
