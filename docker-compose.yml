@@ -19,17 +19,15 @@ services:
 
         # Wait for PostgreSQL to be fully ready
         echo '⏳   Waiting for PostgreSQL to start...';
-        until pg_isready -h localhost -p 5432 -U $POSTGRES_USER; do 
+        until pg_isready -h localhost -p 5432 -U $POSTGRES_USER; do
           echo '⏳   Still waiting for PostgreSQL...';
-          sleep 5; 
+          sleep 5;
         done;
 
         echo '✅   PostgreSQL is ready! Proceeding with initialization...';
 
         # Ensure the main database exists
-
         echo \"Checking if main database '$POSTGRES_DB' exists...\";
-
         if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'\" | grep -q 1; then
           echo '✅   Main database \"$POSTGRES_DB\" already exists.';
         else
@@ -37,16 +35,17 @@ services:
           psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB\\\";\";
         fi;
 
-        # Check if APP_ENV is set to "test" and create additional test database
-
+        # Check if test database exists and create schema 'public'
         echo \"Checking if test database '$POSTGRES_DB_TEST' exists...\";
-
         if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_TEST'\" | grep -q 1; then
           echo '✅   Test database \"$POSTGRES_DB_TEST\" already exists.';
         else
           echo '🚀   Creating test database: \"$POSTGRES_DB_TEST\"';
           psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
         fi;
+
+        echo '🔧   Ensuring schema public exists on test database...';
+        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
 
         echo '🎉   Database initialization complete!';
 
