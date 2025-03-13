@@ -32,12 +32,8 @@ type company_controller struct {
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	res := &lib.SendResponse{Ctx: c}
-	auth_claims, err := lib.GetClaimsFromCtx(c)
+	user_id, err := lib.GetUserIdFromClaims(c)
 	if err != nil {
-		return err
-	}
-	user_id, ok := auth_claims["id"].(string)
-	if !ok {
 		return err
 	}
 	user := &model.User{};

@@ -67,6 +67,29 @@ func (um *user_middleware) HashPassword(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+func (um *user_middleware) MatchUserAndCompany(c *fiber.Ctx) error {
+	// Check if company_id parameter exists in request body
+	body, err := lib.GetBodyFromCtx[map[string]any](c)
+	if err != nil {
+		return err
+	}
+	body_company_id, ok := body["company_id"]
+	if !ok {
+		return lib.Error.Company.IdNotFound.SendToClient(c)
+	}
+	user, err := lib.GetClaimsFromCtx(c)
+	if err != nil {
+		return err
+	}
+	user_company_id, ok := user["company_id"]
+	if !ok {
+		return lib.Error.User.CompanyIdNotFound.SendToClient(c)
+	}
+	if body_company_id != user_company_id {
+		return lib.Error.User.Unauthroized.SendToClient(c)
+	}
+	return c.Next()
+}
 // type UserMiddlewareActions struct {
 // 	Gorm *handler.Gorm
 // }

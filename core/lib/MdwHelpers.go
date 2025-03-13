@@ -111,27 +111,3 @@ func InvalidDataType(interfaceName string) error {
 	errStr := fmt.Sprintf("invalid %s data type", interfaceName)
 	return errors.New(errStr)
 }
-
-func MatchUserTokenWithCompanyID(c *fiber.Ctx) error {
-	// Check if company_id parameter exists in request body
-	body, err := GetBodyFromCtx[map[string]any](c)
-	if err != nil {
-		return err
-	}
-	companyID, ok := body["company_id"]
-	if !ok {
-		return Error.Company.IdNotFound.SendToClient(c)
-	}
-	claims, err := GetClaimsFromCtx(c)
-	if err != nil {
-		return err
-	}
-	userCompanyID, ok := claims["company_id"]
-	if !ok {
-		return Error.Company.IdNotFound.SendToClient(c)
-	}
-	if companyID != userCompanyID {
-		return Error.User.Unauthroized.SendToClient(c)
-	}
-	return c.Next()
-}

@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"log"
 
 	"github.com/joho/godotenv"
 )

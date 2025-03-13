@@ -49,13 +49,14 @@ type AuthErrors struct {
 }
 
 type UserErrors struct {
-	NotVerified     ErrorStruct
-	EmailExists     ErrorStruct
-	InvalidUserName ErrorStruct
-	InvalidEmail    ErrorStruct
-	Unauthroized    ErrorStruct
-	NotFoundById    ErrorStruct
-	CompanyLimit    ErrorStruct
+	NotVerified       ErrorStruct
+	EmailExists       ErrorStruct
+	InvalidUserName   ErrorStruct
+	InvalidEmail      ErrorStruct
+	Unauthroized      ErrorStruct
+	NotFoundById      ErrorStruct
+	CompanyLimit      ErrorStruct
+	CompanyIdNotFound ErrorStruct
 }
 
 type CompanyErrors struct {
@@ -128,11 +129,16 @@ var Error = ErrorCategory{
 			DescriptionBr: "Usuário já possui uma empresa associada",
 			HTTPStatus:    400,
 		},
+		CompanyIdNotFound: ErrorStruct{
+			DescriptionEn: "User company ID not found. This is an internal error",
+			DescriptionBr: "ID da empresa do usuário não encontrado. Este é um erro interno",
+			HTTPStatus:    500,
+		},
 	},
 	Company: CompanyErrors{
 		IdNotFound: ErrorStruct{
-			DescriptionEn: "Company ID not found at the request body",
-			DescriptionBr: "ID da empresa não encontrado no corpo da requisição",
+			DescriptionEn: "Company ID not found or malformed at the request body",
+			DescriptionBr: "ID da empresa não encontrado ou malformado no corpo da requisição",
 			HTTPStatus:    400,
 		},
 		CnpjAlreadyExists: ErrorStruct{

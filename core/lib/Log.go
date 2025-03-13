@@ -1,72 +1,70 @@
 package lib
 
 import (
-	"fmt"
-	"strings"
+	"bytes"
 	"time"
 
-	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 )
 
-func SetupMetrics(app *fiber.App) {
-	prometheusMiddleware := fiberprometheus.New("fiber-api") // App name for Prometheus
-	app.Use(prometheusMiddleware.Middleware)                // Enable Prometheus middleware
+// Setup logger with JSON formatting
+var log = logrus.New()
 
-	// Expose Prometheus metrics using promhttp
-	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+func init() {
+	log.SetFormatter(&logrus.JSONFormatter{
+		PrettyPrint: true, // Makes JSON logs more readable
+	})
+	log.SetLevel(logrus.InfoLevel)
 }
 
-
 func ApiLog(c *fiber.Ctx) error {
-	start := time.Now() // Start timer
+	start := time.Now()
 
-	fmt.Println(">>> Request Received!")
-	printRequest(c)
-	fmt.Println(">>> Will process request and send answer soon...")
-	fmt.Println("-------------------")
-
-	// Call the next middleware/handler
+	// Call next middleware
 	err := c.Next()
 
-	// Calculate duration
+	// Calculate response time
 	duration := time.Since(start).Milliseconds()
 
-	// Read response body
+	// Read response body (if needed)
 	body := c.Response().Body()
-	responseHeaders := filterHeaders(c.Response().Header.String())
 
-	fmt.Println(">>> Response Sent!")
-	fmt.Println("Response: ", c.Response().StatusCode())
-	fmt.Println("Response Time:", duration, "ms")
-	fmt.Println("Response Body: ", string(body))
-	fmt.Println("Response Header: ", responseHeaders)
-	fmt.Println(">>> Originated from Request")
-	printRequest(c)
-	fmt.Println("-------------------")
+	// Read request headers
+	requestHeaders := extractHeaders(c.Request().Header.String())
+
+	// Create a structured log entry
+	log.WithFields(logrus.Fields{
+		"time":            time.Now().Format(time.RFC3339),
+		"method":          c.Method(),
+		"path":            c.OriginalURL(),
+		"ip":              c.IP(),
+		"duration_ms":     duration,
+		"status":          c.Response().StatusCode(),
+		"request_headers": requestHeaders,
+		"request_body":    maskSensitiveData(string(c.Request().Body())),
+		"response_body":   string(body),
+	}).Info("API Request Processed")
 
 	return err
 }
 
-func printRequest(c *fiber.Ctx) {
-	fmt.Println("Request: ", c.Method(), " ", c.OriginalURL())
-	fmt.Println("From: ", c.IP())
-
-	// Filter request headers
-	requestHeaders := filterHeaders(c.Request().Header.String())
-	fmt.Println("Headers: ", requestHeaders)
-	fmt.Println("Body: ", string(c.Request().Body()))
+// Mask sensitive fields in logs
+func maskSensitiveData(body string) string {
+	if bytes.Contains([]byte(body), []byte("password")) {
+		return "{masked sensitive data}"
+	}
+	return body
 }
 
-func filterHeaders(headers string) string {
-	lines := strings.Split(headers, "\n")
-	var filtered []string
+// Extract headers cleanly
+func extractHeaders(headerStr string) string {
+	lines := bytes.Split([]byte(headerStr), []byte("\n"))
+	var filtered [][]byte
 	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			filtered = append(filtered, strings.TrimSpace(line))
+		if len(bytes.TrimSpace(line)) > 0 {
+			filtered = append(filtered, bytes.TrimSpace(line))
 		}
 	}
-	return strings.Join(filtered, "\n")
+	return string(bytes.Join(filtered, []byte(", ")))
 }
