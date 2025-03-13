@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"reflect"
@@ -123,18 +124,23 @@ func (h *httpActions) Send(body any) *httpActions {
 	}
 	h.ResHeaders = res.Header
 	if res.ContentLength != 0 && res.Body != nil {
-		// bodyBytes, err := io.ReadAll()
-		// if err != nil {
-		// 	h.Error = fmt.Sprintf("failed to read response body: %v", err)
-		// 	h.test.Fatalf(h.Error)
-		// 	return nil
-		// }
-		decoder := json.NewDecoder(res.Body)
-		decoder.UseNumber()
-		if err := decoder.Decode(&h.ResBody); err != nil {
-			h.test.Fatalf("failed to unmarshal response body: %v", err)
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			h.test.Fatalf("failed to read response body: %v", err)
+		}
+
+		if !json.Valid(bodyBytes) {
+			h.test.Logf("non-JSON response: %s", string(bodyBytes))
+			h.ResBody = map[string]any{"data": string(bodyBytes)} // or handle accordingly
+		} else {
+			decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
+			decoder.UseNumber()
+			if err := decoder.Decode(&h.ResBody); err != nil {
+				h.test.Fatalf("failed to unmarshal response body: %v", err)
+			}
 		}
 	}
+
 	h.Status = res.StatusCode
 	h.httpRes = res
 	return h
