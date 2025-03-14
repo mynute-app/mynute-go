@@ -29,6 +29,14 @@ type SessionsOptions struct {
 	Secure     bool
 }
 
+func Auth(c *fiber.Ctx) *Authentication {
+	return &Authentication{
+		C:           c,
+		Res:         &lib.SendResponse{Ctx: c},
+		sessionName: "user_session",
+	}
+}
+
 func HashPassword(password string) (string, error) {
 	// Generate a hashed password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -88,14 +96,6 @@ func SessionOpts() SessionsOptions {
 			}
 			return b
 		}(),
-	}
-}
-
-func Auth(c *fiber.Ctx) *Authentication {
-	return &Authentication{
-		C:           c,
-		Res:         &lib.SendResponse{Ctx: c},
-		sessionName: "user_session",
 	}
 }
 

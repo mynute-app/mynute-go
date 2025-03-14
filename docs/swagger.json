@@ -1592,7 +1592,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1646,7 +1646,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1709,7 +1709,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1844,7 +1844,7 @@
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 }
             }
         },

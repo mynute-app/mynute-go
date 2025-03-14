@@ -90,7 +90,7 @@ func (sr *SendResponse) send(s int, data any) error {
 
 func (sr *SendResponse) sendError(s int, err error) error {
 	sr.saveError(err)
-	if resErr := sr.Ctx.Status(s).JSON(err.Error()); resErr != nil {
+	if resErr := sr.Ctx.Status(s).JSON(map[string]any{"Error": err.Error()}); resErr != nil {
 		sr.saveError(resErr)
 		return resErr
 	}
@@ -108,6 +108,6 @@ func (sr *SendResponse) sendStatus(s int) error {
 }
 
 func (sr *SendResponse) saveError(err error) *SendResponse {
-	log.Printf("An error occurred!\n>>> %v", err)
+	fmt.Printf("An error occurred!\n>>> %v\n", err.Error())
 	return sr
 }

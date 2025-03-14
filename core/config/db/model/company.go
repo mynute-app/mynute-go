@@ -8,7 +8,7 @@ type Company struct {
 	gorm.Model
 	Name      string     `gorm:"not null;unique" json:"name"`
 	TaxID     string     `gorm:"not null;unique" json:"tax_id"`
-	Sectors   []Sector   `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE" json:"sectors"`
+	Sectors   []*Sector   `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE" json:"sectors"`
 	Employees []Employee `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"employees"` // One-to-many relation with User
 	Branches  []Branch   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"`  // One-to-many relation with Branch
 	Services  []Service  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"`  // One-to-many relation with Service

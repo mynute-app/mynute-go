@@ -22,7 +22,7 @@ func (cm *company_middleware) CreateCompany() []fiber.Handler {
 	auth := Auth(cm.Gorm)
 	return []fiber.Handler{
 		auth.WhoAreYou,
-		auth.DenyUnauthorized,
+		auth.DenyClaimless,
 		lib.SaveBodyOnCtx[model.Company],
 		cm.DenyCnpj,
 		cm.ValidateProps,

@@ -39,7 +39,7 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 		Email:    "test@email.com",
 		Name:     lib.GenerateRandomName("User Name"),
 		Surname:  lib.GenerateRandomName("User Surname"),
-		Password: "1VerySecurePassword!",
+		Password: "1SecurePswd!",
 		Phone:    lib.GenerateRandomStrNumber(11),
 	})
 	http.ParseResponse(&u.created)
@@ -51,6 +51,7 @@ func (u *User) Update(t *testing.T, s int) {
 	http.Method("PATCH")
 	http.URL("/user/" + fmt.Sprintf("%v", u.created.ID))
 	http.ExpectStatus(s)
+	http.Header("Authorization", u.auth_token)
 	http.Send(u.created)
 }
 
@@ -59,6 +60,7 @@ func (u *User) GetByEmail(t *testing.T, s int) map[string]any {
 	http.Method("GET")
 	http.URL("/user/email/" + u.created.Email)
 	http.ExpectStatus(s)
+	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 	return http.ResBody
 }
@@ -68,25 +70,27 @@ func (u *User) Delete(t *testing.T, s int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/user/%v", u.created.ID))
 	http.ExpectStatus(s)
+	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 }
 
 func (u *User) VerifyEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("GET")
-	http.URL(fmt.Sprintf("/auth/verify-email/%v/%s", u.created.ID, "12345"))
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/user/verify-email/%v/%s", u.created.Email, "12345"))
 	http.ExpectStatus(s)
+	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 }
 
 func (u *User) Login(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL("/auth/login")
+	http.URL("/user/login")
 	http.ExpectStatus(s)
 	http.Send(map[string]any{
 		"email":    u.created.Email,
-		"password": "1VerySecurePassword!",
+		"password": "1SecurePswd!",
 	})
 	auth := http.ResHeaders["Authorization"]
 	if len(auth) == 0 {
@@ -110,6 +114,6 @@ func Test_Login_Success(t *testing.T) {
 	http.ExpectStatus(200)
 	http.Send(map[string]any{
 		"email":    "test@email.com",
-		"password": "1VerySecurePassword!",
+		"password": "1SecurePswd!",
 	})
 }

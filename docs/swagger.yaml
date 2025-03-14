@@ -159,7 +159,7 @@ definitions:
         example: John
         type: string
       password:
-        example: 1VerySecurePassword!
+        example: 1SecurePswd!
         type: string
       phone:
         example: "+15555555555"
@@ -198,7 +198,7 @@ definitions:
         example: John
         type: string
       password:
-        example: 1VerySecurePassword!
+        example: 1SecurePswd!
         type: string
       phone:
         example: "+15555555555"
@@ -243,7 +243,7 @@ definitions:
         example: John
         type: string
       password:
-        example: 1VerySecurePassword!
+        example: 1SecurePswd!
         type: string
       phone:
         example: "+15555555555"
@@ -340,7 +340,7 @@ definitions:
         example: john.doe@example.com
         type: string
       password:
-        example: 1VerySecurePassword!
+        example: 1SecurePswd!
         type: string
     type: object
   DTO.Sector:

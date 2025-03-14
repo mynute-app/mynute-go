@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,11 +28,85 @@ type user_controller struct {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
-	var DTO DTO.CreatedUser
-	return cc.SetDTO(c, &DTO).CreateOne(c)
+	user := &model.User{}
+	if err := c.BodyParser(user); err != nil {
+		return err
+	}
+	if err := cc.Request.Gorm.DB.Create(user).Error; err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	res.DTO(200, user, &DTO.User{})
+	return nil
 }
 
-// GetOneByEmail retrieves an user by email
+// LoginUser logs an user in
+//
+//	@Summary		Login
+//	@Description	Log in an user
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body	DTO.LoginUser	true	"User"
+//	@Success		200
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/user/login [post]
+func (cc *user_controller) LoginUser(c *fiber.Ctx) error {
+	var body model.User
+	if err := c.BodyParser(&body); err != nil {
+		return err
+	}
+	var user model.User
+	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
+		return err
+	}
+	if !handler.ComparePassword(user.Password, body.Password) {
+		return lib.Error.Auth.InvalidLogin.SendToClient(c)
+	}
+	token, err := handler.JWT(c).Encode(user)
+	if err != nil {
+		return err
+	}
+	c.Response().Header.Set("Authorization", token)
+	return nil
+}
+
+// VerifyUserEmail Does the email verification for an user
+//
+//	@Summary		Verify email
+//	@Description	Verify an user's email
+//	@Tags			User
+//	@Accept			json
+//	@Produce		json
+//	@Param			email	path	string	true	"User Email"
+//	@Param			code	path	string	true	"Verification Code"
+//	@Success		200		{object}	nil
+//	@Failure		404		{object}	nil
+//	@Router			/user/verify-email/{email}/{code} [post]
+func (cc *user_controller) VerifyUserEmail(c *fiber.Ctx) error {
+	res := &lib.SendResponse{Ctx: c}
+	email := c.Params("email")
+	var user model.User
+	user.Email = email
+	if err := user.ValidateEmail(); err != nil {
+		return res.Send(400, err)
+	}
+	if err := cc.Request.Gorm.GetOneBy("email", email, &user, []string{}); err != nil {
+		return err
+	}
+	// code := c.Params("code")
+	// }
+	// if user.VerificationCode != code {
+	// 	return lib.Error.Auth.EmailCodeInvalid.SendToClient(c)
+	// }
+	user.Verified = true
+	if err := cc.Request.Gorm.DB.Save(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetUserByEmail retrieves an user by email
 //
 //	@Summary		Get user by email
 //	@Description	Retrieve an user by its email
@@ -41,7 +116,7 @@ func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.User
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/user/email/{email} [get]
-func (cc *user_controller) GetOneByEmail(c *fiber.Ctx) error {
+func (cc *user_controller) GetUserByEmail(c *fiber.Ctx) error {
 	return cc.GetBy("email", c)
 }
 
@@ -74,7 +149,6 @@ func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
-
 
 // func (cc *user_controller) Login(c *fiber.Ctx) error {
 // 	cc.SetAction(c)

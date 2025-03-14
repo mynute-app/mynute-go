@@ -13,6 +13,7 @@ type Branch struct {
 	created model.Branch
 	auth_token string
 	company *Company
+	owner *Employee
 }
 
 func Test_Branch(t *testing.T) {

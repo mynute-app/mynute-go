@@ -11,11 +11,11 @@ import (
 func Company(Gorm *handler.Gorm, r fiber.Router) {
 	cc := controller.Company(Gorm)
 	c := r.Group("/company")
-	cm := middleware.Company(Gorm)
-	c.Post("/", append(cm.CreateCompany(), cc.CreateCompany)...) // ok
+	c.Post("/", cc.CreateCompany) // ok
 	c.Get("/:id", cc.GetCompanyById)                             // ok
 	c.Get("/name/:name", cc.GetCompanyByName)                    // ok
 	c.Get("/tax_id/:tax_id", cc.GetCompanyByTaxId)               // ok
-	c.Patch("/:id", cc.UpdateCompanyById)                        // ok
-	c.Delete("/:id", cc.DeleteCompanyById)                       // ok
+	auth := c.Group("/", middleware.Auth(Gorm).DenyUnauthorized) // ok
+	auth.Patch("/:id", cc.UpdateCompanyById)                        // ok
+	auth.Delete("/:id", cc.DeleteCompanyById)                       // ok
 }

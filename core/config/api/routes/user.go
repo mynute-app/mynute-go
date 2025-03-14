@@ -11,9 +11,11 @@ import (
 func User(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.User(Gorm)
 	e := r.Group("/user")
-	mu := middleware.User(Gorm)
-	e.Post("/", append(mu.Create(), ce.CreateUser)...)               // ok
-	e.Get("/email/:email", ce.GetOneByEmail) // ok
-	e.Patch("/:id", ce.UpdateUserById)       // ok
-	e.Delete("/:id", ce.DeleteUserById)      // ok
+	e.Post("/", ce.CreateUser)
+	e.Post("/verify-email/:email/:code", ce.VerifyUserEmail)
+	e.Post("/login", ce.LoginUser)
+	auth := e.Group("/", middleware.Auth(Gorm).DenyUnauthorized)
+	auth.Get("/email/:email", ce.GetUserByEmail)
+	auth.Patch("/:id", ce.UpdateUserById)       
+	auth.Delete("/:id", ce.DeleteUserById)
 }

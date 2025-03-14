@@ -92,7 +92,8 @@ func (h *httpActions) ParseResponse(to interface{}) {
 func (h *httpActions) Send(body any) *httpActions {
 	h.Error = ""
 	h.test.Logf("sending %s request to %s", h.method, h.url)
-	h.test.Logf("body: %+v", body)
+	h.test.Logf("request body: %+v", body)
+	h.test.Logf("request headers: %+v", h.headers)
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		h.test.Fatalf("failed to marshal payload: %v", err)
@@ -119,9 +120,6 @@ func (h *httpActions) Send(body any) *httpActions {
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
-	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
-		h.test.Fatalf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
-	}
 	h.ResHeaders = res.Header
 	if res.ContentLength != 0 && res.Body != nil {
 		bodyBytes, err := io.ReadAll(res.Body)
@@ -130,8 +128,9 @@ func (h *httpActions) Send(body any) *httpActions {
 		}
 
 		if !json.Valid(bodyBytes) {
-			h.test.Logf("non-JSON response: %s", string(bodyBytes))
 			h.ResBody = map[string]any{"data": string(bodyBytes)} // or handle accordingly
+		} else if len(bodyBytes) > 0 && bodyBytes[0] == '"' && bodyBytes[len(bodyBytes)-1] == '"' {
+			h.ResBody = map[string]any{"data": string(bodyBytes)}
 		} else {
 			decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
 			decoder.UseNumber()
@@ -139,6 +138,12 @@ func (h *httpActions) Send(body any) *httpActions {
 				h.test.Fatalf("failed to unmarshal response body: %v", err)
 			}
 		}
+	}
+	h.test.Logf("response body: %+v", h.ResBody)
+	h.test.Logf("response headers: %+v", h.ResHeaders)
+
+	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
+		h.test.Fatalf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
 	}
 
 	h.Status = res.StatusCode

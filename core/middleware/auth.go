@@ -3,6 +3,7 @@ package middleware
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
@@ -25,10 +26,35 @@ func (am *auth_middleware) Login() []fiber.Handler {
 	}
 }
 
+// func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
+// 	res := lib.SendResponse{Ctx: c}
+// 	if c.Get("Authorization") == "" {
+// 		fmt.Printf("Access Denied!\n")
+// 		return res.Http401(nil)
+// 	}
+// 	return c.Next()
+// }
+
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
+	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
+	fmt.Printf("auth_claims: %+v\n", auth_claims)
+	user, ok := auth_claims.(*model.User)
+	if !ok {
+		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	if user.ID == 0 {
+		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	return c.Next()
+}
+
+func (am *auth_middleware) DenyClaimless(c *fiber.Ctx) error {
 	res := lib.SendResponse{Ctx: c}
-	if c.Get("Authorization") == "" {
-		fmt.Printf("Access Denied!\n")
+	auth_claims, ok := c.Locals(namespace.RequestKey.Auth_Claims).(*model.User)
+	if !ok {
+		return res.Http401(nil)
+	}
+	if auth_claims.ID == 0 {
 		return res.Http401(nil)
 	}
 	return c.Next()
@@ -56,19 +82,37 @@ func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 }
 
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
-	res := lib.SendResponse{Ctx: c}
-	// if c.Get("Authorization") == "" {
-	// 	err := handler.Auth(c).WhoAreYou()
-	// 	if err != nil {
-	// 		return res.Http401(err).Next()
-	// 	}
-	// 	return nil
-	// }
-	if c.Get("Authorization") != "" {
-		err := handler.JWT(c).WhoAreYou()
-		if err != nil {
-			return res.Http401(nil)
-		}
+	authorization := c.Get("Authorization")
+	if authorization == "" {
+		return c.Next()
 	}
+	jwt := handler.JWT(c)
+	user, err := jwt.WhoAreYou()
+	if err != nil {
+		return err
+	} else if user == nil {
+		return c.Next()
+	}
+	c.Locals(namespace.RequestKey.Auth_Claims, user)
 	return c.Next()
 }
+
+// func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
+// 	res := lib.SendResponse{Ctx: c}
+// 	// if c.Get("Authorization") == "" {
+// 	// 	err := handler.Auth(c).WhoAreYou()
+// 	// 	if err != nil {
+// 	// 		return res.Http401(err).Next()
+// 	// 	}
+// 	// 	return nil
+// 	// }
+// 	if c.Get("Authorization") != "" {
+// 		err := handler.JWT(c).WhoAreYou()
+// 		if err != nil {
+// 			return res.Http401(nil)
+// 		}
+// 	}
+// 	return c.Next()
+// }
+
+

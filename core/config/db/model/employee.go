@@ -18,8 +18,8 @@ type Employee struct {
 	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" example:"john.doe@example.com"`
 	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" example:"+15555555555"`
 	Tags             []string      `gorm:"type:json" json:"tags"`
-	Password         string        `gorm:"type:varchar(255);not null" json:"-"`
-	VerificationCode string        `gorm:"type:varchar(100)" json:"-"`
+	Password         string        `gorm:"type:varchar(255);not null"`
+	VerificationCode string        `gorm:"type:varchar(100)"`
 	Verified         bool          `gorm:"default:false;not null" json:"verified"`
 	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
 	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;"`
@@ -30,19 +30,19 @@ type Employee struct {
 }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) (err error) {
-	if err := e.validate_password(); err != nil {
+	if err := e.ValidatePassword(); err != nil {
 		return err
 	}
 	if err := e.hash_password(); err != nil {
 		return err
 	}
-	if err := e.validate_email(); err != nil {
+	if err := e.ValidateEmail(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e *Employee) validate_email() error {
+func (e *Employee) ValidateEmail() error {
 	if e.Email == "" {
 		return errors.New("email is required")
 	}
@@ -56,8 +56,7 @@ func (e *Employee) validate_email() error {
 	return nil
 }
 
-
-func (e *Employee) validate_password() error {
+func (e *Employee) ValidatePassword() error {
 	// Password needs at least:
 	// 1 uppercase letter
 	// 1 lowercase letter
@@ -65,10 +64,29 @@ func (e *Employee) validate_password() error {
 	// 1 special character
 	// min of 6 characters
 	// max of 16 characters
-	pswrdRegexp := regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{6,16}$`)
-	if !pswrdRegexp.MatchString(e.Password) {
-		return errors.New("password must be 6-16 chars, containing uppercase, lowercase, number, special character")
+	pswd := e.Password
+
+	if len(pswd) < 6 || len(pswd) > 16 {
+		return errors.New("password must be between 6 and 16 characters")
 	}
+
+	var (
+		hasUpper   = regexp.MustCompile(`[A-Z]`).MatchString
+		hasLower   = regexp.MustCompile(`[a-z]`).MatchString
+		hasDigit   = regexp.MustCompile(`\d`).MatchString
+		hasSpecial = regexp.MustCompile(`[!@#$%^&*]`).MatchString
+	)
+
+	if !hasUpper(pswd) {
+		return errors.New("password must contain at least one uppercase letter")
+	} else if !hasLower(pswd) {
+		return errors.New("password must contain at least one lowercase letter")
+	} else if !hasDigit(pswd) {
+		return errors.New("password must contain at least one number")
+	} else if !hasSpecial(pswd) {
+		return errors.New("password must contain at least one special character")
+	}
+
 	return nil
 }
 
@@ -99,4 +117,3 @@ func (e *Employee) CheckAvailability(service Service, requestedTime time.Time) b
 	}
 	return false
 }
-

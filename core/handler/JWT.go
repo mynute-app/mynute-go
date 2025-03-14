@@ -1,8 +1,10 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/namespace"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/lib"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -24,6 +26,15 @@ func (j *jsonWebToken) GetToken() string {
 	return j.C.Get("Authorization")
 }
 
+func (j *jsonWebToken) Encode(data any) (string, error) {
+	claims := j.CreateClaims(data)
+	token, err := j.CreateToken(claims)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 // create token
 func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -37,20 +48,13 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	}
 }
 
-// WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
-func (j *jsonWebToken) WhoAreYou() error {
-	saveUserData := func(value any) {
-		j.C.Locals(namespace.RequestKey.Auth_Claims, value)
+func (j *jsonWebToken) WhoAreYou() (*model.User, error) {
+	auth_token := j.C.Get("Authorization")
+	if auth_token == "" {
+		return nil, nil
 	}
 
-	// Retrieve the token from the Authorization header
-	tokenString := j.GetToken()
-	if tokenString == "" {
-		saveUserData(nil)
-		return lib.Error.Auth.NoToken.SendToClient(j.C)
-	}
-
-	keyFunc := func(token *jwt.Token) (any, error) {
+	parseCallback := func(token *jwt.Token) (any, error) {
 		// Validate the algorithm
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -59,25 +63,82 @@ func (j *jsonWebToken) WhoAreYou() error {
 		return mySecret, nil
 	}
 
-	// Parse and validate the token
-	token, err := jwt.Parse(tokenString, keyFunc)
-
+	token, err := jwt.Parse(auth_token, parseCallback)
 	if err != nil {
-		return err
+		return nil, err
 	} else if token == nil {
-		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
+		return nil, nil
 	}
 
-	// Check token validity and extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
+		return nil, errors.New("invalid jwt.MapClaims passed.")
 	}
 
-	// Store claims (user data) in Fiber's Locals
-	saveUserData(claims)
-	return nil
+	claim_data, ok := claims["data"].(map[string]interface{})
+	if !ok {
+		return nil, errors.New("invalid claim.data passed.")
+	}
+
+	// Parse claim_data into model.User{} struct
+
+	// Turn claim_data into bytes
+	claim_data_bytes, err := json.Marshal(claim_data)
+	if err != nil {
+		return nil, err
+	}
+
+	// Turn bytes into model.User{} struct
+	user := &model.User{}
+	err = json.Unmarshal(claim_data_bytes, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
+
+// WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
+// func (j *jsonWebToken) WhoAreYou() error {
+// 	saveUserData := func(value any) {
+// 		j.C.Locals(namespace.RequestKey.Auth_Claims, value)
+// 	}
+
+// 	// Retrieve the token from the Authorization header
+// 	tokenString := j.GetToken()
+// 	if tokenString == "" {
+// 		saveUserData(nil)
+// 		return lib.Error.Auth.NoToken.SendToClient(j.C)
+// 	}
+
+// 	keyFunc := func(token *jwt.Token) (any, error) {
+// 		// Validate the algorithm
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+// 		}
+
+// 		return mySecret, nil
+// 	}
+
+// 	// Parse and validate the token
+// 	token, err := jwt.Parse(tokenString, keyFunc)
+
+// 	if err != nil {
+// 		return err
+// 	} else if token == nil {
+// 		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
+// 	}
+
+// 	// Check token validity and extract claims
+// 	claims, ok := token.Claims.(jwt.MapClaims)
+// 	if !ok || !token.Valid {
+// 		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
+// 	}
+
+// 	// Store claims (user data) in Fiber's Locals
+// 	saveUserData(claims)
+// 	return nil
+// }
 
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {

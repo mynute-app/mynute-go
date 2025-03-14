@@ -21,8 +21,7 @@ func Employee(Gorm *handler.Gorm) *employee_middleware {
 func (em *employee_middleware) Create() []fiber.Handler {
 	return []fiber.Handler{
 		em.Auth.WhoAreYou,
-		em.Auth.DenyUnauthorized,
+		em.Auth.DenyClaimless,
 		lib.SaveBodyOnCtx[DTO.CreateEmployee],
-		em.User.MatchUserAndCompany,
 	}
 }

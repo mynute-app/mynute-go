@@ -1,5 +1,11 @@
 package e2e_test
 
+import (
+	"agenda-kaki-go/core/config/db/model"
+	handler "agenda-kaki-go/core/tests/handlers"
+	"testing"
+)
+
 // import (
 // 	"agenda-kaki-go/core"
 // 	"agenda-kaki-go/core/config/db/model"
@@ -10,11 +16,27 @@ package e2e_test
 // 	"github.com/prometheus/common/server"
 // )
 
-// type Employee struct {
-// 	user       *User
-// 	company    *Company
-// 	created    model.Employee
-// }
+type Employee struct {
+	auth_token string
+	company    *Company
+	created    model.Employee
+}
+
+func (e *Employee) Login(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/employee/login")
+	http.ExpectStatus(s)
+	http.Send(model.Employee{
+		Email:    e.created.Email,
+		Password: e.created.Password,
+	})
+	auth := http.ResHeaders["Authorization"]
+	if len(auth) == 0 {
+		t.Errorf("Authorization header not found")
+	}
+	e.auth_token = auth[0]
+}
 
 // func (e *Employee) Test_User(t *testing.T) *Employee {
 // 	server := core.NewServer().Run("test")

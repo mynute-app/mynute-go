@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,8 +29,74 @@ type employee_controller struct {
 //	@Success		201			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
-func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+func (ec *employee_controller) CreateEmployee(c *fiber.Ctx) error {
+	return ec.CreateOne(c)
+}
+
+// LoginEmployee logs an employee in
+//
+//	@Summary		Login
+//	@Description	Log in an user
+//	@Tags			Employee
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body	DTO.LoginEmployee	true	"Employee"
+//	@Success		200
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/employee/login [post]
+func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
+	var body model.Employee
+	if err := c.BodyParser(&body); err != nil {
+		return err
+	}
+	var employee model.Employee
+	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee, ec.Associations); err != nil {
+		return err
+	}
+	if !handler.ComparePassword(employee.Password, body.Password) {
+		return lib.Error.Auth.InvalidLogin.SendToClient(c)
+	}
+	token, err := handler.JWT(c).Encode(employee)
+	if err != nil {
+		return err
+	}
+	c.Response().Header.Set("Authorization", token)
+	return nil
+}
+
+// VerifyEmployeeEmail Does the email verification for an employee
+//
+//	@Summary		Verify email
+//	@Description	Verify an employee's email
+//	@Tags			Employee
+//	@Accept			json
+//	@Produce		json
+//	@Param			email	path	string	true	"Employee Email"
+//	@Param			code	path	string	true	"Verification Code"
+//	@Success		200		{object}	nil
+//	@Failure		404		{object}	nil
+//	@Router			/employee/verify-email/{email}/{code} [post]
+func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
+	res := &lib.SendResponse{Ctx: c}
+	email := c.Params("email")
+	var employee model.Employee
+	employee.Email = email
+	if err := employee.ValidateEmail(); err != nil {
+		return res.Send(400, err)
+	}
+	if err := ec.Request.Gorm.GetOneBy("email", email, &employee, []string{}); err != nil {
+		return err
+	}
+	// code := c.Params("code")
+	// }
+	// if employee.VerificationCode != code {
+	// 	return lib.Error.Auth.EmailCodeInvalid.SendToClient(c)
+	// }
+	employee.Verified = true
+	if err := ec.Request.Gorm.DB.Save(&employee).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetEmployeeById retrieves an employee by ID
@@ -42,8 +109,8 @@ func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
-func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
-	return cc.GetBy("id", c)
+func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
+	return ec.GetBy("id", c)
 }
 
 // UpdateEmployeeById updates an employee by ID
@@ -58,8 +125,8 @@ func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Success		200			{object}	DTO.CreateEmployee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
-func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
-	return cc.UpdateOneById(c)
+func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
+	return ec.UpdateOneById(c)
 }
 
 // DeleteEmployeeById deletes an employee by ID
@@ -72,8 +139,8 @@ func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
-func (cc *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
-	return cc.DeleteOneById(c)
+func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
+	return ec.DeleteOneById(c)
 }
 
 func Employee(Gorm *handler.Gorm) *employee_controller {

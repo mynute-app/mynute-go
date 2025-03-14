@@ -1,5 +1,7 @@
 package controller
 
+import "fmt"
+
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
@@ -36,29 +38,36 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	if err := c.BodyParser(body); err != nil {
 		return err
 	}
+
 	company := &model.Company{
 		Name:  body.Name,
 		TaxID: body.TaxID,
 	}
+
 	if err := cc.Request.Gorm.DB.Create(company).Error; err != nil {
 		return err
 	}
+
 	owner := &model.Employee{
-		Name: body.OwnerName,
-		Surname: body.OwnerSurname,
-		Email: body.OwnerEmail,
-		Phone: body.OwnerPhone,
-		Password: body.OwnerPassword,
+		Name:      body.OwnerName,
+		Surname:   body.OwnerSurname,
+		Email:     body.OwnerEmail,
+		Phone:     body.OwnerPhone,
+		Password:  body.OwnerPassword,
 		CompanyID: company.ID,
 	}
+
 	if err := cc.Request.Gorm.DB.Create(owner).Error; err != nil {
 		return err
 	}
-	company.Employees = append(company.Employees, *owner)
-	if err := cc.Request.Gorm.DB.Save(company).Error; err != nil {
+
+	var updtCompany model.Company
+
+	if err := cc.Request.Gorm.GetOneBy("id", fmt.Sprint(company.ID), &updtCompany, cc.Associations); err != nil {
 		return err
 	}
-	res.DTO(200, company, &DTO.Company{})
+
+	res.DTO(200, updtCompany, &DTO.Company{})
 	return nil
 }
 

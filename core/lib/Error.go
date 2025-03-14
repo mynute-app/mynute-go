@@ -43,9 +43,11 @@ type ErrorTypes struct {
 }
 
 type AuthErrors struct {
-	InvalidLogin ErrorStruct
-	NoToken      ErrorStruct
-	InvalidToken ErrorStruct
+	InvalidLogin     ErrorStruct
+	NoToken          ErrorStruct
+	InvalidToken     ErrorStruct
+	Unauthorized     ErrorStruct
+	EmailCodeInvalid ErrorStruct
 }
 
 type UserErrors struct {
@@ -53,7 +55,6 @@ type UserErrors struct {
 	EmailExists       ErrorStruct
 	InvalidUserName   ErrorStruct
 	InvalidEmail      ErrorStruct
-	Unauthroized      ErrorStruct
 	NotFoundById      ErrorStruct
 	CompanyLimit      ErrorStruct
 	CompanyIdNotFound ErrorStruct
@@ -92,6 +93,16 @@ var Error = ErrorCategory{
 			DescriptionBr: "Token inválido",
 			HTTPStatus:    401,
 		},
+		Unauthorized: ErrorStruct{
+			DescriptionEn: "You are not authorized to access this resource",
+			DescriptionBr: "Você não está autorizado a acessar este recurso",
+			HTTPStatus:    401,
+		},
+		EmailCodeInvalid: ErrorStruct{
+			DescriptionEn: "Email's verification code is invalid",
+			DescriptionBr: "Código de verificação do email inválido",
+			HTTPStatus:    400,
+		},
 	},
 	User: UserErrors{
 		NotVerified: ErrorStruct{
@@ -113,11 +124,6 @@ var Error = ErrorCategory{
 			DescriptionEn: "Invalid email",
 			DescriptionBr: "Email inválido",
 			HTTPStatus:    400,
-		},
-		Unauthroized: ErrorStruct{
-			DescriptionEn: "You are not authorized to access this resource",
-			DescriptionBr: "Você não está autorizado a acessar este recurso",
-			HTTPStatus:    401,
 		},
 		NotFoundById: ErrorStruct{
 			DescriptionEn: "Could not find user by ID",

@@ -1600,7 +1600,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1654,7 +1654,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1717,7 +1717,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 },
                 "phone": {
                     "type": "string",
@@ -1852,7 +1852,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "1VerySecurePassword!"
+                    "example": "1SecurePswd!"
                 }
             }
         },

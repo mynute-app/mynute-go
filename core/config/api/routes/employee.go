@@ -11,9 +11,11 @@ import (
 func Employee(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.Employee(Gorm)
 	e := r.Group("/employee")
-	em := middleware.Employee(Gorm)
-	e.Post("/", append(em.Create(), ce.CreateEmployee)...) // ok
-	e.Get("/:id", ce.GetEmployeeById)                                                    // ok
-	e.Patch("/:id", ce.UpdateEmployeeById)                                               // ok
-	e.Delete("/:id", ce.DeleteEmployeeById)                                              // ok
+	e.Post("/login", ce.LoginEmployee)
+	e.Post("/verify-email/:email/:code", ce.VerifyEmployeeEmail)
+	auth := e.Group("/", middleware.Auth(Gorm).DenyUnauthorized) // ok
+	auth.Post("/", ce.CreateEmployee)                               // ok
+	auth.Get("/:id", ce.GetEmployeeById)                            // ok
+	auth.Patch("/:id", ce.UpdateEmployeeById)                       // ok
+	auth.Delete("/:id", ce.DeleteEmployeeById)                      // ok
 }

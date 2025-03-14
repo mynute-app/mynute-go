@@ -19,9 +19,6 @@ func User(Gorm *handler.Gorm) *user_middleware {
 func (um *user_middleware) Create() []fiber.Handler {
 	return []fiber.Handler{
 		lib.SaveBodyOnCtx[model.User],
-		um.VerifyEmailExists,
-		um.ValidateProps,
-		um.HashPassword,
 	}
 }
 
@@ -86,7 +83,7 @@ func (um *user_middleware) MatchUserAndCompany(c *fiber.Ctx) error {
 		return lib.Error.User.CompanyIdNotFound.SendToClient(c)
 	}
 	if body_company_id != user_company_id {
-		return lib.Error.User.Unauthroized.SendToClient(c)
+		return lib.Error.Auth.Unauthorized.SendToClient(c)
 	}
 	return c.Next()
 }
