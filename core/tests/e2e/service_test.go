@@ -37,7 +37,7 @@ func Test_Service(t *testing.T) {
 	branch.auth_token = user.auth_token
 	branch.company = company
 	branch.Create(t, 200)
-	branch.created.Services = append(branch.created.Services, service.created)
+	branch.created.Services = append(branch.created.Services, &service.created)
 	branch.Update(t, 200)
 	service.Delete(t, 200)
 	branch.Delete(t, 200)
