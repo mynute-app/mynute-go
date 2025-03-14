@@ -26,6 +26,9 @@ func (p *Gorm) UpdateOneById(value string, model any, changes any, associations 
 		return err
 	}
 
+	// Omit all associations
+	query = query.Omit(associations...)
+
 	// Apply the changes
 	if err := query.Updates(changes).Error; err != nil {
 		return err
