@@ -1,9 +1,11 @@
 package controller
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,7 +30,24 @@ type employee_controller struct {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+	res := &lib.SendResponse{Ctx: c}
+	user := model.User{}
+	c.BodyParser(&user)
+	if err := cc.Request.Gorm.DB.Create(&user).Error; err != nil {
+		return err
+	}
+	employee := model.Employee{}
+	employee.UserID = &user.ID
+	employee.CompanyID = user.CompanyID
+	if err := cc.Request.Gorm.DB.Create(&employee).Error; err != nil {
+		return err
+	}
+	user.EmployeeID = &employee.ID
+	if err := cc.Request.Gorm.DB.Save(&user).Error; err != nil {
+		return err
+	}
+	res.DTO(200, employee, &DTO.Employee{})
+	return nil
 }
 
 // GetEmployeeById retrieves an employee by ID
@@ -38,7 +57,7 @@ func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			id	path	string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
 func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
@@ -54,7 +73,7 @@ func (cc *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
 //	@Param			employee	body		DTO.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200			{object}	DTO.Employee
+//	@Success		200			{object}	DTO.CreateEmployee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
@@ -68,7 +87,7 @@ func (cc *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			id	path	string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
 func (cc *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {

@@ -50,8 +50,8 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 	employee := &model.Employee{}
-	employee.UserID = user.ID
-	employee.CompanyID = company.ID
+	employee.UserID = &user.ID
+	employee.CompanyID = &company.ID
 	if err := cc.Request.Gorm.DB.Create(employee).Error; err != nil {
 		return err
 	}

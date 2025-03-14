@@ -1,38 +1,39 @@
 package DTO
 
+type TimeRange struct {
+	Start string `json:"start" example:"09:00"`
+	End   string `json:"end" example:"17:00"`
+}
+
 type UpdateEmployeeSwagger struct {
 	Name    string `json:"name" example:"John"`
 	Surname string `json:"surname" example:"Clark"`
 }
 
 type CreateEmployee struct {
-	Name      string `json:"name" example:"John"`
-	Surname   string `json:"surname" example:"Doe"`
-	Email     string `json:"email" example:"john.doe@example.com"`
-	Phone     string `json:"phone" example:"+15555555555"`
-	Password  string `json:"password" example:"1VerySecurePassword!"`
-	CompanyID uint   `json:"company_id" example:"1"`
-	UserID    uint   `json:"user_id" example:"1"`
+	CompanyID uint     `gorm:"not null" json:"company_id"`
+	Name      string   `gorm:"not null" json:"name" example:"Joseph"`
+	Surname   string   `json:"surname" example:"Doe"`
+	Role      string   `json:"role" example:"user"`
+	Email     string   `gorm:"not null;unique" json:"email" example:"joseph.doe@example.com"`
+	Phone     string   `gorm:"not null;unique" json:"phone" example:"+15555555551"`
 }
 
 type Employee struct {
-	CreateEmployee
-	ID               uint               `json:"id"`
-	VerificationCode string             `json:"verification_code" example:"123456"`
-	Verified         bool               `json:"verified" example:"false"`
-	Branches         []BranchPopulated  `json:"branches"`
-	Services         []ServicePopulated `json:"services"`
-	Tags             []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
+	ID             uint               `json:"id" example:"1"`
+	UserID         uint               `json:"user_id" example:"1"`
+	User           User               `json:"user"`
+	CompanyID      uint               `json:"company_id" example:"1"`
+	Company        Company            `json:"company" example:"1"`
+	Branches       []BranchPopulated  `json:"branches" example:"[]"`
+	Services       []ServicePopulated `json:"services" example:"[]"`
+	AvailableSlots []TimeRange        `json:"available_slots" example:"[{\"start\":\"09:00\", \"end\":\"17:00\"}]"`
+	Appointments   []Appointment      `json:"appointments" example:"[]"`
+	Tags           []string           `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
 }
 
 type EmployeePopulated struct {
-	ID               uint     `json:"id" example:"1"`
-	Name             string   `json:"name" example:"John"`
-	Surname          string   `json:"surname" example:"Doe"`
-	Email            string   `json:"email" example:"john.doe@example.com"`
-	Phone            string   `json:"phone" example:"+1-555-555-5555"`
-	Tags             []string `json:"tag" example:"[\"super-admin\", \"branch-manager\"]"`
-	VerificationCode string   `json:"verification_code" example:"123456"`
-	Verified         bool     `json:"verified" example:"false"`
-	CompanyID        uint     `json:"company_id" example:"1"`
+	ID        uint `json:"id" example:"1"`
+	UserID    uint `json:"user_id" example:"1"`
+	CompanyID uint `json:"company_id" example:"1"`
 }
