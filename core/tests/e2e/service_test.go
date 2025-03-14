@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -49,7 +50,7 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 	http.URL("/service")
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
-	http.Send(model.CreateService{
+	http.Send(DTO.CreateService{
 		Name:        "Test Service",
 		Description: "Test Description",
 		CompanyID:   s.company.created.ID,

@@ -5,14 +5,13 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type employee_controller struct {
-	service.Base[model.Employee, model.Employee]
+	service.Base[model.Employee, DTO.Employee]
 }
 
 // CreateEmployee creates an employee
@@ -30,24 +29,7 @@ type employee_controller struct {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func (cc *employee_controller) CreateEmployee(c *fiber.Ctx) error {
-	res := &lib.SendResponse{Ctx: c}
-	user := model.User{}
-	c.BodyParser(&user)
-	if err := cc.Request.Gorm.DB.Create(&user).Error; err != nil {
-		return err
-	}
-	employee := model.Employee{}
-	employee.UserID = &user.ID
-	employee.CompanyID = user.CompanyID
-	if err := cc.Request.Gorm.DB.Create(&employee).Error; err != nil {
-		return err
-	}
-	user.EmployeeID = &employee.ID
-	if err := cc.Request.Gorm.DB.Save(&user).Error; err != nil {
-		return err
-	}
-	res.DTO(200, employee, &DTO.Employee{})
-	return nil
+	return cc.CreateOne(c)
 }
 
 // GetEmployeeById retrieves an employee by ID
@@ -96,7 +78,7 @@ func (cc *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	return &employee_controller{
-		Base: service.Base[model.Employee, model.Employee]{
+		Base: service.Base[model.Employee, DTO.Employee]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{},

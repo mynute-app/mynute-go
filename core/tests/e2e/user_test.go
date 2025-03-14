@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
@@ -34,7 +35,7 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 	http.Method("POST")
 	http.URL("/user")
 	http.ExpectStatus(s)
-	http.Send(model.CreateUser{
+	http.Send(DTO.CreateUser{
 		Email:    "test@email.com",
 		Name:     lib.GenerateRandomName("User Name"),
 		Surname:  lib.GenerateRandomName("User Surname"),

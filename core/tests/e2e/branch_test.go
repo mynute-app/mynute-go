@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -42,7 +43,7 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 	http.URL("/branch")
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
-	http.Send(model.CreateBranch{
+	http.Send(DTO.CreateBranch{
 		Name:         "Test Branch",
 		CompanyID:    b.company.created.ID,
 		Street:       "Test Street",

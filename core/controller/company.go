@@ -32,36 +32,29 @@ type company_controller struct {
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	res := &lib.SendResponse{Ctx: c}
-	user_id, err := lib.GetUserIdFromClaims(c)
-	if err != nil {
+	body := &DTO.CreateCompany{}
+	if err := c.BodyParser(body); err != nil {
 		return err
 	}
-	user := &model.User{};
-	if err := cc.Request.Gorm.GetOneBy("id", user_id, user, nil); err != nil {
-		return err
+	company := &model.Company{
+		Name:  body.Name,
+		TaxID: body.TaxID,
 	}
-	company := &model.Company{}
-	c.BodyParser(company)
 	if err := cc.Request.Gorm.DB.Create(company).Error; err != nil {
-		return res.Http400(err)
-	}
-	user.CompanyID = &company.ID
-	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
 		return err
 	}
-	employee := &model.Employee{}
-	employee.UserID = &user.ID
-	employee.CompanyID = &company.ID
-	if err := cc.Request.Gorm.DB.Create(employee).Error; err != nil {
+	owner := &model.Employee{
+		Name: body.OwnerName,
+		Surname: body.OwnerSurname,
+		Email: body.OwnerEmail,
+		Phone: body.OwnerPhone,
+		Password: body.OwnerPassword,
+		CompanyID: company.ID,
+	}
+	if err := cc.Request.Gorm.DB.Create(owner).Error; err != nil {
 		return err
 	}
-	user.EmployeeID = &employee.ID
-	user.CompanyID = &company.ID
-	if err := cc.Request.Gorm.DB.Save(user).Error; err != nil {
-		return err
-	}
-	// add a employee to the company
-	company.Employees = append(company.Employees, *employee)
+	company.Employees = append(company.Employees, *owner)
 	if err := cc.Request.Gorm.DB.Save(company).Error; err != nil {
 		return err
 	}

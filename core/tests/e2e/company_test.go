@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -37,7 +38,7 @@ func (c *Company) Create(t *testing.T, status int) map[string]any {
 	http.URL("/company")
 	http.ExpectStatus(status)
 	http.Header("Authorization", c.auth_token)
-	http.Send(model.CreateCompany{
+	http.Send(DTO.CreateCompany{
 		Name:  "Test Company",
 		TaxID: "41915230000168",
 	})

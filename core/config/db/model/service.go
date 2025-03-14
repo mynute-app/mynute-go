@@ -2,14 +2,6 @@ package model
 
 import "gorm.io/gorm"
 
-type CreateService struct {
-	Name        string `gorm:"not null" json:"name"`
-	Description string `gorm:"not null" json:"description"`
-	Price       int32  `gorm:"not null" json:"price"`
-	Duration    uint   `gorm:"not null" json:"duration"`
-	CompanyID   uint   `gorm:"not null" json:"company_id"`
-}
-
 // Third step: Choosing the service.
 type Service struct {
 	gorm.Model
