@@ -22,6 +22,7 @@ type CreateEmployee struct {
 	Role      string `json:"role" example:"user"`
 	Email     string `json:"email" example:"joseph.doe@example.com"`
 	Phone     string `json:"phone" example:"+15555555551"`
+	Password  string `json:"password" example:"1SecurePswd!"`
 }
 
 type Employee struct {

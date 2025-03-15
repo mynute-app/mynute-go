@@ -91,7 +91,7 @@ func (cc *user_controller) VerifyUserEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var user model.User
 	user.Email = email
-	if err := user.ValidateEmail(); err != nil {
+	if err := lib.ValidatorV10.Var(user.Email, "email"); err != nil {
 		return res.Send(400, err)
 	}
 	if err := cc.Request.Gorm.GetOneBy("email", email, &user, []string{}); err != nil {

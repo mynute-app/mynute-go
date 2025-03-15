@@ -42,14 +42,17 @@ func (e *Employee) Create(t *testing.T, s int) {
 	http.URL("/employee")
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
+	pswd := "1SecurePswd!"
 	http.Send(DTO.CreateEmployee{
 		CompanyID: e.company.created.ID,
 		Name:      lib.GenerateRandomName("Employee Name"),
 		Surname:   lib.GenerateRandomName("Employee Surname"),
 		Email:     lib.GenerateRandomEmail(),
-		Phone:     lib.GenerateRandomStrNumber(11),
+		Phone:     lib.GenerateRandomPhoneNumber(),
+		Password:  pswd,
 	})
 	http.ParseResponse(&e.created)
+	e.created.Password = pswd
 }
 
 func (e *Employee) Update(t *testing.T, s int) {

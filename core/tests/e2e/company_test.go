@@ -48,12 +48,12 @@ func (c *Company) Create(t *testing.T, status int) {
 	ownerEmail := lib.GenerateRandomEmail()
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
-		Name:          "Test Company",
-		TaxID:         "41915230000168",
-		OwnerName:     "Test Owner Name",
-		OwnerSurname:  "Test Owner Surname",
+		Name:          lib.GenerateRandomName("Company Name"),
+		TaxID:         lib.GenerateRandomStrNumber(14),
+		OwnerName:     lib.GenerateRandomName("Owner Name"),
+		OwnerSurname:  lib.GenerateRandomName("Owner Surname"),
 		OwnerEmail:    ownerEmail,
-		OwnerPhone:    "+15555555551",
+		OwnerPhone:    lib.GenerateRandomPhoneNumber(),
 		OwnerPassword: ownerPswd,
 	})
 	http.ParseResponse(&c.created)

@@ -84,7 +84,7 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var employee model.Employee
 	employee.Email = email
-	if err := employee.ValidateEmail(); err != nil {
+	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
 		return res.Send(400, err)
 	}
 	if err := ec.Request.Gorm.GetOneBy("email", email, &employee, []string{}); err != nil {

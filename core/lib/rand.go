@@ -14,6 +14,10 @@ func GenerateRandomName(str string) string {
 	return fmt.Sprintf("Test %v %d", str, rand.Intn(100000))
 }
 
+func GenerateRandomPhoneNumber() string {
+	return fmt.Sprintf("+%v", GenerateRandomStrNumber(11))
+}
+
 func GenerateRandomString(length int) string {
 	// Define the character set to be used for generating the random string
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

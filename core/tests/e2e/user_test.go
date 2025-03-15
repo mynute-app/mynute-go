@@ -42,16 +42,16 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 	http.URL("/user")
 	http.ExpectStatus(s)
 	email := lib.GenerateRandomEmail()
-	passwrd := "1SecurePswd!"
+	pswd := "1SecurePswd!"
 	http.Send(DTO.CreateUser{
 		Email:    email,
 		Name:     lib.GenerateRandomName("User Name"),
 		Surname:  lib.GenerateRandomName("User Surname"),
-		Password: passwrd,
-		Phone:    lib.GenerateRandomStrNumber(11),
+		Password: pswd,
+		Phone:    lib.GenerateRandomPhoneNumber(),
 	})
 	http.ParseResponse(&u.created)
-	u.created.Password = passwrd
+	u.created.Password = pswd
 	return http.ResBody
 }
 
