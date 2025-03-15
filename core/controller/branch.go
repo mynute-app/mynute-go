@@ -62,6 +62,9 @@ func (cc *branch_controller) GetBranchByName(c *fiber.Ctx) error {
 //	@Summary		Update branch
 //	@Description	Update a branch
 //	@Tags			Branch
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string				true	"Branch ID"
@@ -78,7 +81,10 @@ func (cc *branch_controller) UpdateBranchById(c *fiber.Ctx) error {
 //	@Summary		Delete branch by ID
 //	@Description	Delete a branch by its ID
 //	@Tags			Branch
-//	@Param			id	path	string	true	"Branch ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Branch ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse

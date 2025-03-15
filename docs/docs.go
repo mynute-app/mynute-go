@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
+        "/auth/verify-existing-account/": {
             "post": {
                 "security": [
                     {
@@ -43,54 +43,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.LoginUser"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/verify-email/{id}/{code}": {
-            "get": {
-                "description": "Verify an user's email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Verify email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Validation code",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -222,6 +174,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a branch by its ID",
                 "produces": [
                     "application/json"
@@ -231,6 +188,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete branch by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Branch ID",
@@ -246,6 +210,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -255,6 +222,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update a branch",
                 "consumes": [
                     "application/json"
@@ -267,6 +239,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update branch",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Branch ID",
@@ -296,17 +275,15 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/company": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Create a company",
                 "consumes": [
                     "application/json"
@@ -319,13 +296,6 @@ const docTemplate = `{
                 ],
                 "summary": "Create company",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "Company",
                         "name": "company",
@@ -348,9 +318,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             }
@@ -460,6 +427,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a company by its ID",
                 "produces": [
                     "application/json"
@@ -469,6 +441,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete company by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Company ID",
@@ -484,6 +463,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Company"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -493,6 +475,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update a company by its ID",
                 "consumes": [
                     "application/json"
@@ -505,6 +492,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update company by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Company ID",
@@ -528,6 +522,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.Company"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",
@@ -575,8 +572,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DTO.Employee"
                         }
@@ -593,8 +590,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/login": {
+            "post": {
+                "description": "Log in an user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "Employee",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.LoginEmployee"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employee/verify-email/{email}/{code}": {
+            "post": {
+                "description": "Verify an employee's email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Verify email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Verification Code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/employee/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an employee by its ID",
                 "produces": [
                     "application/json"
@@ -606,37 +684,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Employee"
-                        }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete an employee by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete employee by ID",
-                "parameters": [
                     {
                         "type": "string",
                         "description": "Employee ID",
@@ -649,8 +701,59 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Employee"
+                            "$ref": "#/definitions/DTO.CreateEmployee"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an employee by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Delete employee by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.CreateEmployee"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",
@@ -661,6 +764,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update an employee",
                 "consumes": [
                     "application/json"
@@ -673,6 +781,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update employee",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Employee ID",
@@ -694,7 +809,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Employee"
+                            "$ref": "#/definitions/DTO.CreateEmployee"
                         }
                     },
                     "400": {
@@ -702,12 +817,20 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/holidays": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a holiday",
                 "consumes": [
                     "application/json"
@@ -720,6 +843,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create holiday",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Holiday",
                         "name": "holiday",
@@ -742,6 +872,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -816,6 +949,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a holiday by its ID",
                 "produces": [
                     "application/json"
@@ -825,6 +963,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete holiday by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Holiday ID",
@@ -840,6 +985,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Holidays"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -849,6 +997,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update a holiday",
                 "consumes": [
                     "application/json"
@@ -861,6 +1014,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update holiday",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Holiday ID",
@@ -890,12 +1050,20 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/sector": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a company type",
                 "consumes": [
                     "application/json"
@@ -908,6 +1076,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create company type",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Company Type",
                         "name": "sector",
@@ -927,6 +1102,44 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/sector/name/{name}": {
+            "get": {
+                "description": "Retrieve a company type by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sector"
+                ],
+                "summary": "Get company type by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company Type ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Sector"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -969,6 +1182,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a company type by its ID",
                 "produces": [
                     "application/json"
@@ -978,6 +1196,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete company type by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Company Type ID",
@@ -993,6 +1218,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Sector"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1002,6 +1230,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update a company type by its ID",
                 "consumes": [
                     "application/json"
@@ -1014,6 +1247,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update company type by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Company Type ID",
@@ -1038,6 +1278,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Sector"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1049,6 +1292,11 @@ const docTemplate = `{
         },
         "/service": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a service",
                 "consumes": [
                     "application/json"
@@ -1061,6 +1309,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create service",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Service",
                         "name": "service",
@@ -1083,6 +1338,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1157,6 +1415,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete a service by its ID",
                 "produces": [
                     "application/json"
@@ -1166,6 +1429,13 @@ const docTemplate = `{
                 ],
                 "summary": "Delete service by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Service ID",
@@ -1178,12 +1448,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found"
                     }
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update a service by its ID",
                 "consumes": [
                     "application/json"
@@ -1196,6 +1474,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update service by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Service ID",
@@ -1219,6 +1504,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.Service"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found"
@@ -1254,7 +1542,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreatedUser"
+                            "$ref": "#/definitions/DTO.User"
                         }
                     },
                     "400": {
@@ -1301,21 +1589,68 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{id}": {
-            "delete": {
-                "description": "Delete an user",
+        "/user/login": {
+            "post": {
+                "description": "Log in an user",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "User"
                 ],
-                "summary": "Delete user",
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "User",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.LoginUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/verify-email/{email}/{code}": {
+            "post": {
+                "description": "Verify an user's email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Verify email",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User ID",
-                        "name": "id",
+                        "description": "User Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Verification Code",
+                        "name": "code",
                         "in": "path",
                         "required": true
                     }
@@ -1328,8 +1663,57 @@ const docTemplate = `{
                         "description": "Not Found"
                     }
                 }
+            }
+        },
+        "/user/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update an user",
                 "consumes": [
                     "application/json"
@@ -1342,6 +1726,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update user",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "User ID",
@@ -1371,12 +1762,46 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         }
     },
     "definitions": {
+        "DTO.Appointment": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "integer"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "end_time": {
+                    "type": "string",
+                    "example": "2021-01-01T10:00:00Z"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "DTO.Branch": {
             "type": "object",
             "properties": {
@@ -1525,6 +1950,21 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.CompanyPopulated": {
+            "description": "Company DTO Populated",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                }
+            }
+        },
         "DTO.CreateBranch": {
             "type": "object",
             "properties": {
@@ -1577,6 +2017,26 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Your Company Name"
                 },
+                "owner_email": {
+                    "type": "string",
+                    "example": "john.clark@gmail.com"
+                },
+                "owner_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "owner_password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                },
+                "owner_phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "owner_surname": {
+                    "type": "string",
+                    "example": "Clark"
+                },
                 "tax_id": {
                     "type": "string",
                     "example": "00000000000000"
@@ -1587,32 +2047,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
                 },
                 "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "joseph.doe@example.com"
                 },
                 "name": {
                     "type": "string",
-                    "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
+                    "example": "Joseph"
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+15555555555"
+                    "example": "+15555555551"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
                 },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -1666,39 +2121,29 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.CreatedUser": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                }
-            }
-        },
         "DTO.Employee": {
             "type": "object",
             "properties": {
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Appointment"
+                    }
+                },
+                "available_slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.TimeRange"
+                    }
+                },
                 "branches": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/DTO.BranchPopulated"
                     }
+                },
+                "company": {
+                    "$ref": "#/definitions/DTO.CompanyPopulated"
                 },
                 "company_id": {
                     "type": "integer",
@@ -1709,19 +2154,20 @@ const docTemplate = `{
                     "example": "john.doe@example.com"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
                     "type": "string",
                     "example": "John"
                 },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
                 "phone": {
                     "type": "string",
                     "example": "+15555555555"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
                 },
                 "services": {
                     "type": "array",
@@ -1733,37 +2179,25 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
-                "tag": {
+                "tags": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
                     "example": [
-                        "[\"super-admin\"",
-                        " \"branch-manager\"]"
+                        "[\"tag1\"",
+                        " \"tag2\"]"
                     ]
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "verification_code": {
-                    "type": "string",
-                    "example": "123456"
                 },
                 "verified": {
                     "type": "boolean",
-                    "example": false
+                    "example": true
                 }
             }
         },
         "DTO.EmployeePopulated": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -1778,29 +2212,25 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string",
-                    "example": "+1-555-555-5555"
+                    "example": "+15555555555"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
                 },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
                 },
-                "tag": {
+                "tags": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
                     "example": [
-                        "[\"super-admin\"",
-                        " \"branch-manager\"]"
+                        "[\"tag1\"",
+                        " \"tag2\"]"
                     ]
-                },
-                "verification_code": {
-                    "type": "string",
-                    "example": "123456"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": false
                 }
             }
         },
@@ -1840,6 +2270,19 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "Public"
+                }
+            }
+        },
+        "DTO.LoginEmployee": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "joseph.doe@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
                 }
             }
         },
@@ -1939,6 +2382,19 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.TimeRange": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "string",
+                    "example": "17:00"
+                },
+                "start": {
+                    "type": "string",
+                    "example": "09:00"
+                }
+            }
+        },
         "DTO.UpdateBranch": {
             "type": "object",
             "properties": {
@@ -1972,17 +2428,21 @@ const docTemplate = `{
         "DTO.User": {
             "type": "object",
             "properties": {
-                "company_id": {
-                    "type": "integer",
-                    "example": 1
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Appointment"
+                    }
+                },
+                "available_slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.TimeRange"
+                    }
                 },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
-                },
-                "employee_id": {
-                    "type": "integer",
-                    "example": 1
                 },
                 "id": {
                     "type": "integer",
@@ -1999,10 +2459,6 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
-                },
-                "verification_code": {
-                    "type": "string",
-                    "example": "123456"
                 },
                 "verified": {
                     "type": "boolean",
@@ -2032,6 +2488,10 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         }

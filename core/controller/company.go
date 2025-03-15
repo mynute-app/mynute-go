@@ -23,9 +23,6 @@ type company_controller struct {
 //	@Summary		Create company
 //	@Description	Create a company
 //	@Tags			Company
-//	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
-//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"
@@ -118,7 +115,10 @@ func (cc *company_controller) GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Summary		Update company by ID
 //	@Description	Update a company by its ID
 //	@Tags			Company
-//	@Param			id	path	string	true	"Company ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Company ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.Company	true	"Company"
@@ -134,7 +134,10 @@ func (cc *company_controller) UpdateCompanyById(c *fiber.Ctx) error {
 //	@Summary		Delete company by ID
 //	@Description	Delete a company by its ID
 //	@Tags			Company
-//	@Param			id	path	string	true	"Company ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Company ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Company
 //	@Failure		404	{object}	DTO.ErrorResponse

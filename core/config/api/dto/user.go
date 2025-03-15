@@ -20,7 +20,7 @@ type User struct {
 	Email          string        `json:"email" example:"john.doe@example.com"`
 	Phone          string        `json:"phone" example:"+15555555555"`
 	Verified       bool          `json:"verified" example:"false"`
-	AvailableSlots []TimeRange   `json:"available_slots" example:"[{\"start\":\"09:00\", \"end\":\"17:00\"}]"`
+	AvailableSlots []TimeRange   `json:"available_slots"`
 	Appointments   []Appointment `json:"appointments"`
 }
 

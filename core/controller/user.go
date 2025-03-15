@@ -24,7 +24,7 @@ type user_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		DTO.CreateUser	true	"User"
-//	@Success		200		{object}	DTO.CreatedUser
+//	@Success		200		{object}	DTO.User
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
@@ -81,8 +81,8 @@ func (cc *user_controller) LoginUser(c *fiber.Ctx) error {
 //	@Tags			User
 //	@Accept			json
 //	@Produce		json
-//	@Param			email	path	string	true	"User Email"
-//	@Param			code	path	string	true	"Verification Code"
+//	@Param			email	path		string	true	"User Email"
+//	@Param			code	path		string	true	"Verification Code"
 //	@Success		200		{object}	nil
 //	@Failure		404		{object}	nil
 //	@Router			/user/verify-email/{email}/{code} [post]
@@ -128,6 +128,9 @@ func (cc *user_controller) GetUserByEmail(c *fiber.Ctx) error {
 //	@Summary		Update user
 //	@Description	Update an user
 //	@Tags			User
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string		true	"User ID"
@@ -144,7 +147,10 @@ func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 //	@Summary		Delete user
 //	@Description	Delete an user
 //	@Tags			User
-//	@Param			id	path	string	true	"User ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"User ID"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		404	{object}	nil
@@ -152,29 +158,6 @@ func (cc *user_controller) UpdateUserById(c *fiber.Ctx) error {
 func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
-
-// func (cc *user_controller) Login(c *fiber.Ctx) error {
-// 	cc.SetAction(c)
-// 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
-// 	var userDatabase model.User
-// 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &userDatabase, []string{}); err != nil {
-// 		cc.AutoReqActions.ActionFailed(404, err)
-// 		return nil
-// 	}
-// 	if handler.ComparePassword(userDatabase.Password, body.Password) && userDatabase.Verified {
-// 		cc.AutoReqActions.Status = 401
-// 		return nil
-// 	}
-// 	claims := handler.JWT(c).CreateClaims(userDatabase.Email)
-// 	token, err := handler.JWT(c).CreateToken(claims)
-// 	if err != nil {
-// 		cc.AutoReqActions.ActionFailed(500, err)
-// 	}
-// 	log.Println("User logged in")
-// 	c.Response().Header.Set("Authorization", token)
-
-// 	return nil
-// }
 
 var UserAssociations = []string{"Appointments"}
 

@@ -26,7 +26,7 @@ type employee_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
-//	@Success		201			{object}	DTO.Employee
+//	@Success		200			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func (ec *employee_controller) CreateEmployee(c *fiber.Ctx) error {
@@ -74,8 +74,8 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Accept			json
 //	@Produce		json
-//	@Param			email	path	string	true	"Employee Email"
-//	@Param			code	path	string	true	"Verification Code"
+//	@Param			email	path		string	true	"Employee Email"
+//	@Param			code	path		string	true	"Verification Code"
 //	@Success		200		{object}	nil
 //	@Failure		404		{object}	nil
 //	@Router			/employee/verify-email/{email}/{code} [post]
@@ -107,7 +107,10 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Summary		Get employee by ID
 //	@Description	Retrieve an employee by its ID
 //	@Tags			Employee
-//	@Param			id	path	string	true	"Employee ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
@@ -121,6 +124,9 @@ func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Summary		Update employee
 //	@Description	Update an employee
 //	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
@@ -137,7 +143,10 @@ func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Summary		Delete employee by ID
 //	@Description	Delete an employee by its ID
 //	@Tags			Employee
-//	@Param			id	path	string	true	"Employee ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse

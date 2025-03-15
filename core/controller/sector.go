@@ -19,6 +19,9 @@ type sector_controller struct {
 //	@Summary		Create company type
 //	@Description	Create a company type
 //	@Tags			Sector
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			sector	body		DTO.Sector	true	"Company Type"
@@ -38,7 +41,7 @@ func (cc *sector_controller) CreateCompanyType(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/sector/{id} [get]
+//	@Router			/sector/name/{name} [get]
 func (cc *sector_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
@@ -62,7 +65,10 @@ func (cc *sector_controller) GetCompanyTypeById(c *fiber.Ctx) error {
 //	@Summary		Update company type by ID
 //	@Description	Update a company type by its ID
 //	@Tags			Sector
-//	@Param			id	path	string	true	"Company Type ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Company Type ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			sector	body		DTO.Sector	true	"Company Type"
@@ -78,7 +84,10 @@ func (cc *sector_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
 //	@Summary		Delete company type by ID
 //	@Description	Delete a company type by its ID
 //	@Tags			Sector
-//	@Param			id	path	string	true	"Company Type ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Company Type ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse

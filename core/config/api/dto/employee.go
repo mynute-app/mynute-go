@@ -5,6 +5,11 @@ type TimeRange struct {
 	End   string `json:"end" example:"17:00"`
 }
 
+type LoginEmployee struct {
+	Email    string `json:"email" example:"joseph.doe@example.com"`
+	Password string `json:"password" example:"1SecurePswd!"`
+}
+
 type UpdateEmployeeSwagger struct {
 	Name    string `json:"name" example:"John"`
 	Surname string `json:"surname" example:"Clark"`
@@ -28,7 +33,7 @@ type Employee struct {
 	Phone          string             `json:"phone" example:"+15555555555"`
 	Tags           []string           `json:"tags" example:"[\"tag1\", \"tag2\"]"`
 	Verified       bool               `json:"verified" example:"true"`
-	AvailableSlots []TimeRange        `json:"available_slots" example:"[{\"start\":\"09:00\", \"end\":\"17:00\"}]"`
+	AvailableSlots []TimeRange        `json:"available_slots"`
 	Appointments   []Appointment      `json:"appointments"`
 	CompanyID      uint               `json:"company_id" example:"1"`
 	Company        CompanyPopulated   `json:"company"`

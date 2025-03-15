@@ -20,6 +20,9 @@ type service_controller struct {
 //	@Summary		Create service
 //	@Description	Create a service
 //	@Tags			Service
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.CreateService	true	"Service"
@@ -63,7 +66,10 @@ func (cc *service_controller) GetServiceByName(c *fiber.Ctx) error {
 //	@Summary		Update service by ID
 //	@Description	Update a service by its ID
 //	@Tags			Service
-//	@Param			id	path	string	true	"Service ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Service ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
@@ -79,7 +85,10 @@ func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
 //	@Summary		Delete service by ID
 //	@Description	Delete a service by its ID
 //	@Tags			Service
-//	@Param			id	path	string	true	"Service ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		404	{object}	nil

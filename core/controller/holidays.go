@@ -19,6 +19,9 @@ type holidays_controller struct {
 //	@Summary		Create holiday
 //	@Description	Create a holiday
 //	@Tags			Holidays
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
@@ -62,6 +65,9 @@ func (cc *holidays_controller) GetHolidayByName(c *fiber.Ctx) error {
 //	@Summary		Update holiday
 //	@Description	Update a holiday
 //	@Tags			Holidays
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string			true	"Holiday ID"
@@ -78,7 +84,10 @@ func (cc *holidays_controller) UpdateHolidayById(c *fiber.Ctx) error {
 //	@Summary		Delete holiday by ID
 //	@Description	Delete a holiday by its ID
 //	@Tags			Holidays
-//	@Param			id	path	string	true	"Holiday ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Holiday ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Holidays
 //	@Failure		404	{object}	DTO.ErrorResponse
