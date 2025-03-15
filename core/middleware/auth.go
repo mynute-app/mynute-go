@@ -38,12 +38,27 @@ func (am *auth_middleware) Login() []fiber.Handler {
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
 	fmt.Printf("auth_claims: %+v\n", auth_claims)
-	user, ok := auth_claims.(*model.User)
+	user, ok := auth_claims.(*DTO.UserPopulated)
 	if !ok {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
 	}
 	if user.ID == 0 {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	if !user.Verified {
+		return lib.Error.User.NotVerified.SendToClient(c)
+	}
+	return c.Next()
+}
+
+func (am *auth_middleware) DenyUnverified(c *fiber.Ctx) error {
+	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
+	user, ok := auth_claims.(*DTO.UserPopulated)
+	if !ok {
+		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	if !user.Verified {
+		return lib.Error.User.NotVerified.SendToClient(c)
 	}
 	return c.Next()
 }
@@ -114,5 +129,3 @@ func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
 // 	}
 // 	return c.Next()
 // }
-
-

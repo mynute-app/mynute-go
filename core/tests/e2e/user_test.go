@@ -30,19 +30,28 @@ func Test_User(t *testing.T) {
 	user.Delete(t, 200)
 }
 
+func (u *User) Set(t *testing.T) {
+	u.Create(t, 200)
+	u.VerifyEmail(t, 200)
+	u.Login(t, 200)
+}
+
 func (u *User) Create(t *testing.T, s int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/user")
 	http.ExpectStatus(s)
+	email := lib.GenerateRandomEmail()
+	passwrd := "1SecurePswd!"
 	http.Send(DTO.CreateUser{
-		Email:    "test@email.com",
+		Email:    email,
 		Name:     lib.GenerateRandomName("User Name"),
 		Surname:  lib.GenerateRandomName("User Surname"),
-		Password: "1SecurePswd!",
+		Password: passwrd,
 		Phone:    lib.GenerateRandomStrNumber(11),
 	})
 	http.ParseResponse(&u.created)
+	u.created.Password = passwrd
 	return http.ResBody
 }
 

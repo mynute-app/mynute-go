@@ -60,6 +60,9 @@ func (cc *user_controller) LoginUser(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
 		return err
 	}
+	if !user.Verified {
+		return lib.Error.User.NotVerified.SendToClient(c)
+	}
 	if !handler.ComparePassword(user.Password, body.Password) {
 		return lib.Error.Auth.InvalidLogin.SendToClient(c)
 	}

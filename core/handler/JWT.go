@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/db/model"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"errors"
@@ -48,7 +48,7 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	}
 }
 
-func (j *jsonWebToken) WhoAreYou() (*model.User, error) {
+func (j *jsonWebToken) WhoAreYou() (*DTO.UserPopulated, error) {
 	auth_token := j.C.Get("Authorization")
 	if auth_token == "" {
 		return nil, nil
@@ -89,7 +89,7 @@ func (j *jsonWebToken) WhoAreYou() (*model.User, error) {
 	}
 
 	// Turn bytes into model.User{} struct
-	user := &model.User{}
+	user := &DTO.UserPopulated{}
 	err = json.Unmarshal(claim_data_bytes, user)
 	if err != nil {
 		return nil, err

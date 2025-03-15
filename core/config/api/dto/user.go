@@ -25,9 +25,10 @@ type User struct {
 }
 
 type UserPopulated struct {
-	ID      uint   `json:"id" example:"1"`
-	Name    string `json:"name" example:"John"`
-	Surname string `json:"surname" example:"Doe"`
-	Email   string `json:"email" example:"john.doe@example.com"`
-	Phone   string `json:"phone" example:"+1-555-555-5555"`
+	ID       uint   `json:"id" example:"1"`
+	Name     string `json:"name" example:"John"`
+	Surname  string `json:"surname" example:"Doe"`
+	Email    string `json:"email" example:"john.doe@example.com"`
+	Phone    string `json:"phone" example:"+1-555-555-5555"`
+	Verified bool   `json:"verified" example:"false"`
 }

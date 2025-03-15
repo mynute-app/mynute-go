@@ -53,6 +53,9 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee, ec.Associations); err != nil {
 		return err
 	}
+	if !employee.Verified {
+		return lib.Error.User.NotVerified.SendToClient(c)
+	}
 	if !handler.ComparePassword(employee.Password, body.Password) {
 		return lib.Error.Auth.InvalidLogin.SendToClient(c)
 	}
@@ -148,7 +151,7 @@ func Employee(Gorm *handler.Gorm) *employee_controller {
 		Base: service.Base[model.Employee, DTO.Employee]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{},
+			Associations: []string{"Branches", "Company", "Services"},
 		},
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
@@ -21,13 +22,21 @@ func Test_Company(t *testing.T) {
 	defer server.Shutdown()
 	company := &Company{}
 	company.Create(t, 200)
+	company.owner.VerifyEmail(t, 200)
 	company.owner.Login(t, 200)
-	company.created.Name = "Updated Company Name"
 	company.auth_token = company.owner.auth_token
+	company.created.Name = "Updated Company Name"
 	company.Update(t, 200)
 	company.GetById(t, 200)
 	company.GetByName(t, 200)
 	company.Delete(t, 200)
+}
+
+func (c *Company) Set(t *testing.T) {
+	c.Create(t, 200)
+	c.owner.VerifyEmail(t, 200)
+	c.owner.Login(t, 200)
+	c.auth_token = c.owner.auth_token
 }
 
 func (c *Company) Create(t *testing.T, status int) {
@@ -36,7 +45,7 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.URL("/company")
 	http.ExpectStatus(status)
 	http.Header("Authorization", c.auth_token)
-	ownerEmail := "owner.email@gmail.com"
+	ownerEmail := lib.GenerateRandomEmail()
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
 		Name:          "Test Company",
@@ -50,7 +59,6 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.ParseResponse(&c.created)
 	owner := c.created.Employees[0]
 	owner.Password = ownerPswd
-	owner.Email = ownerEmail
 	c.owner = &Employee{
 		created: owner,
 	}

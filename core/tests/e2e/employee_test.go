@@ -1,8 +1,12 @@
 package e2e_test
 
 import (
+	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
+	"fmt"
 	"testing"
 )
 
@@ -22,6 +26,32 @@ type Employee struct {
 	created    model.Employee
 }
 
+func Test_Employee(t *testing.T) {
+	server := core.NewServer().Run("test")
+	defer server.Shutdown()
+	company := &Company{}
+	company.Set(t)
+	employee := &Employee{}
+	employee.company = company
+	employee.Create(t, 200)
+}
+
+func (e *Employee) Create(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/employee")
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.company.auth_token)
+	http.Send(DTO.CreateEmployee{
+		CompanyID: e.company.created.ID,
+		Name:      lib.GenerateRandomName("Employee Name"),
+		Surname:   lib.GenerateRandomName("Employee Surname"),
+		Email:     lib.GenerateRandomEmail(),
+		Phone:     lib.GenerateRandomStrNumber(11),
+	})
+	http.ParseResponse(&e.created)
+}
+
 func (e *Employee) Login(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
@@ -36,6 +66,14 @@ func (e *Employee) Login(t *testing.T, s int) {
 		t.Errorf("Authorization header not found")
 	}
 	e.auth_token = auth[0]
+}
+
+func (e *Employee) VerifyEmail(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/employee/verify-email/%v/%s", e.created.Email, "12345"))
+	http.ExpectStatus(s)
+	http.Send(nil)
 }
 
 // func (e *Employee) Test_User(t *testing.T) *Employee {
