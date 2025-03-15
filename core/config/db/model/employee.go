@@ -23,7 +23,7 @@ type Employee struct {
 	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
 	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
 	CompanyID        uint          `gorm:"not null;index" json:"company_id"`
-	Company          Company       `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
+	Company          *Company      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 	Branches         []*Branch     `gorm:"many2many:employee_branches;" json:"branches"`
 	Services         []*Service    `gorm:"many2many:employee_services;" json:"services"`
 }

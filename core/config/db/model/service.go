@@ -11,7 +11,7 @@ type Service struct {
 	Duration    uint   `gorm:"not null" json:"duration"` // Duration in minutes
 
 	CompanyID uint    `gorm:"not null;index" json:"company_id"`
-	Company   Company `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;"`
+	Company   *Company `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;"`
 
 	Employees []Employee `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"employees"` // Many-to-many relation with Employee
 	Branches  []Branch   `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE;" json:"branches"`    // Many-to-many relation with Branch
