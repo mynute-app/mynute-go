@@ -52,6 +52,43 @@ func (e *Employee) Create(t *testing.T, s int) {
 	http.ParseResponse(&e.created)
 }
 
+func (e *Employee) Update(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("PUT")
+	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.company.auth_token)
+	http.Send(e.created)
+	http.ParseResponse(&e.created)
+}
+
+func (e *Employee) GetById(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.company.auth_token)
+	http.ParseResponse(&e.created)
+}
+
+func (e *Employee) GetByEmail(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(fmt.Sprintf("/employee/email/%s", e.created.Email))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.company.auth_token)
+	http.ParseResponse(&e.created)
+}
+
+func (e *Employee) Delete(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("DELETE")
+	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.company.auth_token)
+	http.ParseResponse(&e.created)
+}
+
 func (e *Employee) Login(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")

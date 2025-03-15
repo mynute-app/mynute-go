@@ -33,12 +33,29 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) (err error) {
 	if err := e.ValidatePassword(); err != nil {
 		return err
 	}
-	if err := e.hash_password(); err != nil {
-		return err
-	}
 	if err := e.ValidateEmail(); err != nil {
 		return err
 	}
+	if err := e.ValidatePhone(); err != nil {
+		return err
+	}
+	if err := e.HashPassword(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Employee) ValidatePhone() error {
+	if e.Phone == "" {
+		return errors.New("phone is required")
+	}
+
+	var validate = validator.New()
+
+	if err := validate.Var(e.Phone, "phone"); err != nil {
+		return errors.New("invalid phone format")
+	}
+
 	return nil
 }
 
@@ -91,7 +108,7 @@ func (e *Employee) ValidatePassword() error {
 }
 
 // Method to set hashed password:
-func (e *Employee) hash_password() error {
+func (e *Employee) HashPassword() error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(e.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
