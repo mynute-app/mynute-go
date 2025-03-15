@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -50,9 +49,7 @@ func (e *Employee) ValidatePhone() error {
 		return errors.New("phone is required")
 	}
 
-	var validate = validator.New()
-
-	if err := validate.Var(e.Phone, "phone"); err != nil {
+	if err := validator_v10.Var(e.Phone, "e164"); err != nil {
 		return errors.New("invalid phone format")
 	}
 
@@ -64,9 +61,7 @@ func (e *Employee) ValidateEmail() error {
 		return errors.New("email is required")
 	}
 
-	var validate = validator.New()
-
-	if err := validate.Var(e.Email, "email"); err != nil {
+	if err := validator_v10.Var(e.Email, "email"); err != nil {
 		return errors.New("invalid email format")
 	}
 
