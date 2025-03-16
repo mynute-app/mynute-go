@@ -63,6 +63,7 @@ type UserErrors struct {
 type CompanyErrors struct {
 	IdNotFound        ErrorStruct
 	CnpjAlreadyExists ErrorStruct
+	NotSame           ErrorStruct
 }
 
 type GeneralErrors struct {
@@ -150,6 +151,11 @@ var Error = ErrorCategory{
 		CnpjAlreadyExists: ErrorStruct{
 			DescriptionEn: "Company CNPJ already exists",
 			DescriptionBr: "Empresa já cadastrada",
+			HTTPStatus:    400,
+		},
+		NotSame: ErrorStruct{
+			DescriptionEn: "The CompanyID of entities are not all equal.",
+			DescriptionBr: "O CompanyID das entidades não são todos iguais.",
 			HTTPStatus:    400,
 		},
 	},

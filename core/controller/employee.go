@@ -155,6 +155,43 @@ func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 	return ec.DeleteOneById(c)
 }
 
+// AddEmployeeService adds a service to an employee
+//
+//	@Summary		Add service to employee
+//	@Description	Add a service to an employee
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization
+//	@Failure		401				{object}	nil
+//	@Accept			json
+//	@Produce		json
+//	@Param			employee_id	path	string	true	"Employee ID"
+//	@Param			service_id	path	string	true	"Service ID"
+//	@Success		200	{object}	DTO.Service
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/employee/{employee_id}/service/{service_id} [post]
+func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	service_id := c.Params("service_id")
+	var employee model.Employee
+	var service model.Service
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+		return err
+	}
+	if employee.CompanyID != service.CompanyID {
+		return lib.Error.Company.NotSame.SendToClient(c)
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{}
+	res.DTO(200, &employee, &DTO.Employee{})
+	return nil
+}
+
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	return &employee_controller{
 		Base: service.Base[model.Employee, DTO.Employee]{
