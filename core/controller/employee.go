@@ -188,7 +188,7 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.DTO(200, &employee, &DTO.Employee{})
+	res.SendDTO(200, &employee, &DTO.Employee{})
 	return nil
 }
 

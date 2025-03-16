@@ -28,15 +28,15 @@ type user_controller struct {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/user [post]
 func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
-	user := &model.User{}
-	if err := c.BodyParser(user); err != nil {
+	var user model.User
+	if err := c.BodyParser(&user); err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.DB.Create(user).Error; err != nil {
+	if err := cc.Request.Gorm.DB.Create(&user).Error; err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.DTO(200, user, &DTO.User{})
+	res.SendDTO(200, &user, &DTO.User{})
 	return nil
 }
 

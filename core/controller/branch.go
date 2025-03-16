@@ -124,7 +124,7 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.DTO(200, &employee.Services, &DTO.Service{})
+	res.SendDTO(200, &employee.Services, &DTO.Service{})
 	return nil
 }
 
@@ -160,7 +160,7 @@ func (cc *branch_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.DTO(200, &branch, &DTO.Branch{})
+	res.SendDTO(200, &branch, &DTO.Branch{})
 	return nil
 }
 
@@ -196,7 +196,7 @@ func (cc *branch_controller) RemoveEmployeeFromBranch(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.DTO(200, &branch, &DTO.Branch{})
+	res.SendDTO(200, &branch, &DTO.Branch{})
 	return nil
 }
 
@@ -232,16 +232,17 @@ func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	branch_marchal, err := json.Marshal(&branch)
-	if err != nil {
-		return err
-	}
-	var DTO DTO.Branch
-	if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
-		return err
-	}
-	res.Http200(&DTO)
-	return nil
+	// branch_marchal, err := json.Marshal(&branch)
+	// if err != nil {
+	// 	return err
+	// }
+	// var DTO DTO.Branch
+	// if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
+	// 	return err
+	// }
+	return res.SendDTO(200, &branch, &DTO.Branch{})
+	// res.Http200(&DTO)
+	// return nil
 }
 
 // RemoveServiceFromBranch removes a service from a branch

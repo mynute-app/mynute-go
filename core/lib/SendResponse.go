@@ -1,7 +1,9 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,16 +18,35 @@ func (sr *SendResponse) Next() error {
 
 // This function is used to send a response back to the client
 // using the Data Transfer Object (DTO) pattern.
-func (sr *SendResponse) DTO(s int, source any, dto any) *SendResponse {
-	if source == nil || dto == nil {
-		sr.sendStatus(s)
-		return sr
+// func (sr *SendResponse) DTO(s int, source any, dto any) *SendResponse {
+// 	if source == nil || dto == nil {
+// 		sr.sendStatus(s)
+// 		return sr
+// 	}
+// 	if err := ParseToDTO(source, dto); err != nil {
+// 		sr.Http500(err)
+// 	}
+// 	sr.send(s, dto)
+// 	return sr
+// }
+
+func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
+	IsPointerToStruct := func (v any) bool {
+		val := reflect.ValueOf(v)
+		return val.Kind() == reflect.Ptr && val.Elem().Kind() == reflect.Struct
 	}
-	if err := ParseToDTO(source, dto); err != nil {
-		sr.Http500(err)
+	// Return error if source or dto are not pointer to struct
+	if !IsPointerToStruct(source) || !IsPointerToStruct(dto) {
+		return fmt.Errorf("source and dto must be pointer to struct")
 	}
-	sr.send(s, dto)
-	return sr
+	source_bytes, err := json.Marshal(source)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(source_bytes, dto); err != nil {
+		return err
+	}
+	return sr.send(s, dto)
 }
 
 func (sr *SendResponse) HttpError(s int, err error) error {

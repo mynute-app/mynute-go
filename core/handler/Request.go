@@ -86,7 +86,7 @@ func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
 	ac.Error = nil
 	ac.Status = status
 	if !ac.mute_res {
-		ac.res.DTO(status, data, dto)
+		ac.res.SendDTO(status, data, dto)
 	}
 }
 
