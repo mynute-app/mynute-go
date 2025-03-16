@@ -3,14 +3,13 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
 )
 
 type Service struct {
-	created    model.Service
+	created    DTO.Service
 	auth_token string
 	company    *Company
 }
@@ -37,7 +36,7 @@ func Test_Service(t *testing.T) {
 	branch.auth_token = user.auth_token
 	branch.company = company
 	branch.Create(t, 200)
-	branch.created.Services = append(branch.created.Services, &service.created)
+	branch.AddService(t, 200, service)
 	branch.Update(t, 200)
 	service.Delete(t, 200)
 	branch.Delete(t, 200)

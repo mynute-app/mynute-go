@@ -3,17 +3,18 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
 )
 
 type Branch struct {
-	created model.Branch
+	created DTO.Branch
 	auth_token string
 	company *Company
 	owner *Employee
+	services *[]Service
+	employees *[]Employee
 }
 
 func Test_Branch(t *testing.T) {
@@ -34,6 +35,11 @@ func Test_Branch(t *testing.T) {
 	branch.Update(t, 200)
 	branch.GetById(t, 200)
 	branch.GetByName(t, 200)
+	service := &Service{}
+	service.auth_token = user.auth_token
+	service.company = company
+	service.Create(t, 200)
+	branch.AddService(t, 200, service)
 	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
@@ -92,6 +98,16 @@ func (b *Branch) Delete(t *testing.T, status int) {
 	http.URL(fmt.Sprintf("/branch/%d", b.created.ID))
 	http.ExpectStatus(status)
 	http.Send(nil)
+}
+
+func (b *Branch) AddService(t *testing.T, status int, service *Service) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/branch/%d/service/%d", b.created.ID, service.created.ID))
+	http.ExpectStatus(status)
+	http.Header("Authorization", b.auth_token)
+	http.Send(nil)
+	http.ParseResponse(&b.created)
 }
 
 

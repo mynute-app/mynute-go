@@ -187,7 +187,7 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
+	res := &lib.SendResponse{Ctx: c}
 	res.DTO(200, &employee, &DTO.Employee{})
 	return nil
 }

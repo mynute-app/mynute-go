@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
+	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -122,7 +123,7 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Find(&employee.Services); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
+	res := &lib.SendResponse{Ctx: c}
 	res.DTO(200, &employee.Services, &DTO.Service{})
 	return nil
 }
@@ -158,7 +159,7 @@ func (cc *branch_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Append(&employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
+	res := &lib.SendResponse{Ctx: c}
 	res.DTO(200, &branch, &DTO.Branch{})
 	return nil
 }
@@ -194,7 +195,7 @@ func (cc *branch_controller) RemoveEmployeeFromBranch(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Delete(&employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
+	res := &lib.SendResponse{Ctx: c}
 	res.DTO(200, &branch, &DTO.Branch{})
 	return nil
 }
@@ -230,8 +231,16 @@ func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Append(&service); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
-	res.DTO(200, &branch, &DTO.Branch{})
+	res := &lib.SendResponse{Ctx: c}
+	branch_marchal, err := json.Marshal(&branch)
+	if err != nil {
+		return err
+	}
+	var DTO DTO.Branch
+	if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
+		return err
+	}
+	res.Http200(&DTO)
 	return nil
 }
 
@@ -266,8 +275,16 @@ func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Delete(&service); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{}
-	res.DTO(200, &branch, &DTO.Branch{})
+	res := &lib.SendResponse{Ctx: c}
+	branch_marchal, err := json.Marshal(&branch)
+	if err != nil {
+		return err
+	}
+	var DTO DTO.Branch
+	if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
+		return err
+	}
+	res.Http200(&DTO)
 	return nil
 }
 
@@ -277,7 +294,7 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Employees", "Services"},
+			Associations: []string{"Employees", "Services", "Company"},
 		},
 	}
 }

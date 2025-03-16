@@ -21,8 +21,8 @@ type UpdateBranch struct {
 
 type Branch struct {
 	ID           uint               `json:"id" example:"1"`
-	Employees    []UserPopulated    `json:"employees"`
-	Services     []ServicePopulated `json:"services"`
+	Employees    []*UserPopulated    `json:"employees"`
+	Services     []*ServicePopulated `json:"services"`
 	CompanyID    uint               `json:"company_id" example:"1"`
 	Name         string             `json:"name" example:"Main Branch"`
 	Street       string             `gorm:"not null" json:"street" example:"123 Main St"`
