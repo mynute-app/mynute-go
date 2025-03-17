@@ -13,8 +13,8 @@ type Branch struct {
 	auth_token string
 	company *Company
 	owner *Employee
-	services *[]Service
-	employees *[]Employee
+	services []*Service
+	employees []*Employee
 }
 
 func Test_Branch(t *testing.T) {
@@ -110,6 +110,7 @@ func (b *Branch) AddService(t *testing.T, status int, service *Service) {
 	http.Header("Authorization", b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
+	b.services = append(b.services, service)
 }
 
 
