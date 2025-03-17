@@ -12,6 +12,8 @@ type Service struct {
 	created    DTO.Service
 	auth_token string
 	company    *Company
+	employees  []*Employee
+	branches   []*Branch
 }
 
 func Test_Service(t *testing.T) {
@@ -41,7 +43,6 @@ func Test_Service(t *testing.T) {
 	service.Delete(t, 200)
 	branch.Delete(t, 200)
 }
-
 
 func (s *Service) Create(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)

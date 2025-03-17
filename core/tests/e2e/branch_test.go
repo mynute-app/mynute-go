@@ -9,12 +9,12 @@ import (
 )
 
 type Branch struct {
-	created DTO.Branch
+	created    DTO.Branch
 	auth_token string
-	company *Company
-	owner *Employee
-	services []*Service
-	employees []*Employee
+	company    *Company
+	owner      *Employee
+	services   []*Service
+	employees  []*Employee
 }
 
 func Test_Branch(t *testing.T) {
@@ -110,7 +110,6 @@ func (b *Branch) AddService(t *testing.T, status int, service *Service) {
 	http.Header("Authorization", b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
+	service.branches = append(service.branches, b)
 	b.services = append(b.services, service)
 }
-
-

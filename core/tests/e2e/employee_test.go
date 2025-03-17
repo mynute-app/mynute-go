@@ -24,8 +24,8 @@ type Employee struct {
 	auth_token string
 	company    *Company
 	created    model.Employee
-	services  []*Service
-	branches  []*Branch
+	services   []*Service
+	branches   []*Branch
 }
 
 func Test_Employee(t *testing.T) {
@@ -145,6 +145,7 @@ func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch) {
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	branch.GetById(t, 200)
+	branch.employees = append(branch.employees, e)
 	e.branches = append(e.branches, branch)
 }
 
@@ -157,5 +158,6 @@ func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	service.GetById(t, 200)
+	service.employees = append(service.employees, e)
 	e.services = append(e.services, service)
 }
