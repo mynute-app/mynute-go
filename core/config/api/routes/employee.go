@@ -12,12 +12,17 @@ func Employee(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.Employee(Gorm)
 	e := r.Group("/employee")
 	AuthMdw := middleware.Auth(Gorm)
-	e.Post("/login", ce.LoginEmployee)                                   // ok
-	e.Post("/verify-email/:email/:code", ce.VerifyEmployeeEmail)         // ok
-	auth := e.Group("/", AuthMdw.DenyUnauthorized)                       // ok
-	auth.Post("/", ce.CreateEmployee)                                    // ok
-	auth.Get("/:id", ce.GetEmployeeById)                                 // ok
-	auth.Patch("/:id", ce.UpdateEmployeeById)                            // ok
-	auth.Delete("/:id", ce.DeleteEmployeeById)                           // ok
-	auth.Post("/:employee_id/branch/:branch_id", ce.AddBranchToEmployee) // ok
+	e.Post("/login", ce.LoginEmployee)                                             // ok
+	e.Post("/verify-email/:email/:code", ce.VerifyEmployeeEmail)                   // ok
+	auth := e.Group("/", AuthMdw.DenyUnauthorized)                                 // ok
+	auth.Get("/:id", ce.GetEmployeeById)                                           // ok
+	auth.Get("/email/:email", ce.GetEmployeeByEmail)                               // ok
+	auth.Post("/", ce.CreateEmployee)                                              // ok
+	auth.Get("/:id", ce.GetEmployeeById)                                           // ok
+	auth.Patch("/:id", ce.UpdateEmployeeById)                                      // ok
+	auth.Delete("/:id", ce.DeleteEmployeeById)                                     // ok
+	auth.Post("/:employee_id/branch/:branch_id", ce.AddBranchToEmployee)           // ok
+	auth.Delete("/:employee_id/branch/:branch_id", ce.RemoveBranchFromEmployee)    // ok
+	auth.Post("/:employee_id/service/:service_id", ce.AddServiceToEmployee)        // ok
+	auth.Delete("/:employee_id/service/:service_id", ce.RemoveServiceFromEmployee) // ok
 }

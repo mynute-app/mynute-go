@@ -20,6 +20,4 @@ func Branch(Gorm *handler.Gorm, r fiber.Router) {
 	auth.Delete("/:id", cb.DeleteBranchById)                                              // ok
 	auth.Post("/:branch_id/service/:service_id", cb.AddServiceToBranch)                   // ok
 	auth.Delete("/:branch_id/service/:service_id", cb.RemoveServiceFromBranch)            // ok
-	// auth.Post("/:branch_id/employee/:employee_id", cb.AddEmployeeToBranch)                // ok
-	auth.Delete("/:branch_id/employee/:employee_id", cb.RemoveEmployeeFromBranch)         // ok
 }

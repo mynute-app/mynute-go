@@ -119,6 +119,23 @@ func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 	return ec.GetBy("id", c)
 }
 
+// GetEmployeeByEmail retrieves an employee by email
+//
+//	@Summary		Get employee by email
+//	@Description	Retrieve an employee by its email
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			email			path		string	true	"Employee Email"
+//	@Produce		json
+// 	@Success		200	{object}	DTO.CreateEmployee
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/employee/email/{email} [get]
+func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
+	return ec.GetBy("email", c)
+}
+
 // UpdateEmployeeById updates an employee by ID
 //
 //	@Summary		Update employee
@@ -170,7 +187,7 @@ func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Success		200			{object}	DTO.Service
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
-func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
+func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	service_id := c.Params("service_id")
 	var employee model.Employee
@@ -185,6 +202,42 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 		return lib.Error.Company.NotSame.SendToClient(c)
 	}
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	res.SendDTO(200, &employee, &DTO.Employee{})
+	return nil
+}
+
+// RemoveServiceFromEmployee removes a service from an employee
+//
+//	@Summary		Remove service from employee
+//	@Description	Remove a service from an employee
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			service_id	path		string	true	"Service ID"
+//	@Produce		json
+//	@Success		200			{object}	DTO.Service
+//	@Failure		404			{object}	DTO.ErrorResponse
+//	@Router			/employee/{employee_id}/service/{service_id} [delete]
+func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	service_id := c.Params("service_id")
+	var employee model.Employee
+	var service model.Service
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+		return err
+	}
+	if employee.CompanyID != service.CompanyID {
+		return lib.Error.Company.NotSame.SendToClient(c)
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Delete(&service); err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
@@ -227,6 +280,43 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	res.SendDTO(200, &branch, &DTO.Branch{})
 	return nil
 }
+
+// RemoveBranchFromEmployee removes an employee from a branch
+//
+//	@Summary		Remove employee from branch
+//	@Description	Remove an employee from a branch
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Branch
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/employee/{employee_id}/branch/{branch_id} [delete]
+func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
+	var branch model.Branch
+	var employee model.Employee
+	branch_id := c.Params("branch_id")
+	employee_id := c.Params("employee_id")
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch, []string{}); err != nil {
+		return err
+	}
+	if employee.CompanyID != branch.CompanyID {
+		return lib.Error.Company.NotSame.SendToClient(c)
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Delete(&branch); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	res.SendDTO(200, &branch, &DTO.Branch{})
+	return nil
+}
+
 
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	return &employee_controller{
