@@ -67,6 +67,45 @@ func GenerateRandomStrNumber(length int) string {
 	return string(randomString)
 }
 
-func GenerateDate() string {
-	
+// GenerateDate creates a date with optional parameters.
+// Expected order of arguments: year, month, day, hour, minute.
+func GenerateDate(params ...int) time.Time {
+	now := time.Now()
+
+	// Default values
+	year, month, day, hour, minute := now.Year(), rnd.Intn(12)+1, rnd.Intn(28)+1, rnd.Intn(10)+8, 0
+
+	// Override values if provided
+	if len(params) > 0 && params[0] != 0 {
+		year = params[0]
+	}
+	if len(params) > 1 && params[1] != 0 {
+		month = params[1]
+	}
+	if len(params) > 2 && params[2] != 0 {
+		day = params[2]
+	}
+	if len(params) > 3 && params[3] != 0 {
+		hour = params[3]
+	}
+	if len(params) > 4 && params[4] != 0 {
+		minute = params[4]
+	}
+
+	// Construct the date
+	myTime := time.Date(year, time.Month(month), day, hour, minute, 0, 0, time.UTC)
+
+	// Ensure the generated time is in the future
+	if myTime.Before(now) {
+		myTime = now.AddDate(0, 0, rnd.Intn(30)+1).Truncate(24 * time.Hour).Add(time.Duration(rnd.Intn(10)+8) * time.Hour)
+	}
+
+	return myTime
+}
+
+// GenerateDateRFC3339 creates a date in RFC3339 format 
+// eg. "2021-01-01T09:00:00Z" and also accepts optional parameters.
+// Expected order of arguments: year, month, day, hour, minute.
+func GenerateDateRFC3339(params ...int) string {
+	return GenerateDate().Format(time.RFC3339)
 }

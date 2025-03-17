@@ -109,18 +109,22 @@ func (u *User) Login(t *testing.T, s int) {
 	u.auth_token = auth[0]
 }
 
-func (u *User) CreateAppointment(t *testing.T, s int) {
+func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, srvc *Service, c *Company) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/appointment")
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(DTO.Appointment{
-		BranchID: 1,
-		ServiceID: 1,
-		EmployeeID: 1,
-		StartTime: "2021-01-01T09:00:00Z",
+		BranchID: b.created.ID,
+		ServiceID: b.created.ID,
+		EmployeeID: b.created.ID,
+		UserID: u.created.ID,
+		CompanyID: c.created.ID,
+		StartTime: lib.GenerateDateRFC3339(),
 	})
+	e.GetById(t, 200)
+	u.GetByEmail(t, 200)
 }
 
 func Test_User_Create_Success(t *testing.T) {
