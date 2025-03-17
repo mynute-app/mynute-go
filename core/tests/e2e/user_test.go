@@ -41,7 +41,7 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 	http.Method("POST")
 	http.URL("/user")
 	http.ExpectStatus(s)
-	email := lib.GenerateRandomEmail()
+	email := lib.GenerateRandomEmail("user")
 	pswd := "1SecurePswd!"
 	http.Send(DTO.CreateUser{
 		Email:    email,

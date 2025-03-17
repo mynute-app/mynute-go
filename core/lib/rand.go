@@ -34,9 +34,9 @@ func GenerateRandomString(length int) string {
 	return string(randomString)
 }
 
-func GenerateRandomEmail() string {
+func GenerateRandomEmail(name string) string {
 	provider := "@gmail.com"
-	nick := fmt.Sprintf("test_user_email_%v", GenerateRandomInt(5))
+	nick := fmt.Sprintf("test_%s_email_%v", name, GenerateRandomInt(5))
 	return fmt.Sprintf("%v%v", nick, provider)
 }
 

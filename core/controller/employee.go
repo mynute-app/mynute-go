@@ -129,7 +129,7 @@ func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
-// 	@Success		200	{object}	DTO.CreateEmployee
+//	@Success		200	{object}	DTO.CreateEmployee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/email/{email} [get]
 func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
@@ -184,7 +184,7 @@ func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			employee_id	path		string	true	"Employee ID"
 //	@Param			service_id	path		string	true	"Service ID"
-//	@Success		200			{object}	DTO.Service
+//	@Success		200			{object}	DTO.Employee
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
 func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
@@ -204,6 +204,9 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
 		return err
 	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
 	res := &lib.SendResponse{Ctx: c}
 	res.SendDTO(200, &employee, &DTO.Employee{})
 	return nil
@@ -220,7 +223,7 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Param			employee_id	path		string	true	"Employee ID"
 //	@Param			service_id	path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200			{object}	DTO.Service
+//	@Success		200			{object}	DTO.Employee
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [delete]
 func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
@@ -240,6 +243,9 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Delete(&service); err != nil {
 		return err
 	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
 	res := &lib.SendResponse{Ctx: c}
 	res.SendDTO(200, &employee, &DTO.Employee{})
 	return nil
@@ -256,7 +262,7 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [post]
 func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
@@ -276,8 +282,11 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Append(&branch); err != nil {
 		return err
 	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &branch, &DTO.Branch{})
+	res.SendDTO(200, &employee, &DTO.Employee{})
 	return nil
 }
 
@@ -292,7 +301,7 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [delete]
 func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
@@ -312,11 +321,13 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Delete(&branch); err != nil {
 		return err
 	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &branch, &DTO.Branch{})
+	res.SendDTO(200, &employee, &DTO.Employee{})
 	return nil
 }
-
 
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	return &employee_controller{

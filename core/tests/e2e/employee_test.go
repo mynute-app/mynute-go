@@ -31,11 +31,7 @@ func Test_Employee(t *testing.T) {
 	defer server.Shutdown()
 	company := &Company{}
 	company.Set(t)
-	employee := &Employee{}
-	employee.company = company
-	employee.Create(t, 200)
-	employee.VerifyEmail(t, 200)
-	employee.Login(t, 200)
+	employee := company.employees[0]
 	employee.GetById(t, 200)
 	employee.GetByEmail(t, 200)
 	employee.created.Name = "Updated Employee Name"
@@ -66,7 +62,7 @@ func (e *Employee) Create(t *testing.T, s int) {
 		CompanyID: e.company.created.ID,
 		Name:      lib.GenerateRandomName("Employee Name"),
 		Surname:   lib.GenerateRandomName("Employee Surname"),
-		Email:     lib.GenerateRandomEmail(),
+		Email:     lib.GenerateRandomEmail("employee"),
 		Phone:     lib.GenerateRandomPhoneNumber(),
 		Password:  pswd,
 	})
@@ -76,7 +72,7 @@ func (e *Employee) Create(t *testing.T, s int) {
 
 func (e *Employee) Update(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("PUT")
+	http.Method("PATCH")
 	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
@@ -90,6 +86,7 @@ func (e *Employee) GetById(t *testing.T, s int) {
 	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
+	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
 
@@ -99,6 +96,7 @@ func (e *Employee) GetByEmail(t *testing.T, s int) {
 	http.URL(fmt.Sprintf("/employee/email/%s", e.created.Email))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
+	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
 
@@ -108,6 +106,7 @@ func (e *Employee) Delete(t *testing.T, s int) {
 	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
+	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
 

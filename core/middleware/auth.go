@@ -37,7 +37,6 @@ func (am *auth_middleware) Login() []fiber.Handler {
 
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
-	fmt.Printf("auth_claims: %+v\n", auth_claims)
 	user, ok := auth_claims.(*DTO.UserPopulated)
 	if !ok {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)

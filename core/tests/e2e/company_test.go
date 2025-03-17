@@ -13,7 +13,7 @@ import (
 type Company struct {
 	created    model.Company
 	owner      *Employee
-	employees  *[]Employee
+	employees  []*Employee
 	auth_token string
 }
 
@@ -37,6 +37,12 @@ func (c *Company) Set(t *testing.T) {
 	c.owner.VerifyEmail(t, 200)
 	c.owner.Login(t, 200)
 	c.auth_token = c.owner.auth_token
+	employee := &Employee{}
+	employee.company = c
+	employee.Create(t, 200)
+	employee.VerifyEmail(t, 200)
+	employee.Login(t, 200)
+	c.employees = append(c.employees, employee)
 }
 
 func (c *Company) Create(t *testing.T, status int) {
@@ -45,7 +51,7 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.URL("/company")
 	http.ExpectStatus(status)
 	http.Header("Authorization", c.auth_token)
-	ownerEmail := lib.GenerateRandomEmail()
+	ownerEmail := lib.GenerateRandomEmail("owner")
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
 		Name:          lib.GenerateRandomName("Company Name"),
