@@ -5,12 +5,10 @@ import (
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"
-	"log/slog"
 	"os"
-
+	
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -21,9 +19,8 @@ type Server struct {
 
 // Creates a new server instance
 func NewServer() *Server {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	// Create Prometheus middleware
 	app := fiber.New()
-	app.Use(middleware.LoggerMiddleware(logger))
 	lib.LoadEnv()
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())
@@ -66,6 +63,7 @@ func (s *Server) listen() *Server {
 }
 
 // Runs the server in two modes: test and listen
+//
 //	@test:		starts the server in a goroutine. This is useful for unit testing.
 //	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {

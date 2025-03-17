@@ -2,6 +2,7 @@ package lib
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -31,13 +32,16 @@ func (sr *SendResponse) Next() error {
 // }
 
 func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
+	if source == nil || dto == nil {
+		return sr.sendStatus(s)
+	}
 	IsPointerToStruct := func (v any) bool {
 		val := reflect.ValueOf(v)
 		return val.Kind() == reflect.Ptr && val.Elem().Kind() == reflect.Struct
 	}
 	// Return error if source or dto are not pointer to struct
 	if !IsPointerToStruct(source) || !IsPointerToStruct(dto) {
-		return fmt.Errorf("source and dto must be pointer to struct")
+		return sr.Http500(errors.New("source and dto must be pointer to struct"))
 	}
 	source_bytes, err := json.Marshal(source)
 	if err != nil {

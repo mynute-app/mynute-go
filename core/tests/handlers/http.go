@@ -91,7 +91,7 @@ func (h *httpActions) ParseResponse(to interface{}) {
 // It will defer res.Body.Close() to ensure the response body is closed.
 func (h *httpActions) Send(body any) *httpActions {
 	h.Error = ""
-	h.test.Logf("sending %s request to %s", h.method, h.url)
+	h.test.Logf(">>>>>>>>>> Sending %s request to %s", h.method, h.url)
 	h.test.Logf("request body: %+v", body)
 	h.test.Logf("request headers: %+v", h.headers)
 	bodyBytes, err := json.Marshal(body)

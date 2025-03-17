@@ -116,6 +116,17 @@ func (e *Employee) VerifyEmail(t *testing.T, s int) {
 	http.Send(nil)
 }
 
+func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/employee/%d/branch/%d", e.created.ID, branch.created.ID))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.auth_token)
+	http.Send(nil)
+	http.ParseResponse(&e.created)
+	branch.GetById(t, 200)
+}
+
 // func (e *Employee) Test_User(t *testing.T) *Employee {
 // 	server := core.NewServer().Run("test")
 // 	defer server.Shutdown()

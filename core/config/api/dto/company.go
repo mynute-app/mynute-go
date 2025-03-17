@@ -17,10 +17,10 @@ type Company struct {
 	ID        uint                `json:"id"` // Primary key
 	Name      string              `json:"name" example:"Your Company Name"`
 	TaxID     string              `json:"tax_id" example:"00000000000000"`
-	Employees []EmployeePopulated `json:"employees"`
-	Branches  []BranchPopulated   `json:"branches"`
-	Services  []ServicePopulated  `json:"services"`
-	Sectors   []Sector            `json:"sectors"`
+	Employees []*EmployeePopulated `json:"employees"`
+	Branches  []*BranchPopulated   `json:"branches"`
+	Services  []*ServicePopulated  `json:"services"`
+	Sectors   []*Sector            `json:"sectors"`
 }
 
 // @description	Company DTO Populated

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"bytes"
 	"log/slog"
 	"time"
 
@@ -9,61 +8,38 @@ import (
 )
 
 // LoggerMiddleware logs request and response details without modifying the response.
-func LoggerMiddleware(logger *slog.Logger) fiber.Handler {
+func Logger(logger *slog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		start := time.Now()
+		start := time.Now() // Capture start time
 
-		// Capture request headers and body
-		reqHeaders := c.GetReqHeaders()
-		reqBody := string(c.Body())
-
-		// Capture response body using a buffer
-		resBodyBuffer := new(bytes.Buffer)
-
-		// Clone response writer to capture response body without modifying it
-		originalBody := c.Response().Body()
-		resBodyBuffer.Write(originalBody)
+		// Log the request details
+		logger.Info("Incoming request",
+			slog.String("method", c.Method()),
+			slog.String("path", c.Path()),
+			slog.String("ip", c.IP()),
+		)
 
 		// Process the request
 		err := c.Next()
 
-		// Measure execution time
-		duration := time.Since(start)
-
-		// Capture response headers and body again after the request is processed
-		resHeaders := getResponseHeaders(c)
-		resBody := resBodyBuffer.String()
-
-		// Log structured data
-		logger.Info("API Request",
-			"method", c.Method(),
-			"path", c.Path(),
-			"duration_ms", duration.Milliseconds(),
-			"ip", c.IP(),
-			"error", errorString(err),
-			"request_headers", reqHeaders,
-			"request_body", reqBody,
-			"response_headers", resHeaders,
-			"response_body", resBody,
-		)
-
+		// Log the response details
+		if err != nil {
+			logger.Error("Error processing request",
+				slog.String("method", c.Method()),
+				slog.String("path", c.Path()),
+				slog.String("ip", c.IP()),
+				slog.String("error", err.Error()),
+				slog.Duration("duration", time.Since(start)),
+			)
+		} else {
+			logger.Info("Response sent",
+				slog.String("method", c.Method()),
+				slog.String("path", c.Path()),
+				slog.String("ip", c.IP()),
+				slog.Int("status", c.Response().StatusCode()),
+				slog.Duration("duration", time.Since(start)),
+			)
+		}
 		return err
 	}
-}
-
-// getResponseHeaders extracts response headers.
-func getResponseHeaders(c *fiber.Ctx) map[string]string {
-	headers := make(map[string]string)
-	c.Response().Header.VisitAll(func(key, value []byte) {
-		headers[string(key)] = string(value)
-	})
-	return headers
-}
-
-// errorString converts an error to a string (or returns "none" if nil).
-func errorString(err error) string {
-	if err != nil {
-		return err.Error()
-	}
-	return ""
 }

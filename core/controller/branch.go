@@ -142,27 +142,27 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/employee/{employee_id} [post]
-func (cc *branch_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
-	var branch model.Branch
-	var employee model.Employee
-	branch_id := c.Params("branch_id")
-	employee_id := c.Params("employee_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
-		return err
-	}
-	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee, []string{}); err != nil {
-		return err
-	}
-	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
-	}
-	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Append(&employee); err != nil {
-		return err
-	}
-	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &branch, &DTO.Branch{})
-	return nil
-}
+// func (cc *branch_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
+// 	var branch model.Branch
+// 	var employee model.Employee
+// 	branch_id := c.Params("branch_id")
+// 	employee_id := c.Params("employee_id")
+// 	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
+// 		return err
+// 	}
+// 	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee, []string{}); err != nil {
+// 		return err
+// 	}
+// 	if employee.CompanyID != branch.CompanyID {
+// 		return lib.Error.Company.NotSame.SendToClient(c)
+// 	}
+// 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Append(&employee); err != nil {
+// 		return err
+// 	}
+// 	res := &lib.SendResponse{Ctx: c}
+// 	res.SendDTO(200, &branch, &DTO.Branch{})
+// 	return nil
+// }
 
 // RemoveEmployeeFromBranch removes an employee from a branch
 //

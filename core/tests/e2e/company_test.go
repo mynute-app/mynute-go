@@ -70,6 +70,7 @@ func (c *Company) GetByName(t *testing.T, status int) map[string]any {
 	http.URL(fmt.Sprintf("/company/name/%s", c.created.Name))
 	http.ExpectStatus(status)
 	http.Send(nil)
+	http.ParseResponse(&c.created)
 	return http.ResBody
 }
 
@@ -79,7 +80,7 @@ func (c *Company) GetById(t *testing.T, status int) map[string]any {
 	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
 	http.ExpectStatus(status)
 	http.Send(nil)
-	t.Log(http.ResBody)
+	http.ParseResponse(&c.created)
 	return http.ResBody
 }
 

@@ -31,40 +31,47 @@ type company_controller struct {
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	res := &lib.SendResponse{Ctx: c}
-	body := &DTO.CreateCompany{}
-	if err := c.BodyParser(body); err != nil {
+	var body DTO.CreateCompany
+	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
 
-	company := &model.Company{
-		Name:  body.Name,
-		TaxID: body.TaxID,
-	}
+	var company model.Company
 
-	if err := cc.Request.Gorm.DB.Create(company).Error; err != nil {
+	company.Name = body.Name
+	company.TaxID = body.TaxID
+
+	if err := cc.Request.Gorm.DB.Create(&company).Error; err != nil {
 		return err
 	}
 
-	owner := &model.Employee{
-		Name:      body.OwnerName,
-		Surname:   body.OwnerSurname,
-		Email:     body.OwnerEmail,
-		Phone:     body.OwnerPhone,
-		Password:  body.OwnerPassword,
-		CompanyID: company.ID,
-	}
+	var owner model.Employee
 
-	if err := cc.Request.Gorm.DB.Create(owner).Error; err != nil {
+	// owner := &model.Employee{
+	// 	Name:      body.OwnerName,
+	// 	Surname:   body.OwnerSurname,
+	// 	Email:     body.OwnerEmail,
+	// 	Phone:     body.OwnerPhone,
+	// 	Password:  body.OwnerPassword,
+	// 	CompanyID: company.ID,
+	// }
+
+	owner.Name = body.OwnerName
+	owner.Surname = body.OwnerSurname
+	owner.Email = body.OwnerEmail
+	owner.Phone = body.OwnerPhone
+	owner.Password = body.OwnerPassword
+	owner.CompanyID = company.ID
+
+	if err := cc.Request.Gorm.DB.Create(&owner).Error; err != nil {
 		return err
 	}
 
-	var updtCompany model.Company
-
-	if err := cc.Request.Gorm.GetOneBy("id", fmt.Sprint(company.ID), &updtCompany, cc.Associations); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", fmt.Sprint(company.ID), &company, cc.Associations); err != nil {
 		return err
 	}
 
-	res.SendDTO(200, updtCompany, &DTO.Company{})
+	res.SendDTO(200, &company, &DTO.Company{})
 	return nil
 }
 

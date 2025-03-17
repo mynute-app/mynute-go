@@ -12,11 +12,12 @@ func Employee(Gorm *handler.Gorm, r fiber.Router) {
 	ce := controller.Employee(Gorm)
 	e := r.Group("/employee")
 	AuthMdw := middleware.Auth(Gorm)
-	e.Post("/login", ce.LoginEmployee)
-	e.Post("/verify-email/:email/:code", ce.VerifyEmployeeEmail)
-	auth := e.Group("/", AuthMdw.DenyUnauthorized) // ok
-	auth.Post("/", ce.CreateEmployee)                               // ok
-	auth.Get("/:id", ce.GetEmployeeById)                            // ok
-	auth.Patch("/:id", ce.UpdateEmployeeById)                       // ok
-	auth.Delete("/:id", ce.DeleteEmployeeById)                      // ok
+	e.Post("/login", ce.LoginEmployee)                                   // ok
+	e.Post("/verify-email/:email/:code", ce.VerifyEmployeeEmail)         // ok
+	auth := e.Group("/", AuthMdw.DenyUnauthorized)                       // ok
+	auth.Post("/", ce.CreateEmployee)                                    // ok
+	auth.Get("/:id", ce.GetEmployeeById)                                 // ok
+	auth.Patch("/:id", ce.UpdateEmployeeById)                            // ok
+	auth.Delete("/:id", ce.DeleteEmployeeById)                           // ok
+	auth.Post("/:employee_id/branch/:branch_id", ce.AddEmployeeToBranch) // ok
 }

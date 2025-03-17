@@ -192,6 +192,42 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 	return nil
 }
 
+// AddEmployeeToBranch adds an employee to a branch
+//
+//	@Summary		Add employee to branch
+//	@Description	Add an employee to a branch
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization
+//	@Failure		401				{object}	nil
+//	@Param			branch_id	path		string	true	"Branch ID"
+//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Branch
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/employee/{employee_id}/branch/{branch_id} [post]
+func (ec *employee_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
+	var branch model.Branch
+	var employee model.Employee
+	branch_id := c.Params("branch_id")
+	employee_id := c.Params("employee_id")
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch, []string{}); err != nil {
+		return err
+	}
+	if employee.CompanyID != branch.CompanyID {
+		return lib.Error.Company.NotSame.SendToClient(c)
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Append(&branch); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	res.SendDTO(200, &branch, &DTO.Branch{})
+	return nil
+}
+
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	return &employee_controller{
 		Base: service.Base[model.Employee, DTO.Employee]{

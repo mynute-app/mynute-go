@@ -20,15 +20,13 @@ type Branch struct {
 func Test_Branch(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	user := &User{}
-	user.Create(t, 200)
-	user.VerifyEmail(t, 200)
-	user.Login(t, 200)
 	company := &Company{}
-	company.auth_token = user.auth_token
 	company.Create(t, 200)
+	company.owner.VerifyEmail(t, 200)
+	company.owner.Login(t, 200)
+	company.auth_token = company.owner.auth_token
 	branch := &Branch{}
-	branch.auth_token = user.auth_token
+	branch.auth_token = company.auth_token
 	branch.company = company
 	branch.Create(t, 200)
 	branch.created.Name = "Updated Branch Name"
@@ -36,11 +34,11 @@ func Test_Branch(t *testing.T) {
 	branch.GetById(t, 200)
 	branch.GetByName(t, 200)
 	service := &Service{}
-	service.auth_token = user.auth_token
+	service.auth_token = company.auth_token
 	service.company = company
 	service.Create(t, 200)
 	branch.AddService(t, 200, service)
-	branch.GetById(t, 200)
+	company.owner.AddBranch(t, 200, branch)
 	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
@@ -81,6 +79,7 @@ func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
 	http.URL(fmt.Sprintf("/branch/name/%s", b.created.Name))
 	http.ExpectStatus(status)
 	http.Send(nil)
+	http.ParseResponse(&b.created)
 	return http.ResBody
 }
 
@@ -90,6 +89,7 @@ func (b *Branch) GetById(t *testing.T, status int) map[string]any {
 	http.URL(fmt.Sprintf("/branch/%d", b.created.ID))
 	http.ExpectStatus(status)
 	http.Send(nil)
+	http.ParseResponse(&b.created)
 	return http.ResBody
 }
 
@@ -98,6 +98,7 @@ func (b *Branch) Delete(t *testing.T, status int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/branch/%d", b.created.ID))
 	http.ExpectStatus(status)
+	http.Header("Authorization", b.auth_token)
 	http.Send(nil)
 }
 
