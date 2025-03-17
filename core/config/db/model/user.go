@@ -18,7 +18,7 @@ type TimeRange struct {
 type User struct {
 	gorm.Model
 	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
-	Surname          string        `gorm:"type:varchar(100)" json:"surname" json:"surname"`
+	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
 	Role             string        `gorm:"type:varchar(50);default:user;not null" json:"role"`
 	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
 	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`

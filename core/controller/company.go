@@ -47,15 +47,6 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 
 	var owner model.Employee
 
-	// owner := &model.Employee{
-	// 	Name:      body.OwnerName,
-	// 	Surname:   body.OwnerSurname,
-	// 	Email:     body.OwnerEmail,
-	// 	Phone:     body.OwnerPhone,
-	// 	Password:  body.OwnerPassword,
-	// 	CompanyID: company.ID,
-	// }
-
 	owner.Name = body.OwnerName
 	owner.Surname = body.OwnerSurname
 	owner.Email = body.OwnerEmail
