@@ -192,7 +192,7 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 	return nil
 }
 
-// AddEmployeeToBranch adds an employee to a branch
+// AddBranchToEmployee adds an employee to a branch
 //
 //	@Summary		Add employee to branch
 //	@Description	Add an employee to a branch
@@ -206,7 +206,7 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [post]
-func (ec *employee_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
+func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	var branch model.Branch
 	var employee model.Employee
 	branch_id := c.Params("branch_id")

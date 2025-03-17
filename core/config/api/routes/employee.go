@@ -19,5 +19,5 @@ func Employee(Gorm *handler.Gorm, r fiber.Router) {
 	auth.Get("/:id", ce.GetEmployeeById)                                 // ok
 	auth.Patch("/:id", ce.UpdateEmployeeById)                            // ok
 	auth.Delete("/:id", ce.DeleteEmployeeById)                           // ok
-	auth.Post("/:employee_id/branch/:branch_id", ce.AddEmployeeToBranch) // ok
+	auth.Post("/:employee_id/branch/:branch_id", ce.AddBranchToEmployee) // ok
 }
