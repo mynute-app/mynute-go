@@ -334,7 +334,7 @@ func Employee(Gorm *handler.Gorm) *employee_controller {
 		Base: service.Base[model.Employee, DTO.Employee]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Company", "Services"},
+			Associations: []string{"Branches", "Company", "Services", "Appointments"},
 		},
 	}
 }

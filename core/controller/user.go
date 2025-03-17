@@ -159,14 +159,12 @@ func (cc *user_controller) DeleteUserById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
-var UserAssociations = []string{"Appointments"}
-
 func User(Gorm *handler.Gorm) *user_controller {
 	return &user_controller{
 		Base: service.Base[model.User, DTO.User]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: UserAssociations,
+			Associations: []string{"Appointments"},
 		},
 	}
 }
