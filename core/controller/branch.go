@@ -134,10 +134,10 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Description	Add an employee to a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			branch_id	path		string	true	"Branch ID"
-//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
@@ -170,10 +170,10 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Description	Remove an employee from a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			branch_id	path		string	true	"Branch ID"
-//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
@@ -206,10 +206,10 @@ func (cc *branch_controller) RemoveEmployeeFromBranch(c *fiber.Ctx) error {
 //	@Description	Add a service to a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			branch_id	path		string	true	"Branch ID"
-//	@Param			service_id	path		string	true	"Service ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
@@ -251,10 +251,10 @@ func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
 //	@Description	Remove a service from a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			branch_id	path		string	true	"Branch ID"
-//	@Param			service_id	path		string	true	"Service ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse

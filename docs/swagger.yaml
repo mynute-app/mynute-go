@@ -203,6 +203,9 @@ definitions:
       name:
         example: Joseph
         type: string
+      password:
+        example: 1SecurePswd!
+        type: string
       phone:
         example: "+15555555551"
         type: string
@@ -391,7 +394,7 @@ definitions:
     properties:
       branches:
         items:
-          $ref: '#/definitions/DTO.Branch'
+          $ref: '#/definitions/DTO.BranchPopulated'
         type: array
       company_id:
         example: 1
@@ -404,7 +407,7 @@ definitions:
         type: integer
       employees:
         items:
-          $ref: '#/definitions/DTO.User'
+          $ref: '#/definitions/DTO.UserPopulated'
         type: array
       id:
         example: 1
@@ -575,6 +578,144 @@ paths:
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Create branch
+      tags:
+      - Branch
+  /branch/{branch_id}/employee/{employee_id}:
+    delete:
+      description: Remove an employee from a branch
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove employee from branch
+      tags:
+      - Branch
+  /branch/{branch_id}/employee/{employee_id}/services:
+    get:
+      description: Retrieve all services of an employee included in the branch ID
+      parameters:
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get employee services included in the branch ID
+      tags:
+      - Branch
+  /branch/{branch_id}/service/{service_id}:
+    delete:
+      description: Remove a service from a branch
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from branch
+      tags:
+      - Branch
+    post:
+      description: Add a service to a branch
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add service to branch
       tags:
       - Branch
   /branch/{id}:
@@ -891,6 +1032,82 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create employee
+      tags:
+      - Employee
+  /employee/{employee_id}/branch/{branch_id}:
+    post:
+      description: Add an employee to a branch
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Branch'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add employee to branch
+      tags:
+      - Employee
+  /employee/{employee_id}/service/{service_id}:
+    post:
+      consumes:
+      - application/json
+      description: Add a service to an employee
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add service to employee
       tags:
       - Employee
   /employee/{id}:

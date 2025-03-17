@@ -161,14 +161,14 @@ func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Description	Add a service to an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			employee_id	path	string	true	"Employee ID"
-//	@Param			service_id	path	string	true	"Service ID"
-//	@Success		200	{object}	DTO.Service
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			service_id	path		string	true	"Service ID"
+//	@Success		200			{object}	DTO.Service
+//	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
 func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
@@ -198,10 +198,10 @@ func (ec *employee_controller) AddEmployeeService(c *fiber.Ctx) error {
 //	@Description	Add an employee to a branch
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization
+//	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			branch_id	path		string	true	"Branch ID"
-//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
