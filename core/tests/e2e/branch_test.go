@@ -12,7 +12,6 @@ type Branch struct {
 	created    DTO.Branch
 	auth_token string
 	company    *Company
-	owner      *Employee
 	services   []*Service
 	employees  []*Employee
 }
