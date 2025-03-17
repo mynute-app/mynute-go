@@ -220,11 +220,11 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			employee_id	path		string	true	"Employee ID"
-//	@Param			service_id	path		string	true	"Service ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
+//	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200			{object}	DTO.Employee
-//	@Failure		404			{object}	DTO.ErrorResponse
+//	@Success		200	{object}	DTO.Employee
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [delete]
 func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")

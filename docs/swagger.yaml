@@ -1035,6 +1035,42 @@ paths:
       tags:
       - Employee
   /employee/{employee_id}/branch/{branch_id}:
+    delete:
+      description: Remove an employee from a branch
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Employee'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove employee from branch
+      tags:
+      - Employee
     post:
       description: Add an employee to a branch
       parameters:
@@ -1059,7 +1095,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.Employee'
         "401":
           description: Unauthorized
         "404":
@@ -1072,6 +1108,42 @@ paths:
       tags:
       - Employee
   /employee/{employee_id}/service/{service_id}:
+    delete:
+      description: Remove a service from an employee
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Employee'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from employee
+      tags:
+      - Employee
     post:
       consumes:
       - application/json
@@ -1098,7 +1170,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Service'
+            $ref: '#/definitions/DTO.Employee'
         "401":
           description: Unauthorized
         "404":
@@ -1210,6 +1282,38 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update employee
+      tags:
+      - Employee
+  /employee/email/{email}:
+    get:
+      description: Retrieve an employee by its email
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CreateEmployee'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee by email
       tags:
       - Employee
   /employee/login:
