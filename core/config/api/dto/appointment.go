@@ -1,12 +1,12 @@
 package DTO
 
 type Appointment struct {
-	ID         uint   `json:"id"`
-	ServiceID  uint   `json:"service_id"`
-	EmployeeID uint   `json:"employee_id"`
-	UserID     uint   `json:"user_id"`
-	BranchID   uint   `json:"branch_id"`
-	CompanyID  uint   `json:"company_id"`
+	ID         uint   `json:"id" example:"1"`
+	ServiceID  uint   `json:"service_id" example:"1"`
+	EmployeeID uint   `json:"employee_id" example:"1"`
+	UserID     uint   `json:"user_id" example:"1"`
+	BranchID   uint   `json:"branch_id" example:"1"`
+	CompanyID  uint   `json:"company_id" example:"1"`
 	StartTime  string `json:"start_time" example:"2021-01-01T09:00:00Z"`
 	EndTime    string `json:"end_time" example:"2021-01-01T10:00:00Z"`
 }

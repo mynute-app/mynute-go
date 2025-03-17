@@ -66,3 +66,7 @@ func GenerateRandomStrNumber(length int) string {
 	// Return the generated random string
 	return string(randomString)
 }
+
+func GenerateDate() string {
+	
+}

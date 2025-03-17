@@ -109,6 +109,20 @@ func (u *User) Login(t *testing.T, s int) {
 	u.auth_token = auth[0]
 }
 
+func (u *User) CreateAppointment(t *testing.T, s int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/appointment")
+	http.ExpectStatus(s)
+	http.Header("Authorization", u.auth_token)
+	http.Send(DTO.Appointment{
+		BranchID: 1,
+		ServiceID: 1,
+		EmployeeID: 1,
+		StartTime: "2021-01-01T09:00:00Z",
+	})
+}
+
 func Test_User_Create_Success(t *testing.T) {
 	server := core.NewServer().Run("test")
 	user := &User{}
