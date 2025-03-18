@@ -30,4 +30,5 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Service(Gorm, r)
 	Swagger(App)
 	Employee(Gorm, r)
+	Appointment(Gorm, r)
 }

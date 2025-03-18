@@ -11,7 +11,7 @@ import (
 )
 
 type appointment_controller struct {
-	service.Base[model.Company, DTO.Company]
+	service.Base[model.Appointment, DTO.Appointment]
 }
 
 // CreateAppointment creates an appointment
@@ -78,10 +78,10 @@ func (ac *appointment_controller) DeleteAppointmentByID(c *fiber.Ctx) error {
 // Constructor for appointment_controller
 func Appointment(Gorm *handler.Gorm) *appointment_controller {
 	return &appointment_controller{
-		Base: service.Base[model.Company, DTO.Company]{
+		Base: service.Base[model.Appointment, DTO.Appointment]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Sector", "Branches", "Employees", "Services"},
+			Associations: []string{"Sector", "Branch", "Employe", "Service", "Company"},
 		},
 	}
 }

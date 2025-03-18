@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -27,4 +28,18 @@ type Appointment struct {
 
 	StartTime time.Time `gorm:"not null" json:"start_time"`
 	EndTime   time.Time `gorm:"not null" json:"end_time"`
+}
+
+func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
+	if a.StartTime.Before(time.Now()) {
+		return errors.New("start time must be in the future")
+	}
+	if err := tx.First(&a.Service, a.ServiceID).Error; err != nil {
+		return err
+	}
+	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
+	if a.EndTime.Before(a.StartTime) {
+		return errors.New("end time must be after start time")
+	}
+	return nil
 }

@@ -11,10 +11,9 @@ import (
 )
 
 type User struct {
-	created model.User
-	auth_token 	string
+	created    model.User
+	auth_token string
 }
-
 
 func Test_User(t *testing.T) {
 	server := core.NewServer().Run("test")
@@ -25,7 +24,7 @@ func Test_User(t *testing.T) {
 	user.Login(t, 200)
 	user.created.Name = "Updated User Name"
 	user.created.Surname = "Updated User Surname"
-	user.Update(t, 200)
+	user.Update(t, 200, map[string]any{"name": "Updated User Name"})
 	user.GetByEmail(t, 200)
 	c := &Company{}
 	c.Set(t)
@@ -60,13 +59,13 @@ func (u *User) Create(t *testing.T, s int) {
 	u.created.Password = pswd
 }
 
-func (u *User) Update(t *testing.T, s int) {
+func (u *User) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
 	http.URL("/user/" + fmt.Sprintf("%v", u.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
-	http.Send(u.created)
+	http.Send(changes)
 }
 
 func (u *User) GetByEmail(t *testing.T, s int) {
@@ -120,12 +119,12 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(DTO.Appointment{
-		BranchID: b.created.ID,
-		ServiceID: srvc.created.ID,
+		BranchID:   b.created.ID,
+		ServiceID:  srvc.created.ID,
 		EmployeeID: e.created.ID,
-		UserID: u.created.ID,
-		CompanyID: c.created.ID,
-		StartTime: lib.GenerateDateRFC3339(),
+		UserID:     u.created.ID,
+		CompanyID:  c.created.ID,
+		StartTime:  lib.GenerateDateRFC3339(),
 	})
 	e.GetById(t, 200)
 	u.GetByEmail(t, 200)
