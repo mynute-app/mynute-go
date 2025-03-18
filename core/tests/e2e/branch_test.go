@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
@@ -49,15 +50,15 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
 	http.Send(DTO.CreateBranch{
-		Name:         "Test Branch",
+		Name:         lib.GenerateRandomName("Branch Name"),
 		CompanyID:    b.company.created.ID,
-		Street:       "Test Street",
-		Number:       "123",
-		Neighborhood: "Test Neighborhood",
-		ZipCode:      "12345678",
-		City:         "Test City",
-		State:        "Test State",
-		Country:      "Test Country",
+		Street:       lib.GenerateRandomName("Street"),
+		Number:       lib.GenerateRandomStrNumber(3),
+		Neighborhood: lib.GenerateRandomName("Neighborhood"),
+		ZipCode:      lib.GenerateRandomStrNumber(5),
+		City:         lib.GenerateRandomName("City"),
+		State:        lib.GenerateRandomName("State"),
+		Country:      lib.GenerateRandomName("Country"),
 	})
 	http.ParseResponse(&b.created)
 	return http.ResBody

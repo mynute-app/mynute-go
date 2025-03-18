@@ -27,6 +27,9 @@ func Test_User(t *testing.T) {
 	user.created.Surname = "Updated User Surname"
 	user.Update(t, 200)
 	user.GetByEmail(t, 200)
+	company := &Company{}
+	company.Create(t, 200)
+	user.CreateAppointment(t, 200, &Branch{}, &Employee{}, &Service{}, &Company{})
 	user.Delete(t, 200)
 }
 
@@ -117,8 +120,8 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 	http.Header("Authorization", u.auth_token)
 	http.Send(DTO.Appointment{
 		BranchID: b.created.ID,
-		ServiceID: b.created.ID,
-		EmployeeID: b.created.ID,
+		ServiceID: srvc.created.ID,
+		EmployeeID: e.created.ID,
 		UserID: u.created.ID,
 		CompanyID: c.created.ID,
 		StartTime: lib.GenerateDateRFC3339(),

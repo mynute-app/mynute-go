@@ -43,6 +43,12 @@ func (c *Company) Set(t *testing.T) {
 	employee.VerifyEmail(t, 200)
 	employee.Login(t, 200)
 	c.employees = append(c.employees, employee)
+	branch := &Branch{}
+	branch.company = c
+	branch.Create(t, 200)
+	service := &Service{}
+	service.company = c
+	service.Create(t, 200)
 }
 
 func (c *Company) Create(t *testing.T, status int) {
