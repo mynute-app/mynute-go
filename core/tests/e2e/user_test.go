@@ -27,9 +27,12 @@ func Test_User(t *testing.T) {
 	user.created.Surname = "Updated User Surname"
 	user.Update(t, 200)
 	user.GetByEmail(t, 200)
-	company := &Company{}
-	company.Create(t, 200)
-	user.CreateAppointment(t, 200, &Branch{}, &Employee{}, &Service{}, &Company{})
+	c := &Company{}
+	c.Set(t)
+	b := c.branches[0]
+	e := c.employees[0]
+	s := c.services[0]
+	user.CreateAppointment(t, 200, b, e, s, c)
 	user.Delete(t, 200)
 }
 
@@ -39,7 +42,7 @@ func (u *User) Set(t *testing.T) {
 	u.Login(t, 200)
 }
 
-func (u *User) Create(t *testing.T, s int) map[string]any {
+func (u *User) Create(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/user")
@@ -55,7 +58,6 @@ func (u *User) Create(t *testing.T, s int) map[string]any {
 	})
 	http.ParseResponse(&u.created)
 	u.created.Password = pswd
-	return http.ResBody
 }
 
 func (u *User) Update(t *testing.T, s int) {
@@ -67,14 +69,13 @@ func (u *User) Update(t *testing.T, s int) {
 	http.Send(u.created)
 }
 
-func (u *User) GetByEmail(t *testing.T, s int) map[string]any {
+func (u *User) GetByEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
 	http.URL("/user/email/" + u.created.Email)
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
-	return http.ResBody
 }
 
 func (u *User) Delete(t *testing.T, s int) {
