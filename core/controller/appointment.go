@@ -22,8 +22,8 @@ type appointment_controller struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			appointment	body		DTO.CreateAppointment	true	"Appointment"
-//	@Success		200		{object}	DTO.Appointment
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Success		200			{object}	DTO.Appointment
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/appointment [post]
 func (ac *appointment_controller) CreateAppointment(c *fiber.Ctx) error {
 	return ac.CreateOne(c)
@@ -32,13 +32,13 @@ func (ac *appointment_controller) CreateAppointment(c *fiber.Ctx) error {
 // GetAppointmentByID gets an appointment by ID
 //
 //	@Summary		Get appointment
-//  @Description	Get an appointment by ID
+//	@Description	Get an appointment by ID
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path	string	true	"ID"
-//	@Success		200		{object}	DTO.Appointment
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Param			id	path		string	true	"ID"
+//	@Success		200	{object}	DTO.Appointment
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [get]
 func (ac *appointment_controller) GetAppointmentByID(c *fiber.Ctx) error {
 	return ac.GetOneById(c)
@@ -51,10 +51,10 @@ func (ac *appointment_controller) GetAppointmentByID(c *fiber.Ctx) error {
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path	string	true	"ID"
+//	@Param			id			path		string					true	"ID"
 //	@Param			appointment	body		DTO.UpdateAppointment	true	"Appointment"
-//	@Success		200		{object}	DTO.Appointment
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Success		200			{object}	DTO.Appointment
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [patch]
 func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 	return ac.UpdateOneById(c)
@@ -67,9 +67,9 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path	string	true	"ID"
-//	@Success		200		{object}	DTO.Appointment
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Param			id	path		string	true	"ID"
+//	@Success		200	{object}	DTO.Appointment
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
 func (ac *appointment_controller) DeleteAppointmentByID(c *fiber.Ctx) error {
 	return ac.DeleteOneById(c)
