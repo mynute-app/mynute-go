@@ -3,9 +3,8 @@ package service
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
-	"reflect"
 
+	"reflect"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -65,20 +64,34 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	var dto DTO
 	var changes map[string]any
 	keys := namespace.GeneralKey
-	if s, err := middleware.ParseBodyToContext(c, &model); err != nil {
-		b.AutoReqActions.ActionFailed(s, err)
-		return
+	method := c.Method()
+
+	if method == "PATCH" {
+		c.BodyParser(&changes)
+	} else {
+		// Read raw body to determine if it's an array
+		body := c.Request().Body()
+		if len(body) > 0 && body[0] == '[' {
+			// Body is an array
+			c.BodyParser(&modelArr)
+		} else {
+			// Body is a single object
+			c.BodyParser(&model)
+		}
 	}
-	c.Locals(keys.ModelArr, &modelArr)
+
 	if hasDto := c.Locals(keys.Dto); hasDto == nil {
 		c.Locals(keys.Dto, &dto)
 	}
 	if hasDtoArr := c.Locals(keys.DtoArr); hasDtoArr == nil {
 		c.Locals(keys.DtoArr, &dtoArr)
 	}
+	c.Locals(keys.ModelArr, &modelArr)
+	c.Locals(keys.Model, &model)
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, b.Associations)
 }
+
 
 func (b *Base[MODEL, DTO]) SetDTO(c *fiber.Ctx, newDTO any) *Base[MODEL, DTO] {
 	keys := namespace.GeneralKey

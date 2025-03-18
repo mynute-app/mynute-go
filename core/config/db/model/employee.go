@@ -38,6 +38,27 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
+	if e.Password != "" {
+		db_e := &Employee{}
+		tx.First(db_e, e.ID)
+		if e.Password != db_e.Password && !e.MatchPassword(db_e.Password) {
+			if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
+				return err
+			}
+			if err := e.HashPassword(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (e *Employee) MatchPassword(hashedPass string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(e.Password))
+	return err == nil
+}
+
 // Method to set hashed password:
 func (e *Employee) HashPassword() error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(e.Password), bcrypt.DefaultCost)

@@ -150,7 +150,7 @@ func Company(Gorm *handler.Gorm) *company_controller {
 		Base: service.Base[model.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Sectors", "Branches", "Employees", "Services"},
+			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
 }

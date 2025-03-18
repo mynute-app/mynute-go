@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -90,13 +91,7 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("email", email, &employee, []string{}); err != nil {
 		return err
 	}
-	// code := c.Params("code")
-	// }
-	// if employee.VerificationCode != code {
-	// 	return lib.Error.Auth.EmailCodeInvalid.SendToClient(c)
-	// }
-	employee.Verified = true
-	if err := ec.Request.Gorm.DB.Save(&employee).Error; err != nil {
+	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &model.Employee{}, map[string]interface{}{"verified": true}, []string{}); err != nil {
 		return err
 	}
 	return nil
@@ -112,7 +107,7 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CreateEmployee
+//	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
 func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
@@ -129,7 +124,7 @@ func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CreateEmployee
+//	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/email/{email} [get]
 func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
@@ -148,7 +143,7 @@ func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
 //	@Param			employee	body		DTO.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200			{object}	DTO.CreateEmployee
+//	@Success		200			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
@@ -165,7 +160,7 @@ func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CreateEmployee
+//	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
 func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {

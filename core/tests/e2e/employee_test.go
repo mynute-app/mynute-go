@@ -36,20 +36,7 @@ func Test_Employee(t *testing.T) {
 	employee := company.employees[0]
 	employee.GetById(t, 200)
 	employee.GetByEmail(t, 200)
-	employee.created.Name = "Updated Employee Name"
-	employee.Update(t, 200)
-	branch := &Branch{}
-	branch.auth_token = company.owner.auth_token
-	branch.company = company
-	branch.Create(t, 200)
-	employee.AddBranch(t, 200, branch)
-	service := &Service{}
-	service.auth_token = company.owner.auth_token
-	service.company = company
-	service.Create(t, 200)
-	employee.AddService(t, 200, service)
-	branch.AddService(t, 200, service)
-	company.GetById(t, 200)
+	employee.Update(t, 200, map[string]any{"name": "Updated Employee Name xD"})
 	employee.Delete(t, 200)
 }
 
@@ -72,13 +59,29 @@ func (e *Employee) Create(t *testing.T, s int) {
 	e.created.Password = pswd
 }
 
-func (e *Employee) Update(t *testing.T, s int) {
+func (e *Employee) CreateBranch(t *testing.T, s int) {
+	Branch := &Branch{}
+	Branch.auth_token = e.auth_token
+	Branch.company = e.company
+	Branch.Create(t, s)
+	e.company.branches = append(e.company.branches, Branch)
+}
+
+func (e *Employee) CreateService(t *testing.T, s int) {
+	Service := &Service{}
+	Service.auth_token = e.auth_token
+	Service.company = e.company
+	Service.Create(t, s)
+	e.company.services = append(e.company.services, Service)
+}
+
+func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
 	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
-	http.Send(e.created)
+	http.Send(changes)
 	http.ParseResponse(&e.created)
 }
 

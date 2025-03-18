@@ -43,6 +43,7 @@ type ContextValues struct {
 	Assocs   []string
 	DtoArr   any
 	Dto      any
+	Changes  map[string]any
 }
 
 // Centralized method to fetch values from context
@@ -69,6 +70,10 @@ func (ac *AutoReqActions) fetchContextValues() error {
 	if err != nil {
 		return err
 	}
+	changes, err := lib.GetFromCtx[map[string]any](ac.ctx, keys.Changes)
+	if err != nil {
+		return err
+	}
 
 	ac.ctxVal = &ContextValues{
 		ModelArr: modelArr,
@@ -76,6 +81,7 @@ func (ac *AutoReqActions) fetchContextValues() error {
 		Assocs:   assocs,
 		DtoArr:   dtoArr,
 		Dto:      dto,
+		Changes:  changes,
 	}
 
 	return nil
@@ -251,7 +257,7 @@ func (ac *AutoReqActions) UpdateOneById() {
 		return
 	}
 
-	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
+	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Changes, ac.ctxVal.Assocs); err != nil {
 		ac.ActionFailed(400, err)
 		return
 	}
