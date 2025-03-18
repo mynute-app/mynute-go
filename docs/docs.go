@@ -16,6 +16,165 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/appointment": {
+            "post": {
+                "description": "Create an appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointment"
+                ],
+                "summary": "Create appointment",
+                "parameters": [
+                    {
+                        "description": "Appointment",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.CreateAppointment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Appointment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointment/{id}": {
+            "get": {
+                "description": "Get an appointment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointment"
+                ],
+                "summary": "Get appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Appointment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an appointment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointment"
+                ],
+                "summary": "Delete appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Appointment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update an appointment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointment"
+                ],
+                "summary": "Update appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Appointment",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.UpdateAppointment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Appointment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/verify-existing-account/": {
             "post": {
                 "security": [
@@ -836,7 +995,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployee"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "401": {
@@ -1189,7 +1348,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployee"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "401": {
@@ -1237,7 +1396,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployee"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "401": {
@@ -1297,7 +1456,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployee"
+                            "$ref": "#/definitions/DTO.Employee"
                         }
                     },
                     "400": {
@@ -2263,30 +2422,36 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branch_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "company_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "end_time": {
                     "type": "string",
                     "example": "2021-01-01T10:00:00Z"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "service_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "start_time": {
                     "type": "string",
                     "example": "2021-01-01T09:00:00Z"
                 },
                 "user_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -2420,11 +2585,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Your Company Name"
                 },
-                "sectors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Sector"
-                    }
+                "sector": {
+                    "$ref": "#/definitions/DTO.Sector"
+                },
+                "sector_id": {
+                    "type": "integer"
                 },
                 "services": {
                     "type": "array",
@@ -2450,6 +2615,35 @@ const docTemplate = `{
                 },
                 "tax_id": {
                     "type": "string"
+                }
+            }
+        },
+        "DTO.CreateAppointment": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "company_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "employee_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "service_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2028-01-01T09:00:00Z"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -2884,6 +3078,19 @@ const docTemplate = `{
                 "start": {
                     "type": "string",
                     "example": "09:00"
+                }
+            }
+        },
+        "DTO.UpdateAppointment": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2028-01-01T09:00:00Z"
                 }
             }
         },
