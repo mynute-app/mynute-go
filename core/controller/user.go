@@ -114,7 +114,10 @@ func (cc *user_controller) VerifyUserEmail(c *fiber.Ctx) error {
 //	@Summary		Get user by email
 //	@Description	Retrieve an user by its email
 //	@Tags			User
-//	@Param			email	path	string	true	"User Email"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
+//	@Param			email			path		string	true	"User Email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.User
 //	@Failure		404	{object}	DTO.ErrorResponse

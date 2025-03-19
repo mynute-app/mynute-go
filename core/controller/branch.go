@@ -21,6 +21,9 @@ type branch_controller struct {
 //	@Summary		Create branch
 //	@Description	Create a branch
 //	@Tags			Branch
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"Authorization"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			branch	body		DTO.CreateBranch	true	"Branch"

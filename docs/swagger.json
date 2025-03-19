@@ -217,6 +217,11 @@
         },
         "/branch": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a branch",
                 "consumes": [
                     "application/json"
@@ -229,6 +234,13 @@
                 ],
                 "summary": "Create branch",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Branch",
                         "name": "branch",
@@ -251,6 +263,9 @@
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -2195,6 +2210,11 @@
         },
         "/user/email/{email}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an user by its email",
                 "produces": [
                     "application/json"
@@ -2204,6 +2224,13 @@
                 ],
                 "summary": "Get user by email",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "User Email",
@@ -2218,6 +2245,9 @@
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",

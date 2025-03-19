@@ -225,6 +225,11 @@ const docTemplate = `{
         },
         "/branch": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a branch",
                 "consumes": [
                     "application/json"
@@ -237,6 +242,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create branch",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Branch",
                         "name": "branch",
@@ -259,6 +271,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -2203,6 +2218,11 @@ const docTemplate = `{
         },
         "/user/email/{email}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an user by its email",
                 "produces": [
                     "application/json"
@@ -2212,6 +2232,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get user by email",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "User Email",
@@ -2226,6 +2253,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.User"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",
