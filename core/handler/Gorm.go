@@ -39,12 +39,15 @@ func (p *Gorm) UpdateOneById(value string, model any, changes any, associations 
 }
 
 // Create creates a new record
-func (p *Gorm) Create(model any) error {
+func (p *Gorm) Create(model any, assocs []string) error {
 	query := p.DB
 
 	if query.Error != nil {
 		return query.Error
 	}
+
+	// Omit all associations
+	query = query.Omit(assocs...)
 
 	return query.Create(model).Error
 }

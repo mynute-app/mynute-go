@@ -298,7 +298,7 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.UserKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Employees", "Services", "Company"},
+			Associations: []string{"Employees", "Services", "Company", "Appointments"},
 		},
 	}
 }

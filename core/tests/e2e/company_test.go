@@ -35,9 +35,11 @@ func Test_Company(t *testing.T) {
 
 func (c *Company) Set(t *testing.T) {
 	c.Create(t, 200)
+	c.owner.company = c
 	c.owner.VerifyEmail(t, 200)
 	c.owner.Login(t, 200)
 	c.auth_token = c.owner.auth_token
+	c.owner.GetById(t, 200)
 	employee := &Employee{}
 	employee.company = c
 	employee.Create(t, 200)

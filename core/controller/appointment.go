@@ -81,7 +81,7 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 		Base: service.Base[model.Appointment, DTO.Appointment]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Sector", "Branch", "Employe", "Service", "Company"},
+			Associations: []string{"Sector", "Branch", "Employee", "User", "Service", "Company"},
 		},
 	}
 }

@@ -184,7 +184,7 @@ func (ac *AutoReqActions) CreateOne() {
 		return
 	}
 
-	if err := ac.req.Gorm.Create(ac.ctxVal.Model); err != nil {
+	if err := ac.req.Gorm.Create(ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
 		ac.ActionFailed(400, err)
 		return
 	}

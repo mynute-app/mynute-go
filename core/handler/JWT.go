@@ -72,12 +72,12 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.UserPopulated, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return nil, errors.New("invalid jwt.MapClaims passed.")
+		return nil, errors.New("invalid jwt.MapClaims passed")
 	}
 
 	claim_data, ok := claims["data"].(map[string]interface{})
 	if !ok {
-		return nil, errors.New("invalid claim.data passed.")
+		return nil, errors.New("invalid claim.data passed")
 	}
 
 	// Parse claim_data into model.User{} struct

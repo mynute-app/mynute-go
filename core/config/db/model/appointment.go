@@ -44,108 +44,149 @@ func (Appointment) Indexes() map[string]string {
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
+	// Ensure start time is in the future
 	if a.StartTime.Before(time.Now()) {
 		return errors.New("start time must be in the future")
 	}
-	if err := tx.First(&a.Service, a.ServiceID).Error; err != nil {
+	// TODO: Load all associations into the appointment struct
+	if err := tx.Model(&Service{}).Find(&a.Service, a.ServiceID).Error; err != nil {
 		return err
 	}
+	if err := tx.Model(&Employee{}).Find(&a.Employee, a.EmployeeID).Error; err != nil {
+		return err
+	}
+	if err := tx.Model(&Branch{}).Find(&a.Branch, a.BranchID).Error; err != nil {
+		return err
+	}
+	if err := tx.Model(&Company{}).Find(&a.Company, a.CompanyID).Error; err != nil {
+		return err
+	}
+	if err := tx.Model(&User{}).Find(&a.User, a.UserID).Error; err != nil {
+		return err
+	}
+
+	// TODO: Check if branch belongs to company
+	if a.Branch.CompanyID != a.CompanyID {
+		return errors.New("branch does not belong to the company")
+	}
+	// TODO: Check if employee belongs to company
+	if a.Employee.CompanyID != a.CompanyID {
+		return errors.New("employee does not belong to the company")
+	}
+	// TODO: Check if the service belongs to the company
+	if a.Service.CompanyID != a.CompanyID {
+		return errors.New("service does not belong to the company")
+	}
+	// TODO: Check if service exists in the branch
+	var serviceExistsInBranch int64
+	if err := tx.Model(&Branch{}).
+		Where("id = ? AND EXISTS (SELECT 1 FROM branch_services WHERE branch_id = ? AND service_id = ?)", a.BranchID, a.BranchID, a.ServiceID).
+		Count(&serviceExistsInBranch).Error; err != nil {
+		return err
+	}
+	if serviceExistsInBranch == 0 {
+		return errors.New("service does not exist in the branch")
+	}
+	// TODO: Check if employee has the service
+	var employeeHasService int64
+	if err := tx.Model(&Employee{}).
+		Where("id = ? AND EXISTS (SELECT 1 FROM employee_services WHERE employee_id = ? AND service_id = ?)", a.EmployeeID, a.EmployeeID, a.ServiceID).
+		Count(&employeeHasService).Error; err != nil {
+			return err
+		}
+	if employeeHasService == 0 {
+		return errors.New("employee does not have the service")
+	}
+	// TODO: Check if employee exists in the branch
+	var employeeExistsInBranch int64
+	if err := tx.Model(&Employee{}).
+		Where("id = ? AND EXISTS (SELECT 1 FROM employee_branches WHERE employee_id = ? AND branch_id = ?)", a.EmployeeID, a.EmployeeID, a.BranchID).
+		Count(&employeeExistsInBranch).Error; err != nil {
+			return err
+		}
+	if employeeExistsInBranch == 0 {
+		return errors.New("employee does not exist in the branch")
+	}
+	// TODO: Check if the employee is in the branch at this start time
+
+	// Calculate EndTime based on Service duration
 	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
 	if a.EndTime.Before(a.StartTime) {
 		return errors.New("end time must be after start time")
 	}
-	if err := tx.First(&a.Employee, a.EmployeeID).Error; err != nil {
-		return err
-	}
-	
-	var OverlappingEmployeeAppointmentExists bool
+
+	// Checks for Employee Overlapping
+	var EmployeeOverlappingCount int64
 	if err := tx.Model(&Appointment{}).
-		Select("count(*) > 0").
-		Where(`
-					employee_id = ? 
-					AND (
-							(start_time < ? AND end_time > ?) 
-							OR (start_time >= ? AND start_time < ?) 
-							OR (end_time > ? AND end_time <= ?)
-					)`,
-			a.EmployeeID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime,
-		).Find(&OverlappingEmployeeAppointmentExists).Error; err != nil {
+		Where(`employee_id = ? AND (
+			(start_time < ? AND end_time > ?) 
+			OR (start_time >= ? AND start_time < ?) 
+			OR (end_time > ? AND end_time <= ?)
+		)`, a.EmployeeID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
+		Count(&EmployeeOverlappingCount).Error; err != nil {
 		return err
 	}
-
-	if OverlappingEmployeeAppointmentExists {
-		return errors.New("could not create this appointment as it overlaps with another appointment already created for the employee")
+	if EmployeeOverlappingCount > 0 {
+		return errors.New("appointment conflicts with another employee booking")
 	}
 
-	var OverlappingUserAppointmentExists bool
+	// Checks for User Overlapping
+	var UserOverlappingCount int64
 	if err := tx.Model(&Appointment{}).
-		Select("count(*) > 0").
-		Where(`
-					user_id = ?
-					AND (
-							(start_time < ? AND end_time > ?)
-							OR (start_time >= ? AND start_time < ?)
-							OR (end_time > ? AND end_time <= ?)
-					)`,
-			a.UserID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime,
-		).Find(&OverlappingUserAppointmentExists).Error; err != nil {
+		Where(`user_id = ? AND (
+			(start_time < ? AND end_time > ?) 
+			OR (start_time >= ? AND start_time < ?) 
+			OR (end_time > ? AND end_time <= ?)
+		)`, a.UserID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
+		Count(&UserOverlappingCount).Error; err != nil {
 		return err
 	}
 
-	if OverlappingUserAppointmentExists {
-		return errors.New("could not create this appointment as it overlaps with another appointment already created for the user")
+	if UserOverlappingCount > 0 {
+		return errors.New("appointment conflicts with another user booking")
 	}
 
-	var OverlappingBranchAppointmentCount int64
-	var MaxSchedulesAtSameTime int64
-	
-	// Query to count overlapping appointments
+	// Check for overlapping schedules in the service at the branch
+	var ServiceScheduleOverlapping int64
 	if err := tx.Model(&Appointment{}).
-			Select("count(*)").
-			Where(`
-					branch_id = ?
-					AND service_id = ?
-					AND (
-							(start_time < ? AND end_time > ?)
-							OR (start_time >= ? AND start_time < ?)
-							OR (end_time > ? AND end_time <= ?)
-					)`,
-					a.BranchID, a.ServiceID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime,
-			).Count(&OverlappingBranchAppointmentCount).Error; err != nil {
-			return err
-	}
-	
-	// Fetch MaxSchedulesAtSameTime directly from JSONB in PostgreSQL
-	query := `
-			SELECT COALESCE(
-					(SELECT (jsonb_array_elements(service_density)->>'max_schedules_at_same_time')::int 
-					 FROM branches 
-					 WHERE id = ? 
-					 AND jsonb_array_elements(service_density)->>'service_id' = ?
-					 LIMIT 1),
-					0
-			)`
-	
-	if err := tx.Raw(query, a.BranchID, fmt.Sprintf("%d", a.ServiceID)).Scan(&MaxSchedulesAtSameTime).Error; err != nil {
-			return err
-	}
-	
-	// Check if the overlapping count exceeds the limit
-	BranchServiceHasReachedMaxOverlappingAllowed := OverlappingBranchAppointmentCount >= MaxSchedulesAtSameTime
-	if BranchServiceHasReachedMaxOverlappingAllowed {
-		err_text := fmt.Sprintf("could not create this appointment at selected branch as the maximum overlapping limite of %d appointments for the same service has been reached", MaxSchedulesAtSameTime)
-		return errors.New(err_text)
-	}
-
-	var MaxBranchDensity uint
-	if err := tx.Model(&a.Branch).Select("branch_density").Where("id = ?", a.BranchID).Scan(&MaxBranchDensity).Error; err != nil {
+		Where(`branch_id = ? AND service_id = ? AND (
+			(start_time < ? AND end_time > ?) 
+			OR (start_time >= ? AND start_time < ?) 
+			OR (end_time > ? AND end_time <= ?)
+		)`, a.BranchID, a.ServiceID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
+		Count(&ServiceScheduleOverlapping).Error; err != nil {
 		return err
 	}
 
-	BranchHasReachedMaxOverlappingAllowed := OverlappingBranchAppointmentCount >= int64(MaxBranchDensity)
-	if BranchHasReachedMaxOverlappingAllowed {
-		err_text := fmt.Sprintf("could not create this appointment at selected branch as the maximum overlapping limite of %d appointments for the same branch has been reached", MaxBranchDensity)
-		return errors.New(err_text)
+	var ServiceMaxSchedulesOverlap int64
+
+	for _, sd := range a.Branch.ServiceDensity {
+		if sd.ServiceID == a.ServiceID {
+			ServiceMaxSchedulesOverlap = int64(sd.MaxSchedulesOverlap)
+			break
+		}
+	}
+
+	if ServiceMaxSchedulesOverlap > 0 && ServiceScheduleOverlapping >= ServiceMaxSchedulesOverlap {
+		return fmt.Errorf("max limit of %d concurrent appointments reached for this service at branch", ServiceMaxSchedulesOverlap)
+	}
+
+	// Check for overlapping schedules in the branch
+	var BranchOverlappingSchedules int64
+	if err := tx.Model(&Appointment{}).
+		Where(`branch_id = ? AND (
+			(start_time < ? AND end_time > ?)
+			OR (start_time >= ? AND start_time < ?)
+			OR (end_time > ? AND end_time <= ?)
+		)`, a.BranchID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
+		Count(&BranchOverlappingSchedules).Error; err != nil {
+		return err
+	}
+
+	BranchMaxSchedulesOverlap := int64(a.Branch.BranchDensity)
+
+	if BranchOverlappingSchedules >= BranchMaxSchedulesOverlap {
+		return fmt.Errorf("max limit of %d concurrent appointments reached for this branch", BranchMaxSchedulesOverlap)
 	}
 
 	return nil

@@ -2,6 +2,10 @@ package model
 
 import (
 	"agenda-kaki-go/core/lib"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -29,13 +33,34 @@ type Employee struct {
 }
 
 type WorkSchedule struct {
-	Monday    []TimeRange `json:"monday"`
-	Tuesday   []TimeRange `json:"tuesday"`
-	Wednesday []TimeRange `json:"wednesday"`
-	Thursday  []TimeRange `json:"thursday"`
-	Friday    []TimeRange `json:"friday"`
-	Saturday  []TimeRange `json:"saturday"`
-	Sunday    []TimeRange `json:"sunday"`
+	Monday    []WorkRange `json:"monday"`
+	Tuesday   []WorkRange `json:"tuesday"`
+	Wednesday []WorkRange `json:"wednesday"`
+	Thursday  []WorkRange `json:"thursday"`
+	Friday    []WorkRange `json:"friday"`
+	Saturday  []WorkRange `json:"saturday"`
+	Sunday    []WorkRange `json:"sunday"`
+}
+
+type WorkRange struct {
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	BranchID uint      `json:"branch_id"`
+}
+
+// Implement driver.Valuer
+func (ws WorkSchedule) Value() (driver.Value, error) {
+	return json.Marshal(ws)
+}
+
+// Implement sql.Scanner
+func (ws *WorkSchedule) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan WorkSchedule: expected []byte")
+	}
+
+	return json.Unmarshal(bytes, ws)
 }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
@@ -78,16 +103,3 @@ func (e *Employee) HashPassword() error {
 	e.Password = string(hash)
 	return nil
 }
-
-// func (e *Employee) CheckAvailability(service Service, requestedTime time.Time) bool {
-// 	serviceEnd := requestedTime.Add(time.Duration(service.Duration) * time.Minute)
-
-// 	for _, slot := range e.AvailableSlots {
-// 		if requestedTime.After(slot.Start) || requestedTime.Equal(slot.Start) {
-// 			if serviceEnd.Before(slot.End) || serviceEnd.Equal(slot.End) {
-// 				return true
-// 			}
-// 		}
-// 	}
-// 	return false
-// }
