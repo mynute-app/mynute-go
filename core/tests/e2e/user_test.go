@@ -127,6 +127,7 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 		StartTime:  lib.GenerateDateRFC3339(),
 	})
 	e.GetById(t, 200)
+	b.GetById(t, 200)
 	u.GetByEmail(t, 200)
 }
 

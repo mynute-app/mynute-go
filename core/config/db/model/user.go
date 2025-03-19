@@ -28,7 +28,7 @@ type User struct {
 	VerificationCode string        `gorm:"type:varchar(100)" json:"verification_code"`
 	Verified         bool          `gorm:"default:false;not null" json:"verified"`
 	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
-	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
+	Appointments     []Appointment `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;" json:"appointments"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
