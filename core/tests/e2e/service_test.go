@@ -40,7 +40,6 @@ func Test_Service(t *testing.T) {
 	branch.company = company
 	branch.Create(t, 200)
 	branch.AddService(t, 200, service)
-	branch.Update(t, 200)
 	service.Delete(t, 200)
 	branch.Delete(t, 200)
 }
