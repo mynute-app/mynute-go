@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -43,8 +42,8 @@ type WorkSchedule struct {
 }
 
 type WorkRange struct {
-	Start    time.Time `json:"start"`
-	End      time.Time `json:"end"`
+	Start    string `json:"start"`  // Store as "15:30:00"
+	End      string `json:"end"`    // Store as "18:00:00"
 	BranchID uint      `json:"branch_id"`
 }
 

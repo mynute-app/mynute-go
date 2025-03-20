@@ -37,6 +37,27 @@ func Test_Employee(t *testing.T) {
 	employee.GetById(t, 200)
 	employee.GetByEmail(t, 200)
 	employee.Update(t, 200, map[string]any{"name": "Updated Employee Name xD"})
+	employee.Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
+		{
+			Monday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
+			},
+			Tuesday: []model.WorkRange{
+				{Start: "09:00", End: "12:00", BranchID: company.branches[0].created.ID},
+				{Start: "13:00", End: "18:00", BranchID: company.branches[0].created.ID},
+			},
+			Friday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
+			},
+			Saturday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
+			},
+			Sunday: []model.WorkRange{},
+		},
+	}})
 	employee.Delete(t, 200)
 }
 
@@ -54,7 +75,16 @@ func (e *Employee) Create(t *testing.T, s int) {
 		Email:     lib.GenerateRandomEmail("employee"),
 		Phone:     lib.GenerateRandomPhoneNumber(),
 		Password:  pswd,
-	})
+		WorkSchedule: DTO.WorkSchedule{
+			Monday: []DTO.WorkRange{
+				{Start: "07:00", End: "12:00", BranchID: e.company.branches[0].created.ID},
+				{Start: "13:00", End: "18:00", BranchID: e.company.branches[0].created.ID},
+			},
+			Tuesday: []DTO.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: e.company.branches[0].created.ID},
+				{Start: "13:00", End: "18:00", BranchID: e.company.branches[0].created.ID},
+			},
+		}})
 	http.ParseResponse(&e.created)
 	e.created.Password = pswd
 }

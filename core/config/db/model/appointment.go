@@ -48,6 +48,13 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if a.StartTime.Before(time.Now()) {
 		return errors.New("start time must be in the future")
 	}
+
+	// Calculate EndTime based on Service duration
+	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
+	if a.EndTime.Before(a.StartTime) {
+		return errors.New("end time must be after start time")
+	}
+
 	// TODO: Load all associations into the appointment struct
 	if err := tx.Model(&Service{}).Find(&a.Service, a.ServiceID).Error; err != nil {
 		return err
@@ -92,8 +99,8 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if err := tx.Model(&Employee{}).
 		Where("id = ? AND EXISTS (SELECT 1 FROM employee_services WHERE employee_id = ? AND service_id = ?)", a.EmployeeID, a.EmployeeID, a.ServiceID).
 		Count(&employeeHasService).Error; err != nil {
-			return err
-		}
+		return err
+	}
 	if employeeHasService == 0 {
 		return errors.New("employee does not have the service")
 	}
@@ -102,17 +109,56 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if err := tx.Model(&Employee{}).
 		Where("id = ? AND EXISTS (SELECT 1 FROM employee_branches WHERE employee_id = ? AND branch_id = ?)", a.EmployeeID, a.EmployeeID, a.BranchID).
 		Count(&employeeExistsInBranch).Error; err != nil {
-			return err
-		}
+		return err
+	}
 	if employeeExistsInBranch == 0 {
 		return errors.New("employee does not exist in the branch")
 	}
-	// TODO: Check if the employee is in the branch at this start time
 
-	// Calculate EndTime based on Service duration
-	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
-	if a.EndTime.Before(a.StartTime) {
-		return errors.New("end time must be after start time")
+	// Check if the employee is available in the branch at this start time
+	weekday := a.StartTime.Weekday()
+	var WorkRanges []WorkRange
+
+	switch weekday {
+	case time.Monday:
+		WorkRanges = a.Employee.WorkSchedule.Monday
+	case time.Tuesday:
+		WorkRanges = a.Employee.WorkSchedule.Tuesday
+	case time.Wednesday:
+		WorkRanges = a.Employee.WorkSchedule.Wednesday
+	case time.Thursday:
+		WorkRanges = a.Employee.WorkSchedule.Thursday
+	case time.Friday:
+		WorkRanges = a.Employee.WorkSchedule.Friday
+	case time.Saturday:
+		WorkRanges = a.Employee.WorkSchedule.Saturday
+	case time.Sunday:
+		WorkRanges = a.Employee.WorkSchedule.Sunday
+	}
+
+	if WorkRanges == nil {
+		return errors.New("employee has no work schedule for the selected day")
+	}
+
+	available := false
+	for _, wr := range WorkRanges {
+		StartTimeDate := fmt.Sprintf("%d-%d-%d", a.StartTime.Year(), a.StartTime.Month(), a.StartTime.Day())
+		wrStart, err := time.Parse("2006-01-02 15:04", fmt.Sprintf("%s %s", StartTimeDate, wr.Start))
+		if err != nil {
+			return err
+		}
+		wrEnd, err := time.Parse("2006-01-02 15:04", fmt.Sprintf("%s %s", StartTimeDate, wr.End))
+		if err != nil {
+			return err
+		}
+		if wr.BranchID == a.BranchID && a.StartTime.After(wrStart) && a.StartTime.Before(wrEnd) {
+			available = true
+			break
+		}
+	}
+
+	if !available {
+		return errors.New("employee is not available at schedule time in the specified branch")
 	}
 
 	// Checks for Employee Overlapping
