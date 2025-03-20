@@ -107,5 +107,5 @@ func GenerateDate(params ...int) time.Time {
 // eg. "2021-01-01T09:00:00Z" and also accepts optional parameters.
 // Expected order of arguments: year, month, day, hour, minute.
 func GenerateDateRFC3339(params ...int) string {
-	return GenerateDate().Format(time.RFC3339)
+	return GenerateDate(params...).Format(time.RFC3339)
 }

@@ -60,6 +60,35 @@ func (c *Company) Set(t *testing.T) {
 	c.employees[0].AddService(t, 200, c.services[0])
 	c.employees[0].AddBranch(t, 200, c.branches[0])
 	c.branches[0].AddService(t, 200, c.services[0])
+	c.employees[0].Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
+		{
+			Monday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
+			},
+			Tuesday: []model.WorkRange{
+				{Start: "09:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "18:00", BranchID: c.branches[0].created.ID},
+			},
+			Wednesday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
+			},
+			Thursday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
+			},
+			Friday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
+			},
+			Saturday: []model.WorkRange{
+				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
+				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
+			},
+			Sunday: []model.WorkRange{},
+		},
+	}})
 }
 
 func (c *Company) Create(t *testing.T, status int) {

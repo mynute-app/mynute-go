@@ -49,12 +49,6 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return errors.New("start time must be in the future")
 	}
 
-	// Calculate EndTime based on Service duration
-	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
-	if a.EndTime.Before(a.StartTime) {
-		return errors.New("end time must be after start time")
-	}
-
 	// TODO: Load all associations into the appointment struct
 	if err := tx.Model(&Service{}).Find(&a.Service, a.ServiceID).Error; err != nil {
 		return err
@@ -70,6 +64,12 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 	if err := tx.Model(&User{}).Find(&a.User, a.UserID).Error; err != nil {
 		return err
+	}
+
+	// Calculate EndTime based on Service duration
+	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
+	if a.EndTime.Before(a.StartTime) {
+		return errors.New("end time must be after start time")
 	}
 
 	// TODO: Check if branch belongs to company
@@ -136,13 +136,13 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		WorkRanges = a.Employee.WorkSchedule.Sunday
 	}
 
-	if WorkRanges == nil {
+	if len(WorkRanges) == 0 {
 		return errors.New("employee has no work schedule for the selected day")
 	}
 
 	available := false
 	for _, wr := range WorkRanges {
-		StartTimeDate := fmt.Sprintf("%d-%d-%d", a.StartTime.Year(), a.StartTime.Month(), a.StartTime.Day())
+		StartTimeDate := fmt.Sprintf("%d-%02d-%02d", a.StartTime.Year(), a.StartTime.Month(), a.StartTime.Day()) // Ensure zero-padding
 		wrStart, err := time.Parse("2006-01-02 15:04", fmt.Sprintf("%s %s", StartTimeDate, wr.Start))
 		if err != nil {
 			return err
@@ -151,7 +151,9 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		if err != nil {
 			return err
 		}
-		if wr.BranchID == a.BranchID && a.StartTime.After(wrStart) && a.StartTime.Before(wrEnd) {
+		isAfterOrEqual := a.StartTime.After(wrStart) || a.StartTime.Equal(wrStart)
+		isBeforeOrEqual := a.StartTime.Before(wrEnd) || a.StartTime.Equal(wrEnd)
+		if wr.BranchID == a.BranchID && isAfterOrEqual && isBeforeOrEqual {
 			available = true
 			break
 		}
@@ -173,7 +175,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 	if EmployeeOverlappingCount > 0 {
-		return errors.New("appointment conflicts with another employee booking")
+		return errors.New("appointment conflicts with employee already existant booking")
 	}
 
 	// Checks for User Overlapping
@@ -189,7 +191,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	if UserOverlappingCount > 0 {
-		return errors.New("appointment conflicts with another user booking")
+		return errors.New("appointment conflicts with user already existant booking")
 	}
 
 	// Check for overlapping schedules in the service at the branch

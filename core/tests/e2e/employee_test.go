@@ -68,23 +68,15 @@ func (e *Employee) Create(t *testing.T, s int) {
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
 	pswd := "1SecurePswd!"
-	http.Send(DTO.CreateEmployee{
+	CreateEmployeeBody := &DTO.CreateEmployee{
 		CompanyID: e.company.created.ID,
 		Name:      lib.GenerateRandomName("Employee Name"),
 		Surname:   lib.GenerateRandomName("Employee Surname"),
 		Email:     lib.GenerateRandomEmail("employee"),
 		Phone:     lib.GenerateRandomPhoneNumber(),
 		Password:  pswd,
-		WorkSchedule: DTO.WorkSchedule{
-			Monday: []DTO.WorkRange{
-				{Start: "07:00", End: "12:00", BranchID: e.company.branches[0].created.ID},
-				{Start: "13:00", End: "18:00", BranchID: e.company.branches[0].created.ID},
-			},
-			Tuesday: []DTO.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: e.company.branches[0].created.ID},
-				{Start: "13:00", End: "18:00", BranchID: e.company.branches[0].created.ID},
-			},
-		}})
+	}
+	http.Send(CreateEmployeeBody)
 	http.ParseResponse(&e.created)
 	e.created.Password = pswd
 }

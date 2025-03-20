@@ -120,7 +120,7 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	if startTime == nil {
-		tempStartTime := lib.GenerateDateRFC3339()
+		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
 		startTime = &tempStartTime
 	}
 	http.Send(DTO.Appointment{
