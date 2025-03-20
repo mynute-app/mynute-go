@@ -9,7 +9,12 @@ import (
 
 type Appointment struct {
 }
-
+// As the appointment dates are being generated randomly,
+// this tests can fail sometimes. When it fails, take a look
+// closely to check if the error is related to the appointment date
+// being in conflict with another appointment.
+// If so, just run the test again and it should pass.
+// If the error is not related to the appointment date, then fix it.
 func Test_Appointment(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
