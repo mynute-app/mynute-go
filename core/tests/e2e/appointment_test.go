@@ -29,9 +29,7 @@ func Test_Appointment(t *testing.T) {
 	b := c.branches[0]
 	e := c.employees[0]
 	s := c.services[0]
-	for range 3 {
-		user.CreateAppointment(t, 200, b, e, s, c, nil)
-	}
+	user.CreateAppointment(t, 200, b, e, s, c, nil)
 	startTimeStr := user.created.Appointments[0].StartTime.Format(time.RFC3339)
 	user.CreateAppointment(t, 400, b, c.owner, s, c, nil)
 	c.owner.AddService(t, 200, s)

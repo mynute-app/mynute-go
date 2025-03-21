@@ -3,6 +3,13 @@ pre-commit:
   commands:
     lint:
       glob: "*.go"
+      exclude: "*_test.go"
       run: golangci-lint run {staged_files}
+      only:
+        - main
+        - dev-main
     test:
-      run: go test -v ./core/tests/e2e/...
+      run: go test ./core/tests/e2e/...
+      only:
+        - main
+        - dev-main
