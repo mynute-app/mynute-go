@@ -35,5 +35,7 @@ func isValidPassword(fl validator.FieldLevel) bool {
 // init function to initialize and register the validator
 func init() {
 	ValidatorV10 = validator.New()
-	ValidatorV10.RegisterValidation("myPasswordValidation", isValidPassword)
+	if err := ValidatorV10.RegisterValidation("myPasswordValidation", isValidPassword); err != nil {
+		panic(err)
+	}
 }

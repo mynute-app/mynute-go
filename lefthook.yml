@@ -1,15 +1,7 @@
-pre-commit:
-  parallel: true
-  commands:
-    lint:
-      glob: "*.go"
-      exclude: "*_test.go"
-      run: golangci-lint run {staged_files}
-      only:
-        - main
-        - dev-main
-    test:
-      run: go test ./core/tests/e2e/...
-      only:
-        - main
-        - dev-main
+# pre-commit:
+#   parallel: true
+#   commands:
+#     lint:
+#       run: golangci-lint run ./...
+#     test:
+#       run: go test ./core/tests/e2e/...

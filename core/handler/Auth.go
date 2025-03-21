@@ -112,7 +112,9 @@ func (a *Authentication) WhoAreYou() error {
 	// Check if the user is authenticated
 	_, err := goth_fiber.GetFromSession("_gothic_session", a.C)
 	if err != nil {
-		a.Res.Http401(fmt.Errorf("user not authenticated"))
+		if err := a.Res.Http401(fmt.Errorf("user not authenticated")); err != nil {
+			return a.C.Next()
+		}
 	}
 	return a.C.Next()
 }

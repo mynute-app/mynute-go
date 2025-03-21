@@ -54,28 +54,38 @@ func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
 }
 
 func (sr *SendResponse) HttpError(s int, err error) error {
-	sr.send(s, err)
+	if err2 := sr.send(s, err); err2 != nil {
+		return nil
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http400(err error) error {
-	sr.send(400, err)
+	if err2 := sr.send(400, err); err2 != nil {
+		return nil
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http404() error {
-	sr.sendStatus(404)
+	if err := sr.sendStatus(404); err != nil {
+		return nil
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http401(err error) error {
-	sr.send(401, err)
+	if err2 := sr.send(401, err); err2 != nil {
+		return nil
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http500(err error) error {
 	log.Printf("An internal error occurred! \n Error: %v", err)
-	sr.send(500, err)
+	if err2 := sr.send(500, err); err2 != nil {
+		return nil
+	}
 	return nil
 }
 

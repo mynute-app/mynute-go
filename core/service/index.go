@@ -67,7 +67,9 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	method := c.Method()
 
 	if method == "PATCH" {
-		c.BodyParser(&changes)
+		if err := c.BodyParser(&changes); err != nil {
+			panic(err)
+		}
 	} else {
 		// Read raw body to determine if it's an array
 		body := c.Request().Body()
