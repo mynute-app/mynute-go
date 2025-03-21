@@ -1,0 +1,7 @@
+pre-commit:
+  commands:
+    lint:
+      glob: "*.go"
+      run: golangci-lint run {staged_files}
+    go-test:
+      run: go test ./...
