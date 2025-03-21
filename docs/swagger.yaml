@@ -4,6 +4,9 @@ definitions:
       branch_id:
         example: 1
         type: integer
+      cancelled:
+        example: false
+        type: boolean
       company_id:
         example: 1
         type: integer
@@ -14,6 +17,15 @@ definitions:
         example: "2021-01-01T10:00:00Z"
         type: string
       id:
+        example: 1
+        type: integer
+      rescheduled:
+        example: false
+        type: boolean
+      rescheduled_from_id:
+        example: 1
+        type: integer
+      rescheduled_to_id:
         example: 1
         type: integer
       service_id:
@@ -28,9 +40,17 @@ definitions:
     type: object
   DTO.Branch:
     properties:
+      appointments:
+        items:
+          $ref: '#/definitions/DTO.Appointment'
+        type: array
+      branch_density:
+        type: integer
       city:
         example: New York
         type: string
+      company:
+        $ref: '#/definitions/DTO.CompanyPopulated'
       company_id:
         example: 1
         type: integer
@@ -56,6 +76,10 @@ definitions:
       number:
         example: "456"
         type: string
+      service_density:
+        items:
+          $ref: '#/definitions/DTO.ServiceDensity'
+        type: array
       services:
         items:
           $ref: '#/definitions/DTO.ServicePopulated'
@@ -72,6 +96,8 @@ definitions:
     type: object
   DTO.BranchPopulated:
     properties:
+      branch_density:
+        type: integer
       city:
         example: New York
         type: string
@@ -93,6 +119,10 @@ definitions:
       number:
         example: "456"
         type: string
+      service_density:
+        items:
+          $ref: '#/definitions/DTO.ServiceDensity'
+        type: array
       state:
         example: NY
         type: string
@@ -242,6 +272,8 @@ definitions:
       surname:
         example: Doe
         type: string
+      work_schedule:
+        $ref: '#/definitions/DTO.WorkSchedule'
     type: object
   DTO.CreateService:
     properties:
@@ -285,10 +317,6 @@ definitions:
         items:
           $ref: '#/definitions/DTO.Appointment'
         type: array
-      available_slots:
-        items:
-          $ref: '#/definitions/DTO.TimeRange'
-        type: array
       branches:
         items:
           $ref: '#/definitions/DTO.BranchPopulated'
@@ -330,6 +358,8 @@ definitions:
       verified:
         example: true
         type: boolean
+      work_schedule:
+        $ref: '#/definitions/DTO.WorkSchedule'
     type: object
   DTO.EmployeePopulated:
     properties:
@@ -446,6 +476,13 @@ definitions:
         example: 150
         type: integer
     type: object
+  DTO.ServiceDensity:
+    properties:
+      max_schedules_overlap:
+        type: integer
+      service_id:
+        type: integer
+    type: object
   DTO.ServicePopulated:
     properties:
       description:
@@ -552,6 +589,48 @@ definitions:
       verified:
         example: false
         type: boolean
+    type: object
+  DTO.WorkRange:
+    properties:
+      branch_id:
+        type: integer
+      end:
+        description: Store as "18:00:00"
+        type: string
+      start:
+        description: Store as "15:30:00"
+        type: string
+    type: object
+  DTO.WorkSchedule:
+    properties:
+      friday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      monday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      saturday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      sunday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      thursday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      tuesday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
+      wednesday:
+        items:
+          $ref: '#/definitions/DTO.WorkRange'
+        type: array
     type: object
 info:
   contact: {}

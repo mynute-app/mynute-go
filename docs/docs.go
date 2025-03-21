@@ -2455,6 +2455,10 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "cancelled": {
+                    "type": "boolean",
+                    "example": false
+                },
                 "company_id": {
                     "type": "integer",
                     "example": 1
@@ -2468,6 +2472,18 @@ const docTemplate = `{
                     "example": "2021-01-01T10:00:00Z"
                 },
                 "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rescheduled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "rescheduled_from_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rescheduled_to_id": {
                     "type": "integer",
                     "example": 1
                 },
@@ -2488,9 +2504,21 @@ const docTemplate = `{
         "DTO.Branch": {
             "type": "object",
             "properties": {
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Appointment"
+                    }
+                },
+                "branch_density": {
+                    "type": "integer"
+                },
                 "city": {
                     "type": "string",
                     "example": "New York"
+                },
+                "company": {
+                    "$ref": "#/definitions/DTO.CompanyPopulated"
                 },
                 "company_id": {
                     "type": "integer",
@@ -2526,6 +2554,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "456"
                 },
+                "service_density": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ServiceDensity"
+                    }
+                },
                 "services": {
                     "type": "array",
                     "items": {
@@ -2549,6 +2583,9 @@ const docTemplate = `{
         "DTO.BranchPopulated": {
             "type": "object",
             "properties": {
+                "branch_density": {
+                    "type": "integer"
+                },
                 "city": {
                     "type": "string",
                     "example": "New York"
@@ -2576,6 +2613,12 @@ const docTemplate = `{
                 "number": {
                     "type": "string",
                     "example": "456"
+                },
+                "service_density": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ServiceDensity"
+                    }
                 },
                 "state": {
                     "type": "string",
@@ -2784,6 +2827,9 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "work_schedule": {
+                    "$ref": "#/definitions/DTO.WorkSchedule"
                 }
             }
         },
@@ -2846,12 +2892,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/DTO.Appointment"
                     }
                 },
-                "available_slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.TimeRange"
-                    }
-                },
                 "branches": {
                     "type": "array",
                     "items": {
@@ -2908,6 +2948,9 @@ const docTemplate = `{
                 "verified": {
                     "type": "boolean",
                     "example": true
+                },
+                "work_schedule": {
+                    "$ref": "#/definitions/DTO.WorkSchedule"
                 }
             }
         },
@@ -3073,6 +3116,17 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.ServiceDensity": {
+            "type": "object",
+            "properties": {
+                "max_schedules_overlap": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "DTO.ServicePopulated": {
             "type": "object",
             "properties": {
@@ -3221,6 +3275,69 @@ const docTemplate = `{
                 "verified": {
                     "type": "boolean",
                     "example": false
+                }
+            }
+        },
+        "DTO.WorkRange": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "integer"
+                },
+                "end": {
+                    "description": "Store as \"18:00:00\"",
+                    "type": "string"
+                },
+                "start": {
+                    "description": "Store as \"15:30:00\"",
+                    "type": "string"
+                }
+            }
+        },
+        "DTO.WorkSchedule": {
+            "type": "object",
+            "properties": {
+                "friday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "monday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "saturday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "sunday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "thursday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "tuesday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
+                },
+                "wednesday": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.WorkRange"
+                    }
                 }
             }
         }
