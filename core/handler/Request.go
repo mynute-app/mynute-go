@@ -92,9 +92,7 @@ func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) {
 	ac.Error = nil
 	ac.Status = status
 	if !ac.mute_res {
-		if err := ac.res.SendDTO(status, data, dto); err != nil {
-			panic(err)
-		}
+		_ = ac.res.SendDTO(status, data, dto)
 	}
 }
 

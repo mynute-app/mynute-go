@@ -3,8 +3,10 @@ package service
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 
 	"reflect"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -68,7 +70,11 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 
 	if method == "PATCH" {
 		if err := c.BodyParser(&changes); err != nil {
-			panic(err)
+			lib.SendLogToLoki("Error parsing changes", map[string]string{
+				"app":   "main-api",
+				"level": "internal-error",
+				"error": err.Error(),
+			})
 		}
 	} else {
 		// Read raw body to determine if it's an array
@@ -93,7 +99,6 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, b.Associations)
 }
-
 
 func (b *Base[MODEL, DTO]) SetDTO(c *fiber.Ctx, newDTO any) *Base[MODEL, DTO] {
 	keys := namespace.GeneralKey
