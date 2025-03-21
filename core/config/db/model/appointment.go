@@ -28,6 +28,12 @@ type Appointment struct {
 
 	StartTime time.Time `gorm:"not null" json:"start_time"`
 	EndTime   time.Time `gorm:"not null" json:"end_time"`
+
+	Rescheduled bool `gorm:"default:false" json:"rescheduled"`
+	Cancelled   bool `gorm:"default:false" json:"cancelled"`
+
+	RescheduledToID   *uint `json:"rescheduled_to_id"`
+	RescheduledFromID *uint `json:"rescheduled_from_id"`
 }
 
 // Custom Composite Index

@@ -23,4 +23,8 @@ type Appointment struct {
 	CompanyID  uint   `json:"company_id" example:"1"`
 	StartTime  string `json:"start_time" example:"2021-01-01T09:00:00Z"`
 	EndTime    string `json:"end_time" example:"2021-01-01T10:00:00Z"`
+	Rescheduled bool `json:"rescheduled" example:"false"`
+	Cancelled   bool `json:"cancelled" example:"false"`
+	RescheduledToID   *uint `json:"rescheduled_to_id" example:"1"`
+	RescheduledFromID *uint `json:"rescheduled_from_id" example:"1"`
 }
