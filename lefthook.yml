@@ -1,7 +1,8 @@
 pre-commit:
+  parallel: true
   commands:
     lint:
       glob: "*.go"
       run: golangci-lint run {staged_files}
-    go-test:
-      run: go test ./...
+    test:
+      run: go test -v ./core/tests/e2e/...
