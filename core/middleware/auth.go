@@ -19,35 +19,26 @@ func Auth(Gorm *handler.Gorm) *auth_middleware {
 	return &auth_middleware{Gorm: Gorm}
 }
 
+func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
+	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
+	claim, ok := auth_claims.(*DTO.Claims)
+	if !ok {
+		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	if claim.ID == 0 {
+		return lib.Error.Auth.InvalidToken.SendToClient(c)
+	}
+	if !claim.Verified {
+		return lib.Error.User.NotVerified.SendToClient(c)
+	}
+	return c.Next()
+}
+
 func (am *auth_middleware) Login() []fiber.Handler {
 	return []fiber.Handler{
 		lib.SaveBodyOnCtx[DTO.LoginUser],
 		am.DenyLoginFromUnverified,
 	}
-}
-
-// func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
-// 	res := lib.SendResponse{Ctx: c}
-// 	if c.Get("Authorization") == "" {
-// 		fmt.Printf("Access Denied!\n")
-// 		return res.Http401(nil)
-// 	}
-// 	return c.Next()
-// }
-
-func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
-	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
-	user, ok := auth_claims.(*DTO.UserPopulated)
-	if !ok {
-		return lib.Error.Auth.InvalidToken.SendToClient(c)
-	}
-	if user.ID == 0 {
-		return lib.Error.Auth.InvalidToken.SendToClient(c)
-	}
-	if !user.Verified {
-		return lib.Error.User.NotVerified.SendToClient(c)
-	}
-	return c.Next()
 }
 
 func (am *auth_middleware) DenyUnverified(c *fiber.Ctx) error {
