@@ -44,9 +44,11 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			"req_header": reqHeaders,
 		}
 
-		logger.Info(labelMsg, loggerDefaultMap["slog"])
+		logger.Info(labelMsg, slog.Any("req_info", loggerDefaultMap["slog"]))
 
-		_ = lib.SendLogToLoki(labelMsg, lokiDefaultMap)
+		if err := lib.SendLogToLoki(labelMsg, lokiDefaultMap); err != nil {
+			logger.Error("Failed to send log to Loki", slog.String("error", err.Error()))
+		}
 
 		err := c.Next()
 
@@ -87,8 +89,10 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			labelMsg = "Resquest success!"
 		}
 
-		logger.Error(labelMsg, loggerDefaultMap["slog"])
-		_ = lib.SendLogToLoki(labelMsg, lokiDefaultMap)
+		logger.Info(labelMsg, slog.Any("req_info", loggerDefaultMap["slog"]))
+		if err := lib.SendLogToLoki(labelMsg, lokiDefaultMap); err != nil {
+			logger.Error("Failed to send log to Loki", slog.String("error", err.Error()))
+		}
 
 		return err
 	}
@@ -111,4 +115,15 @@ func maskSensibleInformation(body string) string {
 	}
 
 	return masked
+}
+
+func mapToStringMap(input map[string]any, prefix string) map[string]string {
+	output := make(map[string]string)
+	for k, v := range input {
+		output[k] = fmt.Sprintf("%v", v)
+	}
+	output["type"] = prefix
+	output["level"] = "info"
+	output["app"] = "main-api"
+	return output
 }
