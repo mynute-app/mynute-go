@@ -48,7 +48,7 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	}
 }
 
-func (j *jsonWebToken) WhoAreYou() (*DTO.UserPopulated, error) {
+func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 	auth_token := j.C.Get("Authorization")
 	if auth_token == "" {
 		return nil, nil
@@ -89,7 +89,7 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.UserPopulated, error) {
 	}
 
 	// Turn bytes into model.User{} struct
-	user := &DTO.UserPopulated{}
+	user := &DTO.Claims{}
 	err = json.Unmarshal(claim_data_bytes, user)
 	if err != nil {
 		return nil, err

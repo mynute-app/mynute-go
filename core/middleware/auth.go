@@ -91,8 +91,7 @@ func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
 	if authorization == "" {
 		return c.Next()
 	}
-	jwt := handler.JWT(c)
-	user, err := jwt.WhoAreYou()
+	user, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return err
 	} else if user == nil {
