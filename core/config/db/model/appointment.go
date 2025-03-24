@@ -1,7 +1,7 @@
 package model
 
 import (
-	"errors"
+	"agenda-kaki-go/core/lib"
 	"fmt"
 	"time"
 
@@ -52,7 +52,7 @@ func (Appointment) Indexes() map[string]string {
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	// Ensure start time is in the future
 	if a.StartTime.Before(time.Now()) {
-		return errors.New("start time must be in the future")
+		return lib.Error.Appointment.StartTimeInThePast
 	}
 
 	// TODO: Load all associations into the appointment struct
@@ -75,20 +75,20 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	// Calculate EndTime based on Service duration
 	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
 	if a.EndTime.Before(a.StartTime) {
-		return errors.New("end time must be after start time")
+		return lib.Error.Appointment.EndTimeBeforeStart
 	}
 
 	// TODO: Check if branch belongs to company
 	if a.Branch.CompanyID != a.CompanyID {
-		return errors.New("branch does not belong to the company")
+		return lib.Error.Company.BranchDoesNotBelong
 	}
 	// TODO: Check if employee belongs to company
 	if a.Employee.CompanyID != a.CompanyID {
-		return errors.New("employee does not belong to the company")
+		return lib.Error.Company.EmployeeDoesNotBelong
 	}
 	// TODO: Check if the service belongs to the company
 	if a.Service.CompanyID != a.CompanyID {
-		return errors.New("service does not belong to the company")
+		return lib.Error.Company.ServiceDoesNotBelong
 	}
 	// TODO: Check if service exists in the branch
 	var serviceExistsInBranch int64
@@ -98,7 +98,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 	if serviceExistsInBranch == 0 {
-		return errors.New("service does not exist in the branch")
+		return lib.Error.Branch.ServiceDoesNotBelong
 	}
 	// TODO: Check if employee has the service
 	var employeeHasService int64
@@ -108,7 +108,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 	if employeeHasService == 0 {
-		return errors.New("employee does not have the service")
+		return lib.Error.Employee.ServiceDoesNotBelong
 	}
 	// TODO: Check if employee exists in the branch
 	var employeeExistsInBranch int64
@@ -118,7 +118,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 	if employeeExistsInBranch == 0 {
-		return errors.New("employee does not exist in the branch")
+		return lib.Error.Employee.BranchDoesNotBelong
 	}
 
 	// Check if the employee is available in the branch at this start time
@@ -143,7 +143,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	if len(WorkRanges) == 0 {
-		return errors.New("employee has no work schedule for the selected day")
+		return lib.Error.Employee.NoWorkScheduleForDay
 	}
 
 	available := false
@@ -166,7 +166,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	if !available {
-		return errors.New("employee is not available at schedule time in the specified branch")
+		return lib.Error.Employee.NotAvailableOnDate
 	}
 
 	// Checks for Employee Overlapping
@@ -181,7 +181,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 	if EmployeeOverlappingCount > 0 {
-		return errors.New("appointment conflicts with employee already existant booking")
+		return lib.Error.Employee.ScheduleConflict
 	}
 
 	// Checks for Client Overlapping
@@ -197,7 +197,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	if ClientOverlappingCount > 0 {
-		return errors.New("appointment conflicts with client already existant booking")
+		return lib.Error.Client.ScheduleConflict
 	}
 
 	// Check for overlapping schedules in the service at the branch
@@ -222,7 +222,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	if ServiceMaxSchedulesOverlap > 0 && ServiceScheduleOverlapping >= ServiceMaxSchedulesOverlap {
-		return fmt.Errorf("max limit of %d concurrent appointments reached for this service at branch", ServiceMaxSchedulesOverlap)
+		return lib.Error.Branch.MaxConcurrentAppointmentsForService
 	}
 
 	// Check for overlapping schedules in the branch
@@ -240,7 +240,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	BranchMaxSchedulesOverlap := int64(a.Branch.BranchDensity)
 
 	if BranchOverlappingSchedules >= BranchMaxSchedulesOverlap {
-		return fmt.Errorf("max limit of %d concurrent appointments reached for this branch", BranchMaxSchedulesOverlap)
+		return lib.Error.Branch.MaxConcurrentAppointmentsGeneral
 	}
 
 	return nil

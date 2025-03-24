@@ -52,6 +52,8 @@ func Logger(logger *slog.Logger) fiber.Handler {
 
 		origin_err := c.Next()
 
+		resStatus := 0
+
 		duration := time.Since(start)
 
 		resBody := maskSensibleInformation(string(c.Response().Body()))
@@ -93,15 +95,17 @@ func Logger(logger *slog.Logger) fiber.Handler {
 					}
 					return nil
 				}
+				resStatus = e.HTTPStatus
+			} else {
+				resStatus = fiber.ErrInternalServerError.Code
 			}
 		} else {
 			lokiDefaultMap["level"] = "info"
 			lokiDefaultMap["type"] = "response"
-
+			resStatus = c.Response().Header.StatusCode()
 			labelMsg = "Resquest success!"
 		}
 
-		resStatus := c.Response().Header.StatusCode()
 		lokiDefaultMap["status_code"] = fmt.Sprintf("%d", resStatus)
 		loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),
 			slog.Int("status_code", resStatus),

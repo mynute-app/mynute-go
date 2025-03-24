@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,7 +20,9 @@ type Server struct {
 // Creates a new server instance
 func NewServer() *Server {
 	// Create Prometheus middleware
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: handler.Error,
+	})
 	lib.LoadEnv()
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())

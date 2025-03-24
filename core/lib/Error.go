@@ -18,7 +18,7 @@ type ErrorStruct struct {
 
 // WithError attaches an internal error to the ErrorStruct
 func (e ErrorStruct) WithError(err error) ErrorStruct {
-	e.InnerError = fmt.Sprintf("%s <<<&&>>> %s", e.InnerError, err.Error()) 
+	e.InnerError = fmt.Sprintf("%s <<<&&>>> %s", e.InnerError, err.Error())
 	return e
 }
 
@@ -60,10 +60,18 @@ func NewError(en, br string, status int) ErrorStruct {
 
 // ErrorCategory groups all domain-specific error types.
 type ErrorCategory struct {
-	Auth    AuthErrors
-	Client  ClientErrors
-	Company CompanyErrors
-	General GeneralErrors
+	Auth        AuthErrors
+	Appointment AppointmentErrors
+	Branch      BranchErrors
+	Client      ClientErrors
+	Company     CompanyErrors
+	Employee    EmployeeErrors
+	General     GeneralErrors
+}
+
+type AppointmentErrors struct {
+	StartTimeInThePast ErrorStruct
+	EndTimeBeforeStart ErrorStruct
 }
 
 // Grouped errors per domain
@@ -75,6 +83,13 @@ type AuthErrors struct {
 	EmailCodeInvalid ErrorStruct
 }
 
+type BranchErrors struct {
+	ServiceDoesNotBelong      ErrorStruct
+	MaxConcurrentAppointments ErrorStruct
+	MaxConcurrentAppointmentsForService ErrorStruct
+	MaxConcurrentAppointmentsGeneral ErrorStruct
+}
+
 type ClientErrors struct {
 	NotVerified       ErrorStruct
 	EmailExists       ErrorStruct
@@ -83,12 +98,24 @@ type ClientErrors struct {
 	NotFoundById      ErrorStruct
 	CompanyLimit      ErrorStruct
 	CompanyIdNotFound ErrorStruct
+	ScheduleConflict  ErrorStruct
 }
 
 type CompanyErrors struct {
-	IdNotFound        ErrorStruct
-	CnpjAlreadyExists ErrorStruct
-	NotSame           ErrorStruct
+	IdNotFound            ErrorStruct
+	CnpjAlreadyExists     ErrorStruct
+	NotSame               ErrorStruct
+	BranchDoesNotBelong   ErrorStruct
+	EmployeeDoesNotBelong ErrorStruct
+	ServiceDoesNotBelong  ErrorStruct
+}
+
+type EmployeeErrors struct {
+	ServiceDoesNotBelong ErrorStruct
+	BranchDoesNotBelong  ErrorStruct
+	NoWorkScheduleForDay ErrorStruct
+	NotAvailableOnDate   ErrorStruct
+	ScheduleConflict     ErrorStruct
 }
 
 type GeneralErrors struct {
@@ -110,6 +137,15 @@ var Error = ErrorCategory{
 		Unauthorized:     NewError("You are not authorized to access this resource", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
 		EmailCodeInvalid: NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
 	},
+	Appointment: AppointmentErrors{
+		StartTimeInThePast: NewError("Start time is in the past", "A data de início está no passado", fiber.StatusBadRequest),
+		EndTimeBeforeStart: NewError("End time is before start time", "A data de término é anterior à data de início", fiber.StatusBadRequest),
+	},
+	Branch: BranchErrors{
+		ServiceDoesNotBelong:                NewError("Service is not registered in the branch", "Serviço não está registrado na filial", fiber.StatusBadRequest),
+		MaxConcurrentAppointmentsForService: NewError("Maximum concurrent appointments reached for the service in this branch", "Máximo de atendimentos simultâneos atingido para o serviço nesta filial", fiber.StatusBadRequest),
+		MaxConcurrentAppointmentsGeneral:    NewError("Maximum concurrent appointments reached for the branch", "Máximo de atendimentos simultâneos atingido para a filial", fiber.StatusBadRequest),
+	},
 	Client: ClientErrors{
 		NotVerified:       NewError("Client not verified", "Usuário não verificado", fiber.StatusUnauthorized),
 		EmailExists:       NewError("Email already exists", "Email já cadastrado", fiber.StatusBadRequest),
@@ -118,11 +154,22 @@ var Error = ErrorCategory{
 		NotFoundById:      NewError("Could not find client by ID", "Não foi possível encontrar o usuário pelo ID", fiber.StatusNotFound),
 		CompanyLimit:      NewError("Client already has a company associated", "Usuário já possui uma empresa associada", fiber.StatusBadRequest),
 		CompanyIdNotFound: NewError("Client company ID not found. This is an internal error", "ID da empresa do usuário não encontrado. Este é um erro interno", fiber.StatusInternalServerError),
+		ScheduleConflict:  NewError("Client already has a schedule on this date and time", "Usuário já tem compromisso nesse dia e horário", fiber.StatusBadRequest),
 	},
 	Company: CompanyErrors{
-		IdNotFound:        NewError("Company ID not found or malformed at the request body", "ID da empresa não encontrado ou malformado no corpo da requisição", fiber.StatusBadRequest),
-		CnpjAlreadyExists: NewError("Company CNPJ already exists", "Empresa já cadastrada", fiber.StatusBadRequest),
-		NotSame:           NewError("The CompanyID of entities are not all equal.", "O CompanyID das entidades não são todos iguais.", fiber.StatusBadRequest),
+		IdNotFound:            NewError("Company ID not found or malformed at the request body", "ID da empresa não encontrado ou malformado no corpo da requisição", fiber.StatusBadRequest),
+		CnpjAlreadyExists:     NewError("Company CNPJ already exists", "Empresa já cadastrada", fiber.StatusBadRequest),
+		NotSame:               NewError("The CompanyID of entities are not all equal.", "O CompanyID das entidades não são todos iguais.", fiber.StatusBadRequest),
+		BranchDoesNotBelong:   NewError("Branch does not belong to the company", "Filial não pertence à empresa", fiber.StatusBadRequest),
+		EmployeeDoesNotBelong: NewError("Employee does not belong to the company", "Funcionário não pertence à empresa", fiber.StatusBadRequest),
+		ServiceDoesNotBelong:  NewError("Service does not belong to the company", "Serviço não pertence à empresa", fiber.StatusBadRequest),
+	},
+	Employee: EmployeeErrors{
+		ServiceDoesNotBelong: NewError("Employee does not have the service registered", "Funcionário não possui o serviço cadastrado", fiber.StatusBadRequest),
+		BranchDoesNotBelong:  NewError("Employee does not belong to the branch", "Funcionário não pertence à filial", fiber.StatusBadRequest),
+		NoWorkScheduleForDay: NewError("Employee does not have a work schedule for the selected day", "Funcionário não possui um horário de trabalho para o dia selecionado", fiber.StatusBadRequest),
+		NotAvailableOnDate:   NewError("Employee is not available on the selected date", "Funcionário não está disponível na data selecionada", fiber.StatusBadRequest),
+		ScheduleConflict:     NewError("Employee already has a schedule on this date and time", "Funcionário já tem compromisso nesse dia e horário", fiber.StatusBadRequest),
 	},
 	General: GeneralErrors{
 		InternalError:         NewError("Internal server error while processing the request", "Erro interno do servidor ao processar a requisição", fiber.StatusInternalServerError),
