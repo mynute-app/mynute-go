@@ -18,7 +18,7 @@ type ErrorStruct struct {
 
 // WithError attaches an internal error to the ErrorStruct
 func (e ErrorStruct) WithError(err error) ErrorStruct {
-	e.InnerError = err.Error()
+	e.InnerError = fmt.Sprintf("%s <<<&&>>> %s", e.InnerError, err.Error()) 
 	return e
 }
 
