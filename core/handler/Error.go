@@ -29,6 +29,7 @@ func Error(logger *slog.Logger) fiber.ErrorHandler {
 				}
 				return nil
 			}
+			return nil
 		}
 
 		MyErr := lib.ErrorStruct{
