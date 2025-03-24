@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,9 +20,9 @@ type Server struct {
 
 // Creates a new server instance
 func NewServer() *Server {
-	// Create Prometheus middleware
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	app := fiber.New(fiber.Config{
-		ErrorHandler: handler.Error,
+		ErrorHandler: handler.Error(logger),
 	})
 	lib.LoadEnv()
 	db := database.Connect()
@@ -32,7 +33,7 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
-	routes.Build(db.Gorm, app)
+	routes.Build(db.Gorm, app, logger)
 	return &Server{App: app, Db: db}
 }
 

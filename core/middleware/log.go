@@ -86,15 +86,6 @@ func Logger(logger *slog.Logger) fiber.Handler {
 					slog.String("inner_error", e.InnerError),
 				)
 				lokiDefaultMap["inner_error"] = e.InnerError
-				if err := e.SendToClient(c); err != nil {
-					logger.Error("Failed to send error response to client!", slog.String("error", err.Error()))
-					lokiDefaultMap["error"] = e.WithError(err).Error()
-					if err := lib.SendLogToLoki("Failed to send error response to client!", lokiDefaultMap); err != nil {
-						logger.Error("Failed to send error response log to Loki", slog.String("error", err.Error()))
-						return nil
-					}
-					return nil
-				}
 				resStatus = e.HTTPStatus
 			} else {
 				resStatus = fiber.ErrInternalServerError.Code
