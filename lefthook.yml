@@ -1,7 +1,7 @@
-# pre-commit:
-#   parallel: true
-#   commands:
-#     lint:
-#       run: golangci-lint run ./...
-#     test:
-#       run: go test ./core/tests/e2e/...
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: golangci-lint run ./...
+    test:
+      run: go test ./core/tests/e2e/...

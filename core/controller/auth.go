@@ -41,20 +41,19 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 //	@Failure		401	{object}	DTO.ErrorResponse
 //	@Router			/auth/verify-existing-account/ [post]
 func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
-	cc.SetAction(c)
+	if err := cc.SetAction(c); err != nil {
+		return err
+	}
 	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
 	var user model.User
 	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
 		if err.Error() == "record not found" {
-			cc.AutoReqActions.ActionFailed(200, err)
-			return nil
+			return cc.AutoReqActions.ActionFailed(200, err)
 		}
-		cc.AutoReqActions.ActionFailed(404, err)
-		return nil
+		return cc.AutoReqActions.ActionFailed(404, err)
 	}
 	if user.Email == body.Email {
-		cc.AutoReqActions.ActionFailed(409, errors.New("email already registered"))
-		return nil
+		return cc.AutoReqActions.ActionFailed(409, errors.New("email already registered"))
 	}
 	return nil
 }
@@ -62,8 +61,7 @@ func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
 // OAUTH logics
 func (cc *auth_controller) BeginAuthProviderCallback(c *fiber.Ctx) error {
 	if err := goth_fiber.BeginAuthHandler(c); err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
-		return nil
+		return err
 	}
 	return nil
 }
@@ -71,16 +69,23 @@ func (cc *auth_controller) BeginAuthProviderCallback(c *fiber.Ctx) error {
 func (cc *auth_controller) GetAuthCallbackFunction(c *fiber.Ctx) error {
 	user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
-		cc.AutoReqActions.ActionFailed(500, err)
-		return nil
+		return err
 	}
-	handler.Auth(c).StoreUserSession(user)
-	c.Redirect("/")
+	if err := handler.Auth(c).StoreUserSession(user); err != nil {
+		return err
+	}
+	if err := c.Redirect("/"); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (cc *auth_controller) LogoutProvider(c *fiber.Ctx) error {
-	goth_fiber.Logout(c)
-	c.Redirect("/")
+	if err := goth_fiber.Logout(c); err != nil {
+		return err
+	}
+	if err := c.Redirect("/"); err != nil {
+		return err
+	}
 	return nil
 }

@@ -62,7 +62,9 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
-	res.SendDTO(200, &company, &DTO.Company{})
+	if err := res.SendDTO(200, &company, &DTO.Company{}); err != nil {
+		return err
+	}
 	return nil
 }
 

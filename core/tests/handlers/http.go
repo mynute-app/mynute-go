@@ -143,7 +143,7 @@ func (h *httpActions) Send(body any) *httpActions {
 	h.test.Logf("response headers: %+v", h.ResHeaders)
 
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
-		h.test.Fatalf("expected status code: %d | received status code: %d", h.expectedStatus, res.StatusCode)
+		h.test.Fatalf("expected status code: %d | received status code: %d \n", h.expectedStatus, res.StatusCode)
 	}
 
 	h.Status = res.StatusCode

@@ -3,7 +3,6 @@ package service
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
 
 	"reflect"
 
@@ -44,22 +43,15 @@ func CreateRoutes(r fiber.Router, ci IService) {
 	id.Get("/force", ci.ForceGetOneById)       // ok
 }
 
-func (b *Base[MODEL, DTO]) SetAction(c *fiber.Ctx) {
-	b.saveLocals(c)
+func (b *Base[MODEL, DTO]) SetAction(c *fiber.Ctx) error {
+	if err := b.saveLocals(c); err != nil {
+		return err
+	}
 	b.AutoReqActions = b.Request.SetAutomatedActions(c)
+	return nil
 }
 
-// func (b *Base[MODEL, DTO]) runMiddlewares(c *fiber.Ctx) {
-// 	mdws := b.Middleware.GetActions(b.Name, c.Method())
-// 	for _, mdw := range mdws {
-// 		if s, err := mdw(c); err != nil {
-// 			b.AutoReqActions.ActionFailed(s, err)
-// 			return
-// 		}
-// 	}
-// }
-
-func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
+func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) error {
 	var modelArr []MODEL
 	var dtoArr []DTO
 	var model MODEL
@@ -70,21 +62,21 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 
 	if method == "PATCH" {
 		if err := c.BodyParser(&changes); err != nil {
-			lib.SendLogToLoki("Error parsing changes", map[string]string{
-				"app":   "main-api",
-				"level": "internal-error",
-				"error": err.Error(),
-			})
+			return err
 		}
 	} else {
 		// Read raw body to determine if it's an array
 		body := c.Request().Body()
 		if len(body) > 0 && body[0] == '[' {
 			// Body is an array
-			c.BodyParser(&modelArr)
+			if err := c.BodyParser(&modelArr); err != nil {
+				return err
+			}
 		} else {
 			// Body is a single object
-			c.BodyParser(&model)
+			if err := c.BodyParser(&model); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -98,6 +90,7 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) {
 	c.Locals(keys.Model, &model)
 	c.Locals(keys.Changes, changes)
 	c.Locals(keys.Associations, b.Associations)
+	return nil
 }
 
 func (b *Base[MODEL, DTO]) SetDTO(c *fiber.Ctx, newDTO any) *Base[MODEL, DTO] {
@@ -124,57 +117,71 @@ func (b *Base[MODEL, DTO]) SetDTO(c *fiber.Ctx, newDTO any) *Base[MODEL, DTO] {
 }
 
 func (b *Base[MODEL, DTO]) GetBy(paramKey string, c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.GetBy(paramKey)
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.GetBy(paramKey)
 }
 
 func (b *Base[MODEL, DTO]) ForceGetBy(paramKey string, c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.ForceGetBy(paramKey)
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.ForceGetBy(paramKey)
 }
 
 func (b *Base[MODEL, DTO]) DeleteOneById(c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.DeleteOneById()
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.DeleteOneById()
 }
 
 func (b *Base[MODEL, DTO]) ForceDeleteOneById(c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.ForceDeleteOneById()
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.ForceDeleteOneById()
 }
 
 func (b *Base[MODEL, DTO]) UpdateOneById(c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.UpdateOneById()
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.UpdateOneById()
 }
 
 func (b *Base[MODEL, DTO]) CreateOne(c *fiber.Ctx) error {
-	b.SetAction(c)
-	b.AutoReqActions.CreateOne()
-	return nil
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
+	return b.AutoReqActions.CreateOne()
 }
 
 func (b *Base[MODEL, DTO]) GetAll(c *fiber.Ctx) error {
-	b.SetAction(c)
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
 	return b.GetBy("", c)
 }
 
 func (b *Base[MODEL, DTO]) GetOneById(c *fiber.Ctx) error {
-	b.SetAction(c)
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
 	return b.GetBy("id", c)
 }
 
 func (b *Base[MODEL, DTO]) ForceGetOneById(c *fiber.Ctx) error {
-	b.SetAction(c)
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
 	return b.ForceGetBy("id", c)
 }
 
 func (b *Base[MODEL, DTO]) ForceGetAll(c *fiber.Ctx) error {
-	b.SetAction(c)
+	if err := b.SetAction(c); err != nil {
+		return err
+	}
 	return b.ForceGetBy("", c)
 }

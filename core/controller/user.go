@@ -36,7 +36,9 @@ func (cc *user_controller) CreateUser(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &user, &DTO.User{})
+	if err := res.SendDTO(200, &user, &DTO.User{}); err != nil {
+		return err
+	}
 	return nil
 }
 

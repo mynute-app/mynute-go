@@ -203,7 +203,9 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &employee, &DTO.Employee{})
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -242,7 +244,9 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &employee, &DTO.Employee{})
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -281,7 +285,9 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &employee, &DTO.Employee{})
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -320,7 +326,9 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
-	res.SendDTO(200, &employee, &DTO.Employee{})
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
 	return nil
 }
 

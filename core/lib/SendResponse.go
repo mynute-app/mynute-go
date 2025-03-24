@@ -90,22 +90,30 @@ func (sr *SendResponse) Http500(err error) error {
 }
 
 func (sr *SendResponse) Http201(data any) error {
-	sr.send(201, data)
+	if err := sr.send(201, data); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http204() error {
-	sr.sendStatus(204)
+	if err := sr.sendStatus(204); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (sr *SendResponse) Http200(data any) error {
-	sr.send(200, data)
+	if err := sr.send(200, data); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (sr *SendResponse) Send(s int, data any) error {
-	sr.send(s, data)
+	if err := sr.send(s, data); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -52,7 +52,7 @@ func (test *Tester) POST(t *testing.T) {
 func (test *Tester) PATCH(t *testing.T) {
 	idMsg := validateId(test.EntityID)
 	if idMsg != "" {
-		t.Fatalf(idMsg)
+		t.Fatal(idMsg)
 	}
 	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.RelatedPath, test.EntityID)
 	HTTP := HttpClient{}
@@ -67,7 +67,7 @@ func (test *Tester) PATCH(t *testing.T) {
 func (test *Tester) DELETE(t *testing.T) {
 	idMsg := validateId(test.EntityID)
 	if idMsg != "" {
-		t.Fatalf(idMsg)
+		t.Fatal(idMsg)
 	}
 	url := fmt.Sprintf("%s/%s/%d", test.BaseURL, test.RelatedPath, test.EntityID)
 	HTTP := HttpClient{}
@@ -82,7 +82,7 @@ func (test *Tester) DELETE(t *testing.T) {
 func (test *Tester) ForceDELETE(t *testing.T) {
 	idMsg := validateId(test.EntityID)
 	if idMsg != "" {
-		t.Fatalf(idMsg)
+		t.Fatal(idMsg)
 	}
 	url := fmt.Sprintf("%s/%s/%d/force", test.BaseURL, test.RelatedPath, test.EntityID)
 	HTTP := HttpClient{}
