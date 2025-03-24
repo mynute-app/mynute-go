@@ -19,7 +19,7 @@ type CreateEmployee struct {
 	CompanyID    uint         `json:"company_id"`
 	Name         string       `json:"name" example:"Joseph"`
 	Surname      string       `json:"surname" example:"Doe"`
-	Role         string       `json:"role" example:"user"`
+	Role         string       `json:"role" example:"client"`
 	Email        string       `json:"email" example:"joseph.doe@example.com"`
 	Phone        string       `json:"phone" example:"+15555555551"`
 	Password     string       `json:"password" example:"1SecurePswd!"`
@@ -46,7 +46,7 @@ type Employee struct {
 	ID           uint               `json:"id" example:"1"`
 	Name         string             `json:"name" example:"John"`
 	Surname      string             `json:"surname" example:"Doe"`
-	Role         string             `json:"role" example:"user"`
+	Role         string             `json:"role" example:"client"`
 	Email        string             `json:"email" example:"john.doe@example.com"`
 	Phone        string             `json:"phone" example:"+15555555555"`
 	Tags         []string           `json:"tags" example:"[\"tag1\", \"tag2\"]"`
@@ -63,7 +63,7 @@ type EmployeePopulated struct {
 	ID      uint     `json:"id" example:"1"`
 	Name    string   `json:"name" example:"John"`
 	Surname string   `json:"surname" example:"Doe"`
-	Role    string   `json:"role" example:"user"`
+	Role    string   `json:"role" example:"client"`
 	Email   string   `json:"email" example:"john.doe@example.com"`
 	Phone   string   `json:"phone" example:"+15555555555"`
 	Tags    []string `json:"tags" example:"[\"tag1\", \"tag2\"]"`

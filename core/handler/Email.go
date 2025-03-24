@@ -9,8 +9,8 @@ import (
 )
 
 type MailData struct {
-	Username string
-	Code     string
+	Clientname string
+	Code       string
 }
 
 type Mail struct {
@@ -28,7 +28,7 @@ type Configs struct {
 	PassResetTemplateID string
 	SMTPHost            string
 	SMTPPort            int
-	SMTPUser            string
+	SMTPClient          string
 	SMTPPass            string
 }
 
@@ -43,7 +43,7 @@ var EmailRequestTest = &Mail{
 	subject: "Test",
 	body:    "Test",
 	mtype:   2,
-	data: &MailData{Username: "Test User",
+	data: &MailData{Clientname: "Test Client",
 		Code: "123456"},
 }
 
@@ -73,14 +73,14 @@ func (ms *GoMailService) SendEmail(mailReq *Mail) error {
 	// Set the subject and body based on the mail type
 	// if mailReq.mtype == MailConfirmation {
 	//     m.SetHeader("Subject", "Email Confirmation")
-	//     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your confirmation code is: "+mailReq.data.Code)
+	//     m.SetBody("text/html", "Hello "+mailReq.data.Clientname+",<br><br>Your confirmation code is: "+mailReq.data.Code)
 	// } else if mailReq.mtype == PassReset {
 	//     m.SetHeader("Subject", "Password Reset")
-	//     m.SetBody("text/html", "Hello "+mailReq.data.Username+",<br><br>Your password reset code is: "+mailReq.data.Code)
+	//     m.SetBody("text/html", "Hello "+mailReq.data.Clientname+",<br><br>Your password reset code is: "+mailReq.data.Code)
 	// }
 
 	// Set up the SMTP server
-	d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPUser, ms.configs.SMTPPass)
+	d := gomail.NewDialer(ms.configs.SMTPHost, ms.configs.SMTPPort, ms.configs.SMTPClient, ms.configs.SMTPPass)
 
 	// Send the email
 	if err := d.DialAndSend(message); err != nil {
@@ -97,6 +97,6 @@ func setConfigs(configs *Configs) {
 		log.Fatal("SMTP_PORT must be an integer")
 	}
 	configs.SMTPHost = os.Getenv("SMTP_HOST")
-	configs.SMTPUser = os.Getenv("SMTP_USER")
+	configs.SMTPClient = os.Getenv("SMTP_USER")
 	configs.SMTPPass = os.Getenv("SMTP_PASS")
 }

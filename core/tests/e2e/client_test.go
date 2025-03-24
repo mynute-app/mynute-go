@@ -11,48 +11,48 @@ import (
 	"time"
 )
 
-type User struct {
-	created    model.User
+type Client struct {
+	created    model.Client
 	auth_token string
 }
 
-func Test_User(t *testing.T) {
+func Test_Client(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	user := &User{}
-	user.Create(t, 200)
-	user.VerifyEmail(t, 200)
-	user.Login(t, 200)
-	user.Update(t, 200, map[string]any{"name": "Updated User Name"})
-	user.GetByEmail(t, 200)
+	client := &Client{}
+	client.Create(t, 200)
+	client.VerifyEmail(t, 200)
+	client.Login(t, 200)
+	client.Update(t, 200, map[string]any{"name": "Updated Client Name"})
+	client.GetByEmail(t, 200)
 	c := &Company{}
 	c.Set(t)
 	b := c.branches[0]
 	e := c.employees[0]
 	s := c.services[0]
-	user.CreateAppointment(t, 200, b, e, s, c, nil)
-	startTimeStr := user.created.Appointments[0].StartTime.Format(time.RFC3339)
-	user.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
-	user.Delete(t, 200)
+	client.CreateAppointment(t, 200, b, e, s, c, nil)
+	startTimeStr := client.created.Appointments[0].StartTime.Format(time.RFC3339)
+	client.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
+	client.Delete(t, 200)
 }
 
-func (u *User) Set(t *testing.T) {
+func (u *Client) Set(t *testing.T) {
 	u.Create(t, 200)
 	u.VerifyEmail(t, 200)
 	u.Login(t, 200)
 }
 
-func (u *User) Create(t *testing.T, s int) {
+func (u *Client) Create(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL("/user")
+	http.URL("/client")
 	http.ExpectStatus(s)
-	email := lib.GenerateRandomEmail("user")
+	email := lib.GenerateRandomEmail("client")
 	pswd := "1SecurePswd!"
-	http.Send(DTO.CreateUser{
+	http.Send(DTO.CreateClient{
 		Email:    email,
-		Name:     lib.GenerateRandomName("User Name"),
-		Surname:  lib.GenerateRandomName("User Surname"),
+		Name:     lib.GenerateRandomName("Client Name"),
+		Surname:  lib.GenerateRandomName("Client Surname"),
 		Password: pswd,
 		Phone:    lib.GenerateRandomPhoneNumber(),
 	})
@@ -60,46 +60,46 @@ func (u *User) Create(t *testing.T, s int) {
 	u.created.Password = pswd
 }
 
-func (u *User) Update(t *testing.T, s int, changes map[string]any) {
+func (u *Client) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL("/user/" + fmt.Sprintf("%v", u.created.ID))
+	http.URL("/client/" + fmt.Sprintf("%v", u.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(changes)
 }
 
-func (u *User) GetByEmail(t *testing.T, s int) {
+func (u *Client) GetByEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL("/user/email/" + u.created.Email)
+	http.URL("/client/email/" + u.created.Email)
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 }
 
-func (u *User) Delete(t *testing.T, s int) {
+func (u *Client) Delete(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/user/%v", u.created.ID))
+	http.URL(fmt.Sprintf("/client/%v", u.created.ID))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 }
 
-func (u *User) VerifyEmail(t *testing.T, s int) {
+func (u *Client) VerifyEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(fmt.Sprintf("/user/verify-email/%v/%s", u.created.Email, "12345"))
+	http.URL(fmt.Sprintf("/client/verify-email/%v/%s", u.created.Email, "12345"))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(nil)
 }
 
-func (u *User) Login(t *testing.T, s int) {
+func (u *Client) Login(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL("/user/login")
+	http.URL("/client/login")
 	http.ExpectStatus(s)
 	http.Send(map[string]any{
 		"email":    u.created.Email,
@@ -113,7 +113,7 @@ func (u *User) Login(t *testing.T, s int) {
 	u.auth_token = auth[0]
 }
 
-func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, srvc *Service, c *Company, startTime *string) {
+func (u *Client) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, srvc *Service, c *Company, startTime *string) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/appointment")
@@ -127,7 +127,7 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 		BranchID:   b.created.ID,
 		ServiceID:  srvc.created.ID,
 		EmployeeID: e.created.ID,
-		UserID:     u.created.ID,
+		ClientID:   u.created.ID,
 		CompanyID:  c.created.ID,
 		StartTime:  *startTime,
 	})
@@ -139,10 +139,10 @@ func (u *User) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, sr
 	u.GetByEmail(t, 200)
 }
 
-func Test_User_Create_Success(t *testing.T) {
+func Test_Client_Create_Success(t *testing.T) {
 	server := core.NewServer().Run("test")
-	user := &User{}
-	user.Create(t, 200)
+	client := &Client{}
+	client.Create(t, 200)
 	server.Shutdown()
 }
 

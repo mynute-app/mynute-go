@@ -182,7 +182,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Log in an user",
+                "description": "Log in an client",
                 "consumes": [
                     "application/json"
                 ],
@@ -195,12 +195,12 @@ const docTemplate = `{
                 "summary": "Login",
                 "parameters": [
                     {
-                        "description": "User",
-                        "name": "user",
+                        "description": "Client",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.LoginUser"
+                            "$ref": "#/definitions/DTO.LoginClient"
                         }
                     }
                 ],
@@ -1027,7 +1027,7 @@ const docTemplate = `{
         },
         "/employee/login": {
             "post": {
-                "description": "Log in an user",
+                "description": "Log in an client",
                 "consumes": [
                     "application/json"
                 ],
@@ -1041,7 +1041,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Employee",
-                        "name": "user",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -2176,9 +2176,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/user": {
+        "/client": {
             "post": {
-                "description": "Create an user",
+                "description": "Create an client",
                 "consumes": [
                     "application/json"
                 ],
@@ -2186,17 +2186,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
-                "summary": "Create user",
+                "summary": "Create client",
                 "parameters": [
                     {
-                        "description": "User",
-                        "name": "user",
+                        "description": "Client",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.CreateUser"
+                            "$ref": "#/definitions/DTO.CreateClient"
                         }
                     }
                 ],
@@ -2204,7 +2204,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.Client"
                         }
                     },
                     "400": {
@@ -2216,21 +2216,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/email/{email}": {
+        "/client/email/{email}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve an user by its email",
+                "description": "Retrieve an client by its email",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
-                "summary": "Get user by email",
+                "summary": "Get client by email",
                 "parameters": [
                     {
                         "type": "string",
@@ -2241,7 +2241,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User Email",
+                        "description": "Client Email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -2251,7 +2251,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.Client"
                         }
                     },
                     "401": {
@@ -2266,9 +2266,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/login": {
+        "/client/login": {
             "post": {
-                "description": "Log in an user",
+                "description": "Log in an client",
                 "consumes": [
                     "application/json"
                 ],
@@ -2276,17 +2276,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
                 "summary": "Login",
                 "parameters": [
                     {
-                        "description": "User",
-                        "name": "user",
+                        "description": "Client",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.LoginUser"
+                            "$ref": "#/definitions/DTO.LoginClient"
                         }
                     }
                 ],
@@ -2303,9 +2303,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/verify-email/{email}/{code}": {
+        "/client/verify-email/{email}/{code}": {
             "post": {
-                "description": "Verify an user's email",
+                "description": "Verify an client's email",
                 "consumes": [
                     "application/json"
                 ],
@@ -2313,13 +2313,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
                 "summary": "Verify email",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User Email",
+                        "description": "Client Email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -2342,21 +2342,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{id}": {
+        "/client/{id}": {
             "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete an user",
+                "description": "Delete an client",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
-                "summary": "Delete user",
+                "summary": "Delete client",
                 "parameters": [
                     {
                         "type": "string",
@@ -2367,7 +2367,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "Client ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2391,7 +2391,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update an user",
+                "description": "Update an client",
                 "consumes": [
                     "application/json"
                 ],
@@ -2399,9 +2399,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Client"
                 ],
-                "summary": "Update user",
+                "summary": "Update client",
                 "parameters": [
                     {
                         "type": "string",
@@ -2412,18 +2412,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "Client ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "User",
-                        "name": "user",
+                        "description": "Client",
+                        "name": "client",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.Client"
                         }
                     }
                 ],
@@ -2431,7 +2431,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.User"
+                            "$ref": "#/definitions/DTO.Client"
                         }
                     },
                     "400": {
@@ -2535,7 +2535,7 @@ const docTemplate = `{
                 "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.UserPopulated"
+                        "$ref": "#/definitions/DTO.ClientPopulated"
                     }
                 },
                 "id": {
@@ -2822,7 +2822,7 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string",
-                    "example": "user"
+                    "example": "client"
                 },
                 "surname": {
                     "type": "string",
@@ -2858,7 +2858,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.CreateUser": {
+        "DTO.CreateClient": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2923,7 +2923,7 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string",
-                    "example": "user"
+                    "example": "client"
                 },
                 "services": {
                     "type": "array",
@@ -2975,7 +2975,7 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string",
-                    "example": "user"
+                    "example": "client"
                 },
                 "surname": {
                     "type": "string",
@@ -3045,7 +3045,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.LoginUser": {
+        "DTO.LoginClient": {
             "type": "object",
             "properties": {
                 "email": {
@@ -3099,7 +3099,7 @@ const docTemplate = `{
                 "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.UserPopulated"
+                        "$ref": "#/definitions/DTO.ClientPopulated"
                     }
                 },
                 "id": {
@@ -3208,7 +3208,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.User": {
+        "DTO.Client": {
             "type": "object",
             "properties": {
                 "appointments": {
@@ -3249,7 +3249,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.UserPopulated": {
+        "DTO.ClientPopulated": {
             "type": "object",
             "properties": {
                 "email": {

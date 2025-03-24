@@ -25,7 +25,7 @@ var models = []any{
 	&model.Branch{},
 	&model.Appointment{},
 	&model.Holidays{},
-	&model.User{},
+	&model.Client{},
 	&model.Employee{},
 	&model.Service{},
 }

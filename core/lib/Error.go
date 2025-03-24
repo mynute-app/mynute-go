@@ -31,15 +31,15 @@ type ErrorStruct struct {
 type ErrorTypes struct {
 	InterfaceDataNotFound ErrorStruct
 	InvalidLogin          ErrorStruct
-	UserNotVerified       ErrorStruct
+	ClientNotVerified     ErrorStruct
 	EmailExists           ErrorStruct
-	InvalidUserName       ErrorStruct
+	InvalidClientName     ErrorStruct
 	InvalidEmail          ErrorStruct
 	CompanyIDNotFound     ErrorStruct
 	Unauthroized          ErrorStruct
-	UserNotFoundById      ErrorStruct
+	ClientNotFoundById    ErrorStruct
 	InvalidToken          ErrorStruct
-	UserCompanyLimit      ErrorStruct
+	ClientCompanyLimit    ErrorStruct
 }
 
 type AuthErrors struct {
@@ -50,10 +50,10 @@ type AuthErrors struct {
 	EmailCodeInvalid ErrorStruct
 }
 
-type UserErrors struct {
+type ClientErrors struct {
 	NotVerified       ErrorStruct
 	EmailExists       ErrorStruct
-	InvalidUserName   ErrorStruct
+	InvalidClientName ErrorStruct
 	InvalidEmail      ErrorStruct
 	NotFoundById      ErrorStruct
 	CompanyLimit      ErrorStruct
@@ -72,7 +72,7 @@ type GeneralErrors struct {
 
 type ErrorCategory struct {
 	Auth    AuthErrors
-	User    UserErrors
+	Client  ClientErrors
 	Company CompanyErrors
 	General GeneralErrors
 }
@@ -105,9 +105,9 @@ var Error = ErrorCategory{
 			HTTPStatus:    400,
 		},
 	},
-	User: UserErrors{
+	Client: ClientErrors{
 		NotVerified: ErrorStruct{
-			DescriptionEn: "User not verified",
+			DescriptionEn: "Client not verified",
 			DescriptionBr: "Usuário não verificado",
 			HTTPStatus:    401,
 		},
@@ -116,8 +116,8 @@ var Error = ErrorCategory{
 			DescriptionBr: "Email já cadastrado",
 			HTTPStatus:    400,
 		},
-		InvalidUserName: ErrorStruct{
-			DescriptionEn: "Invalid user name",
+		InvalidClientName: ErrorStruct{
+			DescriptionEn: "Invalid client name",
 			DescriptionBr: "Nome de usuário inválido",
 			HTTPStatus:    400,
 		},
@@ -127,17 +127,17 @@ var Error = ErrorCategory{
 			HTTPStatus:    400,
 		},
 		NotFoundById: ErrorStruct{
-			DescriptionEn: "Could not find user by ID",
+			DescriptionEn: "Could not find client by ID",
 			DescriptionBr: "Não foi possível encontrar o usuário pelo ID",
 			HTTPStatus:    404,
 		},
 		CompanyLimit: ErrorStruct{
-			DescriptionEn: "User already has a company associated",
+			DescriptionEn: "Client already has a company associated",
 			DescriptionBr: "Usuário já possui uma empresa associada",
 			HTTPStatus:    400,
 		},
 		CompanyIdNotFound: ErrorStruct{
-			DescriptionEn: "User company ID not found. This is an internal error",
+			DescriptionEn: "Client company ID not found. This is an internal error",
 			DescriptionBr: "ID da empresa do usuário não encontrado. Este é um erro interno",
 			HTTPStatus:    500,
 		},

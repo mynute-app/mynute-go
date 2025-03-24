@@ -20,15 +20,15 @@ type Service struct {
 func Test_Service(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	user := &User{}
-	user.Create(t, 200)
-	user.VerifyEmail(t, 200)
-	user.Login(t, 200)
+	client := &Client{}
+	client.Create(t, 200)
+	client.VerifyEmail(t, 200)
+	client.Login(t, 200)
 	company := &Company{}
-	company.auth_token = user.auth_token
+	company.auth_token = client.auth_token
 	company.Create(t, 200)
 	service := &Service{}
-	service.auth_token = user.auth_token
+	service.auth_token = client.auth_token
 	service.company = company
 	service.Create(t, 200)
 	service.created.Name = "Updated Service Name"
@@ -36,7 +36,7 @@ func Test_Service(t *testing.T) {
 	service.GetById(t, 200)
 	service.GetByName(t, 200)
 	branch := &Branch{}
-	branch.auth_token = user.auth_token
+	branch.auth_token = client.auth_token
 	branch.company = company
 	branch.Create(t, 200)
 	branch.AddService(t, 200, service)

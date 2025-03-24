@@ -29,33 +29,33 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
 	}
 	if !claim.Verified {
-		return lib.Error.User.NotVerified.SendToClient(c)
+		return lib.Error.Client.NotVerified.SendToClient(c)
 	}
 	return c.Next()
 }
 
 func (am *auth_middleware) Login() []fiber.Handler {
 	return []fiber.Handler{
-		lib.SaveBodyOnCtx[DTO.LoginUser],
+		lib.SaveBodyOnCtx[DTO.LoginClient],
 		am.DenyLoginFromUnverified,
 	}
 }
 
 func (am *auth_middleware) DenyUnverified(c *fiber.Ctx) error {
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
-	user, ok := auth_claims.(*DTO.UserPopulated)
+	user, ok := auth_claims.(*DTO.ClientPopulated)
 	if !ok {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
 	}
 	if !user.Verified {
-		return lib.Error.User.NotVerified.SendToClient(c)
+		return lib.Error.Client.NotVerified.SendToClient(c)
 	}
 	return c.Next()
 }
 
 func (am *auth_middleware) DenyClaimless(c *fiber.Ctx) error {
 	res := lib.SendResponse{Ctx: c}
-	auth_claims, ok := c.Locals(namespace.RequestKey.Auth_Claims).(*model.User)
+	auth_claims, ok := c.Locals(namespace.RequestKey.Auth_Claims).(*model.Client)
 	if !ok {
 		return res.Http401(nil)
 	}
@@ -67,21 +67,21 @@ func (am *auth_middleware) DenyClaimless(c *fiber.Ctx) error {
 
 func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
 	// Get login body from context
-	login, err := lib.GetBodyFromCtx[*DTO.LoginUser](c)
+	login, err := lib.GetBodyFromCtx[*DTO.LoginClient](c)
 	if err != nil {
 		return err
 	}
 	// Get user from email
-	user := &[]model.User{}
+	user := &[]model.Client{}
 	am.Gorm.DB.Where("email = ?", login.Email).Find(user)
 	if len(*user) == 0 {
-		fmt.Printf("User %v not found\n", login.Email)
+		fmt.Printf("Client %v not found\n", login.Email)
 		return lib.Error.Auth.InvalidLogin.SendToClient(c)
 	}
 	// Check if user is verified
 	if !(*user)[0].Verified {
-		fmt.Printf("User %v is not verified\n", login.Email)
-		return lib.Error.User.NotVerified.SendToClient(c)
+		fmt.Printf("Client %v is not verified\n", login.Email)
+		return lib.Error.Client.NotVerified.SendToClient(c)
 	}
 	return c.Next()
 }

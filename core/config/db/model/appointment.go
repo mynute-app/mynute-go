@@ -17,8 +17,8 @@ type Appointment struct {
 	EmployeeID uint      `gorm:"not null;index" json:"employee_id"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	UserID uint  `gorm:"not null;index" json:"user_id"`
-	User   *User `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE;"`
+	ClientID uint    `gorm:"not null;index" json:"user_id"`
+	Client   *Client `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"`
 
 	BranchID uint    `gorm:"not null;index" json:"branch_id"`
 	Branch   *Branch `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
@@ -68,7 +68,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if err := tx.Model(&Company{}).Find(&a.Company, a.CompanyID).Error; err != nil {
 		return err
 	}
-	if err := tx.Model(&User{}).Find(&a.User, a.UserID).Error; err != nil {
+	if err := tx.Model(&Client{}).Find(&a.Client, a.ClientID).Error; err != nil {
 		return err
 	}
 
@@ -184,20 +184,20 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 		return errors.New("appointment conflicts with employee already existant booking")
 	}
 
-	// Checks for User Overlapping
-	var UserOverlappingCount int64
+	// Checks for Client Overlapping
+	var ClientOverlappingCount int64
 	if err := tx.Model(&Appointment{}).
 		Where(`user_id = ? AND (
 			(start_time < ? AND end_time > ?) 
 			OR (start_time >= ? AND start_time < ?) 
 			OR (end_time > ? AND end_time <= ?)
-		)`, a.UserID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
-		Count(&UserOverlappingCount).Error; err != nil {
+		)`, a.ClientID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
+		Count(&ClientOverlappingCount).Error; err != nil {
 		return err
 	}
 
-	if UserOverlappingCount > 0 {
-		return errors.New("appointment conflicts with user already existant booking")
+	if ClientOverlappingCount > 0 {
+		return errors.New("appointment conflicts with client already existant booking")
 	}
 
 	// Check for overlapping schedules in the service at the branch

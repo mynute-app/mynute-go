@@ -25,7 +25,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Holidays(Gorm, r)
 	Sector(Gorm, r)
 	Company(Gorm, r)
-	User(Gorm, r)
+	Client(Gorm, r)
 	Branch(Gorm, r)
 	Service(Gorm, r)
 	Swagger(App)

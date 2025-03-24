@@ -64,8 +64,8 @@ var BranchKey = TypeStruct{
 	Model: "branch_model",
 }
 
-var UserKey = TypeStruct{
-	Name:  "user",
+var ClientKey = TypeStruct{
+	Name:  "client",
 	Model: "user_model",
 }
 

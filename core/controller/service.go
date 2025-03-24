@@ -101,7 +101,7 @@ func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
 func Service(Gorm *handler.Gorm) *service_controller {
 	return &service_controller{
 		Base: service.Base[model.Service, DTO.Service]{
-			Name:         namespace.UserKey.Name,
+			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Company", "Branches", "Employees"},
 		},

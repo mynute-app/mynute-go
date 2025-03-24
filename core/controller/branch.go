@@ -302,7 +302,7 @@ func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
 func Branch(Gorm *handler.Gorm) *branch_controller {
 	return &branch_controller{
 		Base: service.Base[model.Branch, DTO.Branch]{
-			Name:         namespace.UserKey.Name,
+			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Employees", "Services", "Company", "Appointments"},
 		},

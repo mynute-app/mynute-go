@@ -1,11 +1,11 @@
 package DTO
 
-type LoginUser struct {
+type LoginClient struct {
 	Email    string `json:"email" example:"john.doe@example.com"`
 	Password string `json:"password" example:"1SecurePswd!"`
 }
 
-type CreateUser struct {
+type CreateClient struct {
 	Name     string `json:"name" example:"John"`
 	Surname  string `json:"surname" example:"Doe"`
 	Email    string `json:"email" example:"john.doe@example.com"`
@@ -13,18 +13,18 @@ type CreateUser struct {
 	Password string `json:"password" example:"1SecurePswd!"`
 }
 
-type User struct {
-	ID             uint          `json:"id" example:"1"`
-	Name           string        `json:"name" example:"John"`
-	Surname        string        `json:"surname" example:"Doe"`
-	Email          string        `json:"email" example:"john.doe@example.com"`
-	Phone          string        `json:"phone" example:"+15555555555"`
-	Verified       bool          `json:"verified" example:"false"`
-	AvailableSlots []TimeRange   `json:"available_slots"`
+type Client struct {
+	ID             uint           `json:"id" example:"1"`
+	Name           string         `json:"name" example:"John"`
+	Surname        string         `json:"surname" example:"Doe"`
+	Email          string         `json:"email" example:"john.doe@example.com"`
+	Phone          string         `json:"phone" example:"+15555555555"`
+	Verified       bool           `json:"verified" example:"false"`
+	AvailableSlots []TimeRange    `json:"available_slots"`
 	Appointments   []*Appointment `json:"appointments"`
 }
 
-type UserPopulated struct {
+type ClientPopulated struct {
 	ID       uint   `json:"id" example:"1"`
 	Name     string `json:"name" example:"John"`
 	Surname  string `json:"surname" example:"Doe"`

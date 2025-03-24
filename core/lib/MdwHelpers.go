@@ -90,14 +90,14 @@ func GetClaimsFromCtx(c *fiber.Ctx) (map[string]any, error) {
 	return data, nil
 }
 
-func GetUserIdFromClaims(c *fiber.Ctx) (string, error) {
+func GetClientIdFromClaims(c *fiber.Ctx) (string, error) {
 	claims, err := GetClaimsFromCtx(c)
 	if err != nil {
 		return "", err
 	}
 	userID, ok := claims["ID"].(float64)
 	if !ok {
-		return "", errors.New("could not find user ID in jwt.MapClaims")
+		return "", errors.New("could not find client ID in jwt.MapClaims")
 	}
 	return fmt.Sprintf("%v", int(userID)), nil
 }

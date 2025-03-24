@@ -14,28 +14,28 @@ import (
 
 // EmployeeController embeds Base in order to extend it with the functions below
 type auth_controller struct {
-	service.Base[model.User, DTO.User]
+	service.Base[model.Client, DTO.Client]
 }
 
 func Auth(Gorm *handler.Gorm) *auth_controller {
 	return &auth_controller{
-		Base: service.Base[model.User, DTO.User]{
-			Name:         namespace.UserKey.Name,
+		Base: service.Base[model.Client, DTO.Client]{
+			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}
 }
 
-// Login just logs an user in case the password is correct
+// Login just logs an client in case the password is correct
 //
 //	@Summary		Login
-//	@Description	Log in an user
+//	@Description	Log in an client
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body	DTO.LoginUser	true	"User"
+//	@Param			client	body	DTO.LoginClient	true	"Client"
 //	@Success		200
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Failure		401	{object}	DTO.ErrorResponse
@@ -44,15 +44,15 @@ func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
 	if err := cc.SetAction(c); err != nil {
 		return err
 	}
-	body := c.Locals(namespace.GeneralKey.Model).(*model.User)
-	var user model.User
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &user, []string{}); err != nil {
+	body := c.Locals(namespace.GeneralKey.Model).(*model.Client)
+	var client model.Client
+	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client, []string{}); err != nil {
 		if err.Error() == "record not found" {
 			return cc.AutoReqActions.ActionFailed(200, err)
 		}
 		return cc.AutoReqActions.ActionFailed(404, err)
 	}
-	if user.Email == body.Email {
+	if client.Email == body.Email {
 		return cc.AutoReqActions.ActionFailed(409, errors.New("email already registered"))
 	}
 	return nil
@@ -67,11 +67,11 @@ func (cc *auth_controller) BeginAuthProviderCallback(c *fiber.Ctx) error {
 }
 
 func (cc *auth_controller) GetAuthCallbackFunction(c *fiber.Ctx) error {
-	user, err := goth_fiber.CompleteUserAuth(c)
+	client, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		return err
 	}
-	if err := handler.Auth(c).StoreUserSession(user); err != nil {
+	if err := handler.Auth(c).StoreClientSession(client); err != nil {
 		return err
 	}
 	if err := c.Redirect("/"); err != nil {

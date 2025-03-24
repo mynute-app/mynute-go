@@ -80,7 +80,7 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 		return nil, errors.New("invalid claim.data passed")
 	}
 
-	// Parse claim_data into model.User{} struct
+	// Parse claim_data into model.Client{} struct
 
 	// Turn claim_data into bytes
 	claim_data_bytes, err := json.Marshal(claim_data)
@@ -88,26 +88,26 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 		return nil, err
 	}
 
-	// Turn bytes into model.User{} struct
-	user := &DTO.Claims{}
-	err = json.Unmarshal(claim_data_bytes, user)
+	// Turn bytes into model.Client{} struct
+	client := &DTO.Claims{}
+	err = json.Unmarshal(claim_data_bytes, client)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return client, nil
 }
 
-// WhoAreYou decrypts and validates the JWT token, saving user data in context if valid
+// WhoAreYou decrypts and validates the JWT token, saving client data in context if valid
 // func (j *jsonWebToken) WhoAreYou() error {
-// 	saveUserData := func(value any) {
+// 	saveClientData := func(value any) {
 // 		j.C.Locals(namespace.RequestKey.Auth_Claims, value)
 // 	}
 
 // 	// Retrieve the token from the Authorization header
 // 	tokenString := j.GetToken()
 // 	if tokenString == "" {
-// 		saveUserData(nil)
+// 		saveClientData(nil)
 // 		return lib.Error.Auth.NoToken.SendToClient(j.C)
 // 	}
 
@@ -135,8 +135,8 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 // 		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
 // 	}
 
-// 	// Store claims (user data) in Fiber's Locals
-// 	saveUserData(claims)
+// 	// Store claims (client data) in Fiber's Locals
+// 	saveClientData(claims)
 // 	return nil
 // }
 

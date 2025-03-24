@@ -99,7 +99,7 @@ func SessionOpts() SessionsOptions {
 	}
 }
 
-func (a *Authentication) StoreUserSession(us goth.User) error {
+func (a *Authentication) StoreClientSession(us goth.User) error {
 	// Store the user session
 	err := goth_fiber.StoreInSession("_gothic_session", us.AccessToken, a.C)
 	if err != nil {

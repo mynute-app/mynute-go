@@ -14,7 +14,7 @@ type Employee struct {
 	gorm.Model
 	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
 	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
-	Role             string        `gorm:"type:varchar(50);default:user;not null" json:"role"`
+	Role             string        `gorm:"type:varchar(50);default:client;not null" json:"role"`
 	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
 	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
 	Tags             []string      `gorm:"type:json" json:"tags"`
@@ -42,9 +42,9 @@ type WorkSchedule struct {
 }
 
 type WorkRange struct {
-	Start    string `json:"start"`  // Store as "15:30:00"
-	End      string `json:"end"`    // Store as "18:00:00"
-	BranchID uint      `json:"branch_id"`
+	Start    string `json:"start"` // Store as "15:30:00"
+	End      string `json:"end"`   // Store as "18:00:00"
+	BranchID uint   `json:"branch_id"`
 }
 
 // Implement driver.Valuer

@@ -37,11 +37,11 @@ func (ec *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 // LoginEmployee logs an employee in
 //
 //	@Summary		Login
-//	@Description	Log in an user
+//	@Description	Log in an client
 //	@Tags			Employee
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body	DTO.LoginEmployee	true	"Employee"
+//	@Param			client	body	DTO.LoginEmployee	true	"Employee"
 //	@Success		200
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/login [post]
@@ -55,7 +55,7 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if !employee.Verified {
-		return lib.Error.User.NotVerified.SendToClient(c)
+		return lib.Error.Client.NotVerified.SendToClient(c)
 	}
 	if !handler.ComparePassword(employee.Password, body.Password) {
 		return lib.Error.Auth.InvalidLogin.SendToClient(c)

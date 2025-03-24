@@ -9,6 +9,7 @@ import (
 
 type Appointment struct {
 }
+
 // As the appointment dates are being generated randomly,
 // this tests can fail sometimes. When it fails, take a look
 // closely to check if the error is related to the appointment date
@@ -18,22 +19,22 @@ type Appointment struct {
 func Test_Appointment(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	user := &User{}
-	user.Create(t, 200)
-	user.VerifyEmail(t, 200)
-	user.Login(t, 200)
-	user.Update(t, 200, map[string]any{"name": "Updated User Name"})
-	user.GetByEmail(t, 200)
+	client := &Client{}
+	client.Create(t, 200)
+	client.VerifyEmail(t, 200)
+	client.Login(t, 200)
+	client.Update(t, 200, map[string]any{"name": "Updated Client Name"})
+	client.GetByEmail(t, 200)
 	c := &Company{}
 	c.Set(t)
 	b := c.branches[0]
 	e := c.employees[0]
 	s := c.services[0]
-	user.CreateAppointment(t, 200, b, e, s, c, nil)
-	startTimeStr := user.created.Appointments[0].StartTime.Format(time.RFC3339)
-	user.CreateAppointment(t, 400, b, c.owner, s, c, nil)
+	client.CreateAppointment(t, 200, b, e, s, c, nil)
+	startTimeStr := client.created.Appointments[0].StartTime.Format(time.RFC3339)
+	client.CreateAppointment(t, 400, b, c.owner, s, c, nil)
 	c.owner.AddService(t, 200, s)
-	user.CreateAppointment(t, 400, b, c.owner, s, c, nil)
+	client.CreateAppointment(t, 400, b, c.owner, s, c, nil)
 	c.owner.AddBranch(t, 200, b)
 	c.owner.Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
 		{
@@ -63,8 +64,8 @@ func Test_Appointment(t *testing.T) {
 			},
 		},
 	}})
-	user.CreateAppointment(t, 200, b, c.owner, s, c, nil)
-	user.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
-	user.CreateAppointment(t, 400, b, c.owner, s, c, &startTimeStr)
-	user.Delete(t, 200)
+	client.CreateAppointment(t, 200, b, c.owner, s, c, nil)
+	client.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
+	client.CreateAppointment(t, 400, b, c.owner, s, c, &startTimeStr)
+	client.Delete(t, 200)
 }
