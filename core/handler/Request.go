@@ -32,7 +32,6 @@ type AutoReqActions struct {
 	ctx      *fiber.Ctx
 	ctxVal   *ContextValues
 	mute_res bool
-	Error    error
 	Status   int
 }
 
@@ -89,11 +88,10 @@ func (ac *AutoReqActions) fetchContextValues() error {
 
 // Standardized success response
 func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) error {
-	ac.Error = nil
 	ac.Status = status
 	if !ac.mute_res {
 		if err := ac.res.SendDTO(status, data, dto); err != nil {
-			return err
+			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
 	return nil
@@ -101,11 +99,10 @@ func (ac *AutoReqActions) ActionSuccess(status int, data any, dto any) error {
 
 // Standardized failure response
 func (ac *AutoReqActions) ActionFailed(status int, err error) error {
-	ac.Error = err
 	ac.Status = status
 	if !ac.mute_res {
 		if err := ac.res.HttpError(status, err); err != nil {
-			return err
+			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
 	return nil
@@ -117,18 +114,13 @@ func (ac *AutoReqActions) MuteResponse(mute bool) {
 
 // Final method that executes a GET action
 func (ac *AutoReqActions) GetBy(paramKey string) error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
-	err := ac.fetchContextValues()
-	if err != nil {
-		return err
+	if err := ac.fetchContextValues(); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if paramKey == "" {
 		if err := ac.req.Gorm.GetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
-			return err
+			return lib.Error.General.RecordNotFound.WithError(err)
 		}
 		return ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	} // Get the parameter value from the context
@@ -139,50 +131,39 @@ func (ac *AutoReqActions) GetBy(paramKey string) error {
 		return err
 	}
 	if err := ac.req.Gorm.GetOneBy(paramKey, cleanedParamVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-		return err
+		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 }
 
 // Final method that executes a FORCE GET action
 func (ac *AutoReqActions) ForceGetBy(paramKey string) error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
-	err := ac.fetchContextValues()
-	if err != nil {
-		return err
+	if err := ac.fetchContextValues(); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if paramKey == "" {
 		if err := ac.req.Gorm.ForceGetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
-			return err
+			return lib.Error.General.RecordNotFound.WithError(err)
 		}
 		return ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	}
 	paramVal := ac.ctx.Params(paramKey)
 	if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-		if err := ac.ActionFailed(404, err); err != nil {
-			return err
-		}
+		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
 }
 
 // Final method that executes a CREATE action
 func (ac *AutoReqActions) CreateOne() error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
 	err := ac.fetchContextValues()
 	if err != nil {
-		return err
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if err := ac.req.Gorm.Create(ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-		return ac.ActionFailed(400, err)
+		return lib.Error.General.CreatedError.WithError(err)
 	}
 
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -190,14 +171,9 @@ func (ac *AutoReqActions) CreateOne() error {
 
 // Final method that executes a DELETE action
 func (ac *AutoReqActions) DeleteOneById() error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	err := ac.fetchContextValues()
-	if err != nil {
-		return err
+	if err := ac.fetchContextValues(); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
@@ -213,14 +189,9 @@ func (ac *AutoReqActions) DeleteOneById() error {
 
 // Final method that executes a FORCE DELETE action
 func (ac *AutoReqActions) ForceDeleteOneById() error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	err := ac.fetchContextValues()
-	if err != nil {
-		return err
+	if err := ac.fetchContextValues(); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
@@ -236,14 +207,9 @@ func (ac *AutoReqActions) ForceDeleteOneById() error {
 
 // Final method that executes an UPDATE action
 func (ac *AutoReqActions) UpdateOneById() error {
-	if ac.Error != nil {
-		return ac.Error
-	}
-
 	id := ac.ctx.Params(namespace.QueryKey.Id)
-	err := ac.fetchContextValues()
-	if err != nil {
-		return err
+	if err := ac.fetchContextValues(); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Changes, ac.ctxVal.Assocs); err != nil {

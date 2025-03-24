@@ -54,18 +54,15 @@ func Logger(logger *slog.Logger) fiber.Handler {
 
 		duration := time.Since(start)
 
-		resStatus := c.Response().Header.StatusCode()
 		resBody := maskSensibleInformation(string(c.Response().Body()))
 		resHeaders := maskSensibleInformation(string(c.Response().Header.Header()))
 
 		loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),
-			slog.Int("status", resStatus),
 			slog.String("response body", resBody),
 			slog.String("response header", resHeaders),
 			slog.Duration("duration", duration),
 		)
 
-		lokiDefaultMap["status"] = fmt.Sprintf("%d", resStatus)
 		lokiDefaultMap["res_body"] = resBody
 		lokiDefaultMap["res_header"] = resHeaders
 		lokiDefaultMap["duration"] = duration.String()
@@ -82,6 +79,29 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			lokiDefaultMap["stack"] = fmt.Sprintf("%+v", err)
 
 			labelMsg = "Request error!"
+			if e, ok := err.(lib.ErrorStruct); ok {
+				loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),
+					slog.String("inner_error", e.InnerError),
+				)
+				lokiDefaultMap["inner_error"] = e.InnerError
+				if err := e.SendToClient(c); err != nil {
+					logger.Error("Failed to send error response to client!", slog.String("error", err.Error()))
+					if err := lib.SendLogToLoki("Failed to send error response to client!", lokiDefaultMap); err != nil {
+						logger.Error("Failed to send error response log to Loki", slog.String("error", err.Error()))
+						return nil
+					}
+					return nil
+				}
+				resStatus := c.Response().Header.StatusCode()
+				lokiDefaultMap["status_code"] = fmt.Sprintf("%d", resStatus)
+				loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),
+					slog.Int("status_code", resStatus),
+				)
+			}
+		}
+
+		if err != nil {
+
 		} else {
 			lokiDefaultMap["level"] = "info"
 			lokiDefaultMap["type"] = "response"

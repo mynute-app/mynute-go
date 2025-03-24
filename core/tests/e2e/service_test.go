@@ -31,8 +31,9 @@ func Test_Service(t *testing.T) {
 	service.auth_token = client.auth_token
 	service.company = company
 	service.Create(t, 200)
-	service.created.Name = "Updated Service Name"
-	service.Update(t, 200)
+	service.Update(t, 200, map[string]any{
+		"name":        lib.GenerateRandomName("Updated Service"),
+	})
 	service.GetById(t, 200)
 	service.GetByName(t, 200)
 	branch := &Branch{}
@@ -61,13 +62,14 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 	return http.ResBody
 }
 
-func (s *Service) Update(t *testing.T, status int) {
+func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
-	http.Send(s.created)
+	http.Send(changes)
+	s.GetById(t, 200)
 }
 
 func (s *Service) GetById(t *testing.T, status int) map[string]any {
