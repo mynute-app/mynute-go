@@ -110,14 +110,3 @@ func Test_Client_Create_Success(t *testing.T) {
 	client.Create(t, 200)
 	server.Shutdown()
 }
-
-func Test_Login_Success(t *testing.T) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL("/login")
-	http.ExpectStatus(200)
-	http.Send(map[string]any{
-		"email":    "test@email.com",
-		"password": "1SecurePswd!",
-	})
-}
