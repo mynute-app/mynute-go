@@ -8,7 +8,6 @@ import (
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
-	"time"
 )
 
 type Client struct {
@@ -25,14 +24,6 @@ func Test_Client(t *testing.T) {
 	client.Login(t, 200)
 	client.Update(t, 200, map[string]any{"name": "Updated Client Name"})
 	client.GetByEmail(t, 200)
-	c := &Company{}
-	c.Set(t)
-	b := c.branches[0]
-	e := c.employees[0]
-	s := c.services[0]
-	client.CreateAppointment(t, 200, b, e, s, c, nil)
-	startTimeStr := client.created.Appointments[0].StartTime.Format(time.RFC3339)
-	client.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
 	client.Delete(t, 200)
 }
 
@@ -111,32 +102,6 @@ func (u *Client) Login(t *testing.T, s int) {
 		return
 	}
 	u.auth_token = auth[0]
-}
-
-func (u *Client) CreateAppointment(t *testing.T, s int, b *Branch, e *Employee, srvc *Service, c *Company, startTime *string) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL("/appointment")
-	http.ExpectStatus(s)
-	http.Header("Authorization", u.auth_token)
-	if startTime == nil {
-		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
-		startTime = &tempStartTime
-	}
-	http.Send(DTO.Appointment{
-		BranchID:   b.created.ID,
-		ServiceID:  srvc.created.ID,
-		EmployeeID: e.created.ID,
-		ClientID:   u.created.ID,
-		CompanyID:  c.created.ID,
-		StartTime:  *startTime,
-	})
-	var newAppointment model.Appointment
-	http.ParseResponse(&newAppointment)
-	u.created.Appointments = append(u.created.Appointments, newAppointment)
-	e.GetById(t, 200)
-	b.GetById(t, 200)
-	u.GetByEmail(t, 200)
 }
 
 func Test_Client_Create_Success(t *testing.T) {

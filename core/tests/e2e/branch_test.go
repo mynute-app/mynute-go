@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -10,7 +11,7 @@ import (
 )
 
 type Branch struct {
-	created    DTO.Branch
+	created    model.Branch
 	auth_token string
 	company    *Company
 	services   []*Service

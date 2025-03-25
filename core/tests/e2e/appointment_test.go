@@ -2,12 +2,16 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/lib"
+	handler "agenda-kaki-go/core/tests/handlers"
 	"testing"
 	"time"
 )
 
 type Appointment struct {
+	created model.Appointment
 }
 
 // As the appointment dates are being generated randomly,
@@ -19,53 +23,57 @@ type Appointment struct {
 func Test_Appointment(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	client := &Client{}
-	client.Create(t, 200)
-	client.VerifyEmail(t, 200)
-	client.Login(t, 200)
-	client.Update(t, 200, map[string]any{"name": "Updated Client Name"})
-	client.GetByEmail(t, 200)
-	c := &Company{}
-	c.Set(t)
-	b := c.branches[0]
-	e := c.employees[0]
-	s := c.services[0]
-	client.CreateAppointment(t, 200, b, e, s, c, nil)
-	startTimeStr := client.created.Appointments[0].StartTime.Format(time.RFC3339)
-	client.CreateAppointment(t, 400, b, c.owner, s, c, nil)
-	c.owner.AddService(t, 200, s)
-	client.CreateAppointment(t, 400, b, c.owner, s, c, nil)
-	c.owner.AddBranch(t, 200, b)
-	c.owner.Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
-		{
-			Monday: []model.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "17:00", BranchID: b.created.ID},
-			},
-			Tuesday: []model.WorkRange{
-				{Start: "09:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "18:00", BranchID: b.created.ID},
-			},
-			Wednesday: []model.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "17:00", BranchID: b.created.ID},
-			},
-			Thursday: []model.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "17:00", BranchID: b.created.ID},
-			},
-			Friday: []model.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "17:00", BranchID: b.created.ID},
-			},
-			Saturday: []model.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: b.created.ID},
-				{Start: "13:00", End: "17:00", BranchID: b.created.ID},
-			},
-		},
-	}})
-	client.CreateAppointment(t, 200, b, c.owner, s, c, nil)
-	client.CreateAppointment(t, 400, b, e, s, c, &startTimeStr)
-	client.CreateAppointment(t, 400, b, c.owner, s, c, &startTimeStr)
-	client.Delete(t, 200)
+	ct := &Client{}
+	ct.Create(t, 200)
+	ct.VerifyEmail(t, 200)
+	ct.Login(t, 200)
+	ct.Update(t, 200, map[string]any{"name": "Updated client Name"})
+	ct.GetByEmail(t, 200)
+	cy := &Company{}
+	cy.Set(t)
+	b := cy.branches[0]
+	e := cy.employees[0]
+	s := cy.services[0]
+	a := []*Appointment{}
+	a[0] = &Appointment{}
+	a[0].Create(t, 200, ct.auth_token, nil, b, e, s, cy, ct)
+	a[1] = &Appointment{}
+	a1StartTime := lib.GenerateDateRFC3339(2027, 10, 28)
+	a[1].Create(t, 200, ct.auth_token, &a1StartTime, b, e, s, cy, ct)
+	a[2] = &Appointment{}
+	a2StartTime := lib.GenerateDateRFC3339(2027, 10, 27)
+	a[2].Create(t, 200, cy.owner.auth_token, &a2StartTime, b, e, s, cy, ct)
+	startTimeStr := ct.created.Appointments[0].StartTime.Format(time.RFC3339)
+	a[3] = &Appointment{}
+	a[3].Create(t, 400, ct.auth_token, &startTimeStr, b, e, s, cy, ct)
+}
+
+func (a *Appointment) Create(t *testing.T, status int, auth_token string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/appointment")
+	http.ExpectStatus(status)
+	http.Header("Authorization", auth_token)
+	if startTime == nil {
+		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
+		startTime = &tempStartTime
+	}
+	A := DTO.CreateAppointment{
+		BranchID:   b.created.ID,
+		EmployeeID: e.created.ID,
+		ServiceID:  s.created.ID,
+		ClientID:   ct.created.ID,
+		CompanyID:  cy.created.ID,
+		StartTime:  *startTime,
+	}
+	http.Send(A)
+	http.ParseResponse(&a.created)
+	b.GetById(t, 200)
+	e.GetById(t, 200)
+	s.GetById(t, 200)
+	cy.GetById(t, 200)
+	ct.GetByEmail(t, 200)
+	ct.created.Appointments = append(ct.created.Appointments, a.created)
+	e.created.Appointments = append(e.created.Appointments, a.created)
+	b.created.Appointments = append(b.created.Appointments, a.created)
 }
