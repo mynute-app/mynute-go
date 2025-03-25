@@ -79,6 +79,7 @@ func (s *Service) GetById(t *testing.T, status int) map[string]any {
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
 	http.Send(nil)
+	http.ParseResponse(&s.created)
 	return http.ResBody
 }
 
@@ -89,6 +90,7 @@ func (s *Service) GetByName(t *testing.T, status int) map[string]any {
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
 	http.Send(nil)
+	http.ParseResponse(&s.created)
 	return http.ResBody
 }
 

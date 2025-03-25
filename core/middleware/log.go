@@ -65,7 +65,6 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			slog.Duration("duration", duration),
 		)
 
-		lokiDefaultMap["res_body"] = resBody
 		lokiDefaultMap["res_header"] = resHeaders
 		lokiDefaultMap["duration"] = duration.String()
 
@@ -78,15 +77,15 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			lokiDefaultMap["type"] = "response"
 			lokiDefaultMap["level"] = "error"
 			lokiDefaultMap["error"] = origin_err.Error()
-			lokiDefaultMap["stack"] = fmt.Sprintf("%+v", origin_err)
 
 			labelMsg = "Request error!"
 			if e, ok := origin_err.(lib.ErrorStruct); ok {
 				loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),
-					slog.String("inner_error", e.InnerError),
+					slog.String("inner_error", fmt.Sprintf("%+v", e.InnerError)),
 				)
-				lokiDefaultMap["inner_error"] = e.InnerError
+				lokiDefaultMap["inner_error"] = fmt.Sprintf("%+v", e.InnerError)
 				resStatus = e.HTTPStatus
+				resBody = e.ToJSON()
 			} else {
 				resStatus = fiber.ErrInternalServerError.Code
 			}
@@ -96,6 +95,8 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			resStatus = c.Response().Header.StatusCode()
 			labelMsg = "Resquest success!"
 		}
+
+		lokiDefaultMap["res_body"] = resBody
 
 		lokiDefaultMap["status_code"] = fmt.Sprintf("%d", resStatus)
 		loggerDefaultMap["slog"] = append(loggerDefaultMap["slog"].([]slog.Attr),

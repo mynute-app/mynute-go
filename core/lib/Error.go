@@ -13,19 +13,25 @@ type ErrorStruct struct {
 	DescriptionEn string `json:"description_en"`
 	DescriptionBr string `json:"description_br"`
 	HTTPStatus    int    `json:"http_status"`
-	InnerError    string `json:"inner_error"` // optional, shown only in dev
+	InnerError    []string `json:"inner_error"` // optional, shown only in dev
 }
 
 // WithError attaches an internal error to the ErrorStruct
 func (e ErrorStruct) WithError(err error) ErrorStruct {
-	e.InnerError = fmt.Sprintf("%s <<<&&>>> %s", e.InnerError, err.Error())
+	if err != nil {
+		e.InnerError = append(e.InnerError, err.Error())
+	}
 	return e
 }
 
 // Optional: If you want a printable version
 func (e ErrorStruct) Error() string {
-	if e.InnerError != "" {
-		return fmt.Sprintf("%s: %s", e.DescriptionEn, e.InnerError)
+	if (len(e.InnerError) > 0) {
+		errText := ""
+		for index, innerErr := range e.InnerError {
+			errText += fmt.Sprintf("%d. Inner error : %s \n", index+1, innerErr)
+		}
+		return fmt.Sprintf("%s \n%s", e.DescriptionEn, errText)
 	}
 	return e.DescriptionEn
 }
@@ -174,7 +180,7 @@ var Error = ErrorCategory{
 	General: GeneralErrors{
 		InternalError:         NewError("Internal server error while processing the request", "Erro interno do servidor ao processar a requisição", fiber.StatusInternalServerError),
 		InterfaceDataNotFound: NewError("Interface data not found", "Dados da interface não encontrados", fiber.StatusInternalServerError),
-		RecordNotFound:        NewError("Record not found", "Registro não encontrado", fiber.StatusNotFound),
+		RecordNotFound:        NewError("Could not find the specific record", "Não foi possivel encontrar o registro especifico", fiber.StatusNotFound),
 		CreatedError:          NewError("Error creating record", "Erro ao criar registro", fiber.StatusInternalServerError),
 		UpdatedError:          NewError("Error updating record", "Erro ao atualizar registro", fiber.StatusInternalServerError),
 		DeletedError:          NewError("Error deleting record", "Erro ao deletar registro", fiber.StatusInternalServerError),
