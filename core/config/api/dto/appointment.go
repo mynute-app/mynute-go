@@ -3,7 +3,7 @@ package DTO
 type CreateAppointment struct {
 	ServiceID  uint   `json:"service_id" example:"1"`
 	EmployeeID uint   `json:"employee_id" example:"1"`
-	ClientID   uint   `json:"user_id" example:"1"`
+	ClientID   uint   `json:"client_id" example:"1"`
 	BranchID   uint   `json:"branch_id" example:"1"`
 	CompanyID  uint   `json:"company_id" example:"1"`
 	StartTime  string `json:"start_time" example:"2028-01-01T09:00:00Z"`
@@ -18,7 +18,7 @@ type Appointment struct {
 	ID                uint   `json:"id" example:"1"`
 	ServiceID         uint   `json:"service_id" example:"1"`
 	EmployeeID        uint   `json:"employee_id" example:"1"`
-	ClientID          uint   `json:"user_id" example:"1"`
+	ClientID          uint   `json:"client_id" example:"1"`
 	BranchID          uint   `json:"branch_id" example:"1"`
 	CompanyID         uint   `json:"company_id" example:"1"`
 	StartTime         string `json:"start_time" example:"2021-01-01T09:00:00Z"`

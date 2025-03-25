@@ -14,12 +14,6 @@ type Appointment struct {
 	created model.Appointment
 }
 
-// As the appointment dates are being generated randomly,
-// this tests can fail sometimes. When it fails, take a look
-// closely to check if the error is related to the appointment date
-// being in conflict with another appointment.
-// If so, just run the test again and it should pass.
-// If the error is not related to the appointment date, then fix it.
 func Test_Appointment(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
@@ -35,16 +29,16 @@ func Test_Appointment(t *testing.T) {
 	e := cy.employees[0]
 	s := cy.services[0]
 	a := []*Appointment{}
-	a[0] = &Appointment{}
+	a = append(a, &Appointment{})
 	a[0].Create(t, 200, ct.auth_token, nil, b, e, s, cy, ct)
-	a[1] = &Appointment{}
+	a = append(a, &Appointment{})
 	a1StartTime := lib.GenerateDateRFC3339(2027, 10, 28)
 	a[1].Create(t, 200, ct.auth_token, &a1StartTime, b, e, s, cy, ct)
-	a[2] = &Appointment{}
+	a = append(a, &Appointment{})
 	a2StartTime := lib.GenerateDateRFC3339(2027, 10, 27)
 	a[2].Create(t, 200, cy.owner.auth_token, &a2StartTime, b, e, s, cy, ct)
 	startTimeStr := ct.created.Appointments[0].StartTime.Format(time.RFC3339)
-	a[3] = &Appointment{}
+	a = append(a, &Appointment{})
 	a[3].Create(t, 400, ct.auth_token, &startTimeStr, b, e, s, cy, ct)
 }
 

@@ -17,7 +17,7 @@ type Appointment struct {
 	EmployeeID uint      `gorm:"not null;index" json:"employee_id"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	ClientID uint    `gorm:"not null;index" json:"user_id"`
+	ClientID uint    `gorm:"not null;index" json:"client_id"`
 	Client   *Client `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"`
 
 	BranchID uint    `gorm:"not null;index" json:"branch_id"`
@@ -44,7 +44,7 @@ func (Appointment) TableName() string {
 func (Appointment) Indexes() map[string]string {
 	return map[string]string{
 		"idx_employee_time": "CREATE INDEX idx_employee_time ON appointments (employee_id, start_time, end_time)",
-		"idx_user_time":     "CREATE INDEX idx_user_time ON appointments (user_id, start_time, end_time)",
+		"idx_client_time":   "CREATE INDEX idx_client_time ON appointments (client_id, start_time, end_time)",
 		"idx_branch_time":   "CREATE INDEX idx_branch_time ON appointments (branch_id, start_time, end_time)",
 	}
 }
@@ -187,7 +187,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	// Checks for Client Overlapping
 	var ClientOverlappingCount int64
 	if err := tx.Model(&Appointment{}).
-		Where(`user_id = ? AND (
+		Where(`client_id = ? AND (
 			(start_time < ? AND end_time > ?) 
 			OR (start_time >= ? AND start_time < ?) 
 			OR (end_time > ? AND end_time <= ?)

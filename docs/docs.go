@@ -2495,7 +2495,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2021-01-01T09:00:00Z"
                 },
-                "user_id": {
+                "client_id": {
                     "type": "integer",
                     "example": 1
                 }
@@ -2714,7 +2714,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2028-01-01T09:00:00Z"
                 },
-                "user_id": {
+                "client_id": {
                     "type": "integer",
                     "example": 1
                 }

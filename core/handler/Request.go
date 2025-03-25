@@ -163,7 +163,7 @@ func (ac *AutoReqActions) CreateOne() error {
 	}
 
 	if err := ac.req.Gorm.Create(ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
-		return lib.Error.General.CreatedError.WithError(err)
+		return err
 	}
 
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -177,7 +177,7 @@ func (ac *AutoReqActions) DeleteOneById() error {
 	}
 
 	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
-		return ac.ActionFailed(404, err)
+		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 
 	if err := ac.req.Gorm.DeleteOneById(id, ac.ctxVal.Model); err != nil {
@@ -195,7 +195,7 @@ func (ac *AutoReqActions) ForceDeleteOneById() error {
 	}
 
 	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
-		return ac.ActionFailed(404, err)
+		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 
 	if err := ac.req.Gorm.ForceDeleteOneById(id, ac.ctxVal.Model); err != nil {
@@ -213,7 +213,7 @@ func (ac *AutoReqActions) UpdateOneById() error {
 	}
 
 	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Changes, ac.ctxVal.Assocs); err != nil {
-		return ac.ActionFailed(400, err)
+		return err
 	}
 
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
