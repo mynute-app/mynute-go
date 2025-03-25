@@ -17,20 +17,6 @@ func (sr *SendResponse) Next() error {
 	return sr.Ctx.Next()
 }
 
-// This function is used to send a response back to the client
-// using the Data Transfer Object (DTO) pattern.
-// func (sr *SendResponse) DTO(s int, source any, dto any) *SendResponse {
-// 	if source == nil || dto == nil {
-// 		sr.sendStatus(s)
-// 		return sr
-// 	}
-// 	if err := ParseToDTO(source, dto); err != nil {
-// 		sr.Http500(err)
-// 	}
-// 	sr.send(s, dto)
-// 	return sr
-// }
-
 func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
 	if source == nil || dto == nil {
 		return sr.sendStatus(s)

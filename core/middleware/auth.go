@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -34,13 +33,6 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func (am *auth_middleware) Login() []fiber.Handler {
-	return []fiber.Handler{
-		lib.SaveBodyOnCtx[DTO.LoginClient],
-		am.DenyLoginFromUnverified,
-	}
-}
-
 func (am *auth_middleware) DenyUnverified(c *fiber.Ctx) error {
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
 	user, ok := auth_claims.(*DTO.ClientPopulated)
@@ -61,27 +53,6 @@ func (am *auth_middleware) DenyClaimless(c *fiber.Ctx) error {
 	}
 	if auth_claims.ID == 0 {
 		return res.Http401(nil)
-	}
-	return c.Next()
-}
-
-func (am *auth_middleware) DenyLoginFromUnverified(c *fiber.Ctx) error {
-	// Get login body from context
-	login, err := lib.GetBodyFromCtx[*DTO.LoginClient](c)
-	if err != nil {
-		return err
-	}
-	// Get user from email
-	user := &[]model.Client{}
-	am.Gorm.DB.Where("email = ?", login.Email).Find(user)
-	if len(*user) == 0 {
-		fmt.Printf("Client %v not found\n", login.Email)
-		return lib.Error.Auth.InvalidLogin.SendToClient(c)
-	}
-	// Check if user is verified
-	if !(*user)[0].Verified {
-		fmt.Printf("Client %v is not verified\n", login.Email)
-		return lib.Error.Client.NotVerified.SendToClient(c)
 	}
 	return c.Next()
 }
