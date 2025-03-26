@@ -34,6 +34,7 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router) error {
 			rPrv.Add(dbRoute.Method, dbRoute.Path, dbRouteHandler)
 		}
 	}
+	log.Println("Routes build finished!")
 	return nil
 }
 
@@ -86,7 +87,6 @@ func (rr *RouteToRegister) Save() {
 		if err := rr.DB.Create(&route); err.Error != nil {
 			panic(err.Error)
 		}
-		log.Printf("Route %s %s saved on database", rr.Method, rr.Path)
 	}
 }
 

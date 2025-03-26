@@ -4,9 +4,9 @@ import "gorm.io/gorm"
 
 type Route struct {
 	gorm.Model
-	Handler     string
+	Handler     string 
 	Description string
 	Method      string
 	Path        string
-	IsPublic    bool `gorm:"default:false"`
+	IsPublic    bool
 }

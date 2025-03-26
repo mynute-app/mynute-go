@@ -21,13 +21,15 @@ type Test struct {
 
 var models = []any{
 	&model.Sector{},
-	&model.Company{}, // Must be migrated before Service
+	&model.Company{},
 	&model.Branch{},
 	&model.Appointment{},
 	&model.Holidays{},
 	&model.Client{},
 	&model.Employee{},
 	&model.Service{},
+	&model.Route{},
+	&model.Role{},
 }
 
 // Connects to the database
@@ -48,7 +50,7 @@ func Connect() *Database {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
 
-	fmt.Printf("Running in %s environment. Database: %s\n", app_env, dbName)
+	log.Printf("Running in %s environment. Database: %s\n", app_env, dbName)
 
 	// Build the DSN (Data Source Name)
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
@@ -68,12 +70,11 @@ func Connect() *Database {
 // Migrate the database schema
 func (db *Database) Migrate() {
 	for _, model := range models {
-		log.Printf("Migrating: %T", model)
 		if err := db.Gorm.AutoMigrate(model); err != nil {
 			log.Fatalf("Failed to migrate %T: %v", model, err)
 		}
 	}
-	log.Println("Migration completed successfully")
+	log.Println("Migration finished!")
 }
 
 // Close connection to the database
@@ -109,5 +110,5 @@ func (t *Test) Clear() {
 	if err := t.Gorm.Exec(query).Error; err != nil {
 		log.Fatalf("Failed to clear database: %v", err)
 	}
-	fmt.Printf("Erased all tables on %s database.\n", t.name)
+	log.Printf("Erased all tables on %s database.\n", t.name)
 }
