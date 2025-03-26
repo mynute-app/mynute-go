@@ -4,15 +4,17 @@ import "gorm.io/gorm"
 
 type Role struct {
 	gorm.Model
-	Name      string
+	Name        string
 	Description string
+	IsDefault   bool `gorm:"default:false"`
+	CompanyID   *uint
 }
 
 type UserRole struct {
-	ID       uint `gorm:"primaryKey"`
-	UserID   uint
-	RoleID   uint
-	TenantID uint
+	gorm.Model
+	UserID    uint
+	RoleID    uint
+	CompanyID uint
 }
 
 type RolePermission struct {

@@ -148,11 +148,19 @@ func (cc *company_controller) DeleteCompanyById(c *fiber.Ctx) error {
 
 // Constructor for company_controller
 func Company(Gorm *handler.Gorm) *company_controller {
-	return &company_controller{
+	cc := &company_controller{
 		Base: service.Base[model.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
+	route := &handler.Route{}
+	route.Register("/company", "POST", "private", cc.CreateCompany, "Create a company").SaveOnDatabase(Gorm.DB)
+	route.Register("/company/:id", "GET", "private", cc.GetCompanyById, "Get company by ID").SaveOnDatabase(Gorm.DB)
+	route.Register("/company/name/:name", "GET", "public", cc.GetCompanyByName, "Get company by name").SaveOnDatabase(Gorm.DB)
+	route.Register("/company/tax_id/:tax_id", "GET", "public", cc.GetCompanyByTaxId, "Get company by tax ID").SaveOnDatabase(Gorm.DB)
+	route.Register("/company/:id", "PATCH", "private", cc.UpdateCompanyById, "Update company by ID").SaveOnDatabase(Gorm.DB)
+	route.Register("/company/:id", "DELETE", "private", cc.DeleteCompanyById, "Delete company by ID").SaveOnDatabase(Gorm.DB)
+	return cc
 }
