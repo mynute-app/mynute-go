@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/controller"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/middleware"
@@ -27,11 +26,10 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
 
-	auth := middleware.Auth(Gorm)
+	mdw_auth := middleware.Auth(Gorm)
 
-	router_pub := App.Group("/", auth.WhoAreYou)
-	router_auth := router_pub.Group("/", auth.DenyUnauthorized)
+	router_pub := App.Group("/", mdw_auth.WhoAreYou)
+	router_auth := router_pub.Group("/", mdw_auth.DenyUnauthorized)
 
-	route := &handler.Route{DB: DB}
-	route.Build(router_pub, router_auth)
+	(&handler.Route{DB: DB}).Build(router_pub, router_auth)
 }
