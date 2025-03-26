@@ -43,3 +43,22 @@ func IsRootDir() bool {
 
 	return strings.HasSuffix(dir, root_dir)
 }
+
+func MatchPath(rulePath, actualPath string) bool {
+	ruleSegments := strings.Split(rulePath, "/")
+	actualSegments := strings.Split(actualPath, "/")
+
+	if len(ruleSegments) != len(actualSegments) {
+		return false
+	}
+
+	for i := range ruleSegments {
+		if strings.HasPrefix(ruleSegments[i], ":") {
+			continue
+		}
+		if ruleSegments[i] != actualSegments[i] {
+			return false
+		}
+	}
+	return true
+}

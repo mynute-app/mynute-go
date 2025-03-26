@@ -1,10 +1,11 @@
 package model
 
+import "gorm.io/gorm"
+
 type Role struct {
-	ID        uint   `gorm:"primaryKey"`
-	TenantID  uint   `gorm:"index"`
+	gorm.Model
 	Name      string
-	IsDefault bool
+	Description string
 }
 
 type UserRole struct {
@@ -15,7 +16,7 @@ type UserRole struct {
 }
 
 type RolePermission struct {
-	ID     uint   `gorm:"primaryKey"`
+	ID     uint `gorm:"primaryKey"`
 	RoleID uint
 	Method string
 	Path   string

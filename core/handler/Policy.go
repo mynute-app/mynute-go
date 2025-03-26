@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/db/model"
 	"strings"
+	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/config/db/model"
 )
 
 type PolicySubject struct {
-	ID    uint
+	ID    string
 	Attrs map[string]string
 }
 
@@ -28,41 +29,32 @@ func Policy(rules []model.PolicyRule) *PolicyEngine {
 
 func (pe *PolicyEngine) CanAccess(s PolicySubject, method, path string, r PolicyResource, e PolicyEnvironment) bool {
 	for _, rule := range pe.Rules {
-		subMatch := s.Attrs[rule.SubjectAttr] == rule.SubjectValue
-		resMatch := r.Attrs[rule.ResourceAttr] == rule.ResourceValue
-		methodMatch := strings.EqualFold(rule.Method, method)
-		pathMatch := matchPath(rule.Path, path)
-		attrMatch := false
-
-		switch rule.AttrCondition {
-		case "equal":
-			attrMatch = subMatch && resMatch
-		case "contains":
-			attrMatch = strings.Contains(s.Attrs[rule.SubjectAttr], r.Attrs[rule.ResourceAttr])
+		if !strings.EqualFold(rule.Method, method) || !lib.MatchPath(rule.Path, path) {
+			continue
 		}
 
-		if attrMatch && methodMatch && pathMatch {
+		if s.Attrs[rule.SubjectAttr] != rule.SubjectValue {
+			continue
+		}
+
+		match := true
+		for _, cond := range rule.Conditions {
+			val := r.Attrs[cond.Attr]
+			switch cond.Op {
+			case "equal":
+				if val != cond.Value {
+					match = false
+				}
+			case "contains":
+				if !strings.Contains(val, cond.Value) {
+					match = false
+				}
+			}
+		}
+
+		if match {
 			return true
 		}
 	}
 	return false
-}
-
-func matchPath(rulePath, realPath string) bool {
-	ruleSegments := strings.Split(rulePath, "/")
-	realSegments := strings.Split(realPath, "/")
-
-	if len(ruleSegments) != len(realSegments) {
-		return false
-	}
-
-	for i := range ruleSegments {
-		if strings.HasPrefix(ruleSegments[i], ":") {
-			continue
-		}
-		if ruleSegments[i] != realSegments[i] {
-			return false
-		}
-	}
-	return true
 }

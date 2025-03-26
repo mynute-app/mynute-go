@@ -7,7 +7,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -30,20 +30,20 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	method := c.Method()
 	path := c.Path()
 	db := am.Gorm.DB
-	userID := claim.ID
-	tenantID := claim.CompanyID
+	userID := fmt.Sprintf("%d", claim.ID)
+	companyID := fmt.Sprintf("%d", claim.CompanyID)
 
 	// RBAC Check
 	var roles []model.Role
 	db.Raw(`SELECT r.* FROM roles r 
 		JOIN user_roles ur ON ur.role_id = r.id 
-		WHERE ur.user_id = ? AND ur.tenant_id = ?`, userID, tenantID).Scan(&roles)
+		WHERE ur.user_id = ? AND ur.company_id = ?`, userID, companyID).Scan(&roles)
 
 	for _, role := range roles {
 		var perms []model.RolePermission
 		db.Where("role_id = ? AND method = ?", role.ID, method).Find(&perms)
 		for _, perm := range perms {
-			if matchPath(perm.Path, path) {
+			if lib.MatchPath(perm.Path, path) {
 				return c.Next()
 			}
 		}
@@ -53,22 +53,24 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	sub := handler.PolicySubject{
 		ID: userID,
 		Attrs: map[string]string{
-			"user_id":    fmt.Sprintf("%d", userID),
+			"user_id":    userID,
 			"role":       claim.Role,
-			"company_id": fmt.Sprintf("%d", claim.CompanyID),
+			"company_id": companyID,
 		},
 	}
 
 	res := handler.PolicyResource{
 		Attrs: map[string]string{
-			"branch_id": c.Query("branch_id"),
+			"company_id": strconv.Itoa(int(claim.CompanyID)),
+			"branch_id":  c.Params("branch_id"),
+			"employee_id": c.Params("employee_id"),
 		},
 	}
 
 	env := handler.PolicyEnvironment{}
 
 	var rules []model.PolicyRule
-	db.Where("company_id = ?", tenantID).Find(&rules)
+	db.Where("company_id = ?", companyID).Find(&rules)
 	engine := handler.Policy(rules)
 
 	if engine.CanAccess(sub, method, path, res, env) {
@@ -80,24 +82,6 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	})
 }
 
-func matchPath(rulePath, actualPath string) bool {
-	ruleSegments := strings.Split(rulePath, "/")
-	actualSegments := strings.Split(actualPath, "/")
-
-	if len(ruleSegments) != len(actualSegments) {
-		return false
-	}
-
-	for i := range ruleSegments {
-		if strings.HasPrefix(ruleSegments[i], ":") {
-			continue
-		}
-		if ruleSegments[i] != actualSegments[i] {
-			return false
-		}
-	}
-	return true
-}
 
 // func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 // 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
