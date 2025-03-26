@@ -3,5 +3,5 @@ pre-commit:
     lint:
       run: golangci-lint run ./...
     test:
-      run: go test ./core/tests/e2e/... || true
+      run: go test ./core/tests/e2e/...
       description: "Run E2E tests"
