@@ -82,22 +82,6 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	})
 }
 
-
-// func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
-// 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
-// 	claim, ok := auth_claims.(*DTO.Claims)
-// 	if !ok {
-// 		return lib.Error.Auth.InvalidToken.SendToClient(c)
-// 	}
-// 	if claim.ID == 0 {
-// 		return lib.Error.Auth.InvalidToken.SendToClient(c)
-// 	}
-// 	if !claim.Verified {
-// 		return lib.Error.Client.NotVerified.SendToClient(c)
-// 	}
-// 	return c.Next()
-// }
-
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
 	authorization := c.Get("Authorization")
 	if authorization == "" {
