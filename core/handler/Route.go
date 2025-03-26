@@ -17,7 +17,25 @@ func makeRegistryKey(path, method string) string {
 	return method + " " + path
 }
 
-type Route struct {}
+type Route struct {
+	DB *gorm.DB
+}
+
+func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router) error {
+	var dbRoutes []*model.Route
+	if err := r.DB.Find(&dbRoutes).Error; err != nil {
+		return err
+	}
+	for _, dbRoute := range dbRoutes {
+		dbRouteHandler := r.GetHandler(dbRoute.Path, dbRoute.Method)
+		if dbRoute.IsPublic {
+			rPub.Add(dbRoute.Method, dbRoute.Path, dbRouteHandler)
+		} else {
+			rPrv.Add(dbRoute.Method, dbRoute.Path, dbRouteHandler)
+		}
+	}
+	return nil
+}
 
 func (r *Route) GetHandler(path, method string) fiber.Handler {
 	key := makeRegistryKey(path, method)
@@ -36,6 +54,7 @@ func (r *Route) Register(path, method, access string, handler fiber.Handler, des
 		Handler:     handler,
 		Description: description,
 		Access:      access,
+		DB:          r.DB,
 	}
 }
 
@@ -45,11 +64,12 @@ type RouteToRegister struct {
 	Handler     fiber.Handler
 	Description string
 	Access      string
+	DB          *gorm.DB
 }
 
-func (rr *RouteToRegister) SaveOnDatabase(DB *gorm.DB) {
+func (rr *RouteToRegister) Save() {
 	var count int64
-	DB.
+	rr.DB.
 		Model(&model.Route{}).
 		Where("method = ? AND path = ?", rr.Method, rr.Path).
 		Count(&count)
@@ -63,7 +83,7 @@ func (rr *RouteToRegister) SaveOnDatabase(DB *gorm.DB) {
 			Path:        rr.Path,
 			IsPublic:    isPublic,
 		}
-		if err := DB.Create(&route); err.Error != nil {
+		if err := rr.DB.Create(&route); err.Error != nil {
 			panic(err.Error)
 		}
 		log.Printf("Route %s %s saved on database", rr.Method, rr.Path)

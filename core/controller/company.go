@@ -1,8 +1,8 @@
 package controller
 
-import "fmt"
-
 import (
+	"fmt"
+
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
@@ -155,12 +155,12 @@ func Company(Gorm *handler.Gorm) *company_controller {
 			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
-	route := &handler.Route{}
-	route.Register("/company", "POST", "private", cc.CreateCompany, "Create a company").SaveOnDatabase(Gorm.DB)
-	route.Register("/company/:id", "GET", "private", cc.GetCompanyById, "Get company by ID").SaveOnDatabase(Gorm.DB)
-	route.Register("/company/name/:name", "GET", "public", cc.GetCompanyByName, "Get company by name").SaveOnDatabase(Gorm.DB)
-	route.Register("/company/tax_id/:tax_id", "GET", "public", cc.GetCompanyByTaxId, "Get company by tax ID").SaveOnDatabase(Gorm.DB)
-	route.Register("/company/:id", "PATCH", "private", cc.UpdateCompanyById, "Update company by ID").SaveOnDatabase(Gorm.DB)
-	route.Register("/company/:id", "DELETE", "private", cc.DeleteCompanyById, "Delete company by ID").SaveOnDatabase(Gorm.DB)
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/company", "POST", "public", cc.CreateCompany, "Create a company").Save()
+	route.Register("/company/:id", "GET", "private", cc.GetCompanyById, "Get company by ID").Save()
+	route.Register("/company/name/:name", "GET", "public", cc.GetCompanyByName, "Get company by name").Save()
+	route.Register("/company/tax_id/:tax_id", "GET", "public", cc.GetCompanyByTaxId, "Get company by tax ID").Save()
+	route.Register("/company/:id", "PATCH", "private", cc.UpdateCompanyById, "Update company by ID").Save()
+	route.Register("/company/:id", "DELETE", "private", cc.DeleteCompanyById, "Delete company by ID").Save()
 	return cc
 }

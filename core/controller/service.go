@@ -99,11 +99,18 @@ func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
 
 // Service returns a service_controller
 func Service(Gorm *handler.Gorm) *service_controller {
-	return &service_controller{
+	sc := &service_controller{
 		Base: service.Base[model.Service, DTO.Service]{
 			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Company", "Branches", "Employees"},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/service", "POST", "private", sc.CreateService, "Create a service").Save()
+	route.Register("/service/:id", "GET", "private", sc.GetServiceById, "Get service by ID").Save()
+	route.Register("/service/name/:name", "GET", "public", sc.GetServiceByName, "Get service by name").Save()
+	route.Register("/service/:id", "PATCH", "private", sc.UpdateServiceById, "Update service by ID").Save()
+	route.Register("/service/:id", "DELETE", "private", sc.DeleteServiceById, "Delete service by ID").Save()
+	return sc
 }

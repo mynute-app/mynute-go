@@ -333,11 +333,24 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 }
 
 func Employee(Gorm *handler.Gorm) *employee_controller {
-	return &employee_controller{
+	ec := &employee_controller{
 		Base: service.Base[model.Employee, DTO.Employee]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Branches", "Company", "Services", "Appointments"},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/employee", "post", "private", ec.CreateEmployee, "Create employee").Save()
+	route.Register("/employee/login", "post", "public", ec.LoginEmployee, "Login employee").Save()
+	route.Register("/employee/verify-email/:email/:code", "post", "public", ec.VerifyEmployeeEmail, "Verify employee email").Save()
+	route.Register("/employee/:id", "get", "private", ec.GetEmployeeById, "Get employee by ID").Save()
+	route.Register("/employee/email/:email", "get", "private", ec.GetEmployeeByEmail, "Get employee by email").Save()
+	route.Register("/employee/:id", "patch", "private", ec.UpdateEmployeeById, "Update employee by ID").Save()
+	route.Register("/employee/:id", "delete", "private", ec.DeleteEmployeeById, "Delete employee by ID").Save()
+	route.Register("/employee/:employee_id/service/:service_id", "post", "private", ec.AddServiceToEmployee, "Add service to employee").Save()
+	route.Register("/employee/:employee_id/service/:service_id", "delete", "private", ec.RemoveServiceFromEmployee, "Remove service from employee").Save()
+	route.Register("/employee/:employee_id/branch/:branch_id", "post", "private", ec.AddBranchToEmployee, "Add employee to branch").Save()
+	route.Register("/employee/:employee_id/branch/:branch_id", "delete", "private", ec.RemoveBranchFromEmployee, "Remove employee from branch").Save()
+	return ec
 }

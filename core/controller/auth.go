@@ -17,16 +17,6 @@ type auth_controller struct {
 	service.Base[model.Client, DTO.Client]
 }
 
-func Auth(Gorm *handler.Gorm) *auth_controller {
-	return &auth_controller{
-		Base: service.Base[model.Client, DTO.Client]{
-			Name:         namespace.ClientKey.Name,
-			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Services", "Appointment", "Company"},
-		},
-	}
-}
-
 // Login just logs an client in case the password is correct
 //
 //	@Summary		Login
@@ -88,4 +78,20 @@ func (cc *auth_controller) LogoutProvider(c *fiber.Ctx) error {
 		return err
 	}
 	return nil
+}
+
+func Auth(Gorm *handler.Gorm) *auth_controller {
+	ac := &auth_controller{
+		Base: service.Base[model.Client, DTO.Client]{
+			Name:         namespace.ClientKey.Name,
+			Request:      handler.Request(Gorm),
+			Associations: []string{"Branches", "Services", "Appointment", "Company"},
+		},
+	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/auth/verify-existing-account", "POST", "public", ac.VerifyExistingAccount, "Verify if an account exists").Save()
+	route.Register("/auth/oauth/:provider", "GET", "public", ac.BeginAuthProviderCallback, "Begin auth provider callback").Save()
+	route.Register("/auth/oauth/:provider/callback", "GET", "public", ac.GetAuthCallbackFunction, "Get auth callback function").Save()
+	route.Register("/auth/oauth/logout", "GET", "public", ac.LogoutProvider, "Logout provider").Save()
+	return ac
 }

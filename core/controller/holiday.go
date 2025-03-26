@@ -97,12 +97,19 @@ func (cc *holidays_controller) DeleteHolidayById(c *fiber.Ctx) error {
 }
 
 // Holidays creates a new holidays_controller
-func Holidays(Gorm *handler.Gorm) *holidays_controller {
-	return &holidays_controller{
+func Holiday(Gorm *handler.Gorm) *holidays_controller {
+	hc := &holidays_controller{
 		Base: service.Base[model.Holidays, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/holiday", "POST", "private", hc.CreateHoliday, "Create a holiday").Save()
+	route.Register("/holiday/:id", "GET", "private", hc.GetHolidayById, "Get holiday by ID").Save()
+	route.Register("/holiday/name/:name", "GET", "public", hc.GetHolidayByName, "Get holiday by name").Save()
+	route.Register("/holiday/:id", "PATCH", "private", hc.UpdateHolidayById, "Update holiday by ID").Save()
+	route.Register("/holiday/:id", "DELETE", "private", hc.DeleteHolidayById, "Delete holiday by ID").Save()
+	return hc
 }

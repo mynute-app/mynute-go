@@ -133,80 +133,6 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	return nil
 }
 
-// AddEmployeeToBranch adds an employee to a branch
-//
-//	@Summary		Add employee to branch
-//	@Description	Add an employee to a branch
-//	@Tags			Branch
-//	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
-//	@Failure		401				{object}	nil
-//	@Param			branch_id		path		string	true	"Branch ID"
-//	@Param			employee_id		path		string	true	"Employee ID"
-//	@Produce		json
-//	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/branch/{branch_id}/employee/{employee_id} [post]
-// func (cc *branch_controller) AddEmployeeToBranch(c *fiber.Ctx) error {
-// 	var branch model.Branch
-// 	var employee model.Employee
-// 	branch_id := c.Params("branch_id")
-// 	employee_id := c.Params("employee_id")
-// 	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
-// 		return err
-// 	}
-// 	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee, []string{}); err != nil {
-// 		return err
-// 	}
-// 	if employee.CompanyID != branch.CompanyID {
-// 		return lib.Error.Company.NotSame.SendToClient(c)
-// 	}
-// 	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Append(&employee); err != nil {
-// 		return err
-// 	}
-// 	res := &lib.SendResponse{Ctx: c}
-// 	res.SendDTO(200, &branch, &DTO.Branch{})
-// 	return nil
-// }
-
-// RemoveEmployeeFromBranch removes an employee from a branch
-//
-//	@Summary		Remove employee from branch
-//	@Description	Remove an employee from a branch
-//	@Tags			Branch
-//	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
-//	@Failure		401				{object}	nil
-//	@Param			branch_id		path		string	true	"Branch ID"
-//	@Param			employee_id		path		string	true	"Employee ID"
-//	@Produce		json
-//	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
-//	@Router			/branch/{branch_id}/employee/{employee_id} [delete]
-func (cc *branch_controller) RemoveEmployeeFromBranch(c *fiber.Ctx) error {
-	var branch model.Branch
-	var employee model.Employee
-	branch_id := c.Params("branch_id")
-	employee_id := c.Params("employee_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
-		return err
-	}
-	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee, []string{}); err != nil {
-		return err
-	}
-	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
-	}
-	if err := cc.Request.Gorm.DB.Model(&branch).Association("Employees").Delete(&employee); err != nil {
-		return err
-	}
-	res := &lib.SendResponse{Ctx: c}
-	if err := res.SendDTO(200, &branch, &DTO.Branch{}); err != nil {
-		return err
-	}
-	return nil
-}
-
 // AddServiceToBranch adds a service to a branch
 //
 //	@Summary		Add service to branch
@@ -300,11 +226,21 @@ func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
 
 // CreateBranch creates a branch
 func Branch(Gorm *handler.Gorm) *branch_controller {
-	return &branch_controller{
+	bc := &branch_controller{
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Employees", "Services", "Company", "Appointments"},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/branch", "post", "private", bc.CreateBranch, "Create a branch").Save()
+	route.Register("/branch/:id", "get", "private", bc.GetBranchById, "Get branch by ID").Save()
+	route.Register("/branch/name/:name", "get", "private", bc.GetBranchByName, "Get branch by name").Save()
+	route.Register("/branch/:id", "patch", "private", bc.UpdateBranchById, "Update branch by ID").Save()
+	route.Register("/branch/:id", "delete", "private", bc.DeleteBranchById, "Delete branch by ID").Save()
+	route.Register("/branch/:branch_id/employee/:employee_id/services", "get", "private", bc.GetEmployeeServicesByBranchId, "Get employee offered services at the branch by branch ID").Save()
+	route.Register("/branch/:branch_id/service/:service_id", "post", "private", bc.AddServiceToBranch, "Add service to branch").Save()
+	route.Register("/branch/:branch_id/service/:service_id", "delete", "private", bc.RemoveServiceFromBranch, "Remove service from branch").Save()
+	return bc
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// LoggerMiddleware logs request and response details without modifying the response.
-func Logger(logger *slog.Logger) fiber.Handler {
+// Logs request and response details without modifying them.
+func Log(logger *slog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 
