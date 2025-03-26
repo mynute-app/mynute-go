@@ -43,7 +43,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		var perms []model.RolePermission
 		db.Where("role_id = ? AND method = ?", role.ID, method).Find(&perms)
 		for _, perm := range perms {
-			if lib.MatchPath(perm.Path, path) {
+			if lib.MatchPath(perm.Route.Path, path) {
 				return c.Next()
 			}
 		}
@@ -61,8 +61,8 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 	res := handler.PolicyResource{
 		Attrs: map[string]string{
-			"company_id": strconv.Itoa(int(claim.CompanyID)),
-			"branch_id":  c.Params("branch_id"),
+			"company_id":  strconv.Itoa(int(claim.CompanyID)),
+			"branch_id":   c.Params("branch_id"),
 			"employee_id": c.Params("employee_id"),
 		},
 	}

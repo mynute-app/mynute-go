@@ -14,7 +14,6 @@ type Employee struct {
 	gorm.Model
 	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
 	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
-	Role             string        `gorm:"type:varchar(50);default:client;not null" json:"role"`
 	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
 	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
 	Tags             []string      `gorm:"type:json" json:"tags"`
@@ -29,6 +28,7 @@ type Employee struct {
 	Company          *Company      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 	Branches         []*Branch     `gorm:"many2many:employee_branches;" json:"branches"`
 	Services         []*Service    `gorm:"many2many:employee_services;" json:"services"`
+	Roles            []*Role       `gorm:"many2many:user_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 }
 
 type WorkSchedule struct {

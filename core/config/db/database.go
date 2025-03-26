@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Database struct {
@@ -56,8 +58,21 @@ func Connect() *Database {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		host, user, password, dbName, port, sslmode, timeZone)
 
+	customGormLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Warn,
+			Colorful:      true,
+		},
+	)
+
+	gormConfig := &gorm.Config{
+		Logger: customGormLogger,
+	}
+
 	// Connect to the database
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
 		log.Fatal("Failed to connect to the database: ", err)
 	}

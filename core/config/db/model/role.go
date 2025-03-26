@@ -18,8 +18,8 @@ type UserRole struct {
 }
 
 type RolePermission struct {
-	ID     uint `gorm:"primaryKey"`
-	RoleID uint
-	Method string
-	Path   string
+	ID      uint `gorm:"primaryKey"`
+	RoleID  uint
+	RouteID uint
+	Route   Route `gorm:"foreignKey:RouteID"`
 }

@@ -14,6 +14,7 @@ import (
 var RouteRegistry = map[string]fiber.Handler{}
 
 func makeRegistryKey(path, method string) string {
+	method = strings.ToUpper(method)
 	return method + " " + path
 }
 
@@ -28,10 +29,11 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router) error {
 	}
 	for _, dbRoute := range dbRoutes {
 		dbRouteHandler := r.GetHandler(dbRoute.Path, dbRoute.Method)
+		method := strings.ToUpper(dbRoute.Method)
 		if dbRoute.IsPublic {
-			rPub.Add(dbRoute.Method, dbRoute.Path, dbRouteHandler)
+			rPub.Add(method, dbRoute.Path, dbRouteHandler)
 		} else {
-			rPrv.Add(dbRoute.Method, dbRoute.Path, dbRouteHandler)
+			rPrv.Add(method, dbRoute.Path, dbRouteHandler)
 		}
 	}
 	log.Println("Routes build finished!")
@@ -44,6 +46,7 @@ func (r *Route) GetHandler(path, method string) fiber.Handler {
 }
 
 func (r *Route) Register(path, method, access string, handler fiber.Handler, description string) *RouteToRegister {
+	method = strings.ToUpper(method)
 	if access != "public" && access != "private" {
 		panic("Route access must be either public or private")
 	}
@@ -69,6 +72,7 @@ type RouteToRegister struct {
 }
 
 func (rr *RouteToRegister) Save() {
+	rr.Method = strings.ToUpper(rr.Method)
 	var count int64
 	rr.DB.
 		Model(&model.Route{}).
