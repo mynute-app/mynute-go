@@ -26,10 +26,13 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
 
-	mdw_auth := middleware.Auth(Gorm)
+	a := middleware.Auth(Gorm)
 
-	router_pub := App.Group("/", mdw_auth.WhoAreYou)
-	router_auth := router_pub.Group("/", mdw_auth.DenyUnauthorized)
+	r := App.Group("/")
+	mdwPub := []fiber.Handler{a.WhoAreYou}
+	mdwPrv := []fiber.Handler{a.WhoAreYou, a.DenyUnauthorized}
 
-	(&handler.Route{DB: DB}).Build(router_pub, router_auth)
+	if err := (&handler.Route{DB: DB}).Build(r, r, mdwPub, mdwPrv); err != nil {
+		panic(err)
+	}
 }

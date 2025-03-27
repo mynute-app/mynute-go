@@ -22,7 +22,7 @@ type Route struct {
 	DB *gorm.DB
 }
 
-func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router) error {
+func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
 	var dbRoutes []*model.Route
 	if err := r.DB.Find(&dbRoutes).Error; err != nil {
 		return err
@@ -30,10 +30,13 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router) error {
 	for _, dbRoute := range dbRoutes {
 		dbRouteHandler := r.GetHandler(dbRoute.Path, dbRoute.Method)
 		method := strings.ToUpper(dbRoute.Method)
+
 		if dbRoute.IsPublic {
-			rPub.Add(method, dbRoute.Path, dbRouteHandler)
+			handlers := append(mdwPub, dbRouteHandler)
+			rPub.Add(method, dbRoute.Path, handlers...)
 		} else {
-			rPrv.Add(method, dbRoute.Path, dbRouteHandler)
+			handlers := append(mdwPrv, dbRouteHandler)
+			rPrv.Add(method, dbRoute.Path, handlers...)
 		}
 	}
 	log.Println("Routes build finished!")
