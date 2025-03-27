@@ -3,6 +3,7 @@ package core
 import (
 	"agenda-kaki-go/core/config/api/routes"
 	database "agenda-kaki-go/core/config/db"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -38,6 +39,7 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
+	model.SeedRoles(db.Gorm)
 	routes.Build(db.Gorm, app)
 	return &Server{App: app, Db: db}
 }

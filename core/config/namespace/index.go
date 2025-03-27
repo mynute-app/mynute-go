@@ -78,3 +78,17 @@ var HolidaysKey = TypeStruct{
 	Name:  "holidays",
 	Model: "holidays_model",
 }
+
+var Role = struct {
+	Owner string
+	GeneralManager string
+	BranchManager string
+	BranchSupervisor string
+	Employee string
+}{
+	Owner:            "Owner",
+	GeneralManager:   "General Manager",
+	BranchManager:    "Branch Manager",
+	BranchSupervisor: "Branch Supervisor",
+	Employee:         "Employee",
+}

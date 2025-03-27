@@ -10,9 +10,9 @@ import (
 
 // ErrorStruct defines the error structure returned to clients.// ErrorStruct defines the error structure returned to clients.
 type ErrorStruct struct {
-	DescriptionEn string `json:"description_en"`
-	DescriptionBr string `json:"description_br"`
-	HTTPStatus    int    `json:"http_status"`
+	DescriptionEn string   `json:"description_en"`
+	DescriptionBr string   `json:"description_br"`
+	HTTPStatus    int      `json:"http_status"`
 	InnerError    []string `json:"inner_error"` // optional, shown only in dev
 }
 
@@ -26,7 +26,7 @@ func (e ErrorStruct) WithError(err error) ErrorStruct {
 
 // Optional: If you want a printable version
 func (e ErrorStruct) Error() string {
-	if (len(e.InnerError) > 0) {
+	if len(e.InnerError) > 0 {
 		errText := ""
 		for index, innerErr := range e.InnerError {
 			errText += fmt.Sprintf("%d. Inner error : %s \n", index+1, innerErr)
@@ -73,6 +73,7 @@ type ErrorCategory struct {
 	Company     CompanyErrors
 	Employee    EmployeeErrors
 	General     GeneralErrors
+	Role        RoleErrors
 }
 
 type AppointmentErrors struct {
@@ -90,10 +91,10 @@ type AuthErrors struct {
 }
 
 type BranchErrors struct {
-	ServiceDoesNotBelong      ErrorStruct
-	MaxConcurrentAppointments ErrorStruct
+	ServiceDoesNotBelong                ErrorStruct
+	MaxConcurrentAppointments           ErrorStruct
 	MaxConcurrentAppointmentsForService ErrorStruct
-	MaxConcurrentAppointmentsGeneral ErrorStruct
+	MaxConcurrentAppointmentsGeneral    ErrorStruct
 }
 
 type ClientErrors struct {
@@ -132,6 +133,10 @@ type GeneralErrors struct {
 	DeletedError          ErrorStruct
 	NotFoundError         ErrorStruct
 	InternalError         ErrorStruct
+}
+
+type RoleErrors struct {
+	NameReserved ErrorStruct
 }
 
 // Global error instances
@@ -185,5 +190,8 @@ var Error = ErrorCategory{
 		UpdatedError:          NewError("Error updating record", "Erro ao atualizar registro", fiber.StatusBadRequest),
 		DeletedError:          NewError("Error deleting record", "Erro ao deletar registro", fiber.StatusBadRequest),
 		NotFoundError:         NewError("Resource not found", "Recurso não encontrado", fiber.StatusNotFound),
+	},
+	Role: RoleErrors{
+		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),
 	},
 }

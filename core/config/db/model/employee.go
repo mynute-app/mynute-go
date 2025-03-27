@@ -25,7 +25,7 @@ type Employee struct {
 	WorkSchedule     WorkSchedule  `gorm:"type:jsonb" json:"work_schedule"`
 	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
 	CompanyID        uint          `gorm:"not null;index" json:"company_id"`
-	Company          *Company      `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
+	Company          Company       `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 	Branches         []*Branch     `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
 	Services         []*Service    `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
 	Roles            []*Role       `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
