@@ -40,10 +40,15 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		WHERE ur.user_id = ? AND ur.company_id = ?`, userID, companyID).Scan(&roles)
 
 	for _, role := range roles {
-		var perms []model.RolePermission
-		db.Where("role_id = ? AND method = ?", role.ID, method).Find(&perms)
+		var perms []model.Route
+		db.Raw(`SELECT r.* FROM routes r
+		JOIN role_routes rr ON rr.route_id = r.id
+		WHERE rr.role_id = ? AND r.method = ?`, role.ID, method).Scan(&perms)
+		if len(perms) == 0 {
+			continue
+		}
 		for _, perm := range perms {
-			if lib.MatchPath(perm.Route.Path, path) {
+			if lib.MatchPath(perm.Path, path) {
 				return c.Next()
 			}
 		}

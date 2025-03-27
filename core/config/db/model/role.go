@@ -7,19 +7,7 @@ type Role struct {
 	Name        string
 	Description string
 	IsDefault   bool `gorm:"default:false"`
+	IsBusiness  bool `gorm:"default:true"`
 	CompanyID   *uint
-}
-
-type UserRole struct {
-	gorm.Model
-	UserID    uint
-	RoleID    uint
-	CompanyID uint
-}
-
-type RolePermission struct {
-	ID      uint `gorm:"primaryKey"`
-	RoleID  uint
-	RouteID uint
-	Route   Route `gorm:"foreignKey:RouteID"`
+	Routes      []*Route `gorm:"many2many:role_routes;constraint:OnDelete:CASCADE"`
 }
