@@ -83,13 +83,18 @@ func Connect() *Database {
 }
 
 // Migrate the database schema
-func (db *Database) Migrate() {
+func (db *Database) Migrate() *Database {
 	for _, model := range models {
 		if err := db.Gorm.AutoMigrate(model); err != nil {
 			log.Fatalf("Failed to migrate %T: %v", model, err)
 		}
 	}
 	log.Println("Migration finished!")
+	return db
+}
+
+func (db *Database) Seed() *Database {
+	return db
 }
 
 // Close connection to the database

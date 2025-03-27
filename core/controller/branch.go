@@ -234,7 +234,9 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/branch", "post", "private", bc.CreateBranch, "Create a branch").Save()
+	route.
+		Register("/branch", "post", "private", bc.CreateBranch, "Create a branch").
+		Save()
 	route.Register("/branch/:id", "get", "private", bc.GetBranchById, "Get branch by ID").Save()
 	route.Register("/branch/name/:name", "get", "private", bc.GetBranchByName, "Get branch by name").Save()
 	route.Register("/branch/:id", "patch", "private", bc.UpdateBranchById, "Update branch by ID").Save()
