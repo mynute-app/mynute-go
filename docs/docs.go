@@ -667,6 +667,276 @@ const docTemplate = `{
                 }
             }
         },
+        "/client": {
+            "post": {
+                "description": "Create an client",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Create client",
+                "parameters": [
+                    {
+                        "description": "Client",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.CreateClient"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Client"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/email/{email}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve an client by its email",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Get client by email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Client"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/login": {
+            "post": {
+                "description": "Log in an client",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "Client",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.LoginClient"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/verify-email/{email}/{code}": {
+            "post": {
+                "description": "Verify an client's email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Verify email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Verification Code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/client/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an client",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Delete client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an client",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Update client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Client",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Client"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Client"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/company": {
             "post": {
                 "description": "Create a company",
@@ -2175,276 +2445,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/client": {
-            "post": {
-                "description": "Create an client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Create client",
-                "parameters": [
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateClient"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Client"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/email/{email}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an client by its email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Get client by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Client"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/login": {
-            "post": {
-                "description": "Log in an client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Login",
-                "parameters": [
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.LoginClient"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/verify-email/{email}/{code}": {
-            "post": {
-                "description": "Verify an client's email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Verify email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Verification Code",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
-        "/client/{id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete an client",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Delete client",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update an client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Update client",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Client"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Client"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -2458,6 +2458,10 @@ const docTemplate = `{
                 "cancelled": {
                     "type": "boolean",
                     "example": false
+                },
+                "client_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "company_id": {
                     "type": "integer",
@@ -2494,10 +2498,6 @@ const docTemplate = `{
                 "start_time": {
                     "type": "string",
                     "example": "2021-01-01T09:00:00Z"
-                },
-                "client_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -2535,7 +2535,7 @@ const docTemplate = `{
                 "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.ClientPopulated"
+                        "$ref": "#/definitions/DTO.EmployeePopulated"
                     }
                 },
                 "id": {
@@ -2634,6 +2634,47 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.Client": {
+            "type": "object",
+            "properties": {
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Appointment"
+                    }
+                },
+                "available_slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.TimeRange"
+                    }
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
         "DTO.Company": {
             "description": "Company Full DTO",
             "type": "object",
@@ -2698,6 +2739,10 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "client_id": {
+                    "type": "integer",
+                    "example": 1
+                },
                 "company_id": {
                     "type": "integer",
                     "example": 1
@@ -2713,10 +2758,6 @@ const docTemplate = `{
                 "start_time": {
                     "type": "string",
                     "example": "2028-01-01T09:00:00Z"
-                },
-                "client_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -2762,6 +2803,31 @@ const docTemplate = `{
                 "zip_code": {
                     "type": "string",
                     "example": "10001"
+                }
+            }
+        },
+        "DTO.CreateClient": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
                 }
             }
         },
@@ -2855,31 +2921,6 @@ const docTemplate = `{
                 "price": {
                     "type": "integer",
                     "example": 150
-                }
-            }
-        },
-        "DTO.CreateClient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
                 }
             }
         },
@@ -3032,12 +3073,12 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.LoginEmployee": {
+        "DTO.LoginClient": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "joseph.doe@example.com"
+                    "example": "john.doe@example.com"
                 },
                 "password": {
                     "type": "string",
@@ -3045,12 +3086,12 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.LoginClient": {
+        "DTO.LoginEmployee": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "joseph.doe@example.com"
                 },
                 "password": {
                     "type": "string",
@@ -3099,7 +3140,7 @@ const docTemplate = `{
                 "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.ClientPopulated"
+                        "$ref": "#/definitions/DTO.EmployeePopulated"
                     }
                 },
                 "id": {
@@ -3205,76 +3246,6 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Clark"
-                }
-            }
-        },
-        "DTO.Client": {
-            "type": "object",
-            "properties": {
-                "appointments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
-                    }
-                },
-                "available_slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.TimeRange"
-                    }
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "DTO.ClientPopulated": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+1-555-555-5555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": false
                 }
             }
         },
