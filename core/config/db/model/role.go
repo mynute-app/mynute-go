@@ -3,6 +3,7 @@ package model
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -12,7 +13,7 @@ var AllowSystemRoleCreation = false
 type Role struct {
 	gorm.Model
 	Name        string   `gorm:"type:varchar(20);not null"`
-	Description string   `gorm:"type:varchar(100)"`
+	Description string   `gorm:"type:varchar(255)"`
 	CompanyID   *uint    `gorm:"index" json:"company_id"`
 	Company     Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE"`
 	Routes      []*Route `gorm:"many2many:role_routes;constraint:OnDelete:CASCADE"`
@@ -92,7 +93,7 @@ func SeedRoles(db *gorm.DB) error {
 			return err
 		}
 	}
-
+	log.Println("System roles seeded successfully!")
 	return nil
 }
 

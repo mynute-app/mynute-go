@@ -72,6 +72,12 @@ type RouteToRegister struct {
 	Description string
 	Access      string
 	DB          *gorm.DB
+	RoleAccess  []string
+}
+
+func (rr *RouteToRegister) SetRoleAccess(roles []string) *RouteToRegister {
+	rr.RoleAccess = roles
+	return rr
 }
 
 func (rr *RouteToRegister) Save() {
@@ -93,6 +99,18 @@ func (rr *RouteToRegister) Save() {
 		}
 		if err := rr.DB.Create(&route); err.Error != nil {
 			panic(err.Error)
+		}
+		// Add role access if provided
+		if len(rr.RoleAccess) > 0 {
+			
+			// Get role ID from the database
+			for _, roleName := range rr.RoleAccess {
+				var role model.Role
+				if err := rr.DB.First(&role, "name = ?", roleName).Error; err != nil {
+					panic(err.Error)
+				}
+				rr.DB.Exec("INSERT INTO role_routes (role_id, route_id) VALUES (?, ?)", role.ID, route.ID)
+			}
 		}
 	}
 }

@@ -64,6 +64,7 @@ func Connect() *Database {
 			SlowThreshold: time.Second,
 			LogLevel:      logger.Warn,
 			Colorful:      true,
+			IgnoreRecordNotFoundError: true,
 		},
 	)
 

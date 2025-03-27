@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,63 +27,72 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
 	}
 
+	db := am.Gorm.DB
+	userID := claim.ID
+	companyID := claim.CompanyID
 	method := c.Method()
 	path := c.Path()
-	db := am.Gorm.DB
-	userID := fmt.Sprintf("%d", claim.ID)
-	companyID := fmt.Sprintf("%d", claim.CompanyID)
 
-	// RBAC Check
-	var roles []model.Role
-	db.Raw(`SELECT r.* FROM roles r 
-		JOIN user_roles ur ON ur.role_id = r.id 
-		WHERE ur.user_id = ? AND ur.company_id = ?`, userID, companyID).Scan(&roles)
+	// 1. Verificar RBAC
+	var matchedRoute model.Route
+	if err := db.Where("method = ? AND path = ?", method, path).First(&matchedRoute).Error; err != nil {
+		return lib.Error.Auth.Unauthorized
+	}
 
-	for _, role := range roles {
-		var perms []model.Route
-		db.Raw(`SELECT r.* FROM routes r
-		JOIN role_routes rr ON rr.route_id = r.id
-		WHERE rr.role_id = ? AND r.method = ? AND r.path = ?`, role.ID, method, path).Scan(&perms)
-		if len(perms) == 0 {
+	var count int64
+	err := db.Raw(`
+		SELECT COUNT(*)
+		FROM roles r
+		JOIN employee_roles er ON er.role_id = r.id
+		JOIN role_routes rr ON rr.role_id = r.id
+		WHERE er.user_id = ? AND er.company_id = ? AND rr.route_id = ?
+	`, userID, companyID, matchedRoute.ID).Scan(&count).Error
+
+	if err != nil || count == 0 {
+		return lib.Error.Auth.Unauthorized
+	}
+
+	// 2. Verificar ABAC
+	var rules []model.PolicyRule
+	if err := db.Where("method = ? AND path = ? AND company_id = ?", method, path, companyID).
+		Find(&rules).Error; err != nil {
+		return lib.Error.Auth.Unauthorized
+	}
+
+	for _, rule := range rules {
+		// Exemplo: se SubjectAttr == "user_id" && SubjectValue == "123"
+		if rule.SubjectAttr == "user_id" && rule.SubjectValue != fmt.Sprint(userID) {
 			continue
 		}
-		for _, perm := range perms {
-			if lib.MatchPath(perm.Path, path) {
-				return c.Next()
+
+		// Aqui você pode usar c.Params() ou c.Query() pra validar os atributos de recurso
+		matches := true
+		for _, cond := range rule.Conditions {
+			val := c.Params(cond.Attr) // pode adaptar pra usar c.Query(cond.Attr) também
+			if !matchCondition(val, cond.Op, cond.Value) {
+				matches = false
+				break
 			}
+		}
+		if matches {
+			return c.Next() // ✅ ABAC passou
 		}
 	}
 
-	// ABAC Check
-	// sub := handler.PolicySubject{
-	// 	ID: userID,
-	// 	Attrs: map[string]string{
-	// 		"user_id":    userID,
-	// 		"role":       claim.Role,
-	// 		"company_id": companyID,
-	// 	},
-	// }
-
-	// res := handler.PolicyResource{
-	// 	Attrs: map[string]string{
-	// 		"company_id":  strconv.Itoa(int(claim.CompanyID)),
-	// 		"branch_id":   c.Params("branch_id"),
-	// 		"employee_id": c.Params("employee_id"),
-	// 	},
-	// }
-
-	// env := handler.PolicyEnvironment{}
-
-	// var rules []model.PolicyRule
-	// db.Where("company_id = ?", companyID).Find(&rules)
-	// engine := handler.Policy(rules)
-
-	// if engine.CanAccess(sub, method, path, res, env) {
-	// 	return c.Next()
-	// }
-
 	return lib.Error.Auth.Unauthorized
 }
+
+func matchCondition(actual string, op string, expected string) bool {
+	switch op {
+	case "equal":
+		return actual == expected
+	case "contains":
+		return strings.Contains(actual, expected)
+	default:
+		return false
+	}
+}
+
 
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
 	authorization := c.Get("Authorization")

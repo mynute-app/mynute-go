@@ -14,24 +14,3 @@ type Company struct {
 	Branches  []Branch   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"branches"`  // One-to-many relation with Branch
 	Services  []Service  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE" json:"services"`  // One-to-many relation with Service
 }
-
-type EntityPermissions struct {
-	EntityName string   `json:"entity_name"`
-	Create     []string `json:"create"`
-	ReadAny    []string `json:"read_any"`
-	ReadOwn    []string `json:"read_own"`
-	UpdateAny  []string `json:"update_any"`
-	UpdateOwn  []string `json:"update_own"`
-	DeleteAny  []string `json:"delete_any"`
-	DeleteOwn  []string `json:"delete_own"`
-}
-
-type ItemPermissions struct {
-	Create    []string `json:"create"`
-	ReadAny   []string `json:"read_any"`
-	ReadOwn   []string `json:"read_own"`
-	UpdateAny []string `json:"update_any"`
-	UpdateOwn []string `json:"update_own"`
-	DeleteAny []string `json:"delete_any"`
-	DeleteOwn []string `json:"delete_own"`
-}
