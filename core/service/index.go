@@ -3,6 +3,7 @@ package service
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"bytes"
 
 	"reflect"
 
@@ -65,17 +66,16 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) error {
 			return err
 		}
 	} else {
-		// Read raw body to determine if it's an array
 		body := c.Request().Body()
-		if len(body) > 0 && body[0] == '[' {
-			// Body is an array
-			if err := c.BodyParser(&modelArr); err != nil {
-				return err
-			}
-		} else {
-			// Body is a single object
-			if err := c.BodyParser(&model); err != nil {
-				return err
+		if len(body) != 0 && string(bytes.TrimSpace(body)) != "" {
+			if body[0] == '[' {
+				if err := c.BodyParser(&modelArr); err != nil {
+					return err
+				}
+			} else {
+				if err := c.BodyParser(&model); err != nil {
+					return err
+				}
 			}
 		}
 	}
