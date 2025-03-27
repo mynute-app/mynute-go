@@ -77,11 +77,17 @@ func (ac *appointment_controller) DeleteAppointmentByID(c *fiber.Ctx) error {
 
 // Constructor for appointment_controller
 func Appointment(Gorm *handler.Gorm) *appointment_controller {
-	return &appointment_controller{
+	ac := &appointment_controller{
 		Base: service.Base[model.Appointment, DTO.Appointment]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Sector", "Branch", "Employee", "Client", "Service", "Company"},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/appointment", "POST", "private", ac.CreateAppointment, "Create an appointment").Save()
+	route.Register("/appointment/:id", "GET", "private", ac.GetAppointmentByID, "Get appointment by ID").Save()
+	route.Register("/appointment/:id", "PATCH", "private", ac.UpdateAppointmentByID, "Update appointment by ID").Save()
+	route.Register("/appointment/:id", "DELETE", "private", ac.DeleteAppointmentByID, "Delete appointment by ID").Save()
+	return ac
 }

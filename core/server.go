@@ -5,6 +5,7 @@ import (
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"
 	"log/slog"
@@ -27,6 +28,7 @@ func NewServer() *Server {
 		DisableStartupMessage: true,
 	}
 	app := fiber.New(fiberConfig)
+	app.Use(middleware.Log(logger))
 	lib.LoadEnv()
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())
@@ -36,7 +38,7 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
-	routes.Build(db.Gorm, app, logger)
+	routes.Build(db.Gorm, app)
 	return &Server{App: app, Db: db}
 }
 

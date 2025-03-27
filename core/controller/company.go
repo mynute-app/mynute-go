@@ -1,8 +1,8 @@
 package controller
 
-import "fmt"
-
 import (
+	"fmt"
+
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
@@ -148,11 +148,19 @@ func (cc *company_controller) DeleteCompanyById(c *fiber.Ctx) error {
 
 // Constructor for company_controller
 func Company(Gorm *handler.Gorm) *company_controller {
-	return &company_controller{
+	cc := &company_controller{
 		Base: service.Base[model.Company, DTO.Company]{
 			Name:         namespace.CompanyKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/company", "POST", "public", cc.CreateCompany, "Create a company").Save()
+	route.Register("/company/:id", "GET", "private", cc.GetCompanyById, "Get company by ID").Save()
+	route.Register("/company/name/:name", "GET", "public", cc.GetCompanyByName, "Get company by name").Save()
+	route.Register("/company/tax_id/:tax_id", "GET", "public", cc.GetCompanyByTaxId, "Get company by tax ID").Save()
+	route.Register("/company/:id", "PATCH", "private", cc.UpdateCompanyById, "Update company by ID").Save()
+	route.Register("/company/:id", "DELETE", "private", cc.DeleteCompanyById, "Delete company by ID").Save()
+	return cc
 }

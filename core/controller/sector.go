@@ -14,94 +14,101 @@ type sector_controller struct {
 	service.Base[model.Sector, DTO.Sector]
 }
 
-// CreateCompanyType creates a company type
+// CreateSector creates a sector
 //
-//	@Summary		Create company type
-//	@Description	Create a company type
+//	@Summary		Create sector
+//	@Description	Create a sector
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			sector	body		DTO.Sector	true	"Company Type"
+//	@Param			sector	body		DTO.Sector	true	"sector"
 //	@Success		201		{object}	DTO.Sector
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/sector [post]
-func (cc *sector_controller) CreateCompanyType(c *fiber.Ctx) error {
+func (cc *sector_controller) CreateSector(c *fiber.Ctx) error {
 	return cc.CreateOne(c)
 }
 
-// GetCompanyTypeByName retrieves a company type by ID
+// GetSectorByName retrieves a sector by ID
 //
-//	@Summary		Get company type by ID
-//	@Description	Retrieve a company type by its ID
+//	@Summary		Get sector by ID
+//	@Description	Retrieve a sector by its ID
 //	@Tags			Sector
-//	@Param			id	path	string	true	"Company Type ID"
+//	@Param			id	path	string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/name/{name} [get]
-func (cc *sector_controller) GetCompanyTypeByName(c *fiber.Ctx) error {
+func (cc *sector_controller) GetSectorByName(c *fiber.Ctx) error {
 	return cc.GetBy("name", c)
 }
 
-// GetCompanyTypeById retrieves a company type by ID
+// GetSectorById retrieves a sector by ID
 //
-//	@Summary		Get company type by ID
-//	@Description	Retrieve a company type by its ID
+//	@Summary		Get sector by ID
+//	@Description	Retrieve a sector by its ID
 //	@Tags			Sector
-//	@Param			id	path	string	true	"Company Type ID"
+//	@Param			id	path	string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [get]
-func (cc *sector_controller) GetCompanyTypeById(c *fiber.Ctx) error {
+func (cc *sector_controller) GetSectorById(c *fiber.Ctx) error {
 	return cc.GetBy("id", c)
 }
 
-// UpdateCompanyTypeById updates a company type by ID
+// UpdateSectorById updates a sector by ID
 //
-//	@Summary		Update company type by ID
-//	@Description	Update a company type by its ID
+//	@Summary		Update sector by ID
+//	@Description	Update a sector by its ID
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Company Type ID"
+//	@Param			id				path		string	true	"sector ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			sector	body		DTO.Sector	true	"Company Type"
+//	@Param			sector	body		DTO.Sector	true	"sector"
 //	@Success		200		{object}	DTO.Sector
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [patch]
-func (cc *sector_controller) UpdateCompanyTypeById(c *fiber.Ctx) error {
+func (cc *sector_controller) UpdateSectorById(c *fiber.Ctx) error {
 	return cc.UpdateOneById(c)
 }
 
-// DeleteCompanyTypeById deletes a company type by ID
+// DeleteSectorById deletes a sector by ID
 //
-//	@Summary		Delete company type by ID
-//	@Description	Delete a company type by its ID
+//	@Summary		Delete sector by ID
+//	@Description	Delete a sector by its ID
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"Authorization"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Company Type ID"
+//	@Param			id				path		string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [delete]
-func (cc *sector_controller) DeleteCompanyTypeById(c *fiber.Ctx) error {
+func (cc *sector_controller) DeleteSectorById(c *fiber.Ctx) error {
 	return cc.DeleteOneById(c)
 }
 
 func Sector(Gorm *handler.Gorm) *sector_controller {
-	return &sector_controller{
+	sc := &sector_controller{
 		Base: service.Base[model.Sector, DTO.Sector]{
-			Name:         namespace.CompanyTypeKey.Name,
+			Name:         namespace.SectorKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{},
 		},
 	}
+	route := &handler.Route{DB: Gorm.DB}
+	route.Register("/sector", "POST", "private", sc.CreateSector, "Creates a company sector").Save()
+	route.Register("/sector/:id", "GET", "public", sc.GetSectorById, "Retrieves a company sector by ID").Save()
+	route.Register("/sector/name/:name", "GET", "public", sc.GetSectorByName, "Retrieves a company sector by name").Save()
+	route.Register("/sector/:id", "PATCH", "private", sc.UpdateSectorById, "Updates a company sector by ID").Save()
+	route.Register("/sector/:id", "DELETE", "private", sc.DeleteSectorById, "Deletes a company sector by ID").Save()
+	return sc
 }

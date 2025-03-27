@@ -54,7 +54,7 @@ var CompanyKey = TypeStruct{
 	Model: "company_model",
 }
 
-var CompanyTypeKey = TypeStruct{
+var SectorKey = TypeStruct{
 	Name:  "sector",
 	Model: "sector_model",
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// LoggerMiddleware logs request and response details without modifying the response.
-func Logger(logger *slog.Logger) fiber.Handler {
+// Logs request and response details without modifying them.
+func Log(logger *slog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 
@@ -93,7 +93,12 @@ func Logger(logger *slog.Logger) fiber.Handler {
 			lokiDefaultMap["level"] = "info"
 			lokiDefaultMap["type"] = "response"
 			resStatus = c.Response().Header.StatusCode()
-			labelMsg = "Resquest success!"
+			if resStatus == 401 {
+				lokiDefaultMap["level"] = "warning"
+				labelMsg = "Request unauthorized!"
+			} else {
+				labelMsg = "Request success!"
+			}
 		}
 
 		lokiDefaultMap["res_body"] = resBody
