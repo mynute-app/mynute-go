@@ -7,7 +7,6 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -43,7 +42,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		var perms []model.Route
 		db.Raw(`SELECT r.* FROM routes r
 		JOIN role_routes rr ON rr.route_id = r.id
-		WHERE rr.role_id = ? AND r.method = ?`, role.ID, method).Scan(&perms)
+		WHERE rr.role_id = ? AND r.method = ? AND r.path = ?`, role.ID, method, path).Scan(&perms)
 		if len(perms) == 0 {
 			continue
 		}
@@ -55,36 +54,34 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	// ABAC Check
-	sub := handler.PolicySubject{
-		ID: userID,
-		Attrs: map[string]string{
-			"user_id":    userID,
-			"role":       claim.Role,
-			"company_id": companyID,
-		},
-	}
+	// sub := handler.PolicySubject{
+	// 	ID: userID,
+	// 	Attrs: map[string]string{
+	// 		"user_id":    userID,
+	// 		"role":       claim.Role,
+	// 		"company_id": companyID,
+	// 	},
+	// }
 
-	res := handler.PolicyResource{
-		Attrs: map[string]string{
-			"company_id":  strconv.Itoa(int(claim.CompanyID)),
-			"branch_id":   c.Params("branch_id"),
-			"employee_id": c.Params("employee_id"),
-		},
-	}
+	// res := handler.PolicyResource{
+	// 	Attrs: map[string]string{
+	// 		"company_id":  strconv.Itoa(int(claim.CompanyID)),
+	// 		"branch_id":   c.Params("branch_id"),
+	// 		"employee_id": c.Params("employee_id"),
+	// 	},
+	// }
 
-	env := handler.PolicyEnvironment{}
+	// env := handler.PolicyEnvironment{}
 
-	var rules []model.PolicyRule
-	db.Where("company_id = ?", companyID).Find(&rules)
-	engine := handler.Policy(rules)
+	// var rules []model.PolicyRule
+	// db.Where("company_id = ?", companyID).Find(&rules)
+	// engine := handler.Policy(rules)
 
-	if engine.CanAccess(sub, method, path, res, env) {
-		return c.Next()
-	}
+	// if engine.CanAccess(sub, method, path, res, env) {
+	// 	return c.Next()
+	// }
 
-	return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-		"error": "Access denied",
-	})
+	return lib.Error.Auth.Unauthorized
 }
 
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
