@@ -3,6 +3,7 @@ package model
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"gorm.io/datatypes"
 	"log"
 
 	"gorm.io/gorm"
@@ -11,12 +12,15 @@ import (
 var AllowSystemRoleCreation = false
 
 type Role struct {
-	gorm.Model
-	Name        string   `gorm:"type:varchar(20);not null"`
-	Description string   `gorm:"type:varchar(255)"`
-	CompanyID   *uint    `gorm:"index" json:"company_id"`
-	Company     Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE"`
-	Routes      []*Route `gorm:"many2many:role_routes;constraint:OnDelete:CASCADE"`
+	gorm.Model                           // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
+	Name               string            `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
+	Description        string            `json:"description"`
+	CompanyID          *uint             `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
+	Company            *Company          `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
+	IsSystemRole       bool              `gorm:"not null;default:false" json:"is_system_role"`
+	TemplateAttributes datatypes.JSONMap `gorm:"type:jsonb" json:"template_attributes"`
+	Employees          []*Employee       `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"employees,omitempty"`
+	Clients            []*Client         `gorm:"many2many:client_roles;constraint:OnDelete:CASCADE;" json:"clients,omitempty"`
 }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {
@@ -96,4 +100,3 @@ func SeedRoles(db *gorm.DB) error {
 	log.Println("System roles seeded successfully!")
 	return nil
 }
-
