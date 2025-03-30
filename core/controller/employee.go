@@ -341,16 +341,85 @@ func Employee(Gorm *handler.Gorm) *employee_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/employee", "post", "private", ec.CreateEmployee, "Create employee").Save()
-	route.Register("/employee/login", "post", "public", ec.LoginEmployee, "Login employee").Save()
-	route.Register("/employee/verify-email/:email/:code", "post", "public", ec.VerifyEmployeeEmail, "Verify employee email").Save()
-	route.Register("/employee/:id", "get", "private", ec.GetEmployeeById, "Get employee by ID").Save()
-	route.Register("/employee/email/:email", "get", "private", ec.GetEmployeeByEmail, "Get employee by email").Save()
-	route.Register("/employee/:id", "patch", "private", ec.UpdateEmployeeById, "Update employee by ID").Save()
-	route.Register("/employee/:id", "delete", "private", ec.DeleteEmployeeById, "Delete employee by ID").Save()
-	route.Register("/employee/:employee_id/service/:service_id", "post", "private", ec.AddServiceToEmployee, "Add service to employee").Save()
-	route.Register("/employee/:employee_id/service/:service_id", "delete", "private", ec.RemoveServiceFromEmployee, "Remove service from employee").Save()
-	route.Register("/employee/:employee_id/branch/:branch_id", "post", "private", ec.AddBranchToEmployee, "Add employee to branch").Save()
-	route.Register("/employee/:employee_id/branch/:branch_id", "delete", "private", ec.RemoveBranchFromEmployee, "Remove employee from branch").Save()
+	EmployeeResources := []*handler.ResourceRoute{
+		{
+			Path: "/employee",
+			Method: "POST",
+			Handler: ec.CreateEmployee,
+			Description: "Create employee",
+			Access: "private",
+		},
+		{
+			Path: "/employee/login",
+			Method: "POST",
+			Handler: ec.LoginEmployee,
+			Description: "Login employee",
+			Access: "public",
+		},
+		{
+			Path: "/employee/verify-email/:email/:code",
+			Method: "POST",
+			Handler: ec.VerifyEmployeeEmail,
+			Description: "Verify employee email",
+			Access: "public",
+		},
+		{
+			Path: "/employee/:id",
+			Method: "GET",
+			Handler: ec.GetEmployeeById,
+			Description: "Get employee by ID",
+			Access: "private",
+		},
+		{
+			Path: "/employee/email/:email",
+			Method: "GET",
+			Handler: ec.GetEmployeeByEmail,
+			Description: "Get employee by email",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:id",
+			Method: "PATCH",
+			Handler: ec.UpdateEmployeeById,
+			Description: "Update employee by ID",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:id",
+			Method: "DELETE",
+			Handler: ec.DeleteEmployeeById,
+			Description: "Delete employee by ID",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:employee_id/service/:service_id",
+			Method: "POST",
+			Handler: ec.AddServiceToEmployee,
+			Description: "Add service to employee",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:employee_id/service/:service_id",
+			Method: "DELETE",
+			Handler: ec.RemoveServiceFromEmployee,
+			Description: "Remove service from employee",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:employee_id/branch/:branch_id",
+			Method: "POST",
+			Handler: ec.AddBranchToEmployee,
+			Description: "Add employee to branch",
+			Access: "private",
+		},
+		{
+			Path: "/employee/:employee_id/branch/:branch_id",
+			Method: "DELETE",
+			Handler: ec.RemoveBranchFromEmployee,
+			Description: "Remove employee from branch",
+			Access: "private",
+		},
+	}
+	route.BulkRegisterAndSave(EmployeeResources)
 	return ec
 }

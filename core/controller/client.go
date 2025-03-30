@@ -173,11 +173,50 @@ func Client(Gorm *handler.Gorm) *client_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/client", "post", "public", cc.CreateClient, "Create client").Save()
-	route.Register("/client/login", "post", "public", cc.LoginClient, "Login client").Save()
-	route.Register("/client/verify-email/:email/:code", "post", "public", cc.VerifyClientEmail, "Verify client email").Save()
-	route.Register("/client/email/:email", "get", "private", cc.GetClientByEmail, "Get client by email").Save()
-	route.Register("/client/:id", "patch", "private", cc.UpdateClientById, "Update client by ID").Save()
-	route.Register("/client/:id", "delete", "private", cc.DeleteClientById, "Delete client by ID").Save()
+	ClientResources := []*handler.ResourceRoute{
+		{
+			Path: "/client",
+			Method: "POST",
+			Handler: cc.CreateClient,
+			Description: "Create client",
+			Access: "public",
+		},
+		{
+			Path: "/client/login",
+			Method: "POST",
+			Handler: cc.LoginClient,
+			Description: "Login client",
+			Access: "public",
+		},
+		{
+			Path: "/client/verify-email/:email/:code",
+			Method: "POST",
+			Handler: cc.VerifyClientEmail,
+			Description: "Verify client email",
+			Access: "public",
+		},
+		{
+			Path: "/client/email/:email",
+			Method: "GET",
+			Handler: cc.GetClientByEmail,
+			Description: "Get client by email",
+			Access: "private",
+		},
+		{
+			Path: "/client/:id",
+			Method: "PATCH",
+			Handler: cc.UpdateClientById,
+			Description: "Update client by ID",
+			Access: "private",
+		},
+		{
+			Path: "/client/:id",
+			Method: "DELETE",
+			Handler: cc.DeleteClientById,
+			Description: "Delete client by ID",
+			Access: "private",
+		},
+	}
+	route.BulkRegisterAndSave(ClientResources)
 	return cc
 }

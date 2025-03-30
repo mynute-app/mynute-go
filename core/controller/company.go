@@ -156,11 +156,50 @@ func Company(Gorm *handler.Gorm) *company_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/company", "POST", "public", cc.CreateCompany, "Create a company").Save()
-	route.Register("/company/:id", "GET", "private", cc.GetCompanyById, "Get company by ID").Save()
-	route.Register("/company/name/:name", "GET", "public", cc.GetCompanyByName, "Get company by name").Save()
-	route.Register("/company/tax_id/:tax_id", "GET", "public", cc.GetCompanyByTaxId, "Get company by tax ID").Save()
-	route.Register("/company/:id", "PATCH", "private", cc.UpdateCompanyById, "Update company by ID").Save()
-	route.Register("/company/:id", "DELETE", "private", cc.DeleteCompanyById, "Delete company by ID").Save()
+	CompanyResources := []*handler.ResourceRoute{
+		{
+			Path: "/company",
+			Method: "POST",
+			Handler: cc.CreateCompany,
+			Description: "Create a company",
+			Access: "public",
+		},
+		{
+			Path: "/company/:id",
+			Method: "GET",
+			Handler: cc.GetCompanyById,
+			Description: "Get company by ID",
+			Access: "private",
+		},
+		{
+			Path: "/company/name/:name",
+			Method: "GET",
+			Handler: cc.GetCompanyByName,
+			Description: "Get company by name",
+			Access: "public",
+		},
+		{
+			Path: "/company/tax_id/:tax_id",
+			Method: "GET",
+			Handler: cc.GetCompanyByTaxId,
+			Description: "Get company by tax ID",
+			Access: "public",
+		},
+		{
+			Path: "/company/:id",
+			Method: "PATCH",
+			Handler: cc.UpdateCompanyById,
+			Description: "Update company by ID",
+			Access: "private",
+		},
+		{
+			Path: "/company/:id",
+			Method: "DELETE",
+			Handler: cc.DeleteCompanyById,
+			Description: "Delete company by ID",
+			Access: "private",
+		},
+	}
+	route.BulkRegisterAndSave(CompanyResources)	
 	return cc
 }

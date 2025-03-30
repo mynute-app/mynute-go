@@ -48,19 +48,33 @@ func (r *Route) GetHandler(path, method string) fiber.Handler {
 	return RouteRegistry[key]
 }
 
-func (r *Route) Register(path, method, access string, handler fiber.Handler, description string) *RouteToRegister {
-	method = strings.ToUpper(method)
-	if access != "public" && access != "private" {
-		panic("Route access must be either public or private")
+type ResourceRoute struct {
+	Path        string
+	Method      string
+	Handler     fiber.Handler
+	Description string
+	Access			string
+}
+
+func (r *Route) BulkRegisterAndSave(resources []*ResourceRoute) {
+	for _, resource := range resources {
+		r.Register(resource).Save()
 	}
-	key := makeRegistryKey(path, method)
-	RouteRegistry[key] = handler
+}
+
+func (r *Route) Register(resource *ResourceRoute) *RouteToRegister {
+	resource.Method = strings.ToUpper(resource.Method)
+	if resource.Access != "public" && resource.Access != "private" {
+		panic("Resource Route access must be either public or private")
+	}
+	key := makeRegistryKey(resource.Path, resource.Method)
+	RouteRegistry[key] = resource.Handler
 	return &RouteToRegister{
-		Path:        path,
-		Method:      method,
-		Handler:     handler,
-		Description: description,
-		Access:      access,
+		Path:        resource.Path,
+		Method:      resource.Method,
+		Handler:     resource.Handler,
+		Description: resource.Description,
+		Access:      resource.Access,
 		DB:          r.DB,
 	}
 }
@@ -102,7 +116,7 @@ func (rr *RouteToRegister) Save() {
 		}
 		// Add role access if provided
 		if len(rr.RoleAccess) > 0 {
-			
+
 			// Get role ID from the database
 			for _, roleName := range rr.RoleAccess {
 				var role model.Role

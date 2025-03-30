@@ -106,10 +106,43 @@ func Holiday(Gorm *handler.Gorm) *holidays_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/holiday", "POST", "private", hc.CreateHoliday, "Create a holiday").Save()
-	route.Register("/holiday/:id", "GET", "private", hc.GetHolidayById, "Get holiday by ID").Save()
-	route.Register("/holiday/name/:name", "GET", "public", hc.GetHolidayByName, "Get holiday by name").Save()
-	route.Register("/holiday/:id", "PATCH", "private", hc.UpdateHolidayById, "Update holiday by ID").Save()
-	route.Register("/holiday/:id", "DELETE", "private", hc.DeleteHolidayById, "Delete holiday by ID").Save()
+	HolidayResources := []*handler.ResourceRoute{
+		{
+			Path:        "/holiday",
+			Method:      "POST",
+			Handler:     hc.CreateHoliday,
+			Description: "Create a holiday",
+			Access:      "private",
+		},
+		{
+			Path:        "/holiday/:id",
+			Method:      "GET",
+			Handler:     hc.GetHolidayById,
+			Description: "Get holiday by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/holiday/name/:name",
+			Method:      "GET",
+			Handler:     hc.GetHolidayByName,
+			Description: "Get holiday by name",
+			Access:      "public",
+		},
+		{
+			Path:        "/holiday/:id",
+			Method:      "PATCH",
+			Handler:     hc.UpdateHolidayById,
+			Description: "Update holiday by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/holiday/:id",
+			Method:      "DELETE",
+			Handler:     hc.DeleteHolidayById,
+			Description: "Delete holiday by ID",
+			Access:      "private",
+		},
+	}
+	route.BulkRegisterAndSave(HolidayResources)
 	return hc
 }

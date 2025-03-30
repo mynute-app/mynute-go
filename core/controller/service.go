@@ -107,10 +107,43 @@ func Service(Gorm *handler.Gorm) *service_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/service", "POST", "private", sc.CreateService, "Create a service").Save()
-	route.Register("/service/:id", "GET", "private", sc.GetServiceById, "Get service by ID").Save()
-	route.Register("/service/name/:name", "GET", "public", sc.GetServiceByName, "Get service by name").Save()
-	route.Register("/service/:id", "PATCH", "private", sc.UpdateServiceById, "Update service by ID").Save()
-	route.Register("/service/:id", "DELETE", "private", sc.DeleteServiceById, "Delete service by ID").Save()
+	ServiceResources := []*handler.ResourceRoute{
+		{
+			Path:        "/service",
+			Method:      "POST",
+			Handler:     sc.CreateService,
+			Description: "Create a service",
+			Access:      "private",
+		},
+		{
+			Path:        "/service/:id",
+			Method:      "GET",
+			Handler:     sc.GetServiceById,
+			Description: "Get service by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/service/name/:name",
+			Method:      "GET",
+			Handler:     sc.GetServiceByName,
+			Description: "Get service by name",
+			Access:      "public",
+		},
+		{
+			Path:        "/service/:id",
+			Method:      "PATCH",
+			Handler:     sc.UpdateServiceById,
+			Description: "Update service by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/service/:id",
+			Method:      "DELETE",
+			Handler:     sc.DeleteServiceById,
+			Description: "Delete service by ID",
+			Access:      "private",
+		},
+	}
+	route.BulkRegisterAndSave(ServiceResources)
 	return sc
 }

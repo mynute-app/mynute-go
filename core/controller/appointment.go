@@ -85,57 +85,36 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.
-		Register(
-			"/appointment",
-			"POST",
-			"private",
-			ac.CreateAppointment,
-			"Create an appointment",
-		).
-		SetRoleAccess([]string{
-			namespace.Role.Owner,
-			namespace.Role.GeneralManager,
-		}).
-		Save()
-	route.
-		Register(
-			"/appointment/:id",
-			"GET",
-			"private",
-			ac.GetAppointmentByID,
-			"Get appointment by ID",
-		).
-		SetRoleAccess([]string{
-			namespace.Role.Owner,
-			namespace.Role.GeneralManager,
-		}).
-		Save()
-	route.
-		Register(
-			"/appointment/:id",
-			"PATCH",
-			"private",
-			ac.UpdateAppointmentByID,
-			"Update appointment by ID",
-		).
-		SetRoleAccess([]string{
-			namespace.Role.Owner,
-			namespace.Role.GeneralManager,
-		}).
-		Save()
-	route.
-		Register(
-			"/appointment/:id",
-			"DELETE",
-			"private",
-			ac.DeleteAppointmentByID,
-			"Delete appointment by ID",
-		).
-		SetRoleAccess([]string{
-			namespace.Role.Owner,
-			namespace.Role.GeneralManager,
-		}).
-		Save()
+	AppointmentResources := []*handler.ResourceRoute{
+		{
+			Path:        "/appointment",
+			Method:      "POST",
+			Handler:     ac.CreateAppointment,
+			Description: "Create an appointment",
+			Access:      "private",
+		},
+		{
+			Path:        "/appointment/:id",
+			Method:      "GET",
+			Handler:     ac.GetAppointmentByID,
+			Description: "Get appointment by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/appointment/:id",
+			Method:      "PATCH",
+			Handler:     ac.UpdateAppointmentByID,
+			Description: "Update appointment by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/appointment/:id",
+			Method:      "DELETE",
+			Handler:     ac.DeleteAppointmentByID,
+			Description: "Delete appointment by ID",
+			Access:      "private",
+		},
+	}
+	route.BulkRegisterAndSave(AppointmentResources)
 	return ac
 }

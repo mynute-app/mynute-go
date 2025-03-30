@@ -234,15 +234,64 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.
-		Register("/branch", "post", "private", bc.CreateBranch, "Create a branch").
-		Save()
-	route.Register("/branch/:id", "get", "private", bc.GetBranchById, "Get branch by ID").Save()
-	route.Register("/branch/name/:name", "get", "private", bc.GetBranchByName, "Get branch by name").Save()
-	route.Register("/branch/:id", "patch", "private", bc.UpdateBranchById, "Update branch by ID").Save()
-	route.Register("/branch/:id", "delete", "private", bc.DeleteBranchById, "Delete branch by ID").Save()
-	route.Register("/branch/:branch_id/employee/:employee_id/services", "get", "private", bc.GetEmployeeServicesByBranchId, "Get employee offered services at the branch by branch ID").Save()
-	route.Register("/branch/:branch_id/service/:service_id", "post", "private", bc.AddServiceToBranch, "Add service to branch").Save()
-	route.Register("/branch/:branch_id/service/:service_id", "delete", "private", bc.RemoveServiceFromBranch, "Remove service from branch").Save()
+	BranchResources := []*handler.ResourceRoute{
+		{
+			Path: "/branch",
+			Method: "POST",
+			Handler: bc.CreateBranch,
+			Description: "Create a branch",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:id",
+			Method: "GET",
+			Handler: bc.GetBranchById,
+			Description: "Get branch by ID",
+			Access: "private",
+		},
+		{
+			Path: "/branch/name/:name",
+			Method: "GET",
+			Handler: bc.GetBranchByName,
+			Description: "Get branch by name",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:id",
+			Method: "PATCH",
+			Handler: bc.UpdateBranchById,
+			Description: "Update branch by ID",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:id",
+			Method: "DELETE",
+			Handler: bc.DeleteBranchById,
+			Description: "Delete branch by ID",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:branch_id/employee/:employee_id/services",
+			Method: "GET",
+			Handler: bc.GetEmployeeServicesByBranchId,
+			Description: "Get employee offered services at the branch by branch ID",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:branch_id/service/:service_id",
+			Method: "POST",
+			Handler: bc.AddServiceToBranch,
+			Description: "Add service to branch",
+			Access: "private",
+		},
+		{
+			Path: "/branch/:branch_id/service/:service_id",
+			Method: "DELETE",
+			Handler: bc.RemoveServiceFromBranch,
+			Description: "Remove service from branch",
+			Access: "private",
+		},
+	}
+	route.BulkRegisterAndSave(BranchResources)
 	return bc
 }

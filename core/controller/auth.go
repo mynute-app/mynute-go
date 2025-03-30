@@ -89,9 +89,36 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/auth/verify-existing-account", "POST", "public", ac.VerifyExistingAccount, "Verify if an account exists").Save()
-	route.Register("/auth/oauth/:provider", "GET", "public", ac.BeginAuthProviderCallback, "Begin auth provider callback").Save()
-	route.Register("/auth/oauth/:provider/callback", "GET", "public", ac.GetAuthCallbackFunction, "Get auth callback function").Save()
-	route.Register("/auth/oauth/logout", "GET", "public", ac.LogoutProvider, "Logout provider").Save()
+	AuthResources := []*handler.ResourceRoute{
+		{
+			Path:        "/auth/verify-existing-account",
+			Method:      "POST",
+			Handler:     ac.VerifyExistingAccount,
+			Description: "Verify if an account exists",
+			Access:      "public",
+		},
+		{
+			Path:        "/auth/oauth/:provider",
+			Method:      "GET",
+			Handler:     ac.BeginAuthProviderCallback,
+			Description: "Begin auth provider callback",
+			Access:      "public",
+		},
+		{
+			Path:        "/auth/oauth/:provider/callback",
+			Method:      "GET",
+			Handler:     ac.GetAuthCallbackFunction,
+			Description: "Get auth callback function",
+			Access:      "public",
+		},
+		{
+			Path:        "/auth/oauth/logout",
+			Method:      "GET",
+			Handler:     ac.LogoutProvider,
+			Description: "Logout provider",
+			Access:      "public",
+		},
+	}
+	route.BulkRegisterAndSave(AuthResources)
 	return ac
 }

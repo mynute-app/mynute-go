@@ -105,10 +105,43 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	route.Register("/sector", "POST", "private", sc.CreateSector, "Creates a company sector").Save()
-	route.Register("/sector/:id", "GET", "public", sc.GetSectorById, "Retrieves a company sector by ID").Save()
-	route.Register("/sector/name/:name", "GET", "public", sc.GetSectorByName, "Retrieves a company sector by name").Save()
-	route.Register("/sector/:id", "PATCH", "private", sc.UpdateSectorById, "Updates a company sector by ID").Save()
-	route.Register("/sector/:id", "DELETE", "private", sc.DeleteSectorById, "Deletes a company sector by ID").Save()
+	SectorResources := []*handler.ResourceRoute{
+		{
+			Path:        "/sector",
+			Method:      "POST",
+			Handler:     sc.CreateSector,
+			Description: "Creates a company sector",
+			Access:      "private",
+		},
+		{
+			Path:        "/sector/:id",
+			Method:      "GET",
+			Handler:     sc.GetSectorById,
+			Description: "Retrieves a company sector by ID",
+			Access:      "public",
+		},
+		{
+			Path:        "/sector/name/:name",
+			Method:      "GET",
+			Handler:     sc.GetSectorByName,
+			Description: "Retrieves a company sector by name",
+			Access:      "public",
+		},
+		{
+			Path:        "/sector/:id",
+			Method:      "PATCH",
+			Handler:     sc.UpdateSectorById,
+			Description: "Updates a company sector by ID",
+			Access:      "private",
+		},
+		{
+			Path:        "/sector/:id",
+			Method:      "DELETE",
+			Handler:     sc.DeleteSectorById,
+			Description: "Deletes a company sector by ID",
+			Access:      "private",
+		},
+	}
+	route.BulkRegisterAndSave(SectorResources)
 	return sc
 }

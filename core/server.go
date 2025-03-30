@@ -39,7 +39,9 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
-	model.SeedRoles(db.Gorm)
+	if err := model.SeedRoles(db.Gorm); err != nil {
+		panic(err)
+	}
 	routes.Build(db.Gorm, app)
 	return &Server{App: app, Db: db}
 }
