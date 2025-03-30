@@ -2,8 +2,8 @@ package model
 
 type PolicyRule struct {
 	ID                  uint                `gorm:"primaryKey"`
-	CompanyID           uint                `json:"company_id"`
-	CreatedByEmployeeID uint                `json:"created_by_employee_id"`
+	CompanyID           *uint               `json:"company_id"`
+	CreatedByEmployeeID *uint               `json:"created_by_employee_id"`
 	Name                string              `json:"name"`
 	Description         string              `json:"description"`
 	SubjectAttr         string              `json:"subject_attr"`  // e.g., "user_id", "role"

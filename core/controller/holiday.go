@@ -105,44 +105,5 @@ func Holiday(Gorm *handler.Gorm) *holidays_controller {
 			Associations: []string{},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	HolidayResources := []*handler.Resource{
-		{
-			Path:        "/holiday",
-			Method:      "POST",
-			Handler:     hc.CreateHoliday,
-			Description: "Create a holiday",
-			Access:      "private",
-		},
-		{
-			Path:        "/holiday/:id",
-			Method:      "GET",
-			Handler:     hc.GetHolidayById,
-			Description: "Get holiday by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/holiday/name/:name",
-			Method:      "GET",
-			Handler:     hc.GetHolidayByName,
-			Description: "Get holiday by name",
-			Access:      "public",
-		},
-		{
-			Path:        "/holiday/:id",
-			Method:      "PATCH",
-			Handler:     hc.UpdateHolidayById,
-			Description: "Update holiday by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/holiday/:id",
-			Method:      "DELETE",
-			Handler:     hc.DeleteHolidayById,
-			Description: "Delete holiday by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(HolidayResources)
 	return hc
 }

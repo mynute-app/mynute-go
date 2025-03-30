@@ -117,17 +117,6 @@ func (rr *ResourceToRegister) Save() {
 	if err := rr.DB.Create(&resource); err.Error != nil {
 		panic(err.Error)
 	}
-	// Add role access if provided
-	if len(rr.RoleAccess) > 0 {
-		// Get role ID from the database
-		for _, roleName := range rr.RoleAccess {
-			var role model.Role
-			if err := rr.DB.First(&role, "name = ?", roleName).Error; err != nil {
-				panic(err.Error)
-			}
-			rr.DB.Exec("INSERT INTO role_routes (role_id, route_id) VALUES (?, ?)", role.ID, resource.ID)
-		}
-	}
 }
 
 func getHandlerName(fn fiber.Handler) string {

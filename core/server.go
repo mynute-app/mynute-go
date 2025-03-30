@@ -24,8 +24,8 @@ type Server struct {
 func NewServer() *Server {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	fiberConfig := fiber.Config{
-		ErrorHandler: handler.Error(logger),
-		BodyLimit:    2 * 1024 * 1024, // 2 MB
+		ErrorHandler:          handler.Error(logger),
+		BodyLimit:             2 * 1024 * 1024, // 2 MB
 		DisableStartupMessage: true,
 	}
 	app := fiber.New(fiberConfig)
@@ -39,6 +39,9 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
+	if err := model.SeedResources(db.Gorm); err != nil {
+		panic(err)
+	}
 	if err := model.SeedRoles(db.Gorm); err != nil {
 		panic(err)
 	}

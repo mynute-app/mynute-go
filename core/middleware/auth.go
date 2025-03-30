@@ -21,32 +21,36 @@ func Auth(Gorm *handler.Gorm) *auth_middleware {
 }
 
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
+	db := am.Gorm.DB
+	method := c.Method()
+	path := c.Route().Path
+
+	var Resource model.Resource
+	if err := db.Where("method = ? AND path = ?", method, path).First(&Resource).Error; err != nil || Resource.ID == 0 {
+		return lib.Error.Auth.Unauthorized
+	}
+
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
 	claim, ok := auth_claims.(*DTO.Claims)
 	if !ok || claim.ID == 0 || !claim.Verified {
 		return lib.Error.Auth.InvalidToken.SendToClient(c)
 	}
-
-	db := am.Gorm.DB
+	
 	userID := claim.ID
 	companyID := claim.CompanyID
-	method := c.Method()
-	path := c.Path()
+
 
 	// 1. Verificar RBAC
-	var matchedResource model.Resource
-	if err := db.Where("method = ? AND path = ?", method, path).First(&matchedResource).Error; err != nil {
-		return lib.Error.Auth.Unauthorized
-	}
-
 	var count int64
 	err := db.Raw(`
 		SELECT COUNT(*)
+
+		
 		FROM roles r
 		JOIN employee_roles er ON er.role_id = r.id
 		JOIN role_routes rr ON rr.role_id = r.id
 		WHERE er.user_id = ? AND er.company_id = ? AND rr.route_id = ?
-	`, userID, companyID, matchedResource.ID).Scan(&count).Error
+	`, userID, companyID, Resource.ID).Scan(&count).Error
 
 	if err != nil || count == 0 {
 		return lib.Error.Auth.Unauthorized

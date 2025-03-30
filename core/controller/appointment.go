@@ -84,37 +84,5 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 			Associations: []string{"Sector", "Branch", "Employee", "Client", "Service", "Company"},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	AppointmentResources := []*handler.Resource{
-		{
-			Path:        "/appointment",
-			Method:      "POST",
-			Handler:     ac.CreateAppointment,
-			Description: "Create an appointment",
-			Access:      "private",
-		},
-		{
-			Path:        "/appointment/:id",
-			Method:      "GET",
-			Handler:     ac.GetAppointmentByID,
-			Description: "Get appointment by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/appointment/:id",
-			Method:      "PATCH",
-			Handler:     ac.UpdateAppointmentByID,
-			Description: "Update appointment by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/appointment/:id",
-			Method:      "DELETE",
-			Handler:     ac.DeleteAppointmentByID,
-			Description: "Delete appointment by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(AppointmentResources)
 	return ac
 }

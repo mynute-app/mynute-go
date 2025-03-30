@@ -104,44 +104,5 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 			Associations: []string{},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	SectorResources := []*handler.Resource{
-		{
-			Path:        "/sector",
-			Method:      "POST",
-			Handler:     sc.CreateSector,
-			Description: "Creates a company sector",
-			Access:      "private",
-		},
-		{
-			Path:        "/sector/:id",
-			Method:      "GET",
-			Handler:     sc.GetSectorById,
-			Description: "Retrieves a company sector by ID",
-			Access:      "public",
-		},
-		{
-			Path:        "/sector/name/:name",
-			Method:      "GET",
-			Handler:     sc.GetSectorByName,
-			Description: "Retrieves a company sector by name",
-			Access:      "public",
-		},
-		{
-			Path:        "/sector/:id",
-			Method:      "PATCH",
-			Handler:     sc.UpdateSectorById,
-			Description: "Updates a company sector by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/sector/:id",
-			Method:      "DELETE",
-			Handler:     sc.DeleteSectorById,
-			Description: "Deletes a company sector by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(SectorResources)
 	return sc
 }

@@ -32,7 +32,8 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	mdwPub := []fiber.Handler{a.WhoAreYou}
 	mdwPrv := []fiber.Handler{a.WhoAreYou, a.DenyUnauthorized}
 
-	if err := (&handler.Route{DB: DB}).Build(r, r, mdwPub, mdwPrv); err != nil {
+	route := &handler.Route{DB: DB}
+	if err := route.Build(r, r, mdwPub, mdwPrv); err != nil {
 		panic(err)
 	}
 }

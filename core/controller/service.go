@@ -106,44 +106,5 @@ func Service(Gorm *handler.Gorm) *service_controller {
 			Associations: []string{"Company", "Branches", "Employees"},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	ServiceResources := []*handler.Resource{
-		{
-			Path:        "/service",
-			Method:      "POST",
-			Handler:     sc.CreateService,
-			Description: "Create a service",
-			Access:      "private",
-		},
-		{
-			Path:        "/service/:id",
-			Method:      "GET",
-			Handler:     sc.GetServiceById,
-			Description: "Get service by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/service/name/:name",
-			Method:      "GET",
-			Handler:     sc.GetServiceByName,
-			Description: "Get service by name",
-			Access:      "public",
-		},
-		{
-			Path:        "/service/:id",
-			Method:      "PATCH",
-			Handler:     sc.UpdateServiceById,
-			Description: "Update service by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/service/:id",
-			Method:      "DELETE",
-			Handler:     sc.DeleteServiceById,
-			Description: "Delete service by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(ServiceResources)
 	return sc
 }

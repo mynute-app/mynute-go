@@ -61,9 +61,9 @@ func Connect() *Database {
 	customGormLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second,
-			LogLevel:      logger.Warn,
-			Colorful:      true,
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Warn,
+			Colorful:                  true,
 			IgnoreRecordNotFoundError: true,
 		},
 	)

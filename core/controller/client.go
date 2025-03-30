@@ -172,51 +172,5 @@ func Client(Gorm *handler.Gorm) *client_controller {
 			Associations: []string{"Appointments"},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	ClientResources := []*handler.Resource{
-		{
-			Path:        "/client",
-			Method:      "POST",
-			Handler:     cc.CreateClient,
-			Description: "Create client",
-			Access:      "public",
-		},
-		{
-			Path:        "/client/login",
-			Method:      "POST",
-			Handler:     cc.LoginClient,
-			Description: "Login client",
-			Access:      "public",
-		},
-		{
-			Path:        "/client/verify-email/:email/:code",
-			Method:      "POST",
-			Handler:     cc.VerifyClientEmail,
-			Description: "Verify client email",
-			Access:      "public",
-		},
-		{
-			Path:        "/client/email/:email",
-			Method:      "GET",
-			Handler:     cc.GetClientByEmail,
-			Description: "Get client by email",
-			Access:      "private",
-		},
-		{
-			Path:        "/client/:id",
-			Method:      "PATCH",
-			Handler:     cc.UpdateClientById,
-			Description: "Update client by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/client/:id",
-			Method:      "DELETE",
-			Handler:     cc.DeleteClientById,
-			Description: "Delete client by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(ClientResources)
 	return cc
 }

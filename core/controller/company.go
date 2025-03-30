@@ -155,51 +155,5 @@ func Company(Gorm *handler.Gorm) *company_controller {
 			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
-	route := &handler.Route{DB: Gorm.DB}
-	CompanyResources := []*handler.Resource{
-		{
-			Path:        "/company",
-			Method:      "POST",
-			Handler:     cc.CreateCompany,
-			Description: "Create a company",
-			Access:      "public",
-		},
-		{
-			Path:        "/company/:id",
-			Method:      "GET",
-			Handler:     cc.GetCompanyById,
-			Description: "Get company by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/company/name/:name",
-			Method:      "GET",
-			Handler:     cc.GetCompanyByName,
-			Description: "Get company by name",
-			Access:      "public",
-		},
-		{
-			Path:        "/company/tax_id/:tax_id",
-			Method:      "GET",
-			Handler:     cc.GetCompanyByTaxId,
-			Description: "Get company by tax ID",
-			Access:      "public",
-		},
-		{
-			Path:        "/company/:id",
-			Method:      "PATCH",
-			Handler:     cc.UpdateCompanyById,
-			Description: "Update company by ID",
-			Access:      "private",
-		},
-		{
-			Path:        "/company/:id",
-			Method:      "DELETE",
-			Handler:     cc.DeleteCompanyById,
-			Description: "Delete company by ID",
-			Access:      "private",
-		},
-	}
-	route.BulkRegisterAndSave(CompanyResources)
 	return cc
 }
