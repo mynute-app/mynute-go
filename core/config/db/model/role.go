@@ -57,40 +57,49 @@ func (r *Role) isRoleNameReserved(tx *gorm.DB) error {
 	return nil
 }
 
+var SystemRoleOwner = &Role{
+	Name:        namespace.Role.Owner,
+	Description: "Company Owner. Can access anything within the company's scope.",
+}
+
+var SystemRoleGeneralManager = &Role{
+	Name:        namespace.Role.GeneralManager,
+	Description: "Company General Manager. Can access anything within the company's scope besides editing the company name and taxID; and deleting the company.",
+}
+
+var SystemRoleBranchManager = &Role{
+	Name:        namespace.Role.BranchManager,
+	Description: "Company Branch Manager. Can access anything within the branch's scope besides deleting, renaming and changing its address; Can also manage appointments in the branch.",
+}
+
+var SystemRoleBranchSupervisor = &Role{
+	Name:        namespace.Role.BranchSupervisor,
+	Description: "Company Branch Supervisor. Can see anything within the branch's scope but can't change or delete anything related to branch services, employees and properties; Can also manage appointments in the branch.",
+}
+
+var SystemRoleEmployee = &Role{
+	Name:        namespace.Role.Employee,
+	Description: "Company Employee. Can only see branches, services and appointments assigned. Besides also being able to edit its own properties.",
+}
+
+var SystemRoles = []*Role{
+	SystemRoleOwner,
+	SystemRoleGeneralManager,
+	SystemRoleBranchManager,
+	SystemRoleBranchSupervisor,
+	SystemRoleEmployee,
+}
+
 func SeedRoles(db *gorm.DB) error {
 	AllowSystemRoleCreation = true
 	defer func() {
 		AllowSystemRoleCreation = false
 	}()
 
-	systemRoles := []Role{
-		{
-			Name:        namespace.Role.Owner,
-			Description: "Company Owner. Can access anything within the company's scope.",
-		},
-		{
-			Name:        namespace.Role.GeneralManager,
-			Description: "Company General Manager. Can access anything within the company's scope besides editing the company name and taxID; and deleting the company.",
-		},
-		{
-			Name:        namespace.Role.BranchManager,
-			Description: "Company Branch Manager. Can access anything within the branch's scope besides deleting, renaming and changing its address; Can also manage appointments in the branch.",
-		},
-		{
-			Name:        namespace.Role.BranchSupervisor,
-			Description: "Company Branch Supervisor. Can see anything within the branch's scope but can't change or delete anything related to branch services, employees and properties; Can also manage appointments in the branch.",
-		},
-		{
-			Name:        namespace.Role.Employee,
-			Description: "Company Employee. Can only see branches, services and appointments assigned. Besides also being able to edit its own properties.",
-		},
-	}
-
-	for _, role := range systemRoles {
-		var existing Role
-		err := db.Where("name = ? AND company_id IS NULL", role.Name).First(&existing).Error
+	for _, role := range SystemRoles {
+		err := db.Where("name = ? AND company_id IS NULL", role.Name).First(role).Error
 		if err == gorm.ErrRecordNotFound {
-			if err := db.Create(&role).Error; err != nil {
+			if err := db.Create(role).Error; err != nil {
 				return err
 			}
 		} else if err != nil {
