@@ -29,7 +29,7 @@ func Policy(rules []model.PolicyRule) *PolicyEngine {
 
 func (pe *PolicyEngine) CanAccess(s PolicySubject, method, path string, r PolicyResource, e PolicyEnvironment) bool {
 	for _, rule := range pe.Rules {
-		if !strings.EqualFold(rule.Method, method) || !lib.MatchPath(rule.Path, path) {
+		if !strings.EqualFold(rule.Method, method) || !lib.MatchPath(rule.Resource.Path, path) {
 			continue
 		}
 

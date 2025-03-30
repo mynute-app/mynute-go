@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-type Route struct {
+type Resource struct {
 	gorm.Model
 	Handler     string `gorm:"type:varchar(255)"`
 	Description string `gorm:"type:varchar(255)"`
@@ -12,11 +12,11 @@ type Route struct {
 }
 
 // Custom Composite Index
-func (Route) TableName() string {
-	return "routes"
+func (Resource) TableName() string {
+	return "resources"
 }
 
-func (Route) Indexes() map[string]string {
+func (Resource) Indexes() map[string]string {
 	return map[string]string{
 		"idx_method_path": "CREATE UNIQUE INDEX idx_method_path ON routes (method, path)",
 	}

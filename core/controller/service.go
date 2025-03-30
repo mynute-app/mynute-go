@@ -107,7 +107,7 @@ func Service(Gorm *handler.Gorm) *service_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	ServiceResources := []*handler.ResourceRoute{
+	ServiceResources := []*handler.Resource{
 		{
 			Path:        "/service",
 			Method:      "POST",

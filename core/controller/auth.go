@@ -89,7 +89,7 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	AuthResources := []*handler.ResourceRoute{
+	AuthResources := []*handler.Resource{
 		{
 			Path:        "/auth/verify-existing-account",
 			Method:      "POST",

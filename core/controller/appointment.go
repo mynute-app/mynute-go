@@ -85,7 +85,7 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	AppointmentResources := []*handler.ResourceRoute{
+	AppointmentResources := []*handler.Resource{
 		{
 			Path:        "/appointment",
 			Method:      "POST",

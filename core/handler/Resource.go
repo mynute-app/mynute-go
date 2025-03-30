@@ -2,6 +2,7 @@ package handler
 
 import (
 	"agenda-kaki-go/core/config/db/model"
+	"fmt"
 	"log"
 	"reflect"
 	"runtime"
@@ -11,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var RouteRegistry = map[string]fiber.Handler{}
+var ResourceRegistry = map[string]*Resource{}
 
 func makeRegistryKey(path, method string) string {
 	method = strings.ToUpper(method)
@@ -23,20 +24,20 @@ type Route struct {
 }
 
 func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
-	var dbRoutes []*model.Route
-	if err := r.DB.Find(&dbRoutes).Error; err != nil {
+	var Resources []*model.Resource
+	if err := r.DB.Find(&Resources).Error; err != nil {
 		return err
 	}
-	for _, dbRoute := range dbRoutes {
-		dbRouteHandler := r.GetHandler(dbRoute.Path, dbRoute.Method)
-		method := strings.ToUpper(dbRoute.Method)
+	for _, Resource := range Resources {
+		dbRouteHandler := r.GetHandler(Resource.Path, Resource.Method)
+		method := strings.ToUpper(Resource.Method)
 
-		if dbRoute.IsPublic {
+		if Resource.IsPublic {
 			handlers := append(mdwPub, dbRouteHandler)
-			rPub.Add(method, dbRoute.Path, handlers...)
+			rPub.Add(method, Resource.Path, handlers...)
 		} else {
 			handlers := append(mdwPrv, dbRouteHandler)
-			rPrv.Add(method, dbRoute.Path, handlers...)
+			rPrv.Add(method, Resource.Path, handlers...)
 		}
 	}
 	log.Println("Routes build finished!")
@@ -45,31 +46,31 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handl
 
 func (r *Route) GetHandler(path, method string) fiber.Handler {
 	key := makeRegistryKey(path, method)
-	return RouteRegistry[key]
+	return ResourceRegistry[key].Handler
 }
 
-type ResourceRoute struct {
+type Resource struct {
 	Path        string
 	Method      string
 	Handler     fiber.Handler
 	Description string
-	Access			string
+	Access      string
 }
 
-func (r *Route) BulkRegisterAndSave(resources []*ResourceRoute) {
+func (r *Route) BulkRegisterAndSave(resources []*Resource) {
 	for _, resource := range resources {
 		r.Register(resource).Save()
 	}
 }
 
-func (r *Route) Register(resource *ResourceRoute) *RouteToRegister {
+func (r *Route) Register(resource *Resource) *ResourceToRegister {
 	resource.Method = strings.ToUpper(resource.Method)
 	if resource.Access != "public" && resource.Access != "private" {
 		panic("Resource Route access must be either public or private")
 	}
 	key := makeRegistryKey(resource.Path, resource.Method)
-	RouteRegistry[key] = resource.Handler
-	return &RouteToRegister{
+	ResourceRegistry[key] = resource
+	return &ResourceToRegister{
 		Path:        resource.Path,
 		Method:      resource.Method,
 		Handler:     resource.Handler,
@@ -79,7 +80,7 @@ func (r *Route) Register(resource *ResourceRoute) *RouteToRegister {
 	}
 }
 
-type RouteToRegister struct {
+type ResourceToRegister struct {
 	Path        string
 	Method      string
 	Handler     fiber.Handler
@@ -89,42 +90,42 @@ type RouteToRegister struct {
 	RoleAccess  []string
 }
 
-func (rr *RouteToRegister) SetRoleAccess(roles []string) *RouteToRegister {
+func (rr *ResourceToRegister) SetRoleAccess(roles []string) *ResourceToRegister {
 	rr.RoleAccess = roles
 	return rr
 }
 
-func (rr *RouteToRegister) Save() {
+func (rr *ResourceToRegister) Save() {
 	rr.Method = strings.ToUpper(rr.Method)
 	var count int64
 	rr.DB.
-		Model(&model.Route{}).
+		Model(&model.Resource{}).
 		Where("method = ? AND path = ?", rr.Method, rr.Path).
 		Count(&count)
-	if count == 0 {
-		isPublic := rr.Access == "public"
-		handlerName := getHandlerName(rr.Handler)
-		route := model.Route{
-			Handler:     handlerName,
-			Description: rr.Description,
-			Method:      rr.Method,
-			Path:        rr.Path,
-			IsPublic:    isPublic,
-		}
-		if err := rr.DB.Create(&route); err.Error != nil {
-			panic(err.Error)
-		}
-		// Add role access if provided
-		if len(rr.RoleAccess) > 0 {
-
-			// Get role ID from the database
-			for _, roleName := range rr.RoleAccess {
-				var role model.Role
-				if err := rr.DB.First(&role, "name = ?", roleName).Error; err != nil {
-					panic(err.Error)
-				}
-				rr.DB.Exec("INSERT INTO role_routes (role_id, route_id) VALUES (?, ?)", role.ID, route.ID)
+	if count > 0 {
+		panic(fmt.Sprintf("Resource %s %s already exists", rr.Method, rr.Path))
+	}
+	isPublic := rr.Access == "public"
+	handlerName := getHandlerName(rr.Handler)
+	resource := model.Resource{
+		Handler:     handlerName,
+		Description: rr.Description,
+		Method:      rr.Method,
+		Path:        rr.Path,
+		IsPublic:    isPublic,
+	}
+	if err := rr.DB.Create(&resource); err.Error != nil {
+		panic(err.Error)
+	}
+	// Add role access if provided
+	if len(rr.RoleAccess) > 0 {
+		// Get role ID from the database
+		for _, roleName := range rr.RoleAccess {
+			var role model.Role
+			if err := rr.DB.First(&role, "name = ?", roleName).Error; err != nil {
+				panic(err.Error)
 			}
+			rr.DB.Exec("INSERT INTO role_routes (role_id, route_id) VALUES (?, ?)", role.ID, resource.ID)
 		}
 	}
 }

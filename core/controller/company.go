@@ -156,50 +156,50 @@ func Company(Gorm *handler.Gorm) *company_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	CompanyResources := []*handler.ResourceRoute{
+	CompanyResources := []*handler.Resource{
 		{
-			Path: "/company",
-			Method: "POST",
-			Handler: cc.CreateCompany,
+			Path:        "/company",
+			Method:      "POST",
+			Handler:     cc.CreateCompany,
 			Description: "Create a company",
-			Access: "public",
+			Access:      "public",
 		},
 		{
-			Path: "/company/:id",
-			Method: "GET",
-			Handler: cc.GetCompanyById,
+			Path:        "/company/:id",
+			Method:      "GET",
+			Handler:     cc.GetCompanyById,
 			Description: "Get company by ID",
-			Access: "private",
+			Access:      "private",
 		},
 		{
-			Path: "/company/name/:name",
-			Method: "GET",
-			Handler: cc.GetCompanyByName,
+			Path:        "/company/name/:name",
+			Method:      "GET",
+			Handler:     cc.GetCompanyByName,
 			Description: "Get company by name",
-			Access: "public",
+			Access:      "public",
 		},
 		{
-			Path: "/company/tax_id/:tax_id",
-			Method: "GET",
-			Handler: cc.GetCompanyByTaxId,
+			Path:        "/company/tax_id/:tax_id",
+			Method:      "GET",
+			Handler:     cc.GetCompanyByTaxId,
 			Description: "Get company by tax ID",
-			Access: "public",
+			Access:      "public",
 		},
 		{
-			Path: "/company/:id",
-			Method: "PATCH",
-			Handler: cc.UpdateCompanyById,
+			Path:        "/company/:id",
+			Method:      "PATCH",
+			Handler:     cc.UpdateCompanyById,
 			Description: "Update company by ID",
-			Access: "private",
+			Access:      "private",
 		},
 		{
-			Path: "/company/:id",
-			Method: "DELETE",
-			Handler: cc.DeleteCompanyById,
+			Path:        "/company/:id",
+			Method:      "DELETE",
+			Handler:     cc.DeleteCompanyById,
 			Description: "Delete company by ID",
-			Access: "private",
+			Access:      "private",
 		},
 	}
-	route.BulkRegisterAndSave(CompanyResources)	
+	route.BulkRegisterAndSave(CompanyResources)
 	return cc
 }

@@ -30,7 +30,7 @@ var models = []any{
 	&model.Client{},
 	&model.Employee{},
 	&model.Service{},
-	&model.Route{},
+	&model.Resource{},
 	&model.Role{},
 }
 

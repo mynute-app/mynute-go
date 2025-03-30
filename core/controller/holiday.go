@@ -106,7 +106,7 @@ func Holiday(Gorm *handler.Gorm) *holidays_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	HolidayResources := []*handler.ResourceRoute{
+	HolidayResources := []*handler.Resource{
 		{
 			Path:        "/holiday",
 			Method:      "POST",

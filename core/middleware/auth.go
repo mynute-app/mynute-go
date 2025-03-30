@@ -34,8 +34,8 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	path := c.Path()
 
 	// 1. Verificar RBAC
-	var matchedRoute model.Route
-	if err := db.Where("method = ? AND path = ?", method, path).First(&matchedRoute).Error; err != nil {
+	var matchedResource model.Resource
+	if err := db.Where("method = ? AND path = ?", method, path).First(&matchedResource).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
 	}
 
@@ -46,7 +46,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		JOIN employee_roles er ON er.role_id = r.id
 		JOIN role_routes rr ON rr.role_id = r.id
 		WHERE er.user_id = ? AND er.company_id = ? AND rr.route_id = ?
-	`, userID, companyID, matchedRoute.ID).Scan(&count).Error
+	`, userID, companyID, matchedResource.ID).Scan(&count).Error
 
 	if err != nil || count == 0 {
 		return lib.Error.Auth.Unauthorized
@@ -59,24 +59,10 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.Unauthorized
 	}
 
-	for _, rule := range rules {
-		// Exemplo: se SubjectAttr == "user_id" && SubjectValue == "123"
-		if rule.SubjectAttr == "user_id" && rule.SubjectValue != fmt.Sprint(userID) {
-			continue
-		}
+	abac := handler.Policy(rules)
 
-		// Aqui você pode usar c.Params() ou c.Query() pra validar os atributos de recurso
-		matches := true
-		for _, cond := range rule.Conditions {
-			val := c.Params(cond.Attr) // pode adaptar pra usar c.Query(cond.Attr) também
-			if !matchCondition(val, cond.Op, cond.Value) {
-				matches = false
-				break
-			}
-		}
-		if matches {
-			return c.Next() // ✅ ABAC passou
-		}
+	if abac.CanAccess() {
+		return c.Next()
 	}
 
 	return lib.Error.Auth.Unauthorized

@@ -105,7 +105,7 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 		},
 	}
 	route := &handler.Route{DB: Gorm.DB}
-	SectorResources := []*handler.ResourceRoute{
+	SectorResources := []*handler.Resource{
 		{
 			Path:        "/sector",
 			Method:      "POST",
