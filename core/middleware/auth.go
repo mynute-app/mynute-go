@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,13 +38,10 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	userID := claim.ID
 	companyID := claim.CompanyID
 
-
 	// 1. Verificar RBAC
 	var count int64
 	err := db.Raw(`
 		SELECT COUNT(*)
-
-		
 		FROM roles r
 		JOIN employee_roles er ON er.role_id = r.id
 		JOIN role_routes rr ON rr.role_id = r.id
@@ -57,17 +53,17 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	// 2. Verificar ABAC
-	var rules []model.PolicyRule
-	if err := db.Where("method = ? AND path = ? AND company_id = ?", method, path, companyID).
-		Find(&rules).Error; err != nil {
-		return lib.Error.Auth.Unauthorized
-	}
+	// var rules []model.PolicyRule
+	// if err := db.Where("method = ? AND path = ? AND company_id = ?", method, path, companyID).
+	// 	Find(&rules).Error; err != nil {
+	// 	return lib.Error.Auth.Unauthorized
+	// }
 
-	abac := handler.Policy(rules)
+	// abac := handler.Policy(rules)
 
-	if abac.CanAccess() {
-		return c.Next()
-	}
+	// if abac.CanAccess() {
+	// 	return c.Next()
+	// }
 
 	return lib.Error.Auth.Unauthorized
 }
