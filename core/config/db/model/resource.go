@@ -10,11 +10,14 @@ var AllowResourceCreation = false
 
 type Resource struct {
 	gorm.Model
-	Handler     string `gorm:"type:varchar(255)"`
-	Description string `gorm:"type:varchar(255)"`
-	Method      string `gorm:"type:varchar(10)"`
-	Path        string `gorm:"type:varchar(255)"`
-	IsPublic    bool   `gorm:"default:false"`
+	Handler       string `json:"handler"`
+	Description   string `json:"description"`
+	Method        string `gorm:"type:varchar(10)" json:"method"`
+	Path          string `json:"path"`
+	IsPublic      bool   `gorm:"default:false" json:"is_public"`
+	RefFromTable  string `json:"ref_from_table"`
+	RefFromKey    string `json:"ref_from_key"`
+	RefKeyValueAt string `json:"ref_key_value_at"`
 }
 
 func (r *Resource) BeforeCreate(tx *gorm.DB) error {
@@ -38,32 +41,44 @@ func (Resource) Indexes() map[string]string {
 // --- Appointment Resources --- //
 
 var CreateAppointment = &Resource{
-	Path:        "/appointment",
-	Method:      "POST",
-	Handler:     "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
-	Description: "Create an appointment",
-	IsPublic:    false, // Access: "private"
+	Path:          "/appointment",
+	Method:        "POST",
+	Handler:       "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
+	Description:   "Create an appointment",
+	IsPublic:      false, // Access: "private"
+	RefFromTable:  "branches",
+	RefFromKey:    "branch_id",
+	RefKeyValueAt: "Body",
 }
 var GetAppointmentByID = &Resource{
-	Path:        "/appointment/:id",
-	Method:      "GET",
-	Handler:     "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
-	Description: "Get appointment by ID",
-	IsPublic:    false, // Access: "private"
+	Path:          "/appointment/:id",
+	Method:        "GET",
+	Handler:       "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
+	Description:   "Get appointment by ID",
+	IsPublic:      false, // Access: "private"
+	RefFromTable:  "appointments",
+	RefFromKey:    "id",
+	RefKeyValueAt: "Path",
 }
 var UpdateAppointmentByID = &Resource{
-	Path:        "/appointment/:id",
-	Method:      "PATCH",                 // Corrected from GET based on reference
-	Handler:     "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
-	Description: "Update appointment by ID",
-	IsPublic:    false, // Access: "private"
+	Path:          "/appointment/:id",
+	Method:        "PATCH",                 // Corrected from GET based on reference
+	Handler:       "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
+	Description:   "Update appointment by ID",
+	IsPublic:      false, // Access: "private"
+	RefFromTable:  "appointments",
+	RefFromKey:    "id",
+	RefKeyValueAt: "Path",
 }
 var DeleteAppointmentByID = &Resource{
-	Path:        "/appointment/:id",
-	Method:      "DELETE",
-	Handler:     "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
-	Description: "Delete appointment by ID",
-	IsPublic:    false, // Access: "private"
+	Path:         "/appointment/:id",
+	Method:       "DELETE",
+	Handler:      "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
+	Description:  "Delete appointment by ID",
+	IsPublic:     false, // Access: "private"
+	RefFromTable: "appointments",
+	RefFromKey:   "id",
+	RefKeyValueAt: "Path",
 }
 
 // --- Auth Resources --- //

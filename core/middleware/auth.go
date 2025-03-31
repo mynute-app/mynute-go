@@ -6,17 +6,18 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"strings"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type auth_middleware struct {
-	Gorm *handler.Gorm
+	Gorm         *handler.Gorm
+	PolicyEngine *handler.Policy
 }
 
 func Auth(Gorm *handler.Gorm) *auth_middleware {
-	return &auth_middleware{Gorm: Gorm}
+	return &auth_middleware{Gorm: Gorm, PolicyEngine: handler.NewPolicyEngine(Gorm.DB)}
 }
 
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
@@ -32,53 +33,62 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
 	claim, ok := auth_claims.(*DTO.Claims)
 	if !ok || claim.ID == 0 || !claim.Verified {
-		return lib.Error.Auth.InvalidToken.SendToClient(c)
+		return lib.Error.Auth.InvalidToken
 	}
-	
-	userID := claim.ID
-	companyID := claim.CompanyID
 
-	// 1. Verificar RBAC
-	var count int64
-	err := db.Raw(`
-		SELECT COUNT(*)
-		FROM roles r
-		JOIN employee_roles er ON er.role_id = r.id
-		JOIN role_routes rr ON rr.role_id = r.id
-		WHERE er.user_id = ? AND er.company_id = ? AND rr.route_id = ?
-	`, userID, companyID, Resource.ID).Scan(&count).Error
+	var UserTableName string
+	if claim.CompanyID == 0 {
+		UserTableName = "clients"
+	} else {
+		UserTableName = "employees"
+	}
 
-	if err != nil || count == 0 {
+	subject := make(map[string]any)
+
+	if err := db.Table(UserTableName).
+		Where("id = ?", claim.ID).
+		Take(&subject).Error; err != nil {
+		return lib.Error.Auth.InvalidToken
+	}
+
+	RegistryTable := Resource.RefFromTable
+	RegistryParamKey := Resource.RefFromKey
+	RegistryParamAt := Resource.RefKeyValueAt
+	var RegistryParamVal any
+	switch RegistryParamAt {
+	case "query":
+		RegistryParamVal = c.Query(RegistryParamKey)
+	case "header":
+		RegistryParamVal = c.Get(RegistryParamKey)
+	case "path":
+		RegistryParamVal = c.Params(RegistryParamKey)
+	default:
+		panic("Invalid registry param at")
+	}
+
+	WhereClause := fmt.Sprintf("%s = ?", RegistryParamKey)
+
+	registry := make(map[string]any)
+	if err := db.Table(RegistryTable).
+		Where(WhereClause, RegistryParamVal). // Need to replace with actual resource ID from the path
+		Take(&registry).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
 	}
 
-	// 2. Verificar ABAC
-	// var rules []model.PolicyRule
-	// if err := db.Where("method = ? AND path = ? AND company_id = ?", method, path, companyID).
-	// 	Find(&rules).Error; err != nil {
-	// 	return lib.Error.Auth.Unauthorized
-	// }
-
-	// abac := handler.Policy(rules)
-
-	// if abac.CanAccess() {
-	// 	return c.Next()
-	// }
-
-	return lib.Error.Auth.Unauthorized
-}
-
-func matchCondition(actual string, op string, expected string) bool {
-	switch op {
-	case "equal":
-		return actual == expected
-	case "contains":
-		return strings.Contains(actual, expected)
-	default:
-		return false
+	var policies []*model.PolicyRule
+	if err := db.Where("resource_id = ? AND (company_id IS NULL OR company_id = ?)", Resource.ID, claim.CompanyID).
+		Find(&policies).Error; err != nil {
+		return lib.Error.Auth.Unauthorized
 	}
-}
 
+	if ok, err := am.PolicyEngine.CanAccess(subject, registry, policies); err != nil {
+		return err
+	} else if !ok {
+		return lib.Error.Auth.Unauthorized
+	}
+
+	return c.Next()
+}
 
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
 	authorization := c.Get("Authorization")
