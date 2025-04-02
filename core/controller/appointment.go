@@ -84,5 +84,12 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 			Associations: []string{"Sector", "Branch", "Employee", "Client", "Service", "Company"},
 		},
 	}
+	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegister([]fiber.Handler{
+		ac.CreateAppointment,
+		ac.GetAppointmentByID,
+		ac.UpdateAppointmentByID,
+		ac.DeleteAppointmentByID,
+	})
 	return ac
 }

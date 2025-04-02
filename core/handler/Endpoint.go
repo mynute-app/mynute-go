@@ -2,7 +2,6 @@ package handler
 
 import (
 	"agenda-kaki-go/core/config/db/model"
-	"fmt"
 	"log"
 	"reflect"
 	"runtime"
@@ -50,14 +49,18 @@ func getHandler(path, method string) fiber.Handler {
 	return EndpointHandlers[key]
 }
 
-func (ep *Endpoint) BulkRegisterAndSave(handlers []fiber.Handler) {
+func (ep *Endpoint) BulkRegister(handlers []fiber.Handler) {
 	for _, h := range handlers {
 		ep.RegisterHandler(h)
 	}
 }
 
-func (ep *Endpoint) RegisterHandler(handler fiber.Handler) fiber.Handler {
-	return handler
+func (ep *Endpoint) RegisterHandler(handler fiber.Handler) {
+	handlerName := getHandlerName(handler)
+	if handlerName == "" {
+		panic("Couldn't get handler name")
+	}
+	EndpointHandlers[handlerName] = handler
 }
 
 // func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
@@ -76,40 +79,6 @@ func (ep *Endpoint) RegisterHandler(handler fiber.Handler) fiber.Handler {
 // 		DB:          r.DB,
 // 	}
 // }
-
-type ResourceToRegister struct {
-	Path        string
-	Method      string
-	Handler     fiber.Handler
-	Description string
-	Access      string
-	DB          *gorm.DB
-	RoleAccess  []string
-}
-
-func (rr *ResourceToRegister) Save() {
-	rr.Method = strings.ToUpper(rr.Method)
-	var count int64
-	rr.DB.
-		Model(&model.EndPoint{}).
-		Where("method = ? AND path = ?", rr.Method, rr.Path).
-		Count(&count)
-	if count > 0 {
-		panic(fmt.Sprintf("EndPoint %s %s already exists", rr.Method, rr.Path))
-	}
-	isPublic := rr.Access == "public"
-	handlerName := getHandlerName(rr.Handler)
-	endpoint := model.EndPoint{
-		Handler:     handlerName,
-		Description: rr.Description,
-		Method:      rr.Method,
-		Path:        rr.Path,
-		IsPublic:    isPublic,
-	}
-	if err := rr.DB.Create(&endpoint); err.Error != nil {
-		panic(err.Error)
-	}
-}
 
 func getHandlerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
