@@ -73,6 +73,7 @@ func (b *Branch) Update(t *testing.T, status int, changes map[string]any) {
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
 	http.Send(changes)
+	http.ParseResponse(&b.created)
 }
 
 func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
