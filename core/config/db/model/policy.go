@@ -89,13 +89,13 @@ func (PolicyRule) Indexes() map[string]string {
 	}
 }
 
-// --- Helper Functions (Keep as is) ---
+// --- Helper Functions ---
 
-// MustMarshalJSON simplifies creating JSON examples
-func MustMarshalJSON(v any) json.RawMessage {
+// JsonRawMessage simplifies creating JSON.RawMessage from any value.
+func JsonRawMessage(v any) json.RawMessage {
 	data, err := json.Marshal(v)
 	if err != nil {
-		panic(fmt.Sprintf("MustMarshalJSON failed: %v", err))
+		panic(fmt.Sprintf("JsonRawMessage failed: %v", err))
 	}
 	return json.RawMessage(data)
 }
@@ -203,15 +203,12 @@ var company_membership_access_check = ConditionNode{
 	},
 }
 
-// REMOVED UNUSED CHECK: subject_is_company_member_check
-// var subject_is_company_member_check = ...
-
 // Checks if subject is the Owner of the resource's company
 var company_owner_check = ConditionNode{
 	Description: "Allow if Subject is Owner of the Resource's Company",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleOwner.ID)}},
+		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
 		company_membership_access_check, // Re-use the company match check
 	},
 }
@@ -221,7 +218,7 @@ var company_general_manager_check = ConditionNode{
 	Description: "Allow if Subject is General Manager of the Resource's Company",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleGeneralManager.ID)}},
+		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
 		company_membership_access_check, // Re-use the company match check
 	},
 }
@@ -231,7 +228,7 @@ var company_branch_manager_check = ConditionNode{
 	Description: "Allow if Subject is Branch Manager within the Resource's Company",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleBranchManager.ID)}},
+		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
 		company_membership_access_check, // Re-use the company match check
 	},
 }
@@ -258,7 +255,7 @@ var company_employee_assigned_employee_check = ConditionNode{
 	Description: "Allow if Subject is the Employee associated with the Resource",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleEmployee.ID)}},
+		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 		company_membership_access_check, // Must be in the same company
 		{
 			Leaf: &ConditionLeaf{
@@ -306,10 +303,10 @@ var company_internal_user_check = ConditionNode{
 			Description: "Role Check (Is Owner, GM, BM, or Employee)",
 			LogicType:   "OR",
 			Children: []ConditionNode{
-				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleOwner.ID)}},
-				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleGeneralManager.ID)}},
-				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleBranchManager.ID)}},
-				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleEmployee.ID)}},
+				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
+				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+				{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 			},
 		},
 	},
@@ -328,7 +325,7 @@ var AllowCreateAppointment = &PolicyRule{
 	ResourceTable:   "branches", // Resource being referenced for context/permissions
 	ResourceKey:     "branch_id",  // Key in the request body identifying the branch
 	ResourceValueAt: "body",    // Where to find the value for ResourceKey
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow Client Creation OR Company User Creation",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -373,7 +370,7 @@ var AllowGetAppointmentByID = &PolicyRule{
 	ResourceTable:   "appointments", // The resource being acted upon
 	ResourceKey:     "id",           // The identifier in the path
 	ResourceValueAt: "path",       // Found in the URL path
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow Client Access OR Company User Access",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -410,7 +407,7 @@ var AllowUpdateAppointmentByID = &PolicyRule{
 	ResourceTable:   "appointments",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow Client Self-Update OR Company User Update",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -445,7 +442,7 @@ var AllowDeleteAppointmentByID = &PolicyRule{
 	ResourceTable:   "appointments",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Company User Delete Check",
 		LogicType:   "AND",
 		Children: []ConditionNode{
@@ -477,7 +474,7 @@ var AllowCreateBranch = &PolicyRule{
 	ResourceKey:     "company_id", // Assuming company_id is provided in the request body
 	ResourceValueAt: "body",
 	// Condition checks against resource.company_id derived from the body
-	Conditions: MustMarshalJSON(company_admin_check), // Owner or GM of the target company
+	Conditions: JsonRawMessage(company_admin_check), // Owner or GM of the target company
 }
 
 var AllowGetBranchById = &PolicyRule{
@@ -488,7 +485,7 @@ var AllowGetBranchById = &PolicyRule{
 	ResourceTable:   "branches",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(company_internal_user_check), // Any internal user of the branch's company can view
+	Conditions:      JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 }
 
 var AllowGetBranchByName = &PolicyRule{
@@ -499,7 +496,7 @@ var AllowGetBranchByName = &PolicyRule{
 	ResourceTable:   "branches", // The lookup happens on branches table
 	ResourceKey:     "name",     // The key used for lookup in the path
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(company_internal_user_check), // Any internal user of the branch's company can view
+	Conditions:      JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 }
 
 var AllowUpdateBranchById = &PolicyRule{
@@ -510,7 +507,7 @@ var AllowUpdateBranchById = &PolicyRule{
 	ResourceTable:   "branches",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Assigned Branch Manager Update Access",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -528,7 +525,7 @@ var AllowDeleteBranchById = &PolicyRule{
 	ResourceTable:   "branches",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(company_admin_check), // Only Owner or GM
+	Conditions:      JsonRawMessage(company_admin_check), // Only Owner or GM
 }
 
 var AllowGetEmployeeServicesByBranchId = &PolicyRule{
@@ -540,7 +537,7 @@ var AllowGetEmployeeServicesByBranchId = &PolicyRule{
 	ResourceKey:     "id",       // Branch ID from the path
 	ResourceValueAt: "path",
 	// Context needs resource.company_id derived from the branch ID
-	Conditions: MustMarshalJSON(company_internal_user_check), // Any internal user of the branch's company
+	Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company
 }
 
 var AllowAddServiceToBranch = &PolicyRule{
@@ -553,7 +550,7 @@ var AllowAddServiceToBranch = &PolicyRule{
 	ResourceValueAt: "path",
 	// Service ID likely comes from body/query
 	// Context needs resource.company_id and resource.branch_id from the branch resource
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Assigned Branch Manager Access",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -572,7 +569,7 @@ var AllowRemoveServiceFromBranch = &PolicyRule{
 	ResourceKey:     "id",       // Branch ID from the path
 	ResourceValueAt: "path",
 	// Service ID likely comes from body/query/path
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Assigned Branch Manager Access",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -593,7 +590,7 @@ var AllowGetClientByEmail = &PolicyRule{
 	ResourceTable:   "clients",  // Lookup is on clients table
 	ResourceKey:     "email",    // Key used for lookup from path
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow only if the subject's email matches the email in the path.",
 		LogicType:   "AND",
 		Children: []ConditionNode{
@@ -611,7 +608,7 @@ var AllowUpdateClientById = &PolicyRule{
 	ResourceTable:   "clients",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(client_self_access_check), // Client can update self (checks subject.id == resource.id)
+	Conditions:      JsonRawMessage(client_self_access_check), // Client can update self (checks subject.id == resource.id)
 }
 
 var AllowDeleteClientById = &PolicyRule{
@@ -622,7 +619,7 @@ var AllowDeleteClientById = &PolicyRule{
 	ResourceTable:   "clients",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(client_self_access_check), // Client can delete self
+	Conditions:      JsonRawMessage(client_self_access_check), // Client can delete self
 }
 
 
@@ -637,7 +634,7 @@ var AllowGetCompanyById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Checks subject.company_id equals resource.company_id (derived from the path ID)
-	Conditions: MustMarshalJSON(company_membership_access_check),
+	Conditions: JsonRawMessage(company_membership_access_check),
 }
 
 var AllowUpdateCompanyById = &PolicyRule{
@@ -648,7 +645,7 @@ var AllowUpdateCompanyById = &PolicyRule{
 	ResourceTable:   "companies",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(company_admin_check), // Only Owner or GM of this company
+	Conditions:      JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 }
 
 var AllowDeleteCompanyById = &PolicyRule{
@@ -659,7 +656,7 @@ var AllowDeleteCompanyById = &PolicyRule{
 	ResourceTable:   "companies",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions:      MustMarshalJSON(company_owner_check), // Only Owner of this company
+	Conditions:      JsonRawMessage(company_owner_check), // Only Owner of this company
 }
 
 
@@ -674,7 +671,7 @@ var AllowCreateEmployee = &PolicyRule{
 	ResourceTable:   "companies",
 	ResourceKey:     "company_id", // Assume company_id is in the request body or derived
 	ResourceValueAt: "body",       // Or "context" if derived from subject/environment
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Branch Manager Creation Access",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -696,7 +693,7 @@ var AllowGetEmployeeById = &PolicyRule{
 	ResourceTable:   "employees",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow Employee Self-View OR Any Internal Company User View",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -715,7 +712,7 @@ var AllowGetEmployeeByEmail = &PolicyRule{
 	ResourceKey:     "email",     // Key from path
 	ResourceValueAt: "path",
 	// Requires resource.company_id populated from the employee found by email
-	Conditions: MustMarshalJSON(company_internal_user_check), // Subject must be internal user of the found employee's company
+	Conditions: JsonRawMessage(company_internal_user_check), // Subject must be internal user of the found employee's company
 }
 
 var AllowUpdateEmployeeById = &PolicyRule{
@@ -726,7 +723,7 @@ var AllowUpdateEmployeeById = &PolicyRule{
 	ResourceTable:   "employees",
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Allow Employee Self-Update OR Manager Update",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -749,7 +746,7 @@ var AllowDeleteEmployeeById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Same scoping comment as Update: BM can delete any employee in the company currently.
-	Conditions: MustMarshalJSON(company_manager_check), // Owner, GM, BM can delete
+	Conditions: JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 }
 
 var AllowAddServiceToEmployee = &PolicyRule{
@@ -762,7 +759,7 @@ var AllowAddServiceToEmployee = &PolicyRule{
 	ResourceValueAt: "path",
 	// Service ID likely from body/query
 	// Requires resource.company_id from the employee resource
-	Conditions: MustMarshalJSON(company_manager_check), // Manager of the employee's company
+	Conditions: JsonRawMessage(company_manager_check), // Manager of the employee's company
 }
 
 var AllowRemoveServiceFromEmployee = &PolicyRule{
@@ -775,7 +772,7 @@ var AllowRemoveServiceFromEmployee = &PolicyRule{
 	ResourceValueAt: "path",
 	// Service ID likely from body/query/path
 	// Requires resource.company_id from the employee resource
-	Conditions: MustMarshalJSON(company_manager_check), // Manager of the employee's company
+	Conditions: JsonRawMessage(company_manager_check), // Manager of the employee's company
 }
 
 var AllowAddBranchToEmployee = &PolicyRule{
@@ -788,7 +785,7 @@ var AllowAddBranchToEmployee = &PolicyRule{
 	ResourceValueAt: "path",
 	// Branch ID comes from path/body, used for resource.branch_id in BM check
 	// Requires resource.company_id from the employee resource
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Assigned Branch Manager Assignment Check",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -809,7 +806,7 @@ var AllowRemoveBranchFromEmployee = &PolicyRule{
 	ResourceValueAt: "path",
 	// Branch ID comes from path/body, used for resource.branch_id in BM check
 	// Requires resource.company_id from the employee resource
-	Conditions: MustMarshalJSON(ConditionNode{
+	Conditions: JsonRawMessage(ConditionNode{
 		Description: "Admin or Assigned Branch Manager Assignment Check",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -834,7 +831,7 @@ var AllowCreateHoliday = &PolicyRule{
 	ResourceValueAt: "body",      // Or "context"
 	// If branch-specific is possible via BM:
 	// ResourceTable: "branches", ResourceKey: "branch_id", ResourceValueAt: "body"
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
+	Conditions: JsonRawMessage(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
 }
 
 var AllowGetHolidayById = &PolicyRule{
@@ -846,7 +843,7 @@ var AllowGetHolidayById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the holiday resource
-	Conditions: MustMarshalJSON(company_internal_user_check), // Any internal user of the holiday's company
+	Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the holiday's company
 }
 
 var AllowUpdateHolidayById = &PolicyRule{
@@ -858,7 +855,7 @@ var AllowUpdateHolidayById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the holiday resource
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager of the holiday's company
+	Conditions: JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 }
 
 var AllowDeleteHolidayById = &PolicyRule{
@@ -870,7 +867,7 @@ var AllowDeleteHolidayById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the holiday resource
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager of the holiday's company
+	Conditions: JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 }
 
 
@@ -885,7 +882,7 @@ var AllowCreateSector = &PolicyRule{
 	ResourceKey:     "company_id", // Assume provided or derived
 	ResourceValueAt: "body",       // Or "context"
 	// Requires resource.company_id derived from request/context
-	Conditions: MustMarshalJSON(company_admin_check), // Only Owner/GM of that company
+	Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of that company
 }
 
 // GetSectorById/Name assumed Public - No Policy Needed
@@ -899,7 +896,7 @@ var AllowUpdateSectorById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the sector resource
-	Conditions: MustMarshalJSON(company_admin_check), // Only Owner/GM of the sector's company
+	Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 }
 
 var AllowDeleteSectorById = &PolicyRule{
@@ -911,7 +908,7 @@ var AllowDeleteSectorById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the sector resource
-	Conditions: MustMarshalJSON(company_admin_check), // Only Owner/GM of the sector's company
+	Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 }
 
 
@@ -926,7 +923,7 @@ var AllowCreateService = &PolicyRule{
 	ResourceKey:     "company_id", // Assume provided or derived
 	ResourceValueAt: "body",       // Or "context"
 	// Requires resource.company_id derived from request/context
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager of the company context
+	Conditions: JsonRawMessage(company_manager_check), // Any manager of the company context
 }
 
 var AllowGetServiceById = &PolicyRule{
@@ -938,7 +935,7 @@ var AllowGetServiceById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the service resource
-	Conditions: MustMarshalJSON(company_internal_user_check), // Any internal user of the service's company
+	Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the service's company
 }
 
 // GetServiceByName assumed Public - No Policy Needed
@@ -952,7 +949,7 @@ var AllowUpdateServiceById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the service resource
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager of the service's company
+	Conditions: JsonRawMessage(company_manager_check), // Any manager of the service's company
 }
 
 var AllowDeleteServiceById = &PolicyRule{
@@ -964,7 +961,7 @@ var AllowDeleteServiceById = &PolicyRule{
 	ResourceKey:     "id",
 	ResourceValueAt: "path",
 	// Requires resource.company_id from the service resource
-	Conditions: MustMarshalJSON(company_manager_check), // Any manager of the service's company
+	Conditions: JsonRawMessage(company_manager_check), // Any manager of the service's company
 }
 
 // --- Combined Policies List ---
