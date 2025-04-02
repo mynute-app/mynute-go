@@ -20,27 +20,19 @@ func NewPolicyEngine(db *gorm.DB) *Policy {
 	return &Policy{DB: db}
 }
 
-func (p *Policy) CanAccess(subject map[string]any, resource map[string]any, policies []*model.PolicyRule) (bool, error) {
-	canAccess := false
-	for _, policy := range policies {
-		root, err := policy.GetConditionsNode()
-		if err != nil {
-			return false, err
-		}
-		result, err := evalNode(root, subject, resource)
-		if err != nil {
-			return false, err
-		}
-		if !result {
-			continue
-		}
-		if policy.Effect == "Allow" {
-			canAccess = true
-		}
-		canAccess = false
-		break
+func (p *Policy) CanAccess(subject, resource map[string]any, policy *model.PolicyRule) (bool, error) {
+	root, err := policy.GetConditionsNode()
+	if err != nil {
+		return false, err
 	}
-	return canAccess, nil
+	result, err := evalNode(root, subject, resource)
+	if err != nil {
+		return false, err
+	}
+	if policy.Effect == "Allow" {
+		return result, nil
+	}
+	return !result, nil
 }
 
 func evalNode(node model.ConditionNode, subject, resource map[string]interface{}) (bool, error) {

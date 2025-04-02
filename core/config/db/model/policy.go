@@ -19,12 +19,12 @@ type PolicyRule struct {
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
 	Effect              string          `json:"effect"`      // "Allow" / "Deny"
-	ResourceID          uint            `json:"resource_id"` // Link to Resource definition
-	Resource            Resource        `gorm:"foreignKey:ResourceID;constraint:OnDelete:CASCADE;" json:"resource"`
+	EndPointID          uint            `json:"endpoint_id"` // Link to EndPoint definition
+	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnDelete:CASCADE;" json:"endpoint"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
-	DocTable            string          `gorm:"-" json:"doc_table"`
-	DocRefKey           string          `gorm:"-" json:"doc_ref_key"`
-	DocRefKeyValueAt    string					`gorm:"-" json:"doc_ref_key_value_at"`
+	ResourceTable       string          `gorm:"-" json:"resource_table"`
+	ResourceKey         string          `gorm:"-" json:"resource_key"`
+	ResourceValueAt     string          `gorm:"-" json:"resource_value_at"`
 }
 
 // --- ConditionLeaf (Represents a single atomic check) ---
@@ -94,7 +94,7 @@ func (PolicyRule) Indexes() map[string]string {
 // --- Helper Functions (Keep as is) ---
 
 // MustMarshalJSON simplifies creating JSON examples
-func MustMarshalJSON(v interface{}) json.RawMessage {
+func MustMarshalJSON(v any) json.RawMessage {
 	data, err := json.Marshal(v)
 	if err != nil {
 		panic(fmt.Sprintf("MustMarshalJSON failed: %v", err))
@@ -119,8 +119,8 @@ var client_access_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.client_id", // Assumes the resource context has client_id for relevant resources (like Appointments)
-				Description:     "Subject ID must match resource client ID",
+				ValueSourceAttr: "endpoint.client_id", // Assumes the endpoint context has client_id for relevant resources (like Appointments)
+				Description:     "Subject ID must match endpoint client ID",
 			},
 		},
 	},
@@ -142,8 +142,8 @@ var client_self_access_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.id", // Check if subject ID matches the resource ID (the client ID being accessed)
-				Description:     "Subject ID must match resource ID",
+				ValueSourceAttr: "endpoint.id", // Check if subject ID matches the endpoint ID (the client ID being accessed)
+				Description:     "Subject ID must match endpoint ID",
 			},
 		},
 	},
@@ -165,16 +165,16 @@ var employee_self_access_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.id", // Check if subject ID matches the resource ID (the employee ID being accessed)
-				Description:     "Subject ID must match resource ID",
+				ValueSourceAttr: "endpoint.id", // Check if subject ID matches the endpoint ID (the employee ID being accessed)
+				Description:     "Subject ID must match endpoint ID",
 			},
 		},
-		{ // Double check they are accessing their own company's resource, although resource.id check should suffice if IDs are unique
+		{ // Double check they are accessing their own company's endpoint, although endpoint.id check should suffice if IDs are unique
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id", // Assumes employee resource has company_id
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id", // Assumes employee endpoint has company_id
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
@@ -195,15 +195,15 @@ var company_membership_access_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id", // Assumes the resource context has company_id
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id", // Assumes the endpoint context has company_id
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
 }
 
 // Simplified check just to ensure the subject belongs to *a* company
-// Useful for creation where resource context might not be fully populated yet
+// Useful for creation where endpoint context might not be fully populated yet
 var subject_is_company_member_check = ConditionNode{
 	Description: "Subject Is Company Member Check",
 	Leaf: &ConditionLeaf{
@@ -229,8 +229,8 @@ var company_owner_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id",
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id",
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
@@ -252,15 +252,15 @@ var company_general_manager_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id",
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id",
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
 }
 
 var company_branch_manager_check = ConditionNode{ // Simplified from assigned branch check - check if this role needs branch context
-	Description: "Allow if subject is the company branch manager within the resource's company",
+	Description: "Allow if subject is the company branch manager within the endpoint's company",
 	LogicType:   "AND",
 	Children: []ConditionNode{
 		{
@@ -275,15 +275,15 @@ var company_branch_manager_check = ConditionNode{ // Simplified from assigned br
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id",
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id",
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
 }
 
 var company_branch_manager_assigned_branch_check = ConditionNode{
-	Description: "Allow if subject is the company branch manager and the resource relates to their assigned branch",
+	Description: "Allow if subject is the company branch manager and the endpoint relates to their assigned branch",
 	LogicType:   "AND",
 	Children: []ConditionNode{
 		{
@@ -298,23 +298,23 @@ var company_branch_manager_assigned_branch_check = ConditionNode{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id",
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id",
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 		{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.branches",   // Assumes subject context has assigned branch IDs
-				Op:              "Contains",           // Check if the subject's assigned branches list contains the resource's branch ID
-				ValueSourceAttr: "resource.branch_id", // Assumes resource context has branch_id
-				Description:     "Subject branches must contain resource branch",
+				Op:              "Contains",           // Check if the subject's assigned branches list contains the endpoint's branch ID
+				ValueSourceAttr: "endpoint.branch_id", // Assumes endpoint context has branch_id
+				Description:     "Subject branches must contain endpoint branch",
 			},
 		},
 	},
 }
 
 var company_employee_check = ConditionNode{ // Simplified check just for Employee role within the company
-	Description: "Allow if subject is an Employee within the resource's company",
+	Description: "Allow if subject is an Employee within the endpoint's company",
 	LogicType:   "AND",
 	Children: []ConditionNode{
 		{
@@ -329,15 +329,15 @@ var company_employee_check = ConditionNode{ // Simplified check just for Employe
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.company_id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.company_id",
-				Description:     "Subject company must match resource company",
+				ValueSourceAttr: "endpoint.company_id",
+				Description:     "Subject company must match endpoint company",
 			},
 		},
 	},
 }
 
 var company_employee_assigned_employee_check = ConditionNode{
-	Description: "Allow if subject is the company employee and the resource relates to them directly",
+	Description: "Allow if subject is the company employee and the endpoint relates to them directly",
 	LogicType:   "AND",
 	Children: []ConditionNode{
 		{
@@ -350,16 +350,16 @@ var company_employee_assigned_employee_check = ConditionNode{
 		{
 			Leaf: &ConditionLeaf{
 				Attr: "subject.company_id",
-				Op:   "Equals", ValueSourceAttr: "resource.company_id",
-				Description: "Subject company must match resource company",
+				Op:   "Equals", ValueSourceAttr: "endpoint.company_id",
+				Description: "Subject company must match endpoint company",
 			},
 		},
 		{
 			Leaf: &ConditionLeaf{
 				Attr:            "subject.id",
 				Op:              "Equals",
-				ValueSourceAttr: "resource.employee_id", // Assumes resource context has employee_id
-				Description:     "Subject ID must match resource employee ID",
+				ValueSourceAttr: "endpoint.employee_id", // Assumes endpoint context has employee_id
+				Description:     "Subject ID must match endpoint employee ID",
 			},
 		},
 	},
@@ -391,7 +391,7 @@ var company_internal_user_check = ConditionNode{
 	Description: "Company Internal User Check (Any Role within Company)",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		company_membership_access_check, // Must be member of the resource's company
+		company_membership_access_check, // Must be member of the endpoint's company
 		{ // Role must be one of the company roles
 			Description: "Role Check (Owner, GM, BM, Employee)",
 			LogicType:   "OR",
@@ -407,24 +407,26 @@ var company_internal_user_check = ConditionNode{
 
 // --- Policy Definitions --- //
 
-// --- Existing Appointment Policies ---
 // Policy: Allow Create appointment
 var AllowCreateAppointment = &PolicyRule{ /* ... as defined in your first message ... */
-	Name:        "SDP: CanCreateAppointment",
-	Description: "System Default Policy: Allows clients to create appointments, or company users based on role/relation.",
-	Effect:      "Allow",
-	ResourceID:  CreateAppointment.ID, // Link to the specific Resource definition
+	Name:            "SDP: CanCreateAppointment",
+	Description:     "System Default Policy: Allows clients to create appointments, or company users based on role/relation.",
+	Effect:          "Allow",
+	EndPointID:      CreateAppointment.ID, // Link to the specific EndPoint definition
+	ResourceTable:   "branches",
+	ResourceKey:     "branch_id",
+	ResourceValueAt: "body",
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Top-level OR: Allow Client Access OR Company User Access", // Top-level description
 		LogicType:   "OR",
 		Children: []ConditionNode{
-			// Assume creation context sets `resource.client_id` if created by client? If not, this needs adjusting.
+			// Assume creation context sets `endpoint.client_id` if created by client? If not, this needs adjusting.
 			client_access_check,
 			{
 				Description: "Company User Access Check",
 				LogicType:   "AND",
 				Children: []ConditionNode{
-					// Requires subject.company_id = resource.company_id. Context must provide resource.company_id from input.
+					// Requires subject.company_id = endpoint.company_id. Context must provide endpoint.company_id from input.
 					company_membership_access_check,
 					{
 						Description: "Role/Relation Check",
@@ -432,8 +434,8 @@ var AllowCreateAppointment = &PolicyRule{ /* ... as defined in your first messag
 						Children: []ConditionNode{
 							company_owner_check,
 							company_general_manager_check,
-							company_branch_manager_assigned_branch_check, // Check resource context has branch_id
-							company_employee_assigned_employee_check,     // Check resource context has employee_id
+							company_branch_manager_assigned_branch_check, // Check endpoint context has branch_id
+							company_employee_assigned_employee_check,     // Check endpoint context has employee_id
 						},
 					},
 				},
@@ -444,28 +446,31 @@ var AllowCreateAppointment = &PolicyRule{ /* ... as defined in your first messag
 
 // Policy: Allow GET appointment by ID.
 var AllowGetAppointmentByID = &PolicyRule{ /* ... as defined in your first message ... */
-	Name:        "SDP: CanViewAppointment",
-	Description: "System Default Policy: Allows clients to view own appointments, or company users based on role/relation.",
-	Effect:      "Allow",
-	ResourceID:  GetAppointmentByID.ID, // Link to the specific Resource definition
+	Name:            "SDP: CanViewAppointment",
+	Description:     "System Default Policy: Allows clients to view own appointments, or company users based on role/relation.",
+	Effect:          "Allow",
+	EndPointID:      GetAppointmentByID.ID, // Link to the specific EndPoint definition
+	ResourceTable:   "appointments",
+	ResourceKey:     "id",
+	ResourceValueAt: "path",
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Top-level OR: Allow Client Access OR Company User Access", // Top-level description
 		LogicType:   "OR",
 		Children: []ConditionNode{
-			client_access_check, // Check resource context has client_id
+			client_access_check, // Check endpoint context has client_id
 			{
 				Description: "Company User Access Check",
 				LogicType:   "AND",
 				Children: []ConditionNode{
-					company_membership_access_check, // Check resource context has company_id
+					company_membership_access_check, // Check endpoint context has company_id
 					{
 						Description: "Role/Relation Check",
 						LogicType:   "OR",
 						Children: []ConditionNode{
 							company_owner_check,
 							company_general_manager_check,
-							company_branch_manager_assigned_branch_check, // Check resource context has branch_id
-							company_employee_assigned_employee_check,     // Check resource context has employee_id
+							company_branch_manager_assigned_branch_check, // Check endpoint context has branch_id
+							company_employee_assigned_employee_check,     // Check endpoint context has employee_id
 						},
 					},
 				},
@@ -479,28 +484,31 @@ var AllowGetAppointmentByID = &PolicyRule{ /* ... as defined in your first messa
 // --- Appointment Policies (Update/Delete) ---
 
 var AllowUpdateAppointmentByID = &PolicyRule{
-	Name:        "SDP: CanUpdateAppointment",
-	Description: "Allows clients to update own appointments, or company managers/assigned employees.",
-	Effect:      "Allow",
-	ResourceID:  UpdateAppointmentByID.ID,
+	Name:            "SDP: CanUpdateAppointment",
+	Description:     "Allows clients to update own appointments, or company managers/assigned employees.",
+	Effect:          "Allow",
+	ResourceTable:   "appointments",
+	ResourceKey:     "id",
+	ResourceValueAt: "path",
+	EndPointID:      UpdateAppointmentByID.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Top-level OR: Allow Client Self-Update OR Company User Update",
 		LogicType:   "OR",
 		Children: []ConditionNode{
-			client_access_check, // Check resource context has client_id
+			client_access_check, // Check endpoint context has client_id
 			{
 				Description: "Company User Update Check",
 				LogicType:   "AND",
 				Children: []ConditionNode{
-					company_membership_access_check, // Check resource context has company_id
+					company_membership_access_check, // Check endpoint context has company_id
 					{
 						Description: "Role/Relation Check (Managers or Assigned Employee)",
 						LogicType:   "OR",
 						Children: []ConditionNode{
 							company_owner_check,
 							company_general_manager_check,
-							company_branch_manager_assigned_branch_check, // Check resource context has branch_id
-							company_employee_assigned_employee_check,     // Check resource context has employee_id
+							company_branch_manager_assigned_branch_check, // Check endpoint context has branch_id
+							company_employee_assigned_employee_check,     // Check endpoint context has employee_id
 						},
 					},
 				},
@@ -510,24 +518,27 @@ var AllowUpdateAppointmentByID = &PolicyRule{
 }
 
 var AllowDeleteAppointmentByID = &PolicyRule{
-	Name:        "SDP: CanDeleteAppointment",
-	Description: "Allows company managers or assigned employees to delete appointments.",
-	Effect:      "Allow",
-	ResourceID:  DeleteAppointmentByID.ID,
+	Name:            "SDP: CanDeleteAppointment",
+	Description:     "Allows company managers or assigned employees to delete appointments.",
+	Effect:          "Allow",
+	ResourceTable:   "appointments",
+	ResourceKey:     "id",
+	ResourceValueAt: "path",
+	EndPointID:      DeleteAppointmentByID.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		// NOTE: Clients usually cannot delete appointments directly, only company staff. Adjust if needed.
 		Description: "Company User Delete Check",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			company_membership_access_check, // Check resource context has company_id
+			company_membership_access_check, // Check endpoint context has company_id
 			{
 				Description: "Role/Relation Check (Managers or Assigned Employee)",
 				LogicType:   "OR",
 				Children: []ConditionNode{
 					company_owner_check,
 					company_general_manager_check,
-					company_branch_manager_assigned_branch_check, // Check resource context has branch_id
-					company_employee_assigned_employee_check,     // Check resource context has employee_id
+					company_branch_manager_assigned_branch_check, // Check endpoint context has branch_id
+					company_employee_assigned_employee_check,     // Check endpoint context has employee_id
 				},
 			},
 		},
@@ -540,10 +551,10 @@ var AllowCreateBranch = &PolicyRule{
 	Name:        "SDP: CanCreateBranch",
 	Description: "Allows company Owner or General Manager to create branches.",
 	Effect:      "Allow",
-	ResourceID:  CreateBranch.ID,
+	EndPointID:  CreateBranch.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Company Admin Check for Creation",
-		// Assumes the resource context for creation includes the target company_id based on input/subject
+		// Assumes the endpoint context for creation includes the target company_id based on input/subject
 		LogicType: "OR", // Either Owner or GM of the target company
 		Children: []ConditionNode{
 			company_owner_check,
@@ -556,7 +567,7 @@ var AllowGetBranchById = &PolicyRule{
 	Name:        "SDP: CanViewBranchById",
 	Description: "Allows any user belonging to the same company to view branch details by ID.",
 	Effect:      "Allow",
-	ResourceID:  GetBranchById.ID,
+	EndPointID:  GetBranchById.ID,
 	Conditions:  MustMarshalJSON(company_internal_user_check), // Any internal user can view
 }
 
@@ -564,7 +575,7 @@ var AllowGetBranchByName = &PolicyRule{
 	Name:        "SDP: CanViewBranchByName",
 	Description: "Allows any user belonging to the same company to view branch details by name.",
 	Effect:      "Allow",
-	ResourceID:  GetBranchByName.ID,
+	EndPointID:  GetBranchByName.ID,
 	Conditions:  MustMarshalJSON(company_internal_user_check), // Any internal user can view
 }
 
@@ -572,7 +583,7 @@ var AllowUpdateBranchById = &PolicyRule{
 	Name:        "SDP: CanUpdateBranch",
 	Description: "Allows company Owner, General Manager, or assigned Branch Manager to update branches.",
 	Effect:      "Allow",
-	ResourceID:  UpdateBranchById.ID,
+	EndPointID:  UpdateBranchById.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Manager Update Access",
 		LogicType:   "OR",
@@ -588,7 +599,7 @@ var AllowDeleteBranchById = &PolicyRule{
 	Name:        "SDP: CanDeleteBranch",
 	Description: "Allows company Owner or General Manager to delete branches.",
 	Effect:      "Allow",
-	ResourceID:  DeleteBranchById.ID,
+	EndPointID:  DeleteBranchById.ID,
 	Conditions:  MustMarshalJSON(company_admin_check), // Only Owner or GM
 }
 
@@ -596,8 +607,8 @@ var AllowGetEmployeeServicesByBranchId = &PolicyRule{
 	Name:        "SDP: CanViewEmployeeServicesInBranch",
 	Description: "Allows company members to view employee services within a branch.",
 	Effect:      "Allow",
-	ResourceID:  GetEmployeeServicesByBranchId.ID,
-	// Assumes resource context includes company_id based on branch_id lookip
+	EndPointID:  GetEmployeeServicesByBranchId.ID,
+	// Assumes endpoint context includes company_id based on branch_id lookip
 	Conditions: MustMarshalJSON(company_internal_user_check),
 }
 
@@ -605,7 +616,7 @@ var AllowAddServiceToBranch = &PolicyRule{
 	Name:        "SDP: CanAddServiceToBranch",
 	Description: "Allows company managers (Owner, GM, relevant BM) to add services to a branch.",
 	Effect:      "Allow",
-	ResourceID:  AddServiceToBranch.ID,
+	EndPointID:  AddServiceToBranch.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Manager Access Check",
 		LogicType:   "OR",
@@ -621,7 +632,7 @@ var AllowRemoveServiceFromBranch = &PolicyRule{
 	Name:        "SDP: CanRemoveServiceFromBranch",
 	Description: "Allows company managers (Owner, GM, relevant BM) to remove services from a branch.",
 	Effect:      "Allow",
-	ResourceID:  RemoveServiceFromBranch.ID,
+	EndPointID:  RemoveServiceFromBranch.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Manager Access Check",
 		LogicType:   "OR",
@@ -641,13 +652,13 @@ var AllowGetClientByEmail = &PolicyRule{
 	Name:        "SDP: CanViewClientByEmail",
 	Description: "Allows a client to retrieve their own profile by email.",
 	Effect:      "Allow",
-	ResourceID:  GetClientByEmail.ID,
+	EndPointID:  GetClientByEmail.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
-		Description: "Allow only if the subject's email matches the resource email being queried.",
+		Description: "Allow only if the subject's email matches the endpoint email being queried.",
 		Leaf: &ConditionLeaf{
 			Attr:            "subject.email", // Requires subject context to have email
 			Op:              "Equals",
-			ValueSourceAttr: "resource.email", // Requires resource context to have email from path param
+			ValueSourceAttr: "endpoint.email", // Requires endpoint context to have email from path param
 		},
 	}),
 }
@@ -656,7 +667,7 @@ var AllowUpdateClientById = &PolicyRule{
 	Name:        "SDP: CanUpdateClient",
 	Description: "Allows a client to update their own profile.",
 	Effect:      "Allow",
-	ResourceID:  UpdateClientById.ID,
+	EndPointID:  UpdateClientById.ID,
 	Conditions:  MustMarshalJSON(client_self_access_check), // Client can update self
 	// Add OR company_admin_check if company admins should manage clients?
 }
@@ -665,7 +676,7 @@ var AllowDeleteClientById = &PolicyRule{
 	Name:        "SDP: CanDeleteClient",
 	Description: "Allows a client to delete their own profile.",
 	Effect:      "Allow",
-	ResourceID:  DeleteClientById.ID,
+	EndPointID:  DeleteClientById.ID,
 	Conditions:  MustMarshalJSON(client_self_access_check), // Client can delete self
 	// Add OR company_admin_check if company admins should manage clients?
 }
@@ -676,7 +687,7 @@ var AllowGetCompanyById = &PolicyRule{
 	Name:        "SDP: CanViewCompanyById",
 	Description: "Allows any member (employee) of the company to view its details.",
 	Effect:      "Allow",
-	ResourceID:  GetCompanyById.ID,
+	EndPointID:  GetCompanyById.ID,
 	// Anyone belonging to the company can view it
 	Conditions: MustMarshalJSON(company_membership_access_check),
 }
@@ -685,7 +696,7 @@ var AllowUpdateCompanyById = &PolicyRule{
 	Name:        "SDP: CanUpdateCompany",
 	Description: "Allows the company Owner or General Manager to update company details.",
 	Effect:      "Allow",
-	ResourceID:  UpdateCompanyById.ID,
+	EndPointID:  UpdateCompanyById.ID,
 	Conditions:  MustMarshalJSON(company_admin_check), // Only Owner or GM
 }
 
@@ -693,7 +704,7 @@ var AllowDeleteCompanyById = &PolicyRule{
 	Name:        "SDP: CanDeleteCompany",
 	Description: "Allows ONLY the company Owner to delete the company.",
 	Effect:      "Allow",
-	ResourceID:  DeleteCompanyById.ID,
+	EndPointID:  DeleteCompanyById.ID,
 	Conditions:  MustMarshalJSON(company_owner_check), // Only Owner
 }
 
@@ -703,7 +714,7 @@ var AllowCreateEmployee = &PolicyRule{
 	Name:        "SDP: CanCreateEmployee",
 	Description: "Allows company Owner, GM, or BM to create employees (within their scope).",
 	Effect:      "Allow",
-	ResourceID:  CreateEmployee.ID,
+	EndPointID:  CreateEmployee.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		// Assumes creation context provides target company_id, and potentially branch_id if created by BM
 		Description: "Manager Check for Creation",
@@ -712,7 +723,7 @@ var AllowCreateEmployee = &PolicyRule{
 			company_owner_check,           // Owner can create in their company
 			company_general_manager_check, // GM can create in their company
 			// BM creating employee likely needs to create them within an assigned branch.
-			// This check requires the input payload (resource context) to have branch_id.
+			// This check requires the input payload (endpoint context) to have branch_id.
 			company_branch_manager_assigned_branch_check,
 		},
 	}),
@@ -722,7 +733,7 @@ var AllowGetEmployeeById = &PolicyRule{
 	Name:        "SDP: CanViewEmployeeById",
 	Description: "Allows company members to view employee profiles within the same company, or employee to view their own.",
 	Effect:      "Allow",
-	ResourceID:  GetEmployeeById.ID,
+	EndPointID:  GetEmployeeById.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Allow Employee Self-View OR Any Internal Company User View",
 		LogicType:   "OR",
@@ -737,8 +748,8 @@ var AllowGetEmployeeByEmail = &PolicyRule{
 	Name:        "SDP: CanViewEmployeeByEmail",
 	Description: "Allows company members to find employees within the same company by email.",
 	Effect:      "Allow",
-	ResourceID:  GetEmployeeByEmail.ID,
-	// Requires resource context providing company_id based on the lookup by email
+	EndPointID:  GetEmployeeByEmail.ID,
+	// Requires endpoint context providing company_id based on the lookup by email
 	Conditions: MustMarshalJSON(company_internal_user_check),
 }
 
@@ -746,7 +757,7 @@ var AllowUpdateEmployeeById = &PolicyRule{
 	Name:        "SDP: CanUpdateEmployee",
 	Description: "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
 	Effect:      "Allow",
-	ResourceID:  UpdateEmployeeById.ID,
+	EndPointID:  UpdateEmployeeById.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
 		Description: "Allow Employee Self-Update OR Manager Update",
 		LogicType:   "OR",
@@ -761,7 +772,7 @@ var AllowDeleteEmployeeById = &PolicyRule{
 	Name:        "SDP: CanDeleteEmployee",
 	Description: "Allows company managers (Owner, GM, BM) to delete employees.",
 	Effect:      "Allow",
-	ResourceID:  DeleteEmployeeById.ID,
+	EndPointID:  DeleteEmployeeById.ID,
 	Conditions:  MustMarshalJSON(company_manager_check), // Owner, GM, BM can delete
 }
 
@@ -769,8 +780,8 @@ var AllowAddServiceToEmployee = &PolicyRule{
 	Name:        "SDP: CanAddServiceToEmployee",
 	Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
 	Effect:      "Allow",
-	ResourceID:  AddServiceToEmployee.ID,
-	// Resource context needs company_id based on employee_id lookup
+	EndPointID:  AddServiceToEmployee.ID,
+	// EndPoint context needs company_id based on employee_id lookup
 	Conditions: MustMarshalJSON(company_manager_check),
 }
 
@@ -778,8 +789,8 @@ var AllowRemoveServiceFromEmployee = &PolicyRule{
 	Name:        "SDP: CanRemoveServiceFromEmployee",
 	Description: "Allows company managers (Owner, GM, BM) to remove services from employees.",
 	Effect:      "Allow",
-	ResourceID:  RemoveServiceFromEmployee.ID,
-	// Resource context needs company_id based on employee_id lookup
+	EndPointID:  RemoveServiceFromEmployee.ID,
+	// EndPoint context needs company_id based on employee_id lookup
 	Conditions: MustMarshalJSON(company_manager_check),
 }
 
@@ -787,16 +798,16 @@ var AllowAddBranchToEmployee = &PolicyRule{
 	Name:        "SDP: CanAddBranchToEmployee",
 	Description: "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
 	Effect:      "Allow",
-	ResourceID:  AddBranchToEmployee.ID,
+	EndPointID:  AddBranchToEmployee.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
-		// Resource context needs company_id (from employee) and branch_id (from path)
+		// EndPoint context needs company_id (from employee) and branch_id (from path)
 		Description: "Manager Assignment Check",
 		LogicType:   "OR",
 		Children: []ConditionNode{
 			company_owner_check,           // Owner can assign any branch in company
 			company_general_manager_check, // GM can assign any branch in company
 			// BM can only assign employees TO a branch THEY MANAGE
-			company_branch_manager_assigned_branch_check, // Checks if subject.branches CONTAINS resource.branch_id
+			company_branch_manager_assigned_branch_check, // Checks if subject.branches CONTAINS endpoint.branch_id
 		},
 	}),
 }
@@ -805,9 +816,9 @@ var AllowRemoveBranchFromEmployee = &PolicyRule{
 	Name:        "SDP: CanRemoveBranchFromEmployee",
 	Description: "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
 	Effect:      "Allow",
-	ResourceID:  RemoveBranchFromEmployee.ID,
+	EndPointID:  RemoveBranchFromEmployee.ID,
 	Conditions: MustMarshalJSON(ConditionNode{
-		// Resource context needs company_id (from employee) and branch_id (from path)
+		// EndPoint context needs company_id (from employee) and branch_id (from path)
 		Description: "Manager Assignment Check",
 		LogicType:   "OR",
 		Children: []ConditionNode{
@@ -824,7 +835,7 @@ var AllowCreateHoliday = &PolicyRule{
 	Name:        "SDP: CanCreateHoliday",
 	Description: "Allows company managers (Owner, GM, BM) to create holidays for the company/branch.",
 	Effect:      "Allow",
-	ResourceID:  CreateHoliday.ID,
+	EndPointID:  CreateHoliday.ID,
 	// Assumes context provides company_id. If holiday is branch-specific, context needs branch_id too.
 	Conditions: MustMarshalJSON(company_manager_check),
 }
@@ -833,7 +844,7 @@ var AllowGetHolidayById = &PolicyRule{
 	Name:        "SDP: CanViewHolidayById",
 	Description: "Allows company members to view holiday details.",
 	Effect:      "Allow",
-	ResourceID:  GetHolidayById.ID,
+	EndPointID:  GetHolidayById.ID,
 	Conditions:  MustMarshalJSON(company_internal_user_check), // Any internal user can view
 }
 
@@ -841,7 +852,7 @@ var AllowUpdateHolidayById = &PolicyRule{
 	Name:        "SDP: CanUpdateHoliday",
 	Description: "Allows company managers (Owner, GM, BM) to update holidays.",
 	Effect:      "Allow",
-	ResourceID:  UpdateHolidayById.ID,
+	EndPointID:  UpdateHolidayById.ID,
 	Conditions:  MustMarshalJSON(company_manager_check),
 }
 
@@ -849,7 +860,7 @@ var AllowDeleteHolidayById = &PolicyRule{
 	Name:        "SDP: CanDeleteHoliday",
 	Description: "Allows company managers (Owner, GM, BM) to delete holidays.",
 	Effect:      "Allow",
-	ResourceID:  DeleteHolidayById.ID,
+	EndPointID:  DeleteHolidayById.ID,
 	Conditions:  MustMarshalJSON(company_manager_check),
 }
 
@@ -859,7 +870,7 @@ var AllowCreateSector = &PolicyRule{
 	Name:        "SDP: CanCreateSector",
 	Description: "Allows company Owner or General Manager to create sectors.",
 	Effect:      "Allow",
-	ResourceID:  CreateSector.ID,
+	EndPointID:  CreateSector.ID,
 	// Assumes context provides company_id based on subject/input
 	Conditions: MustMarshalJSON(company_admin_check),
 }
@@ -870,7 +881,7 @@ var AllowUpdateSectorById = &PolicyRule{
 	Name:        "SDP: CanUpdateSector",
 	Description: "Allows company Owner or General Manager to update sectors.",
 	Effect:      "Allow",
-	ResourceID:  UpdateSectorById.ID,
+	EndPointID:  UpdateSectorById.ID,
 	Conditions:  MustMarshalJSON(company_admin_check),
 }
 
@@ -878,7 +889,7 @@ var AllowDeleteSectorById = &PolicyRule{
 	Name:        "SDP: CanDeleteSector",
 	Description: "Allows company Owner or General Manager to delete sectors.",
 	Effect:      "Allow",
-	ResourceID:  DeleteSectorById.ID,
+	EndPointID:  DeleteSectorById.ID,
 	Conditions:  MustMarshalJSON(company_admin_check),
 }
 
@@ -888,7 +899,7 @@ var AllowCreateService = &PolicyRule{
 	Name:        "SDP: CanCreateService",
 	Description: "Allows company managers (Owner, GM, BM) to create services.",
 	Effect:      "Allow",
-	ResourceID:  CreateService.ID,
+	EndPointID:  CreateService.ID,
 	// Assumes context provides company_id based on subject/input. BM might be restricted later.
 	Conditions: MustMarshalJSON(company_manager_check),
 }
@@ -897,7 +908,7 @@ var AllowGetServiceById = &PolicyRule{
 	Name:        "SDP: CanViewServiceById",
 	Description: "Allows company members to view service details.",
 	Effect:      "Allow",
-	ResourceID:  GetServiceById.ID,
+	EndPointID:  GetServiceById.ID,
 	Conditions:  MustMarshalJSON(company_internal_user_check), // Any internal user can view
 }
 
@@ -907,7 +918,7 @@ var AllowUpdateServiceById = &PolicyRule{
 	Name:        "SDP: CanUpdateService",
 	Description: "Allows company managers (Owner, GM, BM) to update services.",
 	Effect:      "Allow",
-	ResourceID:  UpdateServiceById.ID,
+	EndPointID:  UpdateServiceById.ID,
 	Conditions:  MustMarshalJSON(company_manager_check),
 }
 
@@ -915,7 +926,7 @@ var AllowDeleteServiceById = &PolicyRule{
 	Name:        "SDP: CanDeleteService",
 	Description: "Allows company managers (Owner, GM, BM) to delete services.",
 	Effect:      "Allow",
-	ResourceID:  DeleteServiceById.ID,
+	EndPointID:  DeleteServiceById.ID,
 	Conditions:  MustMarshalJSON(company_manager_check),
 }
 
@@ -998,17 +1009,17 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 			log.Println("Warning: Encountered nil policy in Policies list.")
 			continue
 		}
-		if policy.ResourceID == 0 {
-			// This assumes Resource IDs are assigned elsewhere before seeding.
-			// If Resource structs need creating/finding first, do that here.
-			log.Printf("Warning: Policy '%s' has ResourceID 0. Skipping seeding.", policy.Name)
+		if policy.EndPointID == 0 {
+			// This assumes EndPoint IDs are assigned elsewhere before seeding.
+			// If EndPoint structs need creating/finding first, do that here.
+			log.Printf("Warning: Policy '%s' has EndPointID 0. Skipping seeding.", policy.Name)
 			continue
 		}
 
 		// Create a placeholder to find existing policy
 		var existingPolicy PolicyRule
 		// Find system policies specifically (company_id IS NULL)
-		err := tx.Where("name = ? AND company_id IS NULL AND resource_id = ?", policy.Name, policy.ResourceID).First(&existingPolicy).Error
+		err := tx.Where("name = ? AND company_id IS NULL AND resource_id = ?", policy.Name, policy.EndPointID).First(&existingPolicy).Error
 
 		if err == gorm.ErrRecordNotFound {
 			// Policy doesn't exist, create it

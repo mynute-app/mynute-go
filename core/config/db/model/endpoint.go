@@ -8,31 +8,28 @@ import (
 
 var AllowResourceCreation = false
 
-type Resource struct {
+type EndPoint struct {
 	gorm.Model
 	Handler       string `json:"handler"`
 	Description   string `json:"description"`
 	Method        string `gorm:"type:varchar(10)" json:"method"`
 	Path          string `json:"path"`
 	IsPublic      bool   `gorm:"default:false" json:"is_public"`
-	RefFromTable  string `json:"ref_from_table"`
-	RefFromKey    string `json:"ref_from_key"`
-	RefKeyValueAt string `json:"ref_key_value_at"`
 }
 
-func (r *Resource) BeforeCreate(tx *gorm.DB) error {
+func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
 	if !AllowResourceCreation {
-		panic("Resource creation is not allowed")
+		panic("EndPoint creation is not allowed")
 	}
 	return nil
 }
 
 // Custom Composite Index
-func (Resource) TableName() string {
+func (EndPoint) TableName() string {
 	return "resources"
 }
 
-func (Resource) Indexes() map[string]string {
+func (EndPoint) Indexes() map[string]string {
 	return map[string]string{
 		"idx_method_path": "CREATE UNIQUE INDEX idx_method_path ON routes (method, path)",
 	}
@@ -40,71 +37,59 @@ func (Resource) Indexes() map[string]string {
 
 // --- Appointment Resources --- //
 
-var CreateAppointment = &Resource{
+var CreateAppointment = &EndPoint{
 	Path:          "/appointment",
 	Method:        "POST",
 	Handler:       "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
 	Description:   "Create an appointment",
 	IsPublic:      false, // Access: "private"
-	RefFromTable:  "branches",
-	RefFromKey:    "branch_id",
-	RefKeyValueAt: "Body",
 }
-var GetAppointmentByID = &Resource{
+var GetAppointmentByID = &EndPoint{
 	Path:          "/appointment/:id",
 	Method:        "GET",
 	Handler:       "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
 	Description:   "Get appointment by ID",
 	IsPublic:      false, // Access: "private"
-	RefFromTable:  "appointments",
-	RefFromKey:    "id",
-	RefKeyValueAt: "Path",
 }
-var UpdateAppointmentByID = &Resource{
+var UpdateAppointmentByID = &EndPoint{
 	Path:          "/appointment/:id",
 	Method:        "PATCH",                 // Corrected from GET based on reference
 	Handler:       "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
 	Description:   "Update appointment by ID",
 	IsPublic:      false, // Access: "private"
-	RefFromTable:  "appointments",
-	RefFromKey:    "id",
-	RefKeyValueAt: "Path",
 }
-var DeleteAppointmentByID = &Resource{
-	Path:         "/appointment/:id",
-	Method:       "DELETE",
-	Handler:      "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
-	Description:  "Delete appointment by ID",
-	IsPublic:     false, // Access: "private"
-	RefFromTable: "appointments",
-	RefFromKey:   "id",
-	RefKeyValueAt: "Path",
+var DeleteAppointmentByID = &EndPoint{
+	Path:          "/appointment/:id",
+	Method:        "DELETE",
+	Handler:       "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
+	Description:   "Delete appointment by ID",
+	IsPublic:      false, // Access: "private"
 }
 
 // --- Auth Resources --- //
 
-var VerifyExistingAccount = &Resource{
+var VerifyExistingAccount = &EndPoint{
 	Path:        "/auth/verify-existing-account",
 	Method:      "POST",
 	Handler:     "VerifyExistingAccount", // From ac.VerifyExistingAccount
 	Description: "Verify if an account exists",
 	IsPublic:    true, // Access: "public"
 }
-var BeginAuthProviderCallback = &Resource{
+var BeginAuthProviderCallback = &EndPoint{
 	Path:        "/auth/oauth/:provider",
 	Method:      "GET",
 	Handler:     "BeginAuthProviderCallback", // From ac.BeginAuthProviderCallback
 	Description: "Begin auth provider callback",
 	IsPublic:    true, // Access: "public"
 }
-var GetAuthCallbackFunction = &Resource{
+var GetAuthCallbackFunction = &EndPoint{
 	Path:        "/auth/oauth/:provider/callback",
 	Method:      "GET",
 	Handler:     "GetAuthCallbackFunction", // From ac.GetAuthCallbackFunction
 	Description: "Get auth callback function",
 	IsPublic:    true, // Access: "public"
 }
-var LogoutProvider = &Resource{
+var LogoutProvider = &EndPoint{
 	Path:        "/auth/oauth/logout",
 	Method:      "GET",
 	Handler:     "LogoutProvider", // From ac.LogoutProvider
@@ -114,56 +99,56 @@ var LogoutProvider = &Resource{
 
 // --- Branch Resources --- //
 
-var CreateBranch = &Resource{
+var CreateBranch = &EndPoint{
 	Path:        "/branch",
 	Method:      "POST",
 	Handler:     "CreateBranch", // From bc.CreateBranch
 	Description: "Create a branch",
 	IsPublic:    false, // Access: "private"
 }
-var GetBranchById = &Resource{
+var GetBranchById = &EndPoint{
 	Path:        "/branch/:id",
 	Method:      "GET",
 	Handler:     "GetBranchById", // From bc.GetBranchById
 	Description: "Get branch by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetBranchByName = &Resource{
+var GetBranchByName = &EndPoint{
 	Path:        "/branch/name/:name",
 	Method:      "GET",
 	Handler:     "GetBranchByName", // From bc.GetBranchByName
 	Description: "Get branch by name",
 	IsPublic:    false, // Access: "private"
 }
-var UpdateBranchById = &Resource{
+var UpdateBranchById = &EndPoint{
 	Path:        "/branch/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateBranchById", // From bc.UpdateBranchById
 	Description: "Update branch by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteBranchById = &Resource{
+var DeleteBranchById = &EndPoint{
 	Path:        "/branch/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteBranchById", // From bc.DeleteBranchById
 	Description: "Delete branch by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetEmployeeServicesByBranchId = &Resource{
+var GetEmployeeServicesByBranchId = &EndPoint{
 	Path:        "/branch/:branch_id/employee/:employee_id/services",
 	Method:      "GET",
 	Handler:     "GetEmployeeServicesByBranchId", // From bc.GetEmployeeServicesByBranchId
 	Description: "Get employee offered services at the branch by branch ID",
 	IsPublic:    false, // Access: "private"
 }
-var AddServiceToBranch = &Resource{
+var AddServiceToBranch = &EndPoint{
 	Path:        "/branch/:branch_id/service/:service_id",
 	Method:      "POST",
 	Handler:     "AddServiceToBranch", // From bc.AddServiceToBranch
 	Description: "Add service to branch",
 	IsPublic:    false, // Access: "private"
 }
-var RemoveServiceFromBranch = &Resource{
+var RemoveServiceFromBranch = &EndPoint{
 	Path:        "/branch/:branch_id/service/:service_id",
 	Method:      "DELETE",
 	Handler:     "RemoveServiceFromBranch", // From bc.RemoveServiceFromBranch
@@ -173,42 +158,42 @@ var RemoveServiceFromBranch = &Resource{
 
 // --- Client Resources --- //
 
-var CreateClient = &Resource{
+var CreateClient = &EndPoint{
 	Path:        "/client",
 	Method:      "POST",
 	Handler:     "CreateClient", // From cc.CreateClient
 	Description: "Create client",
 	IsPublic:    true, // Access: "public"
 }
-var LoginClient = &Resource{
+var LoginClient = &EndPoint{
 	Path:        "/client/login",
 	Method:      "POST",
 	Handler:     "LoginClient", // From cc.LoginClient
 	Description: "Login client",
 	IsPublic:    true, // Access: "public"
 }
-var VerifyClientEmail = &Resource{
+var VerifyClientEmail = &EndPoint{
 	Path:        "/client/verify-email/:email/:code",
 	Method:      "POST",
 	Handler:     "VerifyClientEmail", // From cc.VerifyClientEmail
 	Description: "Verify client email",
 	IsPublic:    true, // Access: "public"
 }
-var GetClientByEmail = &Resource{
+var GetClientByEmail = &EndPoint{
 	Path:        "/client/email/:email",
 	Method:      "GET",
 	Handler:     "GetClientByEmail", // From cc.GetClientByEmail
 	Description: "Get client by email",
 	IsPublic:    false, // Access: "private"
 }
-var UpdateClientById = &Resource{
+var UpdateClientById = &EndPoint{
 	Path:        "/client/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateClientById", // From cc.UpdateClientById
 	Description: "Update client by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteClientById = &Resource{
+var DeleteClientById = &EndPoint{
 	Path:        "/client/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteClientById", // From cc.DeleteClientById
@@ -218,42 +203,42 @@ var DeleteClientById = &Resource{
 
 // --- Company Resources --- //
 
-var CreateCompany = &Resource{
+var CreateCompany = &EndPoint{
 	Path:        "/company",
 	Method:      "POST",
 	Handler:     "CreateCompany", // From cc.CreateCompany
 	Description: "Create a company",
 	IsPublic:    true, // Access: "public"
 }
-var GetCompanyById = &Resource{
+var GetCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      "GET",
 	Handler:     "GetCompanyById", // From cc.GetCompanyById
 	Description: "Get company by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetCompanyByName = &Resource{
+var GetCompanyByName = &EndPoint{
 	Path:        "/company/name/:name",
 	Method:      "GET",
 	Handler:     "GetCompanyByName", // From cc.GetCompanyByName
 	Description: "Get company by name",
 	IsPublic:    true, // Access: "public"
 }
-var GetCompanyByTaxId = &Resource{
+var GetCompanyByTaxId = &EndPoint{
 	Path:        "/company/tax_id/:tax_id",
 	Method:      "GET",
 	Handler:     "GetCompanyByTaxId", // From cc.GetCompanyByTaxId
 	Description: "Get company by tax ID",
 	IsPublic:    true, // Access: "public"
 }
-var UpdateCompanyById = &Resource{
+var UpdateCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateCompanyById", // From cc.UpdateCompanyById
 	Description: "Update company by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteCompanyById = &Resource{
+var DeleteCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteCompanyById", // From cc.DeleteCompanyById
@@ -263,77 +248,77 @@ var DeleteCompanyById = &Resource{
 
 // --- Employee Resources --- //
 
-var CreateEmployee = &Resource{
+var CreateEmployee = &EndPoint{
 	Path:        "/employee",
 	Method:      "POST",
 	Handler:     "CreateEmployee", // From ec.CreateEmployee
 	Description: "Create employee",
 	IsPublic:    false, // Access: "private"
 }
-var LoginEmployee = &Resource{
+var LoginEmployee = &EndPoint{
 	Path:        "/employee/login",
 	Method:      "POST",
 	Handler:     "LoginEmployee", // From ec.LoginEmployee
 	Description: "Login employee",
 	IsPublic:    true, // Access: "public"
 }
-var VerifyEmployeeEmail = &Resource{
+var VerifyEmployeeEmail = &EndPoint{
 	Path:        "/employee/verify-email/:email/:code",
 	Method:      "POST",
 	Handler:     "VerifyEmployeeEmail", // From ec.VerifyEmployeeEmail
 	Description: "Verify employee email",
 	IsPublic:    true, // Access: "public"
 }
-var GetEmployeeById = &Resource{
+var GetEmployeeById = &EndPoint{
 	Path:        "/employee/:id",
 	Method:      "GET",
 	Handler:     "GetEmployeeById", // From ec.GetEmployeeById
 	Description: "Get employee by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetEmployeeByEmail = &Resource{
+var GetEmployeeByEmail = &EndPoint{
 	Path:        "/employee/email/:email",
 	Method:      "GET",
 	Handler:     "GetEmployeeByEmail", // From ec.GetEmployeeByEmail
 	Description: "Get employee by email",
 	IsPublic:    false, // Access: "private"
 }
-var UpdateEmployeeById = &Resource{
+var UpdateEmployeeById = &EndPoint{
 	Path:        "/employee/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateEmployeeById", // From ec.UpdateEmployeeById
 	Description: "Update employee by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteEmployeeById = &Resource{
+var DeleteEmployeeById = &EndPoint{
 	Path:        "/employee/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteEmployeeById", // From ec.DeleteEmployeeById
 	Description: "Delete employee by ID",
 	IsPublic:    false, // Access: "private"
 }
-var AddServiceToEmployee = &Resource{
+var AddServiceToEmployee = &EndPoint{
 	Path:        "/employee/:employee_id/service/:service_id",
 	Method:      "POST",
 	Handler:     "AddServiceToEmployee", // From ec.AddServiceToEmployee
 	Description: "Add service to employee",
 	IsPublic:    false, // Access: "private"
 }
-var RemoveServiceFromEmployee = &Resource{
+var RemoveServiceFromEmployee = &EndPoint{
 	Path:        "/employee/:employee_id/service/:service_id",
 	Method:      "DELETE",
 	Handler:     "RemoveServiceFromEmployee", // From ec.RemoveServiceFromEmployee
 	Description: "Remove service from employee",
 	IsPublic:    false, // Access: "private"
 }
-var AddBranchToEmployee = &Resource{
+var AddBranchToEmployee = &EndPoint{
 	Path:        "/employee/:employee_id/branch/:branch_id",
 	Method:      "POST",
 	Handler:     "AddBranchToEmployee", // From ec.AddBranchToEmployee
 	Description: "Add employee to branch",
 	IsPublic:    false, // Access: "private"
 }
-var RemoveBranchFromEmployee = &Resource{
+var RemoveBranchFromEmployee = &EndPoint{
 	Path:        "/employee/:employee_id/branch/:branch_id",
 	Method:      "DELETE",
 	Handler:     "RemoveBranchFromEmployee", // From ec.RemoveBranchFromEmployee
@@ -343,35 +328,35 @@ var RemoveBranchFromEmployee = &Resource{
 
 // --- Holiday Resources --- //
 
-var CreateHoliday = &Resource{
+var CreateHoliday = &EndPoint{
 	Path:        "/holiday",
 	Method:      "POST",
 	Handler:     "CreateHoliday", // From hc.CreateHoliday
 	Description: "Create a holiday",
 	IsPublic:    false, // Access: "private"
 }
-var GetHolidayById = &Resource{
+var GetHolidayById = &EndPoint{
 	Path:        "/holiday/:id",
 	Method:      "GET",
 	Handler:     "GetHolidayById", // From hc.GetHolidayById
 	Description: "Get holiday by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetHolidayByName = &Resource{
+var GetHolidayByName = &EndPoint{
 	Path:        "/holiday/name/:name",
 	Method:      "GET",
 	Handler:     "GetHolidayByName", // From hc.GetHolidayByName
 	Description: "Get holiday by name",
 	IsPublic:    true, // Access: "public"
 }
-var UpdateHolidayById = &Resource{
+var UpdateHolidayById = &EndPoint{
 	Path:        "/holiday/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateHolidayById", // From hc.UpdateHolidayById
 	Description: "Update holiday by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteHolidayById = &Resource{
+var DeleteHolidayById = &EndPoint{
 	Path:        "/holiday/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteHolidayById", // From hc.DeleteHolidayById
@@ -381,35 +366,35 @@ var DeleteHolidayById = &Resource{
 
 // --- Sector Resources --- //
 
-var CreateSector = &Resource{
+var CreateSector = &EndPoint{
 	Path:        "/sector",
 	Method:      "POST",
 	Handler:     "CreateSector", // From sc.CreateSector
 	Description: "Creates a company sector",
 	IsPublic:    false, // Access: "private"
 }
-var GetSectorById = &Resource{
+var GetSectorById = &EndPoint{
 	Path:        "/sector/:id",
 	Method:      "GET",
 	Handler:     "GetSectorById", // From sc.GetSectorById
 	Description: "Retrieves a company sector by ID",
 	IsPublic:    true, // Access: "public"
 }
-var GetSectorByName = &Resource{
+var GetSectorByName = &EndPoint{
 	Path:        "/sector/name/:name",
 	Method:      "GET",
 	Handler:     "GetSectorByName", // From sc.GetSectorByName
 	Description: "Retrieves a company sector by name",
 	IsPublic:    true, // Access: "public"
 }
-var UpdateSectorById = &Resource{
+var UpdateSectorById = &EndPoint{
 	Path:        "/sector/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateSectorById", // From sc.UpdateSectorById
 	Description: "Updates a company sector by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteSectorById = &Resource{
+var DeleteSectorById = &EndPoint{
 	Path:        "/sector/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteSectorById", // From sc.DeleteSectorById
@@ -419,35 +404,35 @@ var DeleteSectorById = &Resource{
 
 // --- Service Resources --- //
 
-var CreateService = &Resource{
+var CreateService = &EndPoint{
 	Path:        "/service",
 	Method:      "POST",
 	Handler:     "CreateService", // From sc.CreateService
 	Description: "Create a service",
 	IsPublic:    false, // Access: "private"
 }
-var GetServiceById = &Resource{
+var GetServiceById = &EndPoint{
 	Path:        "/service/:id",
 	Method:      "GET",
 	Handler:     "GetServiceById", // From sc.GetServiceById
 	Description: "Get service by ID",
 	IsPublic:    false, // Access: "private"
 }
-var GetServiceByName = &Resource{
+var GetServiceByName = &EndPoint{
 	Path:        "/service/name/:name",
 	Method:      "GET",
 	Handler:     "GetServiceByName", // From sc.GetServiceByName
 	Description: "Get service by name",
 	IsPublic:    true, // Access: "public"
 }
-var UpdateServiceById = &Resource{
+var UpdateServiceById = &EndPoint{
 	Path:        "/service/:id",
 	Method:      "PATCH",
 	Handler:     "UpdateServiceById", // From sc.UpdateServiceById
 	Description: "Update service by ID",
 	IsPublic:    false, // Access: "private"
 }
-var DeleteServiceById = &Resource{
+var DeleteServiceById = &EndPoint{
 	Path:        "/service/:id",
 	Method:      "DELETE",
 	Handler:     "DeleteServiceById", // From sc.DeleteServiceById
@@ -456,7 +441,7 @@ var DeleteServiceById = &Resource{
 }
 
 // --- Combine all resources into a slice for seeding --- //
-var Resources = []*Resource{
+var Resources = []*EndPoint{
 	// Appointment
 	CreateAppointment,
 	GetAppointmentByID,
@@ -522,7 +507,7 @@ var Resources = []*Resource{
 	DeleteServiceById,
 }
 
-func SeedResources(db *gorm.DB) ([]*Resource, error) {
+func SeedResources(db *gorm.DB) ([]*EndPoint, error) {
 	AllowResourceCreation = true
 	defer func() { AllowResourceCreation = false }()
 	for _, rsrc := range Resources {

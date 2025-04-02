@@ -25,8 +25,8 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	method := c.Method()
 	path := c.Route().Path
 
-	var Resource model.Resource
-	if err := db.Where("method = ? AND path = ?", method, path).First(&Resource).Error; err != nil || Resource.ID == 0 {
+	var EndPoint model.EndPoint
+	if err := db.Where("method = ? AND path = ?", method, path).First(&EndPoint).Error; err != nil || EndPoint.ID == 0 {
 		return lib.Error.Auth.Unauthorized
 	}
 
@@ -51,40 +51,69 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.InvalidToken
 	}
 
-	RegistryTable := Resource.RefFromTable
-	RegistryParamKey := Resource.RefFromKey
-	RegistryParamAt := Resource.RefKeyValueAt
-	var RegistryParamVal any
-	switch RegistryParamAt {
-	case "query":
-		RegistryParamVal = c.Query(RegistryParamKey)
-	case "header":
-		RegistryParamVal = c.Get(RegistryParamKey)
-	case "path":
-		RegistryParamVal = c.Params(RegistryParamKey)
-	default:
-		panic("Invalid registry param at")
-	}
-
-	WhereClause := fmt.Sprintf("%s = ?", RegistryParamKey)
-
-	registry := make(map[string]any)
-	if err := db.Table(RegistryTable).
-		Where(WhereClause, RegistryParamVal). // Need to replace with actual resource ID from the path
-		Take(&registry).Error; err != nil {
-		return lib.Error.Auth.Unauthorized
-	}
-
 	var policies []*model.PolicyRule
-	if err := db.Where("resource_id = ? AND (company_id IS NULL OR company_id = ?)", Resource.ID, claim.CompanyID).
+	PoliciesWhereClause := fmt.Sprintf("endpoint_id = ? AND (company_id IS NULL OR company_id = ?)")
+	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
 		Find(&policies).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
 	}
 
-	if ok, err := am.PolicyEngine.CanAccess(subject, registry, policies); err != nil {
-		return err
-	} else if !ok {
+	if len(policies) == 0 {
 		return lib.Error.Auth.Unauthorized
+	}
+
+	getResource := func(table, key, valueAt string) (map[string]any, error) {
+		var value any
+		switch valueAt {
+		case "query":
+			value = c.Query(key)
+		case "header":
+			value = c.Get(key)
+		case "path":
+			value = c.Params(key)
+		case "body":
+			var body map[string]any
+			if err := c.BodyParser(&body); err != nil {
+				return nil, err
+			}
+			if val, ok := body[key]; ok {
+				value = val
+			} else {
+				return nil, lib.Error.Auth.Unauthorized
+			}
+		default:
+			panic("Invalid Resource param at")
+		}
+
+		ResourceWhereClause := fmt.Sprintf("%s = ?", key)
+
+		resource := make(map[string]any)
+		if err := db.Table(table).
+			Where(ResourceWhereClause, value). // Need to replace with actual endpoint ID from the path
+			Take(&resource).Error; err != nil {
+			return nil, lib.Error.Auth.Unauthorized
+		}
+
+		if len(resource) == 0 {
+			return nil, lib.Error.Auth.Unauthorized
+		}
+
+		return resource, nil
+	}
+
+	for _, policy := range policies {
+		table := policy.ResourceTable
+		key := policy.ResourceKey
+		valueAt := policy.ResourceValueAt
+		resource, err := getResource(table, key, valueAt)
+		if err != nil {
+			return err
+		}
+		if ok, err := am.PolicyEngine.CanAccess(subject, resource, policy); err != nil {
+			return err
+		} else if !ok {
+			return lib.Error.Auth.Unauthorized
+		}
 	}
 
 	return c.Next()

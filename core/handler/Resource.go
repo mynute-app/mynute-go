@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ResourceRegistry = map[string]*Resource{}
+var ResourceRegistry = map[string]*EndPoint{}
 
 func makeRegistryKey(path, method string) string {
 	method = strings.ToUpper(method)
@@ -24,20 +24,20 @@ type Route struct {
 }
 
 func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
-	var Resources []*model.Resource
+	var Resources []*model.EndPoint
 	if err := r.DB.Find(&Resources).Error; err != nil {
 		return err
 	}
-	for _, Resource := range Resources {
-		dbRouteHandler := r.GetHandler(Resource.Path, Resource.Method)
-		method := strings.ToUpper(Resource.Method)
+	for _, EndPoint := range Resources {
+		dbRouteHandler := r.GetHandler(EndPoint.Path, EndPoint.Method)
+		method := strings.ToUpper(EndPoint.Method)
 
-		if Resource.IsPublic {
+		if EndPoint.IsPublic {
 			handlers := append(mdwPub, dbRouteHandler)
-			rPub.Add(method, Resource.Path, handlers...)
+			rPub.Add(method, EndPoint.Path, handlers...)
 		} else {
 			handlers := append(mdwPrv, dbRouteHandler)
-			rPrv.Add(method, Resource.Path, handlers...)
+			rPrv.Add(method, EndPoint.Path, handlers...)
 		}
 	}
 	log.Println("Routes build finished!")
@@ -49,7 +49,7 @@ func (r *Route) GetHandler(path, method string) fiber.Handler {
 	return ResourceRegistry[key].Handler
 }
 
-type Resource struct {
+type EndPoint struct {
 	Path        string
 	Method      string
 	Handler     fiber.Handler
@@ -57,25 +57,25 @@ type Resource struct {
 	Access      string
 }
 
-func (r *Route) BulkRegisterAndSave(resources []*Resource) {
-	for _, resource := range resources {
-		r.Register(resource).Save()
+func (r *Route) BulkRegisterAndSave(resources []*EndPoint) {
+	for _, endpoint := range resources {
+		r.Register(endpoint).Save()
 	}
 }
 
-func (r *Route) Register(resource *Resource) *ResourceToRegister {
-	resource.Method = strings.ToUpper(resource.Method)
-	if resource.Access != "public" && resource.Access != "private" {
-		panic("Resource Route access must be either public or private")
+func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
+	endpoint.Method = strings.ToUpper(endpoint.Method)
+	if endpoint.Access != "public" && endpoint.Access != "private" {
+		panic("EndPoint Route access must be either public or private")
 	}
-	key := makeRegistryKey(resource.Path, resource.Method)
-	ResourceRegistry[key] = resource
+	key := makeRegistryKey(endpoint.Path, endpoint.Method)
+	ResourceRegistry[key] = endpoint
 	return &ResourceToRegister{
-		Path:        resource.Path,
-		Method:      resource.Method,
-		Handler:     resource.Handler,
-		Description: resource.Description,
-		Access:      resource.Access,
+		Path:        endpoint.Path,
+		Method:      endpoint.Method,
+		Handler:     endpoint.Handler,
+		Description: endpoint.Description,
+		Access:      endpoint.Access,
 		DB:          r.DB,
 	}
 }
@@ -99,22 +99,22 @@ func (rr *ResourceToRegister) Save() {
 	rr.Method = strings.ToUpper(rr.Method)
 	var count int64
 	rr.DB.
-		Model(&model.Resource{}).
+		Model(&model.EndPoint{}).
 		Where("method = ? AND path = ?", rr.Method, rr.Path).
 		Count(&count)
 	if count > 0 {
-		panic(fmt.Sprintf("Resource %s %s already exists", rr.Method, rr.Path))
+		panic(fmt.Sprintf("EndPoint %s %s already exists", rr.Method, rr.Path))
 	}
 	isPublic := rr.Access == "public"
 	handlerName := getHandlerName(rr.Handler)
-	resource := model.Resource{
+	endpoint := model.EndPoint{
 		Handler:     handlerName,
 		Description: rr.Description,
 		Method:      rr.Method,
 		Path:        rr.Path,
 		IsPublic:    isPublic,
 	}
-	if err := rr.DB.Create(&resource); err.Error != nil {
+	if err := rr.DB.Create(&endpoint); err.Error != nil {
 		panic(err.Error)
 	}
 }

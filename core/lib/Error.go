@@ -145,7 +145,7 @@ var Error = ErrorCategory{
 		InvalidLogin:     NewError("Invalid login", "Login inválido", fiber.StatusUnauthorized),
 		NoToken:          NewError("No token provided", "Nenhum token fornecido", fiber.StatusUnauthorized),
 		InvalidToken:     NewError("Invalid token", "Token inválido", fiber.StatusUnauthorized),
-		Unauthorized:     NewError("You are not authorized to access this resource", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
+		Unauthorized:     NewError("You are not authorized to access this endpoint", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
 		EmailCodeInvalid: NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
@@ -189,7 +189,7 @@ var Error = ErrorCategory{
 		CreatedError:          NewError("Error creating record", "Erro ao criar registro", fiber.StatusBadRequest),
 		UpdatedError:          NewError("Error updating record", "Erro ao atualizar registro", fiber.StatusBadRequest),
 		DeletedError:          NewError("Error deleting record", "Erro ao deletar registro", fiber.StatusBadRequest),
-		NotFoundError:         NewError("Resource not found", "Recurso não encontrado", fiber.StatusNotFound),
+		NotFoundError:         NewError("EndPoint not found", "Recurso não encontrado", fiber.StatusNotFound),
 	},
 	Role: RoleErrors{
 		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),
