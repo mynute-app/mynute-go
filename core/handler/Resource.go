@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ResourceRegistry = map[string]*EndPoint{}
+var EndpointRegistry = map[string]*EndPoint{}
 
 func makeRegistryKey(path, method string) string {
 	method = strings.ToUpper(method)
@@ -24,11 +24,11 @@ type Route struct {
 }
 
 func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
-	var Resources []*model.EndPoint
-	if err := r.DB.Find(&Resources).Error; err != nil {
+	var EndPoints []*model.EndPoint
+	if err := r.DB.Find(&EndPoints).Error; err != nil {
 		return err
 	}
-	for _, EndPoint := range Resources {
+	for _, EndPoint := range EndPoints {
 		dbRouteHandler := r.GetHandler(EndPoint.Path, EndPoint.Method)
 		method := strings.ToUpper(EndPoint.Method)
 
@@ -46,7 +46,7 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handl
 
 func (r *Route) GetHandler(path, method string) fiber.Handler {
 	key := makeRegistryKey(path, method)
-	return ResourceRegistry[key].Handler
+	return EndpointRegistry[key].Handler
 }
 
 type EndPoint struct {
@@ -57,8 +57,8 @@ type EndPoint struct {
 	Access      string
 }
 
-func (r *Route) BulkRegisterAndSave(resources []*EndPoint) {
-	for _, endpoint := range resources {
+func (r *Route) BulkRegisterAndSave(EndPoints []*EndPoint) {
+	for _, endpoint := range EndPoints {
 		r.Register(endpoint).Save()
 	}
 }
@@ -69,7 +69,7 @@ func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
 		panic("EndPoint Route access must be either public or private")
 	}
 	key := makeRegistryKey(endpoint.Path, endpoint.Method)
-	ResourceRegistry[key] = endpoint
+	EndpointRegistry[key] = endpoint
 	return &ResourceToRegister{
 		Path:        endpoint.Path,
 		Method:      endpoint.Method,

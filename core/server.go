@@ -39,7 +39,7 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate()
-	if _, err := model.SeedResources(db.Gorm); err != nil {
+	if _, err := model.SeedEndpoints(db.Gorm); err != nil {
 		panic(err)
 	}
 	if _, err := model.SeedRoles(db.Gorm); err != nil {

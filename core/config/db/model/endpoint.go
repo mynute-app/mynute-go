@@ -10,11 +10,11 @@ var AllowResourceCreation = false
 
 type EndPoint struct {
 	gorm.Model
-	Handler       string `json:"handler"`
-	Description   string `json:"description"`
-	Method        string `gorm:"type:varchar(10)" json:"method"`
-	Path          string `json:"path"`
-	IsPublic      bool   `gorm:"default:false" json:"is_public"`
+	Handler     string `json:"handler"`
+	Description string `json:"description"`
+	Method      string `gorm:"type:varchar(10)" json:"method"`
+	Path        string `json:"path"`
+	IsPublic    bool   `gorm:"default:false" json:"is_public"`
 }
 
 func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
@@ -38,32 +38,32 @@ func (EndPoint) Indexes() map[string]string {
 // --- Appointment Resources --- //
 
 var CreateAppointment = &EndPoint{
-	Path:          "/appointment",
-	Method:        "POST",
-	Handler:       "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
-	Description:   "Create an appointment",
-	IsPublic:      false, // Access: "private"
+	Path:        "/appointment",
+	Method:      "POST",
+	Handler:     "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
+	Description: "Create an appointment",
+	IsPublic:    false, // Access: "private"
 }
 var GetAppointmentByID = &EndPoint{
-	Path:          "/appointment/:id",
-	Method:        "GET",
-	Handler:       "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
-	Description:   "Get appointment by ID",
-	IsPublic:      false, // Access: "private"
+	Path:        "/appointment/:id",
+	Method:      "GET",
+	Handler:     "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
+	Description: "Get appointment by ID",
+	IsPublic:    false, // Access: "private"
 }
 var UpdateAppointmentByID = &EndPoint{
-	Path:          "/appointment/:id",
-	Method:        "PATCH",                 // Corrected from GET based on reference
-	Handler:       "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
-	Description:   "Update appointment by ID",
-	IsPublic:      false, // Access: "private"
+	Path:        "/appointment/:id",
+	Method:      "PATCH",                 // Corrected from GET based on reference
+	Handler:     "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
+	Description: "Update appointment by ID",
+	IsPublic:    false, // Access: "private"
 }
 var DeleteAppointmentByID = &EndPoint{
-	Path:          "/appointment/:id",
-	Method:        "DELETE",
-	Handler:       "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
-	Description:   "Delete appointment by ID",
-	IsPublic:      false, // Access: "private"
+	Path:        "/appointment/:id",
+	Method:      "DELETE",
+	Handler:     "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
+	Description: "Delete appointment by ID",
+	IsPublic:    false, // Access: "private"
 }
 
 // --- Auth Resources --- //
@@ -507,7 +507,7 @@ var Resources = []*EndPoint{
 	DeleteServiceById,
 }
 
-func SeedResources(db *gorm.DB) ([]*EndPoint, error) {
+func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
 	AllowResourceCreation = true
 	defer func() { AllowResourceCreation = false }()
 	for _, rsrc := range Resources {
