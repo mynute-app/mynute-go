@@ -56,10 +56,8 @@ type ConditionNode struct {
 // GetConditionsNode parses the stored JSON conditions into the ConditionNode struct
 func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 	var node ConditionNode
-	if len(p.Conditions) == 0 || string(p.Conditions) == "null" { // Check for empty or explicit null
-		// Decide behavior: Is an empty condition set allowed? Does it mean always true/false?
-		// Returning an empty node might be acceptable if evaluator handles it.
-		// Or return an error if conditions are mandatory.
+	if len(p.Conditions) == 0 || string(p.Conditions) == "null" {
+		// If conditions are empty or null, return an error or a default node based on your logic
 		return node, fmt.Errorf("policy rule %d has missing or null conditions", p.ID) // Or return (node, nil) if allowed
 	}
 	err := json.Unmarshal(p.Conditions, &node)
@@ -68,10 +66,8 @@ func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 	}
 	// Basic validation: Ensure a node is either a valid branch or a valid leaf
 	if node.Leaf == nil && (node.LogicType == "" || len(node.Children) == 0) {
-		// It's not a leaf, but lacks LogicType or Children - likely invalid structure
-		// However, an empty top-level object "{}" might parse without error but be invalid policy.
-		// Consider adding more validation if needed, based on how robust parsing/validation should be.
-		// For now, relying on evaluator logic to handle potentially underspecified nodes.
+		// It's a branch, but has no children or logic type - indicates malformed JSON perhaps
+		return node, fmt.Errorf("node `%s` is neither a valid branch nor a valid leaf", node.Description)
 	}
 	if node.Leaf != nil && (node.LogicType != "" || len(node.Children) > 0) {
 		// It's a leaf, but also has branch properties - indicates malformed JSON perhaps
@@ -107,8 +103,21 @@ var client_access_check = ConditionNode{
 	Description: "Client Access Check",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "IsNull", Description: "Subject must not belong to a company"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.id", Op: "Equals", ValueSourceAttr: "resource.client_id", Description: "Subject ID must match appointment client ID"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:        "subject.company_id",
+				Op:          "IsNull",
+				Description: "Subject must not belong to a company",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.client_id",
+				Description:     "Subject ID must match appointment client ID",
+			},
+		},
 	},
 }
 
@@ -116,8 +125,21 @@ var company_membership_access_check = ConditionNode{
 	Description: "Company Membership Check",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "IsNotNull", Description: "Subject must belong to a company"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "Equals", ValueSourceAttr: "resource.company_id", Description: "Subject company must match resource company"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:        "subject.company_id",
+				Op:          "IsNotNull",
+				Description: "Subject must belong to a company",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.company_id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.company_id",
+				Description:     "Subject company must match resource company",
+			},
+		},
 	},
 }
 
@@ -125,8 +147,22 @@ var company_owner_check = ConditionNode{
 	Description: "Allow if subject is the company owner",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleOwner.ID), Description: "Subject role must be Owner"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "Equals", ValueSourceAttr: "resource.company_id", Description: "Subject company must match resource company"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:        "subject.role_id",
+				Op:          "Equals",
+				Value:       MustMarshalJSON(SystemRoleOwner.ID),
+				Description: "Subject role must be Owner",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.company_id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.company_id",
+				Description:     "Subject company must match resource company",
+			},
+		},
 	},
 }
 
@@ -134,8 +170,22 @@ var company_general_manager_check = ConditionNode{
 	Description: "Allow if subject is the company general manager",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleGeneralManager.ID), Description: "Subject role must be General Manager"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "Equals", ValueSourceAttr: "resource.company_id", Description: "Subject company must match resource company"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:        "subject.role_id",
+				Op:          "Equals",
+				Value:       MustMarshalJSON(SystemRoleGeneralManager.ID),
+				Description: "Subject role must be General Manager",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.company_id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.company_id",
+				Description:     "Subject company must match resource company",
+			},
+		},
 	},
 }
 
@@ -143,9 +193,30 @@ var company_branch_manager_assigned_branch_check = ConditionNode{
 	Description: "Allow if subject is the company branch manager and the resource has the branch ID assigned to it",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleBranchManager.ID), Description: "Subject role must be Branch Manager"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "Equals", ValueSourceAttr: "resource.company_id", Description: "Subject company must match resource company"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.branches", Op: "Contains", ValueSourceAttr: "resource.branch_id", Description: "Subject branches must contain resource branch"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:        "subject.role_id",
+				Op:          "Equals",
+				Value:       MustMarshalJSON(SystemRoleBranchManager.ID),
+				Description: "Subject role must be Branch Manager",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.company_id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.company_id",
+				Description:     "Subject company must match resource company",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.branches",
+				Op:              "Contains",
+				ValueSourceAttr: "resource.branch_id",
+				Description:     "Subject branches must contain resource branch",
+			},
+		},
 	},
 }
 
@@ -153,11 +224,31 @@ var company_employee_assigned_employee_check = ConditionNode{
 	Description: "Allow if subject is the company employee and the resource has the employee ID assigned to it",
 	LogicType:   "AND",
 	Children: []ConditionNode{
-		{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: MustMarshalJSON(SystemRoleEmployee.ID), Description: "Subject role must be Employee"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "Equals", ValueSourceAttr: "resource.company_id", Description: "Subject company must match resource company"}},
-		{Leaf: &ConditionLeaf{Attr: "subject.id", Op: "Equals", ValueSourceAttr: "resource.employee_id", Description: "Subject ID must match resource employee ID"}},
+		{
+			Leaf: &ConditionLeaf{
+				Attr: "subject.role_id",
+				Op:   "Equals", Value: MustMarshalJSON(SystemRoleEmployee.ID),
+				Description: "Subject role must be Employee",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr: "subject.company_id",
+				Op:   "Equals", ValueSourceAttr: "resource.company_id",
+				Description: "Subject company must match resource company",
+			},
+		},
+		{
+			Leaf: &ConditionLeaf{
+				Attr:            "subject.id",
+				Op:              "Equals",
+				ValueSourceAttr: "resource.employee_id",
+				Description:     "Subject ID must match resource employee ID",
+			},
+		},
 	},
 }
+
 // Policy: Allow Create appointment by ID.
 var AllowCreateAppointment = &PolicyRule{
 	Name:        "SDP: CanCreateAppointment",
@@ -191,6 +282,7 @@ var AllowCreateAppointment = &PolicyRule{
 		},
 	}),
 }
+
 // Policy: Allow GET appointment by ID.
 var AllowGetAppointmentByID = &PolicyRule{
 	Name:        "SDP: CanViewAppointment",
