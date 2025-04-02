@@ -12,24 +12,25 @@ import (
 	"gorm.io/gorm"
 )
 
-var EndpointRegistry = map[string]*EndPoint{}
+var EndpointHandlers = make(map[string]fiber.Handler)
 
 func makeRegistryKey(path, method string) string {
 	method = strings.ToUpper(method)
 	return method + " " + path
 }
 
-type Route struct {
+type Endpoint struct {
 	DB *gorm.DB
 }
 
-func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
+func (ep *Endpoint) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
 	var EndPoints []*model.EndPoint
-	if err := r.DB.Find(&EndPoints).Error; err != nil {
+	db := ep.DB
+	if err := db.Find(&EndPoints).Error; err != nil {
 		return err
 	}
 	for _, EndPoint := range EndPoints {
-		dbRouteHandler := r.GetHandler(EndPoint.Path, EndPoint.Method)
+		dbRouteHandler := getHandler(EndPoint.Path, EndPoint.Method)
 		method := strings.ToUpper(EndPoint.Method)
 
 		if EndPoint.IsPublic {
@@ -44,41 +45,37 @@ func (r *Route) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handl
 	return nil
 }
 
-func (r *Route) GetHandler(path, method string) fiber.Handler {
+func getHandler(path, method string) fiber.Handler {
 	key := makeRegistryKey(path, method)
-	return EndpointRegistry[key].Handler
+	return EndpointHandlers[key]
 }
 
-type EndPoint struct {
-	Path        string
-	Method      string
-	Handler     fiber.Handler
-	Description string
-	Access      string
-}
-
-func (r *Route) BulkRegisterAndSave(EndPoints []*EndPoint) {
-	for _, endpoint := range EndPoints {
-		r.Register(endpoint).Save()
+func (ep *Endpoint) BulkRegisterAndSave(handlers []fiber.Handler) {
+	for _, h := range handlers {
+		ep.RegisterHandler(h)
 	}
 }
 
-func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
-	endpoint.Method = strings.ToUpper(endpoint.Method)
-	if endpoint.Access != "public" && endpoint.Access != "private" {
-		panic("EndPoint Route access must be either public or private")
-	}
-	key := makeRegistryKey(endpoint.Path, endpoint.Method)
-	EndpointRegistry[key] = endpoint
-	return &ResourceToRegister{
-		Path:        endpoint.Path,
-		Method:      endpoint.Method,
-		Handler:     endpoint.Handler,
-		Description: endpoint.Description,
-		Access:      endpoint.Access,
-		DB:          r.DB,
-	}
+func (ep *Endpoint) RegisterHandler(handler fiber.Handler) fiber.Handler {
+	return handler
 }
+
+// func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
+// 	endpoint.Method = strings.ToUpper(endpoint.Method)
+// 	if endpoint.Access != "public" && endpoint.Access != "private" {
+// 		panic("EndPoint Route access must be either public or private")
+// 	}
+// 	key := makeRegistryKey(endpoint.Path, endpoint.Method)
+// 	EndpointRegistry[key] = endpoint
+// 	return &ResourceToRegister{
+// 		Path:        endpoint.Path,
+// 		Method:      endpoint.Method,
+// 		Handler:     endpoint.Handler,
+// 		Description: endpoint.Description,
+// 		Access:      endpoint.Access,
+// 		DB:          r.DB,
+// 	}
+// }
 
 type ResourceToRegister struct {
 	Path        string
@@ -88,11 +85,6 @@ type ResourceToRegister struct {
 	Access      string
 	DB          *gorm.DB
 	RoleAccess  []string
-}
-
-func (rr *ResourceToRegister) SetRoleAccess(roles []string) *ResourceToRegister {
-	rr.RoleAccess = roles
-	return rr
 }
 
 func (rr *ResourceToRegister) Save() {
@@ -121,7 +113,7 @@ func (rr *ResourceToRegister) Save() {
 
 func getHandlerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
-	// Example: "agenda-kaki-go/core/controller.branch.(*BranchController).CreateBranch"
+	// Example: "agenda-kaki-go/core/controller.branch.(*BranchController).CreateBranch-fm"
 	parts := strings.Split(fullName, "/")
 	short := parts[len(parts)-1]
 	return short
