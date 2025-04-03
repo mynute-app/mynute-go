@@ -10,30 +10,29 @@ import (
 
 // ErrorStruct defines the error structure returned to clients.// ErrorStruct defines the error structure returned to clients.
 type ErrorStruct struct {
-	DescriptionEn string   `json:"description_en"`
-	DescriptionBr string   `json:"description_br"`
-	HTTPStatus    int      `json:"http_status"`
-	InnerError    []string `json:"inner_error"` // optional, shown only in dev
+	DescriptionEn string            `json:"description_en"`
+	DescriptionBr string            `json:"description_br"`
+	HTTPStatus    int               `json:"http_status"`
+	InnerError    map[string]string `json:"inner_error"` // optional, shown only in dev
 }
 
 // WithError attaches an internal error to the ErrorStruct
 func (e ErrorStruct) WithError(err error) ErrorStruct {
-	if err != nil {
-		e.InnerError = append(e.InnerError, err.Error())
+	if e.InnerError == nil {
+		e.InnerError = make(map[string]string)
 	}
+	index := fmt.Sprintf("%d", len(e.InnerError) + 1)
+	e.InnerError[index] = err.Error()
 	return e
 }
 
 // Optional: If you want a printable version
 func (e ErrorStruct) Error() string {
-	if len(e.InnerError) > 0 {
-		errText := ""
-		for index, innerErr := range e.InnerError {
-			errText += fmt.Sprintf("%d. Inner error : %s \n", index+1, innerErr)
-		}
-		return fmt.Sprintf("%s \n%s", e.DescriptionEn, errText)
+	e_byte, err := json.Marshal(e)
+	if err != nil {
+		return fmt.Sprintf("ErrorStruct: %s", err.Error())
 	}
-	return e.DescriptionEn
+	return string(e_byte) 
 }
 
 // ToJSON converts the ErrorStruct to a JSON string.
@@ -83,11 +82,12 @@ type AppointmentErrors struct {
 
 // Grouped errors per domain
 type AuthErrors struct {
-	InvalidLogin     ErrorStruct
-	NoToken          ErrorStruct
-	InvalidToken     ErrorStruct
-	Unauthorized     ErrorStruct
-	EmailCodeInvalid ErrorStruct
+	InvalidLogin                ErrorStruct
+	NoToken                     ErrorStruct
+	InvalidToken                ErrorStruct
+	Unauthorized                ErrorStruct
+	EmailCodeInvalid            ErrorStruct
+	MissingResourceKeyAttribute ErrorStruct
 }
 
 type BranchErrors struct {
@@ -142,11 +142,12 @@ type RoleErrors struct {
 // Global error instances
 var Error = ErrorCategory{
 	Auth: AuthErrors{
-		InvalidLogin:     NewError("Invalid login", "Login inválido", fiber.StatusUnauthorized),
-		NoToken:          NewError("No token provided", "Nenhum token fornecido", fiber.StatusUnauthorized),
-		InvalidToken:     NewError("Invalid token", "Token inválido", fiber.StatusUnauthorized),
-		Unauthorized:     NewError("You are not authorized to access this endpoint", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
-		EmailCodeInvalid: NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
+		InvalidLogin:                NewError("Invalid login", "Login inválido", fiber.StatusUnauthorized),
+		NoToken:                     NewError("No token provided", "Nenhum token fornecido", fiber.StatusUnauthorized),
+		InvalidToken:                NewError("Invalid token", "Token inválido", fiber.StatusUnauthorized),
+		Unauthorized:                NewError("You are not authorized to access this endpoint", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
+		EmailCodeInvalid:            NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
+		MissingResourceKeyAttribute: NewError("Resource key attribute lookup (resource_key) is missing at the request target object lookup (resource_key_at) that was set in the policy.", "Lookup do atributo de chave de recurso (resource_key) não encontrado no objeto de destino (resource_key_at) que foi definido na política.", fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
 		StartTimeInThePast: NewError("Start time is in the past", "A data de início está no passado", fiber.StatusBadRequest),

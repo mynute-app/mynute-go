@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"errors"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -52,7 +53,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	var policies []*model.PolicyRule
-	PoliciesWhereClause := "id = ? AND (company_id IS NULL OR company_id = ?)"
+	PoliciesWhereClause := "end_point_id = ? AND (company_id IS NULL OR company_id = ?)"
 	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
 		Find(&policies).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
@@ -79,7 +80,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 			if val, ok := body[key]; ok {
 				value = val
 			} else {
-				return nil, lib.Error.Auth.Unauthorized
+				return nil, lib.Error.Auth.MissingResourceKeyAttribute
 			}
 		default:
 			panic("Invalid Resource param at")
@@ -91,11 +92,12 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		if err := db.Table(table).
 			Where(ResourceWhereClause, value).
 			Take(&resource).Error; err != nil {
-			return nil, lib.Error.Auth.Unauthorized
+			return nil, lib.Error.Auth.Unauthorized.WithError(err)
 		}
 
 		if len(resource) == 0 {
-			return nil, lib.Error.Auth.Unauthorized
+			return nil, lib.Error.Auth.Unauthorized.
+			WithError(errors.New("no resource found"))
 		}
 
 		return resource, nil
@@ -107,6 +109,10 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		valueAt := policy.ResourceValueAt
 		resource, err := getResource(table, key, valueAt)
 		if err != nil {
+			errVal, ok := err.(lib.ErrorStruct)
+			if ok {
+				return errVal.WithError(fmt.Errorf("policy ID: %d, Policy Name: %s, ResourceTable: %s, ResourceKey: %s, ResourceValueAt: %s", policy.ID, policy.Name, table, key, valueAt))
+			}
 			return err
 		}
 		if ok, err := am.PolicyEngine.CanAccess(subject, resource, policy); err != nil {

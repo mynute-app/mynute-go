@@ -36,7 +36,9 @@ func Error(logger *slog.Logger) fiber.ErrorHandler {
 			DescriptionEn: "Internal Server Error",
 			DescriptionBr: "Erro interno do servidor",
 			HTTPStatus:    500,
-			InnerError:    []string{err.Error()},
+			InnerError: map[string]string{
+				"1": err.Error(),
+			},
 		}
 
 		MyErrJson := MyErr.ToJSON()

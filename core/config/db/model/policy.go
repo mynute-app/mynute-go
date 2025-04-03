@@ -13,7 +13,7 @@ var AllowNilCreatedBy = false
 var AllowNilResourceID = false
 
 type PolicyRule struct {
-	ID                  uint            `gorm:"primaryKey"`
+	gorm.Model
 	CompanyID           *uint           `json:"company_id"`
 	CreatedByEmployeeID *uint           `json:"created_by_employee_id"`
 	Name                string          `json:"name"`
@@ -22,9 +22,9 @@ type PolicyRule struct {
 	EndPointID          uint            `json:"end_point_id"` // Link to EndPoint definition
 	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnDelete:CASCADE;" json:"endpoint"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
-	ResourceTable       string          `gorm:"-" json:"resource_table"`
-	ResourceKey         string          `gorm:"-" json:"resource_key"`
-	ResourceValueAt     string          `gorm:"-" json:"resource_value_at"`
+	ResourceTable       string          `json:"resource_table"`
+	ResourceKey         string          `json:"resource_key"`
+	ResourceValueAt     string          `json:"resource_value_at"`
 }
 
 // --- ConditionLeaf (Represents a single atomic check) ---
