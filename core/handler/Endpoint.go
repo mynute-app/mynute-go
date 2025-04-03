@@ -13,11 +13,6 @@ import (
 
 var EndpointHandlers = make(map[string]fiber.Handler)
 
-func makeRegistryKey(path, method string) string {
-	method = strings.ToUpper(method)
-	return method + " " + path
-}
-
 type Endpoint struct {
 	DB *gorm.DB
 }
@@ -29,7 +24,7 @@ func (ep *Endpoint) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.H
 		return err
 	}
 	for _, EndPoint := range EndPoints {
-		dbRouteHandler := getHandler(EndPoint.Path, EndPoint.Method)
+		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
 
 		if EndPoint.IsPublic {
@@ -44,12 +39,11 @@ func (ep *Endpoint) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.H
 	return nil
 }
 
-func getHandler(path, method string) fiber.Handler {
-	key := makeRegistryKey(path, method)
-	return EndpointHandlers[key]
+func getHandler(handlerName string) fiber.Handler {
+	return EndpointHandlers[handlerName]
 }
 
-func (ep *Endpoint) BulkRegister(handlers []fiber.Handler) {
+func (ep *Endpoint) BulkRegisterHandler(handlers []fiber.Handler) {
 	for _, h := range handlers {
 		ep.RegisterHandler(h)
 	}
@@ -82,8 +76,14 @@ func (ep *Endpoint) RegisterHandler(handler fiber.Handler) {
 
 func getHandlerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
-	// Example: "agenda-kaki-go/core/controller.branch.(*BranchController).CreateBranch-fm"
-	parts := strings.Split(fullName, "/")
-	short := parts[len(parts)-1]
-	return short
+	// Example: "agenda-kaki-go/core/controller.(*appointment_controller).CreateAppointment-fm"
+	parts := strings.Split(fullName, ".")
+	if len(parts) == 0 {
+		return fullName
+	}
+	last := parts[len(parts)-1]
+	// Remove suffix like "-fm" if present
+	last = strings.Split(last, "-")[0]
+	return last
 }
+

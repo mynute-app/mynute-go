@@ -340,5 +340,19 @@ func Employee(Gorm *handler.Gorm) *employee_controller {
 			Associations: []string{"Branches", "Company", "Services", "Appointments"},
 		},
 	}
+	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		ec.CreateEmployee,
+		ec.GetEmployeeById,
+		ec.GetEmployeeByEmail,
+		ec.UpdateEmployeeById,
+		ec.DeleteEmployeeById,
+		ec.AddServiceToEmployee,
+		ec.RemoveServiceFromEmployee,
+		ec.AddBranchToEmployee,
+		ec.RemoveBranchFromEmployee,
+		ec.LoginEmployee,
+		ec.VerifyEmployeeEmail,
+	})
 	return ec
 }

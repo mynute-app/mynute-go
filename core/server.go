@@ -45,6 +45,9 @@ func NewServer() *Server {
 	if _, err := model.SeedRoles(db.Gorm); err != nil {
 		panic(err)
 	}
+	if _, err := model.SeedPolicies(db.Gorm); err != nil {
+		panic(err)
+	}
 	routes.Build(db.Gorm, app)
 	return &Server{App: app, Db: db}
 }

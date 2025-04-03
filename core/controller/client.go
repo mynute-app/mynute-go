@@ -172,5 +172,14 @@ func Client(Gorm *handler.Gorm) *client_controller {
 			Associations: []string{"Appointments"},
 		},
 	}
+	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		cc.CreateClient,
+		cc.LoginClient,
+		cc.VerifyClientEmail,
+		cc.GetClientByEmail,
+		cc.UpdateClientById,
+		cc.DeleteClientById,
+	})
 	return cc
 }

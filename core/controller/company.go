@@ -155,5 +155,14 @@ func Company(Gorm *handler.Gorm) *company_controller {
 			Associations: []string{"Sector", "Branches", "Employees", "Services"},
 		},
 	}
+	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		cc.CreateCompany,
+		cc.GetCompanyById,
+		cc.GetCompanyByName,
+		cc.GetCompanyByTaxId,
+		cc.UpdateCompanyById,
+		cc.DeleteCompanyById,
+	})
 	return cc
 }

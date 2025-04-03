@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var AllowResourceCreation = false
+var AllowEndpointCreation = false
 
 type EndPoint struct {
 	gorm.Model
@@ -18,7 +18,7 @@ type EndPoint struct {
 }
 
 func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
-	if !AllowResourceCreation {
+	if !AllowEndpointCreation {
 		panic("EndPoint creation is not allowed")
 	}
 	return nil
@@ -26,7 +26,7 @@ func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
 
 // Custom Composite Index
 func (EndPoint) TableName() string {
-	return "resources"
+	return "endpoints"
 }
 
 func (EndPoint) Indexes() map[string]string {
@@ -35,7 +35,7 @@ func (EndPoint) Indexes() map[string]string {
 	}
 }
 
-// --- Appointment Resources --- //
+// --- Appointment Endpoints --- //
 
 var CreateAppointment = &EndPoint{
 	Path:        "/appointment",
@@ -66,7 +66,7 @@ var DeleteAppointmentByID = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Auth Resources --- //
+// --- Auth Endpoints --- //
 
 var VerifyExistingAccount = &EndPoint{
 	Path:        "/auth/verify-existing-account",
@@ -97,7 +97,7 @@ var LogoutProvider = &EndPoint{
 	IsPublic:    true, // Access: "public"
 }
 
-// --- Branch Resources --- //
+// --- Branch Endpoints --- //
 
 var CreateBranch = &EndPoint{
 	Path:        "/branch",
@@ -156,7 +156,7 @@ var RemoveServiceFromBranch = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Client Resources --- //
+// --- Client Endpoints --- //
 
 var CreateClient = &EndPoint{
 	Path:        "/client",
@@ -201,7 +201,7 @@ var DeleteClientById = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Company Resources --- //
+// --- Company Endpoints --- //
 
 var CreateCompany = &EndPoint{
 	Path:        "/company",
@@ -246,7 +246,7 @@ var DeleteCompanyById = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Employee Resources --- //
+// --- Employee Endpoints --- //
 
 var CreateEmployee = &EndPoint{
 	Path:        "/employee",
@@ -326,7 +326,7 @@ var RemoveBranchFromEmployee = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Holiday Resources --- //
+// --- Holiday Endpoints --- //
 
 var CreateHoliday = &EndPoint{
 	Path:        "/holiday",
@@ -364,7 +364,7 @@ var DeleteHolidayById = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Sector Resources --- //
+// --- Sector Endpoints --- //
 
 var CreateSector = &EndPoint{
 	Path:        "/sector",
@@ -402,7 +402,7 @@ var DeleteSectorById = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Service Resources --- //
+// --- Service Endpoints --- //
 
 var CreateService = &EndPoint{
 	Path:        "/service",
@@ -440,8 +440,8 @@ var DeleteServiceById = &EndPoint{
 	IsPublic:    false, // Access: "private"
 }
 
-// --- Combine all resources into a slice for seeding --- //
-var Resources = []*EndPoint{
+// --- Combine all Endpoints into a slice for seeding --- //
+var Endpoints = []*EndPoint{
 	// Appointment
 	CreateAppointment,
 	GetAppointmentByID,
@@ -508,18 +508,18 @@ var Resources = []*EndPoint{
 }
 
 func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
-	AllowResourceCreation = true
-	defer func() { AllowResourceCreation = false }()
-	for _, rsrc := range Resources {
-		err := db.Where("method = ? AND path = ?", rsrc.Method, rsrc.Path).First(rsrc).Error
+	AllowEndpointCreation = true
+	defer func() { AllowEndpointCreation = false }()
+	for _, edp := range Endpoints {
+		err := db.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
 		if err == gorm.ErrRecordNotFound {
-			if err := db.Create(rsrc).Error; err != nil {
+			if err := db.Create(edp).Error; err != nil {
 				return nil, err
 			}
 		} else if err != nil {
 			return nil, err
 		}
 	}
-	log.Println("System resources seeded successfully!")
-	return Resources, nil
+	log.Println("System endpoints seeded successfully!")
+	return Endpoints, nil
 }

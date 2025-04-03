@@ -32,6 +32,7 @@ var models = []any{
 	&model.Service{},
 	&model.EndPoint{},
 	&model.Role{},
+	&model.PolicyRule{},
 }
 
 // Connects to the database

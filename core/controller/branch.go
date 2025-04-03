@@ -233,5 +233,16 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 			Associations: []string{"Employees", "Services", "Company", "Appointments"},
 		},
 	}
+	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		bc.CreateBranch,
+		bc.GetBranchById,
+		bc.GetBranchByName,
+		bc.UpdateBranchById,
+		bc.DeleteBranchById,
+		bc.GetEmployeeServicesByBranchId,
+		bc.AddServiceToBranch,
+		bc.RemoveServiceFromBranch,
+	})
 	return bc
 }

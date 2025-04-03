@@ -88,5 +88,12 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 			Associations: []string{"Branches", "Services", "Appointment", "Company"},
 		},
 	}
+	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		ac.VerifyExistingAccount,
+		ac.BeginAuthProviderCallback,
+		ac.GetAuthCallbackFunction,
+		ac.LogoutProvider,
+	})
 	return ac
 }

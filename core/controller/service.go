@@ -106,5 +106,14 @@ func Service(Gorm *handler.Gorm) *service_controller {
 			Associations: []string{"Company", "Branches", "Employees"},
 		},
 	}
+	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		sc.CreateService,
+		sc.GetServiceById,
+		sc.GetServiceByName,
+		sc.UpdateServiceById,
+		sc.DeleteServiceById,
+	})
+	
 	return sc
 }

@@ -105,5 +105,13 @@ func Holiday(Gorm *handler.Gorm) *holidays_controller {
 			Associations: []string{},
 		},
 	}
+	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		hc.CreateHoliday,
+		hc.GetHolidayById,
+		hc.GetHolidayByName,
+		hc.UpdateHolidayById,
+		hc.DeleteHolidayById,
+	})
 	return hc
 }

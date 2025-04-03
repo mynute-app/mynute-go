@@ -104,5 +104,13 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 			Associations: []string{},
 		},
 	}
+	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint.BulkRegisterHandler([]fiber.Handler{
+		sc.CreateSector,
+		sc.GetSectorByName,
+		sc.GetSectorById,
+		sc.UpdateSectorById,
+		sc.DeleteSectorById,
+	})
 	return sc
 }

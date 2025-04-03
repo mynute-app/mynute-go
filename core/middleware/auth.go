@@ -52,7 +52,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	var policies []*model.PolicyRule
-	PoliciesWhereClause := fmt.Sprintf("endpoint_id = ? AND (company_id IS NULL OR company_id = ?)")
+	PoliciesWhereClause := "id = ? AND (company_id IS NULL OR company_id = ?)"
 	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
 		Find(&policies).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
@@ -89,7 +89,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 		resource := make(map[string]any)
 		if err := db.Table(table).
-			Where(ResourceWhereClause, value). // Need to replace with actual endpoint ID from the path
+			Where(ResourceWhereClause, value).
 			Take(&resource).Error; err != nil {
 			return nil, lib.Error.Auth.Unauthorized
 		}
