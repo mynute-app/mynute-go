@@ -70,14 +70,14 @@ func evalNode(node model.ConditionNode, subject, resource map[string]interface{}
 }
 
 func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]interface{}) (bool, error) {
-	left, err := resolveAttr(leaf.Attr, subject, resource)
+	left, err := resolveAttr(leaf.Attribute, subject, resource)
 	if err != nil {
 		return false, err
 	}
 
 	var right interface{}
-	if leaf.ValueSourceAttr != "" {
-		right, err = resolveAttr(leaf.ValueSourceAttr, subject, resource)
+	if leaf.ResourceAttribute != "" {
+		right, err = resolveAttr(leaf.ResourceAttribute, subject, resource)
 		if err != nil {
 			return false, err
 		}
@@ -87,7 +87,7 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]interface{}
 		}
 	}
 
-	switch leaf.Op {
+	switch leaf.Operator {
 	case "Equals":
 		return reflect.DeepEqual(left, right), nil
 	case "IsNull":
@@ -97,7 +97,7 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]interface{}
 	case "Contains":
 		val := reflect.ValueOf(left)
 		if val.Kind() != reflect.Slice && val.Kind() != reflect.Array {
-			return false, fmt.Errorf("attribute %s is not a slice or array", leaf.Attr)
+			return false, fmt.Errorf("attribute %s is not a slice or array", leaf.Attribute)
 		}
 		for i := 0; i < val.Len(); i++ {
 			if reflect.DeepEqual(val.Index(i).Interface(), right) {
@@ -106,13 +106,13 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]interface{}
 		}
 		return false, nil
 	case "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual":
-		return compareNumbers(left, right, leaf.Op)
+		return compareNumbers(left, right, leaf.Operator)
 	case "StartsWith", "EndsWith", "Includes":
-		return compareStrings(left, right, leaf.Op)
+		return compareStrings(left, right, leaf.Operator)
 	case "Before", "After":
-		return compareTimes(left, right, leaf.Op)
+		return compareTimes(left, right, leaf.Operator)
 	default:
-		return false, fmt.Errorf("unsupported operation: %s", leaf.Op)
+		return false, fmt.Errorf("unsupported operation: %s", leaf.Operator)
 	}
 }
 

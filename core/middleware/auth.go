@@ -63,21 +63,21 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.Unauthorized
 	}
 
-	getResource := func(table, key, valueAt string) (map[string]any, error) {
+	getResource := func(rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at string) (map[string]any, error) {
 		var value any
-		switch valueAt {
+		switch rsrc_req_val_at {
 		case "query":
-			value = c.Query(key)
+			value = c.Query(rsrc_req_key)
 		case "header":
-			value = c.Get(key)
+			value = c.Get(rsrc_req_key)
 		case "path":
-			value = c.Params(key)
+			value = c.Params(rsrc_req_key)
 		case "body":
 			var body map[string]any
 			if err := c.BodyParser(&body); err != nil {
 				return nil, err
 			}
-			if val, ok := body[key]; ok {
+			if val, ok := body[rsrc_req_key]; ok {
 				value = val
 			} else {
 				return nil, lib.Error.Auth.MissingResourceKeyAttribute
@@ -86,10 +86,10 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 			panic("Invalid Resource param at")
 		}
 
-		ResourceWhereClause := fmt.Sprintf("%s = ?", key)
+		ResourceWhereClause := fmt.Sprintf("%s = ?", rsrc_db_key)
 
 		resource := make(map[string]any)
-		if err := db.Table(table).
+		if err := db.Table(rsrc_db_table).
 			Where(ResourceWhereClause, value).
 			Take(&resource).Error; err != nil {
 			return nil, lib.Error.Auth.Unauthorized.WithError(err)
@@ -97,21 +97,37 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 		if len(resource) == 0 {
 			return nil, lib.Error.Auth.Unauthorized.
-			WithError(errors.New("no resource found"))
+				WithError(errors.New("no resource found"))
 		}
 
 		return resource, nil
 	}
 
 	for _, policy := range policies {
-		table := policy.ResourceTable
-		key := policy.ResourceKey
-		valueAt := policy.ResourceValueAt
-		resource, err := getResource(table, key, valueAt)
+		var resource map[string]any
+		ResourceID := policy.ResourceID
+		if ResourceID == 0 {
+			return lib.
+				Error.
+				Auth.
+				Unauthorized.
+				WithError(fmt.
+					Errorf("policy ID: %d, Policy Name: %s, ResourceID: %d", policy.ID, policy.Name, ResourceID),
+				)
+		}
+		
+		rsrc_db_table := policy.ResourceDatabaseTable
+		rsrc_db_key := policy.ResourceDatabaseKey
+		rsrc_req_key := policy.ResourceRequestKey
+		rsrc_req_val_at := policy.ResourceRequestValueAt
+		if rsrc_db_key == "" {
+			rsrc_db_key = rsrc_req_key
+		}
+		resource, err := getResource(rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at)
 		if err != nil {
 			errVal, ok := err.(lib.ErrorStruct)
 			if ok {
-				return errVal.WithError(fmt.Errorf("policy ID: %d, Policy Name: %s, ResourceTable: %s, ResourceKey: %s, ResourceValueAt: %s", policy.ID, policy.Name, table, key, valueAt))
+				return errVal.WithError(fmt.Errorf("policy ID: %d, Policy Name: %s, ResourceDatabaseTable: %s, ResourceDatabaseKey: %s, ResourceRequestKey: %s, ResourceRequestValueAt: %s", policy.ID, policy.Name, rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at))
 			}
 			return err
 		}

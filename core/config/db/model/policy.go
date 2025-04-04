@@ -15,28 +15,19 @@ var AllowNilResourceID = false
 type PolicyRule struct {
 	gorm.Model
 	CompanyID           *uint           `json:"company_id"`
+	Company             Company         `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
 	CreatedByEmployeeID *uint           `json:"created_by_employee_id"`
+	CreatedByEmployee   Employee        `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
-	Effect              string          `json:"effect"`       // "Allow" / "Deny"
-	EndPointID          uint            `json:"end_point_id"` // Link to EndPoint definition
-	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnDelete:CASCADE;" json:"endpoint"`
+	Effect              string          `json:"effect"` // "Allow" / "Deny"
+	ActionID            uint            `json:"action_id"`
+	Action              Action          `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"action"`
+	ResourceID          uint            `json:"resource_id"`
+	Resource            Resource        `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
+	PropertyID          *uint           `json:"property_id"`
+	Property            Property        `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
-	ResourceTable       string          `json:"resource_table"`
-	ResourceKey         string          `json:"resource_key"`
-	ResourceValueAt     string          `json:"resource_value_at"`
-}
-
-// --- ConditionLeaf (Represents a single atomic check) ---
-type ConditionLeaf struct {
-	Attr string `json:"attr"` // The primary attribute (e.g., "subject.role_id")
-	Op   string `json:"op"`   // The comparison operator (e.g., "Equals", "IsNull", "Contains")
-
-	// Use EITHER Value OR ValueSourceAttr for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
-	Value           json.RawMessage `json:"value,omitempty"`             // Static value to compare against
-	ValueSourceAttr string          `json:"value_source_attr,omitempty"` // Other attribute's name to compare against
-
-	Description string `json:"description,omitempty"` // Optional human-readable description of the check
 }
 
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
@@ -55,6 +46,18 @@ type ConditionNode struct {
 	// Leaf points to the actual condition details. Required for leaf nodes.
 	Leaf *ConditionLeaf `json:"leaf,omitempty"` // omitempty: Only present for leaf nodes
 }
+
+// --- ConditionLeaf (Represents a single atomic check) ---
+type ConditionLeaf struct {
+	Attribute   string `json:"attribute"`             // The primary attribute (e.g., "subject.role_id")
+	Operator    string `json:"operator"`              // The comparison operator (e.g., "Equals", "IsNull", "Contains")
+	Description string `json:"description,omitempty"` // Optional human-readable description of the check
+	
+	// Use EITHER Value OR ResourceAttribute for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
+	Value             json.RawMessage    `json:"value,omitempty"`              // Static value to compare against
+	ResourceAttribute string             `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
+}
+
 
 // GetConditionsNode parses the stored JSON conditions into the ConditionNode struct
 func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
@@ -109,17 +112,17 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attr:        "subject.company_id",
-					Op:          "IsNull",
+					Attribute:   "subject.company_id",
+					Operator:    "IsNull",
 					Description: "Subject must be a Client (no company affiliation)",
 				},
 			},
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.client_id", // Assumes context provides resource.client_id from the fetched resource
-					Description:     "Subject ID must match the resource's client ID",
+					Attribute:         "subject.id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.client_id", // Assumes context provides resource.client_id from the fetched resource
+					Description:       "Subject ID must match the resource's client ID",
 				},
 			},
 		},
@@ -132,17 +135,17 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attr:        "subject.company_id",
-					Op:          "IsNull",
+					Attribute:   "subject.company_id",
+					Operator:    "IsNull",
 					Description: "Subject must be a Client",
 				},
 			},
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.id", // Assumes context provides resource.id from path parameter matching subject's ID
-					Description:     "Subject ID must match the resource ID being accessed",
+					Attribute:         "subject.id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.id", // Assumes context provides resource.id from path parameter matching subject's ID
+					Description:       "Subject ID must match the resource ID being accessed",
 				},
 			},
 		},
@@ -156,25 +159,25 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attr:        "subject.company_id",
-					Op:          "IsNotNull",
+					Attribute:   "subject.company_id",
+					Operator:    "IsNotNull",
 					Description: "Subject must belong to a company",
 				},
 			},
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.id", // Assumes context provides resource.id from path matching subject's ID
-					Description:     "Subject ID must match the resource ID being accessed",
+					Attribute:         "subject.id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.id", // Assumes context provides resource.id from path matching subject's ID
+					Description:       "Subject ID must match the resource ID being accessed",
 				},
 			},
 			{ // Belt-and-suspenders: Check company match too
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.company_id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.company_id", // Assumes context provides resource.company_id from the fetched resource
-					Description:     "Subject company must match the resource's company",
+					Attribute:         "subject.company_id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.company_id", // Assumes context provides resource.company_id from the fetched resource
+					Description:       "Subject company must match the resource's company",
 				},
 			},
 		},
@@ -187,17 +190,17 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attr:        "subject.company_id",
-					Op:          "IsNotNull",
+					Attribute:   "subject.company_id",
+					Operator:    "IsNotNull",
 					Description: "Subject must belong to a company",
 				},
 			},
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.company_id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.company_id", // Assumes context provides resource.company_id from resource/path/body
-					Description:     "Subject company must match the resource's company",
+					Attribute:         "subject.company_id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.company_id", // Assumes context provides resource.company_id from resource/path/body
+					Description:       "Subject company must match the resource's company",
 				},
 			},
 		},
@@ -208,7 +211,13 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is Owner of the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
+			{
+				Leaf: &ConditionLeaf{
+					Attribute: "subject.role_id", 
+					Operator: "Equals", 
+					Value: JsonRawMessage(SystemRoleOwner.ID),
+				},
+			},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -218,7 +227,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is General Manager of the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -228,7 +237,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is Branch Manager within the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -241,10 +250,10 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 			company_branch_manager_check, // Must be a BM in the correct company first
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.branches",   // Assumes subject context has assigned branch IDs (e.g., [10, 25])
-					Op:              "Contains",           // Checks if the list contains the value
-					ValueSourceAttr: "resource.branch_id", // Assumes context provides resource.branch_id from the resource/path/body
-					Description:     "Subject's assigned branches must include the resource's branch",
+					Attribute:         "subject.branches",   // Assumes subject context has assigned branch IDs (e.g., [10, 25])
+					Operator:          "Contains",           // Checks if the list contains the value
+					ResourceAttribute: "resource.branch_id", // Assumes context provides resource.branch_id from the resource/path/body
+					Description:       "Subject's assigned branches must include the resource's branch",
 				},
 			},
 		},
@@ -255,14 +264,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is the Employee associated with the Resource",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 			company_membership_access_check, // Must be in the same company
 			{
 				Leaf: &ConditionLeaf{
-					Attr:            "subject.id",
-					Op:              "Equals",
-					ValueSourceAttr: "resource.employee_id", // Assumes context provides resource.employee_id from the resource
-					Description:     "Subject ID must match the resource's employee ID",
+					Attribute:         "subject.id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.employee_id", // Assumes context provides resource.employee_id from the resource
+					Description:       "Subject ID must match the resource's employee ID",
 				},
 			},
 		},
@@ -302,10 +311,10 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 				Description: "Role Check (Is Owner, GM, BM, or Employee)",
 				LogicType:   "OR",
 				Children: []ConditionNode{
-					{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
-					{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
-					{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
-					{Leaf: &ConditionLeaf{Attr: "subject.role_id", Op: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 				},
 			},
 		},
@@ -318,11 +327,6 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateAppointment",
 		Description: "Allows clients to create appointments for themselves, or company users based on role/relation.",
 		Effect:      "Allow",
-		EndPointID:  CreateAppointment.ID,
-		// Resource context often refers to the container/parent for creation. Here, likely the branch.
-		ResourceTable:   "branches",  // Resource being referenced for context/permissions
-		ResourceKey:     "branch_id", // Key in the request body identifying the branch
-		ResourceValueAt: "body",      // Where to find the value for ResourceKey
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Creation OR Company User Creation",
 			LogicType:   "OR",
@@ -332,8 +336,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 					Description: "Client Self-Creation",
 					LogicType:   "AND",
 					Children: []ConditionNode{
-						{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "IsNull", Description: "Must be a Client"}},
-						{Leaf: &ConditionLeaf{Attr: "subject.id", Op: "Equals", ValueSourceAttr: "resource.client_id", Description: "Client ID in body must match Subject ID"}},
+						{Leaf: &ConditionLeaf{Attribute: "subject.company_id", Operator: "IsNull", Description: "Must be a Client"}},
+						{Leaf: &ConditionLeaf{Attribute: "subject.id", Operator: "Equals", ResourceAttribute: "resource.client_id", Description: "Client ID in body must match Subject ID"}},
 					},
 				},
 				// Company User creating. Assumes 'branch_id' and maybe 'employee_id' are in the body.
@@ -361,13 +365,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 
 	// Policy: Allow GET appointment by ID.
 	var AllowGetAppointmentByID = &PolicyRule{
-		Name:            "SDP: CanViewAppointment",
-		Description:     "Allows clients to view own appointments, or company users based on role/relation.",
-		Effect:          "Allow",
-		EndPointID:      GetAppointmentByID.ID,
-		ResourceTable:   "appointments", // The resource being acted upon
-		ResourceKey:     "id",           // The identifier in the path
-		ResourceValueAt: "path",         // Found in the URL path
+		Name:        "SDP: CanViewAppointment",
+		Description: "Allows clients to view own appointments, or company users based on role/relation.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Access OR Company User Access",
 			LogicType:   "OR",
@@ -398,13 +398,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 
 	// Policy: Allow UPDATE appointment by ID.
 	var AllowUpdateAppointmentByID = &PolicyRule{
-		Name:            "SDP: CanUpdateAppointment",
-		Description:     "Allows clients to update own appointments, or company managers/assigned employees.",
-		Effect:          "Allow",
-		EndPointID:      UpdateAppointmentByID.ID,
-		ResourceTable:   "appointments",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanUpdateAppointment",
+		Description: "Allows clients to update own appointments, or company managers/assigned employees.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Self-Update OR Company User Update",
 			LogicType:   "OR",
@@ -433,13 +429,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 
 	// Policy: Allow DELETE appointment by ID.
 	var AllowDeleteAppointmentByID = &PolicyRule{
-		Name:            "SDP: CanDeleteAppointment",
-		Description:     "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
-		Effect:          "Allow",
-		EndPointID:      DeleteAppointmentByID.ID,
-		ResourceTable:   "appointments",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanDeleteAppointment",
+		Description: "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Company User Delete Check",
 			LogicType:   "AND",
@@ -465,45 +457,27 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateBranch",
 		Description: "Allows company Owner or General Manager to create branches.",
 		Effect:      "Allow",
-		EndPointID:  CreateBranch.ID,
-		// Context is the company under which the branch is created
-		ResourceTable:   "companies",
-		ResourceKey:     "company_id", // Assuming company_id is provided in the request body
-		ResourceValueAt: "body",
-		// Condition checks against resource.company_id derived from the body
-		Conditions: JsonRawMessage(company_admin_check), // Owner or GM of the target company
+		Conditions:  JsonRawMessage(company_admin_check), // Owner or GM of the target company
 	}
 
 	var AllowGetBranchById = &PolicyRule{
-		Name:            "SDP: CanViewBranchById",
-		Description:     "Allows any user belonging to the same company to view branch details by ID.",
-		Effect:          "Allow",
-		EndPointID:      GetBranchById.ID,
-		ResourceTable:   "branches",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
+		Name:        "SDP: CanViewBranchById",
+		Description: "Allows any user belonging to the same company to view branch details by ID.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 	}
 
 	var AllowGetBranchByName = &PolicyRule{
-		Name:            "SDP: CanViewBranchByName",
-		Description:     "Allows any user belonging to the same company to view branch details by name.",
-		Effect:          "Allow",
-		EndPointID:      GetBranchByName.ID,
-		ResourceTable:   "branches", // The lookup happens on branches table
-		ResourceKey:     "name",     // The key used for lookup in the path
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
+		Name:        "SDP: CanViewBranchByName",
+		Description: "Allows any user belonging to the same company to view branch details by name.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 	}
 
 	var AllowUpdateBranchById = &PolicyRule{
-		Name:            "SDP: CanUpdateBranch",
-		Description:     "Allows company Owner, General Manager, or assigned Branch Manager to update branches.",
-		Effect:          "Allow",
-		EndPointID:      UpdateBranchById.ID,
-		ResourceTable:   "branches",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanUpdateBranch",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to update branches.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Update Access",
 			LogicType:   "OR",
@@ -515,38 +489,23 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowDeleteBranchById = &PolicyRule{
-		Name:            "SDP: CanDeleteBranch",
-		Description:     "Allows company Owner or General Manager to delete branches.",
-		Effect:          "Allow",
-		EndPointID:      DeleteBranchById.ID,
-		ResourceTable:   "branches",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(company_admin_check), // Only Owner or GM
+		Name:        "SDP: CanDeleteBranch",
+		Description: "Allows company Owner or General Manager to delete branches.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM
 	}
 
 	var AllowGetEmployeeServicesByBranchId = &PolicyRule{
-		Name:            "SDP: CanViewEmployeeServicesInBranch",
-		Description:     "Allows company members to view employee services within a branch.",
-		Effect:          "Allow",
-		EndPointID:      GetEmployeeServicesByBranchId.ID,
-		ResourceTable:   "branches", // Primary resource context is the branch
-		ResourceKey:     "id",       // Branch ID from the path
-		ResourceValueAt: "path",
-		// Context needs resource.company_id derived from the branch ID
-		Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company
+		Name:        "SDP: CanViewEmployeeServicesInBranch",
+		Description: "Allows company members to view employee services within a branch.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company
 	}
 
 	var AllowAddServiceToBranch = &PolicyRule{
-		Name:            "SDP: CanAddServiceToBranch",
-		Description:     "Allows company managers (Owner, GM, relevant BM) to add services to a branch.",
-		Effect:          "Allow",
-		EndPointID:      AddServiceToBranch.ID,
-		ResourceTable:   "branches", // Action is on the branch
-		ResourceKey:     "id",       // Branch ID from the path
-		ResourceValueAt: "path",
-		// Service ID likely comes from body/query
-		// Context needs resource.company_id and resource.branch_id from the branch resource
+		Name:        "SDP: CanAddServiceToBranch",
+		Description: "Allows company managers (Owner, GM, relevant BM) to add services to a branch.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Access",
 			LogicType:   "OR",
@@ -558,14 +517,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowRemoveServiceFromBranch = &PolicyRule{
-		Name:            "SDP: CanRemoveServiceFromBranch",
-		Description:     "Allows company managers (Owner, GM, relevant BM) to remove services from a branch.",
-		Effect:          "Allow",
-		EndPointID:      RemoveServiceFromBranch.ID,
-		ResourceTable:   "branches", // Action is on the branch
-		ResourceKey:     "id",       // Branch ID from the path
-		ResourceValueAt: "path",
-		// Service ID likely comes from body/query/path
+		Name:        "SDP: CanRemoveServiceFromBranch",
+		Description: "Allows company managers (Owner, GM, relevant BM) to remove services from a branch.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Access",
 			LogicType:   "OR",
@@ -579,79 +533,55 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	// --- Client Policies ---
 
 	var AllowGetClientByEmail = &PolicyRule{
-		Name:            "SDP: CanViewClientByEmail",
-		Description:     "Allows a client to retrieve their own profile by email.",
-		Effect:          "Allow",
-		EndPointID:      GetClientByEmail.ID,
-		ResourceTable:   "clients", // Lookup is on clients table
-		ResourceKey:     "email",   // Key used for lookup from path
-		ResourceValueAt: "path",
+		Name:        "SDP: CanViewClientByEmail",
+		Description: "Allows a client to retrieve their own profile by email.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow only if the subject's email matches the email in the path.",
 			LogicType:   "AND",
 			Children: []ConditionNode{
-				{Leaf: &ConditionLeaf{Attr: "subject.company_id", Op: "IsNull", Description: "Must be a Client"}},                                                       // Ensure subject is a client
-				{Leaf: &ConditionLeaf{Attr: "subject.email", Op: "Equals", ValueSourceAttr: "resource.email", Description: "Subject email must match email from path"}}, // Assumes context has resource.email from path
+				{Leaf: &ConditionLeaf{Attribute: "subject.company_id", Operator: "IsNull", Description: "Must be a Client"}},                                                         // Ensure subject is a client
+				{Leaf: &ConditionLeaf{Attribute: "subject.email", Operator: "Equals", ResourceAttribute: "resource.email", Description: "Subject email must match email from path"}}, // Assumes context has resource.email from path
 			},
 		}),
 	}
 
 	var AllowUpdateClientById = &PolicyRule{
-		Name:            "SDP: CanUpdateClient",
-		Description:     "Allows a client to update their own profile.",
-		Effect:          "Allow",
-		EndPointID:      UpdateClientById.ID,
-		ResourceTable:   "clients",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(client_self_access_check), // Client can update self (checks subject.id == resource.id)
+		Name:        "SDP: CanUpdateClient",
+		Description: "Allows a client to update their own profile.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can update self (checks subject.id == resource.id)
 	}
 
 	var AllowDeleteClientById = &PolicyRule{
-		Name:            "SDP: CanDeleteClient",
-		Description:     "Allows a client to delete their own profile.",
-		Effect:          "Allow",
-		EndPointID:      DeleteClientById.ID,
-		ResourceTable:   "clients",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(client_self_access_check), // Client can delete self
+		Name:        "SDP: CanDeleteClient",
+		Description: "Allows a client to delete their own profile.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self
 	}
 
 	// --- Company Policies ---
 
 	var AllowGetCompanyById = &PolicyRule{
-		Name:            "SDP: CanViewCompanyById",
-		Description:     "Allows any member (employee/manager) of the company to view its details.",
-		Effect:          "Allow",
-		EndPointID:      GetCompanyById.ID,
-		ResourceTable:   "companies",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanViewCompanyById",
+		Description: "Allows any member (employee/manager) of the company to view its details.",
+		Effect:      "Allow",
 		// Checks subject.company_id equals resource.company_id (derived from the path ID)
 		Conditions: JsonRawMessage(company_membership_access_check),
 	}
 
 	var AllowUpdateCompanyById = &PolicyRule{
-		Name:            "SDP: CanUpdateCompany",
-		Description:     "Allows the company Owner or General Manager to update company details.",
-		Effect:          "Allow",
-		EndPointID:      UpdateCompanyById.ID,
-		ResourceTable:   "companies",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+		Name:        "SDP: CanUpdateCompany",
+		Description: "Allows the company Owner or General Manager to update company details.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 	}
 
 	var AllowDeleteCompanyById = &PolicyRule{
-		Name:            "SDP: CanDeleteCompany",
-		Description:     "Allows ONLY the company Owner to delete the company.",
-		Effect:          "Allow",
-		EndPointID:      DeleteCompanyById.ID,
-		ResourceTable:   "companies",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		Conditions:      JsonRawMessage(company_owner_check), // Only Owner of this company
+		Name:        "SDP: CanDeleteCompany",
+		Description: "Allows ONLY the company Owner to delete the company.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_owner_check), // Only Owner of this company
 	}
 
 	// --- Employee Policies ---
@@ -660,11 +590,6 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateEmployee",
 		Description: "Allows company Owner, GM, or BM to create employees (BM restricted to their branches implicitly if data includes branch).",
 		Effect:      "Allow",
-		EndPointID:  CreateEmployee.ID,
-		// Context is the company they are being created under
-		ResourceTable:   "companies",
-		ResourceKey:     "company_id", // Assume company_id is in the request body or derived
-		ResourceValueAt: "body",       // Or "context" if derived from subject/environment
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Branch Manager Creation Access",
 			LogicType:   "OR",
@@ -679,13 +604,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowGetEmployeeById = &PolicyRule{
-		Name:            "SDP: CanViewEmployeeById",
-		Description:     "Allows employee to view self, or any internal user of the same company to view other employees.",
-		Effect:          "Allow",
-		EndPointID:      GetEmployeeById.ID,
-		ResourceTable:   "employees",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanViewEmployeeById",
+		Description: "Allows employee to view self, or any internal user of the same company to view other employees.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-View OR Any Internal Company User View",
 			LogicType:   "OR",
@@ -697,25 +618,16 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowGetEmployeeByEmail = &PolicyRule{
-		Name:            "SDP: CanViewEmployeeByEmail",
-		Description:     "Allows company members to find employees within the same company by email.",
-		Effect:          "Allow",
-		EndPointID:      GetEmployeeByEmail.ID,
-		ResourceTable:   "employees", // Lookup on employees table
-		ResourceKey:     "email",     // Key from path
-		ResourceValueAt: "path",
-		// Requires resource.company_id populated from the employee found by email
-		Conditions: JsonRawMessage(company_internal_user_check), // Subject must be internal user of the found employee's company
+		Name:        "SDP: CanViewEmployeeByEmail",
+		Description: "Allows company members to find employees within the same company by email.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Subject must be internal user of the found employee's company
 	}
 
 	var AllowUpdateEmployeeById = &PolicyRule{
-		Name:            "SDP: CanUpdateEmployee",
-		Description:     "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
-		Effect:          "Allow",
-		EndPointID:      UpdateEmployeeById.ID,
-		ResourceTable:   "employees",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
+		Name:        "SDP: CanUpdateEmployee",
+		Description: "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-Update OR Manager Update",
 			LogicType:   "OR",
@@ -731,53 +643,30 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowDeleteEmployeeById = &PolicyRule{
-		Name:            "SDP: CanDeleteEmployee",
-		Description:     "Allows company managers (Owner, GM, BM) to delete employees.",
-		Effect:          "Allow",
-		EndPointID:      DeleteEmployeeById.ID,
-		ResourceTable:   "employees",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Same scoping comment as Update: BM can delete any employee in the company currently.
-		Conditions: JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
+		Name:        "SDP: CanDeleteEmployee",
+		Description: "Allows company managers (Owner, GM, BM) to delete employees.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 	}
 
 	var AllowAddServiceToEmployee = &PolicyRule{
-		Name:            "SDP: CanAddServiceToEmployee",
-		Description:     "Allows company managers (Owner, GM, BM) to assign services to employees.",
-		Effect:          "Allow",
-		EndPointID:      AddServiceToEmployee.ID,
-		ResourceTable:   "employees", // Primary action context is the employee
-		ResourceKey:     "id",        // Employee ID from path
-		ResourceValueAt: "path",
-		// Service ID likely from body/query
-		// Requires resource.company_id from the employee resource
-		Conditions: JsonRawMessage(company_manager_check), // Manager of the employee's company
+		Name:        "SDP: CanAddServiceToEmployee",
+		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
 	var AllowRemoveServiceFromEmployee = &PolicyRule{
-		Name:            "SDP: CanRemoveServiceFromEmployee",
-		Description:     "Allows company managers (Owner, GM, BM) to remove services from employees.",
-		Effect:          "Allow",
-		EndPointID:      RemoveServiceFromEmployee.ID,
-		ResourceTable:   "employees", // Primary action context is the employee
-		ResourceKey:     "id",        // Employee ID from path
-		ResourceValueAt: "path",
-		// Service ID likely from body/query/path
-		// Requires resource.company_id from the employee resource
-		Conditions: JsonRawMessage(company_manager_check), // Manager of the employee's company
+		Name:        "SDP: CanRemoveServiceFromEmployee",
+		Description: "Allows company managers (Owner, GM, BM) to remove services from employees.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
 	var AllowAddBranchToEmployee = &PolicyRule{
-		Name:            "SDP: CanAddBranchToEmployee",
-		Description:     "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
-		Effect:          "Allow",
-		EndPointID:      AddBranchToEmployee.ID,
-		ResourceTable:   "employees", // Primary action context is the employee
-		ResourceKey:     "id",        // Employee ID from path
-		ResourceValueAt: "path",
-		// Branch ID comes from path/body, used for resource.branch_id in BM check
-		// Requires resource.company_id from the employee resource
+		Name:        "SDP: CanAddBranchToEmployee",
+		Description: "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -790,15 +679,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	var AllowRemoveBranchFromEmployee = &PolicyRule{
-		Name:            "SDP: CanRemoveBranchFromEmployee",
-		Description:     "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
-		Effect:          "Allow",
-		EndPointID:      RemoveBranchFromEmployee.ID,
-		ResourceTable:   "employees", // Primary action context is the employee
-		ResourceKey:     "id",        // Employee ID from path
-		ResourceValueAt: "path",
-		// Branch ID comes from path/body, used for resource.branch_id in BM check
-		// Requires resource.company_id from the employee resource
+		Name:        "SDP: CanRemoveBranchFromEmployee",
+		Description: "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
+		Effect:      "Allow",
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -816,142 +699,85 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to create holidays for the company/branch.",
 		Effect:      "Allow",
-		EndPointID:  CreateHoliday.ID,
-		// Context depends on whether holidays are company-wide or branch-specific
-		ResourceTable:   "companies",  // Assuming company-wide context needed
-		ResourceKey:     "company_id", // Assume company_id provided or derived
-		ResourceValueAt: "body",       // Or "context"
-		// If branch-specific is possible via BM:
-		// ResourceTable: "branches", ResourceKey: "branch_id", ResourceValueAt: "body"
-		Conditions: JsonRawMessage(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
 	}
 
 	var AllowGetHolidayById = &PolicyRule{
-		Name:            "SDP: CanViewHolidayById",
-		Description:     "Allows company members to view holiday details.",
-		Effect:          "Allow",
-		EndPointID:      GetHolidayById.ID,
-		ResourceTable:   "holidays",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the holiday resource
-		Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the holiday's company
+		Name:        "SDP: CanViewHolidayById",
+		Description: "Allows company members to view holiday details.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the holiday's company
 	}
 
 	var AllowUpdateHolidayById = &PolicyRule{
-		Name:            "SDP: CanUpdateHoliday",
-		Description:     "Allows company managers (Owner, GM, BM) to update holidays.",
-		Effect:          "Allow",
-		EndPointID:      UpdateHolidayById.ID,
-		ResourceTable:   "holidays",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the holiday resource
-		Conditions: JsonRawMessage(company_manager_check), // Any manager of the holiday's company
+		Name:        "SDP: CanUpdateHoliday",
+		Description: "Allows company managers (Owner, GM, BM) to update holidays.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
 	var AllowDeleteHolidayById = &PolicyRule{
-		Name:            "SDP: CanDeleteHoliday",
-		Description:     "Allows company managers (Owner, GM, BM) to delete holidays.",
-		Effect:          "Allow",
-		EndPointID:      DeleteHolidayById.ID,
-		ResourceTable:   "holidays",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the holiday resource
-		Conditions: JsonRawMessage(company_manager_check), // Any manager of the holiday's company
+		Name:        "SDP: CanDeleteHoliday",
+		Description: "Allows company managers (Owner, GM, BM) to delete holidays.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
 	// --- Sector Policies --- (Assuming Company Specific)
 
 	var AllowCreateSector = &PolicyRule{
-		Name:            "SDP: CanCreateSector",
-		Description:     "Allows company Owner or General Manager to create sectors.",
-		Effect:          "Allow",
-		EndPointID:      CreateSector.ID,
-		ResourceTable:   "companies",  // Context is the company
-		ResourceKey:     "company_id", // Assume provided or derived
-		ResourceValueAt: "body",       // Or "context"
-		// Requires resource.company_id derived from request/context
-		Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of that company
+		Name:        "SDP: CanCreateSector",
+		Description: "Allows company Owner or General Manager to create sectors.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of that company
 	}
 
 	// GetSectorById/Name assumed Public - No Policy Needed
 
 	var AllowUpdateSectorById = &PolicyRule{
-		Name:            "SDP: CanUpdateSector",
-		Description:     "Allows company Owner or General Manager to update sectors.",
-		Effect:          "Allow",
-		EndPointID:      UpdateSectorById.ID,
-		ResourceTable:   "sectors",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the sector resource
-		Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
+		Name:        "SDP: CanUpdateSector",
+		Description: "Allows company Owner or General Manager to update sectors.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 	}
 
 	var AllowDeleteSectorById = &PolicyRule{
-		Name:            "SDP: CanDeleteSector",
-		Description:     "Allows company Owner or General Manager to delete sectors.",
-		Effect:          "Allow",
-		EndPointID:      DeleteSectorById.ID,
-		ResourceTable:   "sectors",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the sector resource
-		Conditions: JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
+		Name:        "SDP: CanDeleteSector",
+		Description: "Allows company Owner or General Manager to delete sectors.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 	}
 
 	// --- Service Policies --- (Assuming Company Specific)
 
 	var AllowCreateService = &PolicyRule{
-		Name:            "SDP: CanCreateService",
-		Description:     "Allows company managers (Owner, GM, BM) to create services.",
-		Effect:          "Allow",
-		EndPointID:      CreateService.ID,
-		ResourceTable:   "companies",  // Context is the company
-		ResourceKey:     "company_id", // Assume provided or derived
-		ResourceValueAt: "body",       // Or "context"
-		// Requires resource.company_id derived from request/context
-		Conditions: JsonRawMessage(company_manager_check), // Any manager of the company context
+		Name:        "SDP: CanCreateService",
+		Description: "Allows company managers (Owner, GM, BM) to create services.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the company context
 	}
 
 	var AllowGetServiceById = &PolicyRule{
-		Name:            "SDP: CanViewServiceById",
-		Description:     "Allows company members to view service details.",
-		Effect:          "Allow",
-		EndPointID:      GetServiceById.ID,
-		ResourceTable:   "services",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the service resource
-		Conditions: JsonRawMessage(company_internal_user_check), // Any internal user of the service's company
+		Name:        "SDP: CanViewServiceById",
+		Description: "Allows company members to view service details.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the service's company
 	}
 
 	// GetServiceByName assumed Public - No Policy Needed
 
 	var AllowUpdateServiceById = &PolicyRule{
-		Name:            "SDP: CanUpdateService",
-		Description:     "Allows company managers (Owner, GM, BM) to update services.",
-		Effect:          "Allow",
-		EndPointID:      UpdateServiceById.ID,
-		ResourceTable:   "services",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the service resource
-		Conditions: JsonRawMessage(company_manager_check), // Any manager of the service's company
+		Name:        "SDP: CanUpdateService",
+		Description: "Allows company managers (Owner, GM, BM) to update services.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
 	var AllowDeleteServiceById = &PolicyRule{
-		Name:            "SDP: CanDeleteService",
-		Description:     "Allows company managers (Owner, GM, BM) to delete services.",
-		Effect:          "Allow",
-		EndPointID:      DeleteServiceById.ID,
-		ResourceTable:   "services",
-		ResourceKey:     "id",
-		ResourceValueAt: "path",
-		// Requires resource.company_id from the service resource
-		Conditions: JsonRawMessage(company_manager_check), // Any manager of the service's company
+		Name:        "SDP: CanDeleteService",
+		Description: "Allows company managers (Owner, GM, BM) to delete services.",
+		Effect:      "Allow",
+		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
 	// --- Combined Policies List ---
@@ -1040,17 +866,11 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 			log.Println("Warning: Encountered nil policy in Policies list.")
 			continue
 		}
-		if policy.EndPointID == 0 {
-			// This assumes EndPoint IDs are assigned elsewhere before seeding.
-			// If EndPoint structs need creating/finding first, do that here.
-			log.Printf("Warning: Policy '%s' has EndPointID 0. Skipping seeding.", policy.Name)
-			continue
-		}
 
 		// Create a placeholder to find existing policy
 		var existingPolicy PolicyRule
 		// Find system policies specifically (company_id IS NULL)
-		err := tx.Where("name = ? AND company_id IS NULL AND end_point_id = ?", policy.Name, policy.EndPointID).First(&existingPolicy).Error
+		err := tx.Where("name = ? AND company_id IS NULL", policy.Name).First(&existingPolicy).Error
 
 		if err == gorm.ErrRecordNotFound {
 			// Policy doesn't exist, create it
@@ -1064,10 +884,6 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 			tx.Rollback()
 			return nil, fmt.Errorf("failed to query policy '%s': %w", policy.Name, err)
 		} else {
-			// Policy exists - Optional: Update if definition changed (more complex)
-			// For simplicity, we'll just log that it exists.
-			// To update: Compare fields (e.g., Description, Conditions JSON) and tx.Save(&existingPolicy) if needed.
-			// log.Printf("System policy '%s' already exists.", policy.Name)
 			updatedCount++ // Increment if you implement update logic
 		}
 	}
