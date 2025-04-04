@@ -46,14 +46,26 @@ var SingleIdQueryRef = ResourceReference{
 	RequestRef:  "query",
 }
 
-var CompanyResource = &Resource{
-	Name:        "company",
-	Description: "Company resource",
-	Table:       "companies",
+var AppointmentResource = &Resource{
+	Name:        "appointment",
+	Description: "Appointment resource",
+	Table:       "appointments",
 	References: []ResourceReference{
 		SingleQueryRef(),
-		MultipleQueryRef("company_id"),
-		MultipleBodyRef("company_id"),
+		MultipleQueryRef("appointment_id"),
+		MultipleBodyRef("appointment_id"),
+		MultipleQueryRef("name"),
+	},
+}
+
+var BranchResource = &Resource{
+	Name:        "branch",
+	Description: "Branch resource",
+	Table:       "branches",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("branch_id"),
+		MultipleBodyRef("branch_id"),
 	},
 }
 
@@ -65,5 +77,82 @@ var ClientResource = &Resource{
 		SingleQueryRef(),
 		MultipleQueryRef("client_id"),
 		MultipleBodyRef("client_id"),
+	},
+}
+
+var CompanyResource = &Resource{
+	Name:        "company",
+	Description: "Company resource",
+	Table:       "companies",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("company_id"),
+		MultipleBodyRef("company_id"),
+	},
+}
+
+var EmployeeResource = &Resource{
+	Name:        "employee",
+	Description: "Employee resource",
+	Table:       "employees",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("employee_id"),
+		MultipleBodyRef("employee_id"),
+	},
+}
+
+var HolidayResource = &Resource{
+	Name:        "holiday",
+	Description: "Holiday resource",
+	Table:       "holidays",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("holiday_id"),
+		MultipleBodyRef("holiday_id"),
+	},
+}
+
+var RoleResource = &Resource{
+	Name:        "role",
+	Description: "Role resource",
+	Table:       "roles",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("role_id"),
+		MultipleBodyRef("role_id"),
+	},
+}
+
+var SectorResource = &Resource{
+	Name:        "sector",
+	Description: "Sector resource",
+	Table:       "sectors",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("sector_id"),
+		MultipleBodyRef("sector_id"),
+	},
+}
+
+var ServiceResource = &Resource{
+	Name:        "service",
+	Description: "Service resource",
+	Table:       "services",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("service_id"),
+		MultipleBodyRef("service_id"),
+	},
+}
+
+var AuthResource = &Resource{
+	Name:        "auth",
+	Description: "Auth resource",
+	Table:       "auth",
+	References: []ResourceReference{
+		SingleQueryRef(),
+		MultipleQueryRef("auth_id"),
+		MultipleBodyRef("auth_id"),
 	},
 }
