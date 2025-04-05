@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"log"
+
+	"gorm.io/gorm"
+)
 
 type Resource struct {
 	gorm.Model
@@ -155,4 +159,27 @@ var AuthResource = &Resource{
 		MultipleQueryRef("auth_id"),
 		MultipleBodyRef("auth_id"),
 	},
+}
+
+var Resources = []*Resource{
+	AppointmentResource,
+	BranchResource,
+	ClientResource,
+	CompanyResource,
+	EmployeeResource,
+	HolidayResource,
+	RoleResource,
+	SectorResource,
+	ServiceResource,
+	AuthResource,
+}
+
+func SeedResources(db *gorm.DB) error {
+	for _, resource := range Resources {
+		if err := db.Where("table = ?", resource.Table).FirstOrCreate(resource).Error; err != nil {
+			return err
+		}
+	}
+	log.Print("Resources seeded successfully")
+	return nil
 }

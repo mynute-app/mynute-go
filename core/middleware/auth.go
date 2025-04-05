@@ -6,7 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	"errors"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +27,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	path := c.Route().Path
 
 	var EndPoint model.EndPoint
-	if err := db.Where("method = ? AND path = ?", method, path).First(&EndPoint).Error; err != nil || EndPoint.ID == 0 {
+	if err := db.Where("method = ? AND path = ?", method, path).Preload("Resources").First(&EndPoint).Error; err != nil || EndPoint.ID == 0 {
 		return lib.Error.Auth.Unauthorized
 	}
 
@@ -44,17 +44,9 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		UserTableName = "employees"
 	}
 
-	subject := make(map[string]any)
-
-	if err := db.Table(UserTableName).
-		Where("id = ?", claim.ID).
-		Take(&subject).Error; err != nil {
-		return lib.Error.Auth.InvalidToken
-	}
-
 	var policies []*model.PolicyRule
-	PoliciesWhereClause := "end_point_id = ? AND (company_id IS NULL OR company_id = ?)"
-	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
+	PoliciesWhereClause := "method = ? AND resource_id = ? AND (company_id IS NULL OR company_id = ?)"
+	if err := db.Where(PoliciesWhereClause, EndPoint.Method, EndPoint.ResourceID, claim.CompanyID).
 		Find(&policies).Error; err != nil {
 		return lib.Error.Auth.Unauthorized
 	}
@@ -63,75 +55,70 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.Unauthorized
 	}
 
-	getResource := func(rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at string) (map[string]any, error) {
-		var value any
-		switch rsrc_req_val_at {
+	subject_data := make(map[string]any)
+
+	if err := db.Table(UserTableName).
+		Where("id = ?", claim.ID).
+		Take(&subject_data).Error; err != nil {
+		return lib.Error.Auth.InvalidToken
+	}
+
+	var RequestVal string
+	var ResourceReference model.ResourceReference
+	for _, ref := range EndPoint.Resource.References {
+		switch ref.RequestRef {
 		case "query":
-			value = c.Query(rsrc_req_key)
-		case "header":
-			value = c.Get(rsrc_req_key)
-		case "path":
-			value = c.Params(rsrc_req_key)
+			if c.Query(ref.RequestKey) != "" {
+				ResourceReference = ref
+				RequestVal = c.Query(ref.RequestKey)
+				break
+			}
 		case "body":
 			var body map[string]any
-			if err := c.BodyParser(&body); err != nil {
-				return nil, err
+			bbytes := c.Request().Body()
+			if len(bbytes) == 0 {
+				continue
 			}
-			if val, ok := body[rsrc_req_key]; ok {
-				value = val
-			} else {
-				return nil, lib.Error.Auth.MissingResourceKeyAttribute
+			if err := json.Unmarshal(bbytes, &body); err != nil {
+				return err
+			}
+			if body[ref.RequestKey] != nil && body[ref.RequestKey] != "" {
+				ResourceReference = ref
+				RequestVal = fmt.Sprintf("%v", body[ref.RequestKey])
+				break
+			}
+		case "header":
+			if c.Get(ref.RequestKey) != "" {
+				ResourceReference = ref
+				RequestVal = c.Get(ref.RequestKey)
+				break
+			}
+		case "path":
+			if c.Params(ref.RequestKey) != "" {
+				ResourceReference = ref
+				RequestVal = c.Params(ref.RequestKey)
+				break
 			}
 		default:
-			panic("Invalid Resource param at")
+			return fmt.Errorf("invalid request reference type: %s. Endpoint.Resource.ID: %d", ref.RequestRef, EndPoint.Resource.ID)
 		}
+	}
 
-		ResourceWhereClause := fmt.Sprintf("%s = ?", rsrc_db_key)
+	if RequestVal == "" {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("Request is malformed. Endpoint.Resource.ID: %d", EndPoint.Resource.ID))
+	}
 
-		resource := make(map[string]any)
-		if err := db.Table(rsrc_db_table).
-			Where(ResourceWhereClause, value).
-			Take(&resource).Error; err != nil {
-			return nil, lib.Error.Auth.Unauthorized.WithError(err)
-		}
+	resource_data := make(map[string]any)
 
-		if len(resource) == 0 {
-			return nil, lib.Error.Auth.Unauthorized.
-				WithError(errors.New("no resource found"))
-		}
-
-		return resource, nil
+	if err := db.
+		Table(EndPoint.Resource.Table).
+		Where(ResourceReference.DatabaseKey+" = ?", RequestVal).
+		Take(&resource_data).Error; err != nil {
+		return lib.Error.Auth.Unauthorized.WithError(err)
 	}
 
 	for _, policy := range policies {
-		var resource map[string]any
-		ResourceID := policy.ResourceID
-		if ResourceID == 0 {
-			return lib.
-				Error.
-				Auth.
-				Unauthorized.
-				WithError(fmt.
-					Errorf("policy ID: %d, Policy Name: %s, ResourceID: %d", policy.ID, policy.Name, ResourceID),
-				)
-		}
-		
-		rsrc_db_table := policy.ResourceDatabaseTable
-		rsrc_db_key := policy.ResourceDatabaseKey
-		rsrc_req_key := policy.ResourceRequestKey
-		rsrc_req_val_at := policy.ResourceRequestValueAt
-		if rsrc_db_key == "" {
-			rsrc_db_key = rsrc_req_key
-		}
-		resource, err := getResource(rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at)
-		if err != nil {
-			errVal, ok := err.(lib.ErrorStruct)
-			if ok {
-				return errVal.WithError(fmt.Errorf("policy ID: %d, Policy Name: %s, ResourceDatabaseTable: %s, ResourceDatabaseKey: %s, ResourceRequestKey: %s, ResourceRequestValueAt: %s", policy.ID, policy.Name, rsrc_db_table, rsrc_db_key, rsrc_req_key, rsrc_req_val_at))
-			}
-			return err
-		}
-		if ok, err := am.PolicyEngine.CanAccess(subject, resource, policy); err != nil {
+		if ok, err := am.PolicyEngine.CanAccess(subject_data, resource_data, policy); err != nil {
 			return err
 		} else if !ok {
 			return lib.Error.Auth.Unauthorized

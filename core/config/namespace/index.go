@@ -80,11 +80,11 @@ var HolidaysKey = TypeStruct{
 }
 
 var Role = struct {
-	Owner string
-	GeneralManager string
-	BranchManager string
+	Owner            string
+	GeneralManager   string
+	BranchManager    string
 	BranchSupervisor string
-	Employee string
+	Employee         string
 }{
 	Owner:            "Owner",
 	GeneralManager:   "General Manager",
@@ -92,3 +92,10 @@ var Role = struct {
 	BranchSupervisor: "Branch Supervisor",
 	Employee:         "Employee",
 }
+
+var (
+	CreateActionMethod = "POST"
+	ViewActionMethod   = "GET"
+	UpdateActionMethod = "PATCH"
+	DeleteActionMethod = "DELETE"
+)

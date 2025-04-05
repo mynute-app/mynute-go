@@ -1,6 +1,7 @@
 package model
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -21,12 +22,11 @@ type PolicyRule struct {
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
 	Effect              string          `json:"effect"` // "Allow" / "Deny"
-	ActionID            uint            `json:"action_id"`
-	Action              Action          `gorm:"foreignKey:ActionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"action"`
+	Method              string          `json:"method"` // HTTP method (e.g., "GET", "POST", "PUT", "DELETE")
 	ResourceID          uint            `json:"resource_id"`
 	Resource            Resource        `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 	PropertyID          *uint           `json:"property_id"`
-	Property            Property        `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
+	Property            *Property        `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
@@ -52,12 +52,11 @@ type ConditionLeaf struct {
 	Attribute   string `json:"attribute"`             // The primary attribute (e.g., "subject.role_id")
 	Operator    string `json:"operator"`              // The comparison operator (e.g., "Equals", "IsNull", "Contains")
 	Description string `json:"description,omitempty"` // Optional human-readable description of the check
-	
-	// Use EITHER Value OR ResourceAttribute for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
-	Value             json.RawMessage    `json:"value,omitempty"`              // Static value to compare against
-	ResourceAttribute string             `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
-}
 
+	// Use EITHER Value OR ResourceAttribute for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
+	Value             json.RawMessage `json:"value,omitempty"`              // Static value to compare against
+	ResourceAttribute string          `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
+}
 
 // GetConditionsNode parses the stored JSON conditions into the ConditionNode struct
 func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
@@ -213,9 +212,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attribute: "subject.role_id", 
-					Operator: "Equals", 
-					Value: JsonRawMessage(SystemRoleOwner.ID),
+					Attribute: "subject.role_id",
+					Operator:  "Equals",
+					Value:     JsonRawMessage(SystemRoleOwner.ID),
 				},
 			},
 			company_membership_access_check, // Re-use the company match check
@@ -368,6 +367,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewAppointment",
 		Description: "Allows clients to view own appointments, or company users based on role/relation.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Access OR Company User Access",
 			LogicType:   "OR",
@@ -401,6 +401,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateAppointment",
 		Description: "Allows clients to update own appointments, or company managers/assigned employees.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Self-Update OR Company User Update",
 			LogicType:   "OR",
@@ -432,6 +433,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteAppointment",
 		Description: "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Company User Delete Check",
 			LogicType:   "AND",
@@ -457,6 +459,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateBranch",
 		Description: "Allows company Owner or General Manager to create branches.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Owner or GM of the target company
 	}
 
@@ -464,6 +467,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewBranchById",
 		Description: "Allows any user belonging to the same company to view branch details by ID.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 	}
 
@@ -471,6 +475,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewBranchByName",
 		Description: "Allows any user belonging to the same company to view branch details by name.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 	}
 
@@ -478,6 +483,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateBranch",
 		Description: "Allows company Owner, General Manager, or assigned Branch Manager to update branches.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Update Access",
 			LogicType:   "OR",
@@ -492,6 +498,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteBranch",
 		Description: "Allows company Owner or General Manager to delete branches.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM
 	}
 
@@ -499,6 +506,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewEmployeeServicesInBranch",
 		Description: "Allows company members to view employee services within a branch.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company
 	}
 
@@ -506,6 +514,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanAddServiceToBranch",
 		Description: "Allows company managers (Owner, GM, relevant BM) to add services to a branch.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Access",
 			LogicType:   "OR",
@@ -520,6 +529,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanRemoveServiceFromBranch",
 		Description: "Allows company managers (Owner, GM, relevant BM) to remove services from a branch.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Access",
 			LogicType:   "OR",
@@ -536,6 +546,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewClientByEmail",
 		Description: "Allows a client to retrieve their own profile by email.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow only if the subject's email matches the email in the path.",
 			LogicType:   "AND",
@@ -550,6 +561,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateClient",
 		Description: "Allows a client to update their own profile.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions:  JsonRawMessage(client_self_access_check), // Client can update self (checks subject.id == resource.id)
 	}
 
@@ -557,6 +569,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteClient",
 		Description: "Allows a client to delete their own profile.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self
 	}
 
@@ -566,14 +579,15 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewCompanyById",
 		Description: "Allows any member (employee/manager) of the company to view its details.",
 		Effect:      "Allow",
-		// Checks subject.company_id equals resource.company_id (derived from the path ID)
-		Conditions: JsonRawMessage(company_membership_access_check),
+		Method:      namespace.ViewActionMethod,
+		Conditions:  JsonRawMessage(company_membership_access_check),
 	}
 
 	var AllowUpdateCompanyById = &PolicyRule{
 		Name:        "SDP: CanUpdateCompany",
 		Description: "Allows the company Owner or General Manager to update company details.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 	}
 
@@ -581,6 +595,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteCompany",
 		Description: "Allows ONLY the company Owner to delete the company.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_owner_check), // Only Owner of this company
 	}
 
@@ -590,6 +605,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateEmployee",
 		Description: "Allows company Owner, GM, or BM to create employees (BM restricted to their branches implicitly if data includes branch).",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Branch Manager Creation Access",
 			LogicType:   "OR",
@@ -607,6 +623,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewEmployeeById",
 		Description: "Allows employee to view self, or any internal user of the same company to view other employees.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-View OR Any Internal Company User View",
 			LogicType:   "OR",
@@ -621,6 +638,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewEmployeeByEmail",
 		Description: "Allows company members to find employees within the same company by email.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Subject must be internal user of the found employee's company
 	}
 
@@ -628,6 +646,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateEmployee",
 		Description: "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-Update OR Manager Update",
 			LogicType:   "OR",
@@ -646,6 +665,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to delete employees.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 	}
 
@@ -653,6 +673,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanAddServiceToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
@@ -660,6 +681,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanRemoveServiceFromEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to remove services from employees.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
@@ -667,6 +689,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanAddBranchToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -682,6 +705,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanRemoveBranchFromEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -699,6 +723,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to create holidays for the company/branch.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
 	}
 
@@ -706,6 +731,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewHolidayById",
 		Description: "Allows company members to view holiday details.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the holiday's company
 	}
 
@@ -713,6 +739,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to update holidays.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
@@ -720,6 +747,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to delete holidays.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
@@ -729,6 +757,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateSector",
 		Description: "Allows company Owner or General Manager to create sectors.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of that company
 	}
 
@@ -738,6 +767,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateSector",
 		Description: "Allows company Owner or General Manager to update sectors.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 	}
 
@@ -745,6 +775,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteSector",
 		Description: "Allows company Owner or General Manager to delete sectors.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
 	}
 
@@ -754,6 +785,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateService",
 		Description: "Allows company managers (Owner, GM, BM) to create services.",
 		Effect:      "Allow",
+		Method:      namespace.CreateActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the company context
 	}
 
@@ -761,6 +793,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewServiceById",
 		Description: "Allows company members to view service details.",
 		Effect:      "Allow",
+		Method:      namespace.ViewActionMethod,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the service's company
 	}
 
@@ -770,6 +803,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateService",
 		Description: "Allows company managers (Owner, GM, BM) to update services.",
 		Effect:      "Allow",
+		Method:      namespace.UpdateActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
@@ -777,6 +811,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteService",
 		Description: "Allows company managers (Owner, GM, BM) to delete services.",
 		Effect:      "Allow",
+		Method:      namespace.DeleteActionMethod,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
