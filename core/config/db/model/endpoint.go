@@ -52,13 +52,13 @@ var GetAppointmentByID = &EndPoint{
 	Path:        "/appointment/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
-	Description: "Get appointment by ID",
+	Description: "View appointment by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }
 var UpdateAppointmentByID = &EndPoint{
 	Path:        "/appointment/:id",
-	Method:      namespace.UpdateActionMethod,     // Corrected from GET based on reference
+	Method:      namespace.UpdateActionMethod, 
 	Handler:     "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
 	Description: "Update appointment by ID",
 	IsPublic:    false, // Access: "private"
@@ -93,7 +93,7 @@ var GetAuthCallbackFunction = &EndPoint{
 	Path:        "/auth/oauth/:provider/callback",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetAuthCallbackFunction", // From ac.GetAuthCallbackFunction
-	Description: "Get auth callback function",
+	Description: "View auth callback function",
 	IsPublic:    true, // Access: "public"
 }
 var LogoutProvider = &EndPoint{
@@ -118,7 +118,7 @@ var GetBranchById = &EndPoint{
 	Path:        "/branch/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetBranchById", // From bc.GetBranchById
-	Description: "Get branch by ID",
+	Description: "View branch by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
@@ -126,7 +126,7 @@ var GetBranchByName = &EndPoint{
 	Path:        "/branch/name/:name",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetBranchByName", // From bc.GetBranchByName
-	Description: "Get branch by name",
+	Description: "View branch by name",
 	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
@@ -150,7 +150,7 @@ var GetEmployeeServicesByBranchId = &EndPoint{
 	Path:        "/branch/:branch_id/employee/:employee_id/services",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeServicesByBranchId", // From bc.GetEmployeeServicesByBranchId
-	Description: "Get employee offered services at the branch by branch ID",
+	Description: "View employee offered services at the branch by branch ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
@@ -198,7 +198,7 @@ var GetClientByEmail = &EndPoint{
 	Path:        "/client/email/:email",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetClientByEmail", // From cc.GetClientByEmail
-	Description: "Get client by email",
+	Description: "View client by email",
 	IsPublic:    false, // Access: "private"
 	Resource:    ClientResource,
 }
@@ -232,7 +232,7 @@ var GetCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetCompanyById", // From cc.GetCompanyById
-	Description: "Get company by ID",
+	Description: "View company by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
 }
@@ -240,14 +240,14 @@ var GetCompanyByName = &EndPoint{
 	Path:        "/company/name/:name",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetCompanyByName", // From cc.GetCompanyByName
-	Description: "Get company by name",
+	Description: "View company by name",
 	IsPublic:    true, // Access: "public"
 }
 var GetCompanyByTaxId = &EndPoint{
 	Path:        "/company/tax_id/:tax_id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetCompanyByTaxId", // From cc.GetCompanyByTaxId
-	Description: "Get company by tax ID",
+	Description: "View company by tax ID",
 	IsPublic:    true, // Access: "public"
 }
 var UpdateCompanyById = &EndPoint{
@@ -295,7 +295,7 @@ var GetEmployeeById = &EndPoint{
 	Path:        "/employee/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeById", // From ec.GetEmployeeById
-	Description: "Get employee by ID",
+	Description: "View employee by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
@@ -303,7 +303,7 @@ var GetEmployeeByEmail = &EndPoint{
 	Path:        "/employee/email/:email",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeByEmail", // From ec.GetEmployeeByEmail
-	Description: "Get employee by email",
+	Description: "View employee by email",
 	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
@@ -370,7 +370,7 @@ var GetHolidayById = &EndPoint{
 	Path:        "/holiday/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetHolidayById", // From hc.GetHolidayById
-	Description: "Get holiday by ID",
+	Description: "View holiday by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    HolidayResource,
 }
@@ -378,7 +378,7 @@ var GetHolidayByName = &EndPoint{
 	Path:        "/holiday/name/:name",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetHolidayByName", // From hc.GetHolidayByName
-	Description: "Get holiday by name",
+	Description: "View holiday by name",
 	IsPublic:    true, // Access: "public"
 }
 var UpdateHolidayById = &EndPoint{
@@ -453,7 +453,7 @@ var GetServiceById = &EndPoint{
 	Path:        "/service/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetServiceById", // From sc.GetServiceById
-	Description: "Get service by ID",
+	Description: "View service by ID",
 	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
@@ -461,7 +461,7 @@ var GetServiceByName = &EndPoint{
 	Path:        "/service/name/:name",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetServiceByName", // From sc.GetServiceByName
-	Description: "Get service by name",
+	Description: "View service by name",
 	IsPublic:    true, // Access: "public"
 }
 var UpdateServiceById = &EndPoint{

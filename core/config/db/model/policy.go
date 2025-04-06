@@ -13,6 +13,10 @@ var AllowNilCompanyID = false
 var AllowNilCreatedBy = false
 var AllowNilResourceID = false
 
+// --- PolicyRule (Represents a policy rule for access control) ---
+// [Conditions] : Effect : Method : Resource : Property
+// --- [if is company owner] : Allow : PATCH : /company/{id} : nil
+// --- [if is not company owner] : Deny : PATCH : /company/{id} : tax_id
 type PolicyRule struct {
 	gorm.Model
 	CompanyID           *uint           `json:"company_id"`
@@ -26,7 +30,7 @@ type PolicyRule struct {
 	ResourceID          uint            `json:"resource_id"`
 	Resource            Resource        `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 	PropertyID          *uint           `json:"property_id"`
-	Property            *Property        `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
+	Property            *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
@@ -881,10 +885,6 @@ var Policies []*PolicyRule
 func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 	AllowNilCompanyID = true // Allow seeding system policies without company_id
 	AllowNilCreatedBy = true // Allow seeding system policies without created_by
-	defer func() {
-		AllowNilCompanyID = false
-		AllowNilCreatedBy = false
-	}()
 
 	seededCount := 0
 	updatedCount := 0 // Optionally track updates if you modify seeding logic
@@ -893,6 +893,19 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 	if tx.Error != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
+
+	defer func() {
+		AllowNilCompanyID = false
+		AllowNilCreatedBy = false
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("Panic occurred during policy seeding: %v", r)
+		}
+		if err := tx.Commit().Error; err != nil {
+			log.Printf("Failed to commit transaction: %v", err)
+		}
+		log.Printf("System policies seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
+	}()
 
 	Policies = init_policy_array()
 
@@ -923,10 +936,5 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 		}
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	log.Printf("System policies seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
 	return Policies, nil // Return the original list (or query fresh if needed)
 }

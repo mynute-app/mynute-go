@@ -1,6 +1,10 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 
 	"gorm.io/gorm"
@@ -8,16 +12,52 @@ import (
 
 type Resource struct {
 	gorm.Model
-	Name        string              `json:"name" gorm:"unique;not null"`
-	Description string              `json:"description"`
-	Table       string              `json:"table"`
-	References  []ResourceReference `json:"references"`
+	Name        string             `json:"name" gorm:"unique;not null"`
+	Description string             `json:"description"`
+	Table       string             `json:"table"`
+	References  ResourceReferences `gorm:"type:jsonb" json:"references"`
 }
 
+// --- Define ResourceReference first ---
 type ResourceReference struct {
 	DatabaseKey string `json:"database_key"` // The key in the database, e.g. "id", "tax_id".
 	RequestKey  string `json:"request_key"`  // The key in the request body, query, path, header...
 	RequestRef  string `json:"request_ref"`  // "query", "body", "header", "path".
+}
+
+// --- Define the custom slice type ---
+type ResourceReferences []ResourceReference
+
+// --- Implement the Valuer interface for ResourceReferences ---
+func (r ResourceReferences) Value() (driver.Value, error) {
+	if len(r) == 0 {
+		return nil, nil // Store empty slice as NULL in DB
+	}
+	// Marshal the slice into JSON bytes
+	return json.Marshal(r)
+}
+
+// --- Implement the Scanner interface for ResourceReferences ---
+func (r *ResourceReferences) Scan(value interface{}) error {
+	// Get bytes from the database value
+	bytes, ok := value.([]byte)
+	if !ok {
+		// Handle the case where the database value might be nil
+		if value == nil {
+			*r = nil // Set the slice to nil if DB value is NULL
+			return nil
+		}
+		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", value))
+	}
+
+	// Handle empty byte slice if necessary (e.g., if DB stores '' instead of NULL/[])
+	if len(bytes) == 0 {
+		*r = nil
+		return nil
+	}
+
+	// Unmarshal the JSON bytes into the slice (use pointer *r)
+	return json.Unmarshal(bytes, r)
 }
 
 func SingleQueryRef() ResourceReference {
@@ -54,7 +94,7 @@ var AppointmentResource = &Resource{
 	Name:        "appointment",
 	Description: "Appointment resource",
 	Table:       "appointments",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("appointment_id"),
 		MultipleBodyRef("appointment_id"),
@@ -66,7 +106,7 @@ var BranchResource = &Resource{
 	Name:        "branch",
 	Description: "Branch resource",
 	Table:       "branches",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("branch_id"),
 		MultipleBodyRef("branch_id"),
@@ -77,7 +117,7 @@ var ClientResource = &Resource{
 	Name:        "client",
 	Description: "Client resource",
 	Table:       "clients",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("client_id"),
 		MultipleBodyRef("client_id"),
@@ -88,7 +128,7 @@ var CompanyResource = &Resource{
 	Name:        "company",
 	Description: "Company resource",
 	Table:       "companies",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("company_id"),
 		MultipleBodyRef("company_id"),
@@ -99,7 +139,7 @@ var EmployeeResource = &Resource{
 	Name:        "employee",
 	Description: "Employee resource",
 	Table:       "employees",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("employee_id"),
 		MultipleBodyRef("employee_id"),
@@ -110,7 +150,7 @@ var HolidayResource = &Resource{
 	Name:        "holiday",
 	Description: "Holiday resource",
 	Table:       "holidays",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("holiday_id"),
 		MultipleBodyRef("holiday_id"),
@@ -121,7 +161,7 @@ var RoleResource = &Resource{
 	Name:        "role",
 	Description: "Role resource",
 	Table:       "roles",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("role_id"),
 		MultipleBodyRef("role_id"),
@@ -132,7 +172,7 @@ var SectorResource = &Resource{
 	Name:        "sector",
 	Description: "Sector resource",
 	Table:       "sectors",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("sector_id"),
 		MultipleBodyRef("sector_id"),
@@ -143,7 +183,7 @@ var ServiceResource = &Resource{
 	Name:        "service",
 	Description: "Service resource",
 	Table:       "services",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("service_id"),
 		MultipleBodyRef("service_id"),
@@ -154,7 +194,7 @@ var AuthResource = &Resource{
 	Name:        "auth",
 	Description: "Auth resource",
 	Table:       "auth",
-	References: []ResourceReference{
+	References: ResourceReferences{
 		SingleQueryRef(),
 		MultipleQueryRef("auth_id"),
 		MultipleBodyRef("auth_id"),
@@ -175,11 +215,30 @@ var Resources = []*Resource{
 }
 
 func SeedResources(db *gorm.DB) error {
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("Panic occurred during policy seeding: %v", r)
+		}
+		if err := tx.Commit().Error; err != nil {
+			log.Printf("Failed to commit transaction: %v", err)
+		}
+		log.Print("Resources seeded successfully")
+	}()
 	for _, resource := range Resources {
-		if err := db.Where("table = ?", resource.Table).FirstOrCreate(resource).Error; err != nil {
+		if err := tx.Where("table = ?", resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {
+			if err := tx.Create(resource).Error; err != nil {
+				return err
+			}
+		} else if err != nil {
 			return err
+		} else {
+			// Update the resource if it already exists
+			if err := tx.Model(resource).Updates(resource).Error; err != nil {
+				return err
+			}
 		}
 	}
-	log.Print("Resources seeded successfully")
 	return nil
 }
