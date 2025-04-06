@@ -1,5 +1,7 @@
 package DTO
 
+import "github.com/google/uuid"
+
 type TimeRange struct {
 	Start string `json:"start" example:"09:00"`
 	End   string `json:"end" example:"17:00"`
@@ -16,7 +18,7 @@ type UpdateEmployeeSwagger struct {
 }
 
 type CreateEmployee struct {
-	CompanyID    uint         `json:"company_id"`
+	CompanyID    uuid.UUID    `json:"company_id"`
 	Name         string       `json:"name" example:"Joseph"`
 	Surname      string       `json:"surname" example:"Doe"`
 	Role         string       `json:"role" example:"client"`
@@ -37,13 +39,13 @@ type WorkSchedule struct {
 }
 
 type WorkRange struct {
-	Start    string `json:"start"` // Store as "15:30:00"
-	End      string `json:"end"`   // Store as "18:00:00"
-	BranchID uint   `json:"branch_id"`
+	Start    string    `json:"start"` // Store as "15:30:00"
+	End      string    `json:"end"`   // Store as "18:00:00"
+	BranchID uuid.UUID `json:"branch_id"`
 }
 
 type Employee struct {
-	ID           uint               `json:"id" example:"1"`
+	ID           uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
 	Name         string             `json:"name" example:"John"`
 	Surname      string             `json:"surname" example:"Doe"`
 	Role         string             `json:"role" example:"client"`
@@ -60,11 +62,11 @@ type Employee struct {
 }
 
 type EmployeePopulated struct {
-	ID      uint     `json:"id" example:"1"`
-	Name    string   `json:"name" example:"John"`
-	Surname string   `json:"surname" example:"Doe"`
-	Role    string   `json:"role" example:"client"`
-	Email   string   `json:"email" example:"john.doe@example.com"`
-	Phone   string   `json:"phone" example:"+15555555555"`
-	Tags    []string `json:"tags" example:"[\"tag1\", \"tag2\"]"`
+	ID      uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	Name    string    `json:"name" example:"John"`
+	Surname string    `json:"surname" example:"Doe"`
+	Role    string    `json:"role" example:"client"`
+	Email   string    `json:"email" example:"john.doe@example.com"`
+	Phone   string    `json:"phone" example:"+15555555555"`
+	Tags    []string  `json:"tags" example:"[\"tag1\", \"tag2\"]"`
 }

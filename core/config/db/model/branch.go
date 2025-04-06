@@ -1,10 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 // Branch model
 type Branch struct {
-	gorm.Model
+	BaseModel
 	Name           string           `gorm:"not null" json:"name"`
 	Street         string           `gorm:"not null" json:"street"`
 	Number         string           `gorm:"not null" json:"number"`
@@ -14,7 +14,7 @@ type Branch struct {
 	City           string           `gorm:"not null" json:"city"`
 	State          string           `gorm:"not null" json:"state"`
 	Country        string           `gorm:"not null" json:"country"`
-	CompanyID      uint             `gorm:"not null;index" json:"company_id"`
+	CompanyID      uuid.UUID        `gorm:"not null;index" json:"company_id"`
 	Company        *Company         `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 	Employees      []*Employee      `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
 	Services       []*Service       `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
@@ -24,6 +24,6 @@ type Branch struct {
 }
 
 type ServiceDensity struct {
-	ServiceID           uint `json:"service_id"`
-	MaxSchedulesOverlap uint `json:"max_schedules_overlap"`
+	ServiceID           uuid.UUID `json:"service_id"`
+	MaxSchedulesOverlap uint      `json:"max_schedules_overlap"`
 }

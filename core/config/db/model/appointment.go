@@ -5,26 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Fifth step: Scheduling with service and employee availability.
 type Appointment struct {
-	gorm.Model
-	ServiceID uint     `gorm:"not null;index" json:"service_id"`
-	Service   *Service `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
+	BaseModel
+	ServiceID uuid.UUID `gorm:"not null;index" json:"service_id"`
+	Service   *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	EmployeeID uint      `gorm:"not null;index" json:"employee_id"`
+	EmployeeID uuid.UUID `gorm:"not null;index" json:"employee_id"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	ClientID uint    `gorm:"not null;index" json:"client_id"`
-	Client   *Client `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"`
+	ClientID uuid.UUID `gorm:"not null;index" json:"client_id"`
+	Client   *Client   `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	BranchID uint    `gorm:"not null;index" json:"branch_id"`
-	Branch   *Branch `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
+	BranchID uuid.UUID `gorm:"not null;index" json:"branch_id"`
+	Branch   *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	CompanyID uint     `gorm:"not null;index" json:"company_id"`
-	Company   *Company `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
+	CompanyID uuid.UUID `gorm:"not null;index" json:"company_id"`
+	Company   *Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 
 	StartTime time.Time `gorm:"not null" json:"start_time"`
 	EndTime   time.Time `gorm:"not null" json:"end_time"`
@@ -32,8 +33,8 @@ type Appointment struct {
 	Rescheduled bool `gorm:"default:false" json:"rescheduled"`
 	Cancelled   bool `gorm:"default:false" json:"cancelled"`
 
-	RescheduledToID   *uint `json:"rescheduled_to_id"`
-	RescheduledFromID *uint `json:"rescheduled_from_id"`
+	RescheduledToID   *uuid.UUID `json:"rescheduled_to_id"`
+	RescheduledFromID *uuid.UUID `json:"rescheduled_from_id"`
 }
 
 // Custom Composite Index

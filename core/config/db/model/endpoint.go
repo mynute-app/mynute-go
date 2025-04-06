@@ -4,20 +4,21 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"log"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 var AllowEndpointCreation = false
 
 type EndPoint struct {
-	gorm.Model
-	Handler     string    `json:"handler"`
-	Description string    `json:"description"`
-	Method      string    `gorm:"type:varchar(10)" json:"method"`
-	Path        string    `json:"path"`
-	IsPublic    bool      `gorm:"default:false" json:"is_public"`
-	ResourceID  *uint     `json:"resource_id"`
-	Resource    *Resource `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
+	BaseModel
+	Handler     string     `json:"handler"`
+	Description string     `json:"description"`
+	Method      string     `gorm:"type:varchar(10)" json:"method"`
+	Path        string     `json:"path"`
+	IsPublic    bool       `gorm:"default:false" json:"is_public"`
+	ResourceID  *uuid.UUID `json:"resource_id"`
+	Resource    *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
 func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
@@ -58,7 +59,7 @@ var GetAppointmentByID = &EndPoint{
 }
 var UpdateAppointmentByID = &EndPoint{
 	Path:        "/appointment/:id",
-	Method:      namespace.UpdateActionMethod, 
+	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
 	Description: "Update appointment by ID",
 	IsPublic:    false, // Access: "private"

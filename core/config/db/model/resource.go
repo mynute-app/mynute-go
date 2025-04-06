@@ -11,7 +11,7 @@ import (
 )
 
 type Resource struct {
-	gorm.Model
+	BaseModel
 	Name        string             `json:"name" gorm:"unique;not null"`
 	Description string             `json:"description"`
 	Table       string             `json:"table"`

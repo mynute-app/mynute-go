@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type Employee struct {
-	gorm.Model
+	BaseModel
 	Name             string            `gorm:"type:varchar(100);not null" json:"name"`
 	Surname          string            `gorm:"type:varchar(100)" json:"surname"`
 	Email            string            `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
@@ -24,7 +25,7 @@ type Employee struct {
 	SlotTimeDiff     uint              `gorm:"default:30;not null" json:"slot_time_diff"`
 	WorkSchedule     WorkSchedule      `gorm:"type:jsonb" json:"work_schedule"`
 	Appointments     []Appointment     `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
-	CompanyID        uint              `gorm:"not null;index" json:"company_id"`
+	CompanyID        uuid.UUID              `gorm:"not null;index" json:"company_id"`
 	Company          Company           `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 	Branches         []*Branch         `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
 	Services         []*Service        `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
@@ -45,7 +46,7 @@ type WorkSchedule struct {
 type WorkRange struct {
 	Start    string `json:"start"` // Store as "15:30:00"
 	End      string `json:"end"`   // Store as "18:00:00"
-	BranchID uint   `json:"branch_id"`
+	BranchID uuid.UUID   `json:"branch_id"`
 }
 
 // Implement driver.Valuer

@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type auth_middleware struct {
@@ -27,7 +28,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	path := c.Route().Path
 
 	var EndPoint model.EndPoint
-	if err := db.Where("method = ? AND path = ?", method, path).Preload("Resources").First(&EndPoint).Error; err != nil || EndPoint.ID == 0 {
+	if err := db.Where("method = ? AND path = ?", method, path).Preload("Resources").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
 		return lib.Error.Auth.Unauthorized
 	}
 

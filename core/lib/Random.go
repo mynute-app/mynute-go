@@ -109,3 +109,4 @@ func GenerateDate(params ...int) time.Time {
 func GenerateDateRFC3339(params ...int) string {
 	return GenerateDate(params...).Format(time.RFC3339)
 }
+

@@ -1,9 +1,7 @@
 package model
 
-import "gorm.io/gorm"
-
 type Permission struct {
-	gorm.Model
+	BaseModel
 	EmployeeID   uint
 	ResourceType string
 	EndPointID   *uint // nil means all resources of this type

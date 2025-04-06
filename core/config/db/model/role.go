@@ -3,8 +3,9 @@ package model
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"gorm.io/datatypes"
 	"log"
+
+	"gorm.io/datatypes"
 
 	"gorm.io/gorm"
 )
@@ -12,7 +13,7 @@ import (
 var AllowSystemRoleCreation = false
 
 type Role struct {
-	gorm.Model                           // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
+	BaseModel                            // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
 	Name               string            `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
 	Description        string            `json:"description"`
 	CompanyID          *uint             `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles

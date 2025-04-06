@@ -16,7 +16,7 @@ type TimeRange struct {
 
 // Updated Client model
 type Client struct {
-	gorm.Model
+	BaseModel
 	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
 	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
 	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`

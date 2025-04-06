@@ -1,10 +1,20 @@
 package model
 
 import (
+	"time"
+
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type GeneralResourceInfo struct { // size=88 (0x58)
-	gorm.Model
-	Permissions map[string][]int `json:"permissions" gorm:"type:jsonb"`
+type BaseModel struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;<-:create"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
+	m.ID = uuid.New()
+	return nil
 }

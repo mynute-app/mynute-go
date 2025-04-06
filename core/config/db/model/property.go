@@ -1,9 +1,7 @@
 package model
 
-import "gorm.io/gorm"
-
 type Property struct {
-	gorm.Model
+	BaseModel
 	Name         string   `json:"name" gorm:"unique;not null"`
 	Description  string   `json:"description"`
 	ResourceName string   `json:"resource_name"`

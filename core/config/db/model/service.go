@@ -1,16 +1,16 @@
 package model
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 // Third step: Choosing the service.
 type Service struct {
-	gorm.Model
+	BaseModel
 	Name        string `gorm:"not null" json:"name"`
 	Description string `gorm:"not null" json:"description"`
 	Price       int32  `gorm:"not null" json:"price"`
 	Duration    uint   `gorm:"not null" json:"duration"` // Duration in minutes
 
-	CompanyID uint    `gorm:"not null;index" json:"company_id"`
+	CompanyID uuid.UUID     `gorm:"not null;index" json:"company_id"`
 	Company   *Company `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;"`
 
 	Employees []*Employee `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"employees"` // Many-to-many relation with Employee

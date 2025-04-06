@@ -1,11 +1,9 @@
 package model
 
-import "gorm.io/gorm"
-
 // Company represents a company entity
 
 type Company struct {
-	gorm.Model
+	BaseModel
 	Name      string     `gorm:"not null;unique" json:"name"`
 	TaxID     string     `gorm:"not null;unique" json:"tax_id"`
 	SectorID  *uint      `gorm:"index" json:"sector_id"`
