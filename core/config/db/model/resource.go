@@ -214,7 +214,7 @@ var Resources = []*Resource{
 	AuthResource,
 }
 
-func SeedResources(db *gorm.DB) error {
+func SeedResources(db *gorm.DB) ([]*Resource, error) {
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -227,18 +227,18 @@ func SeedResources(db *gorm.DB) error {
 		log.Print("Resources seeded successfully")
 	}()
 	for _, resource := range Resources {
-		if err := tx.Where("table = ?", resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {
+		if err := tx.Where(`"table" = ?`, resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {
 			if err := tx.Create(resource).Error; err != nil {
-				return err
+				return nil, err
 			}
 		} else if err != nil {
-			return err
+			return nil, err
 		} else {
 			// Update the resource if it already exists
 			if err := tx.Model(resource).Updates(resource).Error; err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
-	return nil
+	return Resources, nil
 }
