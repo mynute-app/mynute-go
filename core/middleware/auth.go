@@ -66,19 +66,20 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 	var RequestVal string
 	var ResourceReference model.ResourceReference
+	EndPointLoop:
 	for _, ref := range EndPoint.Resource.References {
 		switch ref.RequestRef {
 		case "query":
 			if c.Query(ref.RequestKey) != "" {
 				ResourceReference = ref
 				RequestVal = c.Query(ref.RequestKey)
-				break
+				break EndPointLoop
 			}
 		case "body":
 			var body map[string]any
 			bbytes := c.Request().Body()
 			if len(bbytes) == 0 {
-				continue
+				continue EndPointLoop
 			}
 			if err := json.Unmarshal(bbytes, &body); err != nil {
 				return err
@@ -86,19 +87,19 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 			if body[ref.RequestKey] != nil && body[ref.RequestKey] != "" {
 				ResourceReference = ref
 				RequestVal = fmt.Sprintf("%v", body[ref.RequestKey])
-				break
+				break EndPointLoop
 			}
 		case "header":
 			if c.Get(ref.RequestKey) != "" {
 				ResourceReference = ref
 				RequestVal = c.Get(ref.RequestKey)
-				break
+				break EndPointLoop
 			}
 		case "path":
 			if c.Params(ref.RequestKey) != "" {
 				ResourceReference = ref
 				RequestVal = c.Params(ref.RequestKey)
-				break
+				break EndPointLoop
 			}
 		default:
 			return fmt.Errorf("invalid request reference type: %s. Endpoint.Resource.ID: %d", ref.RequestRef, EndPoint.Resource.ID)
@@ -106,7 +107,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	if RequestVal == "" {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("Request is malformed. Endpoint.Resource.ID: %d", EndPoint.Resource.ID))
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("request is malformed. Endpoint.Resource.ID: %d", EndPoint.Resource.ID))
 	}
 
 	resource_data := make(map[string]any)
