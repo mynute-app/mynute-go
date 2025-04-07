@@ -553,24 +553,36 @@ func LoadEndpoints() {
 	for _, edp := range Endpoints {
 		if edp.Resource != nil {
 			edp.ResourceID = &edp.Resource.ID
+			edp.Resource = nil // Avoid circular reference
 		}
 	}
 }
 
 func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
 	AllowEndpointCreation = true
-	defer func() { AllowEndpointCreation = false }()
+	tx := db.Begin()
+	defer func() {
+		AllowEndpointCreation = false
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("Panic occurred during policy seeding: %v", r)
+		}
+		if err := tx.Commit().Error; err != nil {
+			log.Printf("Failed to commit transaction: %v", err)
+		}
+		log.Print("Resources seeded successfully")
+	}()
 	LoadEndpoints()
 	for _, edp := range Endpoints {
-		err := db.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
+		err := tx.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
 		if err == gorm.ErrRecordNotFound {
-			if err := db.Create(edp).Error; err != nil {
+			if err := tx.Create(edp).Error; err != nil {
 				return nil, err
 			}
 		} else if err != nil {
 			return nil, err
 		}
-	}
+	}	
 	log.Println("System endpoints seeded successfully!")
 	return Endpoints, nil
 }
