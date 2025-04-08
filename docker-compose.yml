@@ -1,5 +1,5 @@
-# dev and test : docker compose -p kaki-go -f docker-compose.yml up -d --force-recreate
-# production : docker compose -p kaki-go -f docker-compose.yml --profile production up -d --force-recreate
+# dev and test : docker-compose -p kaki-go -f docker-compose.yml up -d --force-recreate
+# production : docker-compose -p kaki-go -f docker-compose.yml --profile production up -d --force-recreate
 
 services:
   postgres:

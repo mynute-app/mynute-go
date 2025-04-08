@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,10 +24,9 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 		// This covers updates *and* creates where an ID might have been manually assigned.
 		// uuid.Nil has Variant() == uuid.Invalid.
 		// A correctly formatted UUID (v1-v5) has Variant() == uuid.RFC4122.
-		errMsg := fmt.Sprintf("BeforeSave: Invalid UUID variant for ID %s in %T", m.ID.String(), m)
 		// Return an error to prevent saving an invalid UUID.
+		errMsg := fmt.Sprintf("BeforeSave: Invalid UUID variant for ID %s in %T", m.ID.String(), m)
 		return errors.New(errMsg)
 	}
-	log.Println("BeforeCreate called for", m)
 	return nil
 }

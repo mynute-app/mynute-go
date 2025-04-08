@@ -94,17 +94,27 @@ var Roles = []*Role{
 
 func SeedRoles(db *gorm.DB) ([]*Role, error) {
 	AllowSystemRoleCreation = true
-	defer func() { AllowSystemRoleCreation = false }()
+	tx := db.Begin()
+	defer func() {
+		AllowSystemRoleCreation = false
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("Panic occurred during policy seeding: %v", r)
+		}
+		if err := tx.Commit().Error; err != nil {
+			log.Printf("Failed to commit transaction: %v", err)
+		}
+		log.Print("System Roles seeded successfully")
+	}()
 	for _, role := range Roles {
-		err := db.Where("name = ? AND company_id IS NULL", role.Name).First(role).Error
+		err := tx.Where("name = ? AND company_id IS NULL", role.Name).First(role).Error
 		if err == gorm.ErrRecordNotFound {
-			if err := db.Create(role).Error; err != nil {
+			if err := tx.Create(role).Error; err != nil {
 				return nil, err
 			}
 		} else if err != nil {
 			return nil, err
 		}
 	}
-	log.Println("System roles seeded successfully!")
 	return Roles, nil
 }

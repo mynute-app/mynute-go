@@ -224,7 +224,7 @@ func SeedResources(db *gorm.DB) ([]*Resource, error) {
 		if err := tx.Commit().Error; err != nil {
 			log.Printf("Failed to commit transaction: %v", err)
 		}
-		log.Print("Resources seeded successfully")
+		log.Print("System Resources seeded successfully")
 	}()
 	for _, resource := range Resources {
 		if err := tx.Where(`"table" = ?`, resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {

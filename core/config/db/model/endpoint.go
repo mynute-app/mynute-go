@@ -570,7 +570,7 @@ func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
 		if err := tx.Commit().Error; err != nil {
 			log.Printf("Failed to commit transaction: %v", err)
 		}
-		log.Print("Resources seeded successfully")
+		log.Print("System Endpoints seeded successfully")
 	}()
 	LoadEndpoints()
 	for _, edp := range Endpoints {
@@ -582,7 +582,6 @@ func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
 		} else if err != nil {
 			return nil, err
 		}
-	}	
-	log.Println("System endpoints seeded successfully!")
+	}
 	return Endpoints, nil
 }
