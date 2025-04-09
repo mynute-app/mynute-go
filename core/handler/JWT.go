@@ -75,7 +75,7 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 		return nil, errors.New("invalid jwt.MapClaims passed")
 	}
 
-	claim_data, ok := claims["data"].(map[string]interface{})
+	claim_data, ok := claims["data"].(map[string]any)
 	if !ok {
 		return nil, errors.New("invalid claim.data passed")
 	}
@@ -97,48 +97,6 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 
 	return client, nil
 }
-
-// WhoAreYou decrypts and validates the JWT token, saving client data in context if valid
-// func (j *jsonWebToken) WhoAreYou() error {
-// 	saveClientData := func(value any) {
-// 		j.C.Locals(namespace.RequestKey.Auth_Claims, value)
-// 	}
-
-// 	// Retrieve the token from the Authorization header
-// 	tokenString := j.GetToken()
-// 	if tokenString == "" {
-// 		saveClientData(nil)
-// 		return lib.Error.Auth.NoToken.SendToClient(j.C)
-// 	}
-
-// 	keyFunc := func(token *jwt.Token) (any, error) {
-// 		// Validate the algorithm
-// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-// 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-// 		}
-
-// 		return mySecret, nil
-// 	}
-
-// 	// Parse and validate the token
-// 	token, err := jwt.Parse(tokenString, keyFunc)
-
-// 	if err != nil {
-// 		return err
-// 	} else if token == nil {
-// 		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
-// 	}
-
-// 	// Check token validity and extract claims
-// 	claims, ok := token.Claims.(jwt.MapClaims)
-// 	if !ok || !token.Valid {
-// 		return lib.Error.Auth.InvalidToken.SendToClient(j.C)
-// 	}
-
-// 	// Store claims (client data) in Fiber's Locals
-// 	saveClientData(claims)
-// 	return nil
-// }
 
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,9 +20,9 @@ var AllowNilResourceID = false
 // --- [if is not company owner] : Deny : PATCH : /company/{id} : tax_id
 type PolicyRule struct {
 	BaseModel
-	CompanyID           *uuid.UUID           `json:"company_id"`
+	CompanyID           *uuid.UUID      `json:"company_id"`
 	Company             Company         `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
-	CreatedByEmployeeID *uuid.UUID           `json:"created_by_employee_id"`
+	CreatedByEmployeeID *uuid.UUID      `json:"created_by_employee_id"`
 	CreatedByEmployee   Employee        `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
@@ -61,27 +62,137 @@ type ConditionLeaf struct {
 	ResourceAttribute string          `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
 }
 
-// GetConditionsNode parses the stored JSON conditions into the ConditionNode struct
+// GetConditionsNode parses and validates the stored JSON conditions
 func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
-	var node ConditionNode
+	var node ConditionNode // Initialize empty node
+
+	// 1. Check for empty or null JSON content
 	if len(p.Conditions) == 0 || string(p.Conditions) == "null" {
-		// If conditions are empty or null, return an error or a default node based on your logic
-		return node, fmt.Errorf("policy rule %d has missing or null conditions", p.ID) // Or return (node, nil) if allowed
+		// Decide if this is an error or implies a default. Forcing explicit
+		// conditions is usually safer. Use p.Name for better context if available.
+		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		if p.Name != "" {
+			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+		}
+		return node, fmt.Errorf("policy rule %s has missing or null conditions", policyIdentifier)
 	}
+
+	// 2. Attempt to unmarshal the JSON
 	err := json.Unmarshal(p.Conditions, &node)
 	if err != nil {
-		return node, fmt.Errorf("failed to unmarshal conditions JSON for policy rule %d: %w", p.ID, err)
+		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		if p.Name != "" {
+			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+		}
+		return node, fmt.Errorf("failed to unmarshal conditions JSON for policy rule %s: %w", policyIdentifier, err)
 	}
-	// Basic validation: Ensure a node is either a valid branch or a valid leaf
-	if node.Leaf == nil && (node.LogicType == "" || len(node.Children) == 0) {
-		// It's a branch, but has no children or logic type - indicates malformed JSON perhaps
-		return node, fmt.Errorf("node `%s` is neither a valid branch nor a valid leaf", node.Description)
+
+	// 3. Perform recursive validation using the dedicated validator function
+	// This replaces your original two specific validation checks.
+	if err := validateConditionNode(node); err != nil {
+		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		if p.Name != "" {
+			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+		}
+		// Wrap the validation error with policy context
+		return node, fmt.Errorf("invalid conditions structure for policy rule %s: %w", policyIdentifier, err)
 	}
-	if node.Leaf != nil && (node.LogicType != "" || len(node.Children) > 0) {
-		// It's a leaf, but also has branch properties - indicates malformed JSON perhaps
-		return node, fmt.Errorf("policy rule %d condition node %s is incorrectly structured as both leaf and branch", p.ID, node.Description)
-	}
+
+	// 4. Return the successfully parsed and validated node
 	return node, nil
+}
+
+// validateConditionNode performs recursive validation on a condition node structure.
+func validateConditionNode(node ConditionNode) error {
+	nodeContext := ""
+	if node.Description != "" {
+		nodeContext = fmt.Sprintf(" ('%s')", node.Description)
+	}
+
+	if node.Leaf != nil { // It's intended to be a leaf node
+		// Rule 1: A leaf node cannot have branch properties
+		if node.LogicType != "" || len(node.Children) > 0 {
+			return fmt.Errorf("node%s is incorrectly structured as both leaf and branch", nodeContext)
+		}
+
+		// Rule 2: Leaf must have an attribute
+		if node.Leaf.Attribute == "" {
+			return fmt.Errorf("leaf node `%s` is missing required 'attribute'", nodeContext)
+		}
+		// Rule 3: Leaf must have an operator
+		if node.Leaf.Operator == "" {
+			return fmt.Errorf("leaf node `%s` (attribute '%s') is missing required 'operator'", nodeContext, node.Leaf.Attribute)
+		}
+
+		// Rule 4: Operators needing comparison values must have 'value' or 'resource_attribute'
+		requiresComparisonValue := true
+		switch node.Leaf.Operator {
+		case "IsNull", "IsNotNull":
+			requiresComparisonValue = false
+			// Add any other future unary operators here (e.g., "IsEmpty", "IsTrue")
+		}
+
+		if requiresComparisonValue && node.Leaf.Value == nil && node.Leaf.ResourceAttribute == "" {
+			return fmt.Errorf("leaf node `%s` (attribute '%s', operator '%s') requires either 'value' or 'resource_attribute'", nodeContext, node.Leaf.Attribute, node.Leaf.Operator)
+		}
+
+		// Rule 5: Leaf cannot have *both* 'value' and 'resource_attribute'
+		if node.Leaf.Value != nil && node.Leaf.ResourceAttribute != "" {
+			return fmt.Errorf("leaf node `%s` (attribute '%s') cannot have both 'value' and 'resource_attribute' defined", nodeContext, node.Leaf.Attribute)
+		}
+
+		// Rule 6: Basic sanity check on attribute format
+		if node.Leaf.Attribute != "" && !strings.HasPrefix(node.Leaf.Attribute, "subject.") && !strings.HasPrefix(node.Leaf.Attribute, "resource.") {
+			return fmt.Errorf("leaf node `%s` has invalid 'attribute' ('%s'): must start with 'subject.' or 'resource.'", nodeContext, node.Leaf.Attribute)
+		}
+		if node.Leaf.ResourceAttribute != "" && !strings.HasPrefix(node.Leaf.ResourceAttribute, "subject.") && !strings.HasPrefix(node.Leaf.ResourceAttribute, "resource.") {
+			return fmt.Errorf("leaf node `%s` has invalid 'resource_attribute' ('%s'): must start with 'subject.' or 'resource.'", nodeContext, node.Leaf.ResourceAttribute)
+		}
+
+	} else { // It's intended to be a branch node (or potentially an empty root? - see notes)
+
+		// Rule 7: A branch must have a valid LogicType (unless it's truly empty - decide if that's allowed)
+		isValidBranch := false
+		if node.LogicType == "AND" || node.LogicType == "OR" {
+			isValidBranch = true
+			// Rule 8: A branch with a logic type must have children
+			if len(node.Children) == 0 {
+				return fmt.Errorf("branch node `%s` has 'logic_type' %s but no 'children'", nodeContext, node.LogicType)
+			}
+		}
+
+		// Rule 9: Check if it's an invalid structure (neither leaf nor valid branch)
+		// This replaces your first original check `node.Leaf == nil && (node.LogicType == "" || len(node.Children) == 0)`
+		// It's invalid if it's not a leaf AND it's not a valid branch structure defined above.
+		// Exception: Is an *empty* root node (`{}`, Description only) acceptable?
+		// If so, add logic here. Assuming for now it's invalid if it's not leaf/branch.
+		if node.Leaf == nil && !isValidBranch {
+			// This condition means: It's not a leaf. AND (LogicType is missing/invalid OR Children are missing even if logic type is present)
+			// If Description is the *only* thing present, maybe allow? Needs careful consideration.
+			if node.LogicType == "" && len(node.Children) == 0 && node.Description != "" {
+				// Possibly allow an empty descriptive node? Or treat as error? Treat as error for stricter policy defs.
+				return fmt.Errorf("node%s is not a valid leaf (missing 'leaf') nor a valid branch (missing/invalid 'logic_type' or missing 'children')", nodeContext)
+			} else if node.LogicType != "" && !isValidBranch {
+				return fmt.Errorf("branch node `%s` has invalid 'logic_type': '%s' (must be AND or OR)", nodeContext, node.LogicType)
+			} else {
+				// Generic catch-all for invalid structure
+				return fmt.Errorf("node%s is neither a valid leaf nor a valid branch", nodeContext)
+			}
+		}
+
+		// Rule 10: Recursively validate children if it's a valid branch
+		if isValidBranch {
+			for i, child := range node.Children {
+				if err := validateConditionNode(child); err != nil {
+					// Add context about which child failed
+					return fmt.Errorf("invalid child node %d under node%s: %w", i+1, nodeContext, err)
+				}
+			}
+		}
+	}
+
+	// All checks passed for this node and its children (if any)
+	return nil
 }
 
 func (PolicyRule) TableName() string {
@@ -614,11 +725,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 			Description: "Admin or Branch Manager Creation Access",
 			LogicType:   "OR",
 			Children: []ConditionNode{
-				company_admin_check, // Owner/GM can create employees in their company
-				// BM Check: If resource.branch_id is provided in body and needs checking:
-				company_branch_manager_assigned_branch_check, // Ensures BM is assigned to the branch the employee might be added to (if resource.branch_id is provided/checked)
-				// If a BM can create *any* employee in the company (even unassigned):
-				// company_branch_manager_check,
+				company_admin_check,
+				company_branch_manager_assigned_branch_check,
 			},
 		}),
 	}

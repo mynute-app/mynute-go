@@ -65,7 +65,7 @@ func (h *httpActions) Clear() {
 	h.ResBody = nil
 }
 
-func (h *httpActions) ParseResponse(to interface{}) {
+func (h *httpActions) ParseResponse(to any) {
 	if reflect.TypeOf(to).Kind() != reflect.Ptr {
 		h.test.Fatalf("expected a pointer to a struct")
 	}

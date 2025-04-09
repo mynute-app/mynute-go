@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,7 +32,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 	var EndPoint model.EndPoint
 	if err := db.Where("method = ? AND path = ?", method, path).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
-		return lib.Error.Auth.Unauthorized
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("endpoint not found: %s %s", method, path))
 	}
 
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
@@ -45,48 +46,15 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	if err := db.
 		Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
 		Find(&policies).Error; err != nil {
-		return lib.Error.Auth.Unauthorized
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, path, claim.CompanyID.String()))
+		}
+		return lib.Error.Auth.Unauthorized.WithError(err)
 	}
 
 	if len(policies) == 0 {
-		return lib.Error.Auth.Unauthorized
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, path, claim.CompanyID.String()))
 	}
-
-	// var userSubject any // Use interface{} to hold either type
-	// var fetchErr error
-
-	// if claim.CompanyID == uuid.Nil {
-	// 	// Fetch as Client
-	// 	var client model.Client
-	// 	fetchErr = db.
-	// 		Model(&model.Client{}).       // Tell GORM which model (and thus table)
-	// 		Preload(clause.Associations). // Preload ALL defined top-level associations
-	// 		Where("id = ?", claim.ID).
-	// 		Take(&client).Error // Fetch into the specific struct
-	// 	if fetchErr == nil {
-	// 		userSubject = client // Store the fetched struct
-	// 	}
-	// } else {
-	// 	// Fetch as Employee
-	// 	var employee model.Employee
-	// 	fetchErr = db.
-	// 		Model(&model.Employee{}).     // Tell GORM which model (and thus table)
-	// 		Preload(clause.Associations). // Preload ALL defined top-level associations
-	// 		Where("id = ?", claim.ID).
-	// 		Take(&employee).Error // Fetch into the specific struct
-	// 	if fetchErr == nil {
-	// 		userSubject = employee // Store the fetched struct
-	// 	}
-	// }
-
-	// // --- Error Handling for Fetch ---
-	// if fetchErr != nil {
-	// 	if fetchErr == gorm.ErrRecordNotFound {
-	// 		return lib.Error.Auth.Unauthorized
-	// 	}
-	// 	// Log the internal error fetchErr
-	// 	return lib.Error.General.AuthError.WithError(fetchErr)
-	// }
 
 	var user any
 	if claim.CompanyID == uuid.Nil {
@@ -198,7 +166,7 @@ forLoop:
 		Preload(clause.Associations).
 		Take(resource).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Auth.Unauthorized
+			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found: [%s] = %s at table `%s`", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
 		}
 		return lib.Error.General.AuthError.WithError(err)
 	}
@@ -216,21 +184,16 @@ forLoop:
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to unmarshal user subject to map: %w", err))
 	}
 
-	// resource_data := make(map[string]any)
-
-	// if err := db.
-	// 	Table(EndPoint.Resource.Table).
-	// 	Where(ResourceReference.DatabaseKey+" = ?", RequestVal).
-	// 	Preload(clause.Associations).
-	// 	Take(&resource_data).Error; err != nil {
-	// 	return lib.Error.Auth.Unauthorized.WithError(err)
-	// }
-
 	for _, policy := range policies {
-		if ok, err := am.PolicyEngine.CanAccess(subject_data, resource_data, policy); err != nil {
-			return err
+		decision := am.PolicyEngine.CanAccess(subject_data, resource_data, policy)
+		if decision.Error != nil {
+			return lib.Error.General.AuthError.WithError(err)
 		} else if !ok {
-			return lib.Error.Auth.Unauthorized
+			denied := lib.Error.Auth.Unauthorized.WithError(errors.New("policy engine denied access"))
+			denied.WithError(fmt.Errorf("reason: %s", decision.Reason))
+			denied.WithError(fmt.Errorf("endpoint: %s %s", method, path))
+			denied.WithError(fmt.Errorf("policy.name: %s", policy.Name))
+			return denied
 		}
 	}
 

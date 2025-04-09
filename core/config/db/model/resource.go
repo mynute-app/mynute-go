@@ -38,7 +38,7 @@ func (r ResourceReferences) Value() (driver.Value, error) {
 }
 
 // --- Implement the Scanner interface for ResourceReferences ---
-func (r *ResourceReferences) Scan(value interface{}) error {
+func (r *ResourceReferences) Scan(value any) error {
 	// Get bytes from the database value
 	bytes, ok := value.([]byte)
 	if !ok {

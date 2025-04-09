@@ -60,7 +60,6 @@ func (p *Gorm) UpdateMany(v any) error {
 }
 
 // GetOneBy fetches a single record by a specified parameter
-// GetOneBy fetches a single record by a specified parameter
 func (p Gorm) GetOneBy(param string, value string, model any, associations []string) error {
 	query := p.DB
 

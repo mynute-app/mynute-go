@@ -234,7 +234,7 @@ var GetCompanyById = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetCompanyById", // From cc.GetCompanyById
 	Description: "View company by ID",
-	IsPublic:    false, // Access: "private"
+	IsPublic:    true, // Access: "private"
 	Resource:    CompanyResource,
 }
 var GetCompanyByName = &EndPoint{

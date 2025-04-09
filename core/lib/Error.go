@@ -10,18 +10,18 @@ import (
 
 // ErrorStruct defines the error structure returned to clients.// ErrorStruct defines the error structure returned to clients.
 type ErrorStruct struct {
-	DescriptionEn string            `json:"description_en"`
-	DescriptionBr string            `json:"description_br"`
-	HTTPStatus    int               `json:"http_status"`
-	InnerError    map[string]string `json:"inner_error"` // optional, shown only in dev
+	DescriptionEn string         `json:"description_en"`
+	DescriptionBr string         `json:"description_br"`
+	HTTPStatus    int            `json:"http_status"`
+	InnerError    map[int]string `json:"inner_error"` // optional, shown only in dev
 }
 
 // WithError attaches an internal error to the ErrorStruct
 func (e ErrorStruct) WithError(err error) ErrorStruct {
 	if e.InnerError == nil {
-		e.InnerError = make(map[string]string)
+		e.InnerError = make(map[int]string)
 	}
-	index := fmt.Sprintf("%d", len(e.InnerError)+1)
+	index := len(e.InnerError) + 1
 	e.InnerError[index] = err.Error()
 	return e
 }

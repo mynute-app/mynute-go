@@ -94,7 +94,7 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 		}
 		return err
 	}
-	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]interface{}{"verified": true}, []string{}); err != nil {
+	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]any{"verified": true}, []string{}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 	return nil

@@ -34,7 +34,7 @@ type Branch struct {
 	Country        string               `json:"country" example:"USA"`
 	Employees      []*EmployeePopulated `json:"employees"`
 	Services       []*ServicePopulated  `json:"services"`
-	CompanyID      uint                 `json:"company_id" example:"1"`
+	CompanyID      uuid.UUID            `json:"company_id" example:"1"`
 	Company        *CompanyPopulated    `json:"company"`
 	Appointments   []*Appointment       `json:"appointments"`
 	ServiceDensity []ServiceDensity     `json:"service_density"`
