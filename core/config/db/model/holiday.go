@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Holidays struct {
+type Holiday struct {
 	BaseModel
 	Name        string    `gorm:"not null;index" json:"name"`
 	Date        time.Time `gorm:"not null" json:"date"`

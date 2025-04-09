@@ -100,7 +100,7 @@ func (e *Employee) CreateService(t *testing.T, s int) {
 func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
 	http.Send(changes)
@@ -110,7 +110,7 @@ func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 func (e *Employee) GetById(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
 	http.Send(nil)
@@ -130,7 +130,7 @@ func (e *Employee) GetByEmail(t *testing.T, s int) {
 func (e *Employee) Delete(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/employee/%d", e.created.ID))
+	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.company.auth_token)
 	http.Send(nil)
@@ -164,7 +164,7 @@ func (e *Employee) VerifyEmail(t *testing.T, s int) {
 func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(fmt.Sprintf("/employee/%d/branch/%d", e.created.ID, branch.created.ID))
+	http.URL(fmt.Sprintf("/employee/%s/branch/%s", e.created.ID.String(), branch.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.auth_token)
 	http.Send(nil)
@@ -177,7 +177,7 @@ func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch) {
 func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(fmt.Sprintf("/employee/%d/service/%d", e.created.ID, service.created.ID))
+	http.URL(fmt.Sprintf("/employee/%s/service/%s", e.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", e.auth_token)
 	http.Send(nil)

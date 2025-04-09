@@ -21,7 +21,7 @@ func (e ErrorStruct) WithError(err error) ErrorStruct {
 	if e.InnerError == nil {
 		e.InnerError = make(map[string]string)
 	}
-	index := fmt.Sprintf("%d", len(e.InnerError) + 1)
+	index := fmt.Sprintf("%d", len(e.InnerError)+1)
 	e.InnerError[index] = err.Error()
 	return e
 }
@@ -32,7 +32,7 @@ func (e ErrorStruct) Error() string {
 	if err != nil {
 		return fmt.Sprintf("ErrorStruct: %s", err.Error())
 	}
-	return string(e_byte) 
+	return string(e_byte)
 }
 
 // ToJSON converts the ErrorStruct to a JSON string.
@@ -127,12 +127,14 @@ type EmployeeErrors struct {
 
 type GeneralErrors struct {
 	InterfaceDataNotFound ErrorStruct
+	BadRequest            ErrorStruct
 	RecordNotFound        ErrorStruct
 	CreatedError          ErrorStruct
 	UpdatedError          ErrorStruct
 	DeletedError          ErrorStruct
 	NotFoundError         ErrorStruct
 	InternalError         ErrorStruct
+	AuthError             ErrorStruct
 }
 
 type RoleErrors struct {
@@ -191,6 +193,8 @@ var Error = ErrorCategory{
 		UpdatedError:          NewError("Error updating record", "Erro ao atualizar registro", fiber.StatusBadRequest),
 		DeletedError:          NewError("Error deleting record", "Erro ao deletar registro", fiber.StatusBadRequest),
 		NotFoundError:         NewError("EndPoint not found", "Recurso não encontrado", fiber.StatusNotFound),
+		BadRequest:            NewError("Bad request", "Requisição inválida", fiber.StatusBadRequest),
+		AuthError:             NewError("Internal Server Error while authenticating", "Erro Interno de Servidor enquanto autenticando", fiber.StatusInternalServerError),
 	},
 	Role: RoleErrors{
 		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),

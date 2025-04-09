@@ -54,7 +54,7 @@ func (u *Client) Create(t *testing.T, s int) {
 func (u *Client) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL("/client/" + fmt.Sprintf("%v", u.created.ID))
+	http.URL("/client/" + fmt.Sprintf("%v", u.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(changes)
@@ -72,7 +72,7 @@ func (u *Client) GetByEmail(t *testing.T, s int) {
 func (u *Client) Delete(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/client/%v", u.created.ID))
+	http.URL(fmt.Sprintf("/client/%v", u.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header("Authorization", u.auth_token)
 	http.Send(nil)

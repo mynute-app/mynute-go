@@ -68,11 +68,27 @@ func SingleQueryRef() ResourceReference {
 	}
 }
 
+func SinglePathRef() ResourceReference {
+	return ResourceReference{
+		DatabaseKey: "id",
+		RequestKey:  "id",
+		RequestRef:  "path",
+	}
+}
+
 func MultipleQueryRef(name string) ResourceReference {
 	return ResourceReference{
 		DatabaseKey: "id",
 		RequestKey:  name,
 		RequestRef:  "query",
+	}
+}
+
+func MultiplePathRef(name string) ResourceReference {
+	return ResourceReference{
+		DatabaseKey: "id",
+		RequestKey:  name,
+		RequestRef:  "path",
 	}
 }
 
@@ -96,9 +112,11 @@ var AppointmentResource = &Resource{
 	Table:       "appointments",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("appointment_id"),
 		MultipleQueryRef("appointment_id"),
 		MultipleBodyRef("appointment_id"),
-		MultipleQueryRef("name"),
+		MultiplePathRef("name"),
 	},
 }
 
@@ -108,6 +126,8 @@ var BranchResource = &Resource{
 	Table:       "branches",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("branch_id"),
 		MultipleQueryRef("branch_id"),
 		MultipleBodyRef("branch_id"),
 	},
@@ -119,6 +139,8 @@ var ClientResource = &Resource{
 	Table:       "clients",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("client_id"),
 		MultipleQueryRef("client_id"),
 		MultipleBodyRef("client_id"),
 	},
@@ -130,6 +152,8 @@ var CompanyResource = &Resource{
 	Table:       "companies",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("company_id"),
 		MultipleQueryRef("company_id"),
 		MultipleBodyRef("company_id"),
 	},
@@ -141,6 +165,8 @@ var EmployeeResource = &Resource{
 	Table:       "employees",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("employee_id"),
 		MultipleQueryRef("employee_id"),
 		MultipleBodyRef("employee_id"),
 	},
@@ -152,6 +178,8 @@ var HolidayResource = &Resource{
 	Table:       "holidays",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("holiday_id"),
 		MultipleQueryRef("holiday_id"),
 		MultipleBodyRef("holiday_id"),
 	},
@@ -163,6 +191,8 @@ var RoleResource = &Resource{
 	Table:       "roles",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("role_id"),
 		MultipleQueryRef("role_id"),
 		MultipleBodyRef("role_id"),
 	},
@@ -174,6 +204,8 @@ var SectorResource = &Resource{
 	Table:       "sectors",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("sector_id"),
 		MultipleQueryRef("sector_id"),
 		MultipleBodyRef("sector_id"),
 	},
@@ -185,6 +217,8 @@ var ServiceResource = &Resource{
 	Table:       "services",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("service_id"),
 		MultipleQueryRef("service_id"),
 		MultipleBodyRef("service_id"),
 	},
@@ -196,6 +230,8 @@ var AuthResource = &Resource{
 	Table:       "auth",
 	References: ResourceReferences{
 		SingleQueryRef(),
+		SinglePathRef(),
+		MultiplePathRef("auth_id"),
 		MultipleQueryRef("auth_id"),
 		MultipleBodyRef("auth_id"),
 	},

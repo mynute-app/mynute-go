@@ -14,8 +14,8 @@ type Company struct {
 	created    model.Company
 	owner      *Employee
 	employees  []*Employee
-	branches  []*Branch
-	services  []*Service
+	branches   []*Branch
+	services   []*Service
 	auth_token string
 }
 
@@ -128,7 +128,7 @@ func (c *Company) GetByName(t *testing.T, status int) {
 func (c *Company) GetById(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
+	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Send(nil)
 	http.ParseResponse(&c.created)
@@ -137,7 +137,7 @@ func (c *Company) GetById(t *testing.T, status int) {
 func (c *Company) Update(t *testing.T, status int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
+	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", c.auth_token)
 	http.Send(changes)
@@ -146,7 +146,7 @@ func (c *Company) Update(t *testing.T, status int, changes map[string]any) {
 func (c *Company) Delete(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/company/%d", c.created.ID))
+	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", c.auth_token)
 	http.Send(nil)

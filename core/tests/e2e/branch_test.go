@@ -69,7 +69,7 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 func (b *Branch) Update(t *testing.T, status int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL("/branch/" + fmt.Sprintf("%v", b.created.ID))
+	http.URL("/branch/" + fmt.Sprintf("%v", b.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
 	http.Send(changes)
@@ -89,7 +89,7 @@ func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
 func (b *Branch) GetById(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(fmt.Sprintf("/branch/%d", b.created.ID))
+	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
@@ -99,7 +99,7 @@ func (b *Branch) GetById(t *testing.T, status int) map[string]any {
 func (b *Branch) Delete(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/branch/%d", b.created.ID))
+	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
 	http.Send(nil)
@@ -108,7 +108,7 @@ func (b *Branch) Delete(t *testing.T, status int) {
 func (b *Branch) AddService(t *testing.T, status int, service *Service) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
-	http.URL(fmt.Sprintf("/branch/%d/service/%d", b.created.ID, service.created.ID))
+	http.URL(fmt.Sprintf("/branch/%s/service/%s", b.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", b.auth_token)
 	http.Send(nil)

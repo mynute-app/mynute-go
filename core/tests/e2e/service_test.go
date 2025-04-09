@@ -32,7 +32,7 @@ func Test_Service(t *testing.T) {
 	service.company = company
 	service.Create(t, 200)
 	service.Update(t, 200, map[string]any{
-		"name":        lib.GenerateRandomName("Updated Service"),
+		"name": lib.GenerateRandomName("Updated Service"),
 	})
 	service.GetById(t, 200)
 	service.GetByName(t, 200)
@@ -65,7 +65,7 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
-	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
 	http.Send(changes)
@@ -75,7 +75,7 @@ func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 func (s *Service) GetById(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
 	http.Send(nil)
@@ -97,7 +97,7 @@ func (s *Service) GetByName(t *testing.T, status int) map[string]any {
 func (s *Service) Delete(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
-	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID))
+	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header("Authorization", s.auth_token)
 	http.Send(nil)

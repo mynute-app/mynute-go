@@ -19,9 +19,9 @@ var AllowNilResourceID = false
 // --- [if is not company owner] : Deny : PATCH : /company/{id} : tax_id
 type PolicyRule struct {
 	BaseModel
-	CompanyID           *uint           `json:"company_id"`
+	CompanyID           *uuid.UUID           `json:"company_id"`
 	Company             Company         `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
-	CreatedByEmployeeID *uint           `json:"created_by_employee_id"`
+	CreatedByEmployeeID *uuid.UUID           `json:"created_by_employee_id"`
 	CreatedByEmployee   Employee        `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
@@ -573,6 +573,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteClient",
 		Description: "Allows a client to delete their own profile.",
 		Effect:      "Allow",
+		EndPointID:  DeleteClientById.ID,
 		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self
 	}
 
@@ -582,6 +583,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewCompanyById",
 		Description: "Allows any member (employee/manager) of the company to view its details.",
 		Effect:      "Allow",
+		EndPointID:  GetCompanyById.ID,
 		Conditions:  JsonRawMessage(company_membership_access_check),
 	}
 
@@ -589,6 +591,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateCompany",
 		Description: "Allows the company Owner or General Manager to update company details.",
 		Effect:      "Allow",
+		EndPointID:  UpdateCompanyById.ID,
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 	}
 
@@ -596,6 +599,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteCompany",
 		Description: "Allows ONLY the company Owner to delete the company.",
 		Effect:      "Allow",
+		EndPointID:  DeleteCompanyById.ID,
 		Conditions:  JsonRawMessage(company_owner_check), // Only Owner of this company
 	}
 
@@ -605,6 +609,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateEmployee",
 		Description: "Allows company Owner, GM, or BM to create employees (BM restricted to their branches implicitly if data includes branch).",
 		Effect:      "Allow",
+		EndPointID:  CreateEmployee.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Branch Manager Creation Access",
 			LogicType:   "OR",
@@ -622,6 +627,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewEmployeeById",
 		Description: "Allows employee to view self, or any internal user of the same company to view other employees.",
 		Effect:      "Allow",
+		EndPointID:  GetEmployeeById.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-View OR Any Internal Company User View",
 			LogicType:   "OR",
@@ -636,6 +642,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewEmployeeByEmail",
 		Description: "Allows company members to find employees within the same company by email.",
 		Effect:      "Allow",
+		EndPointID:  GetEmployeeByEmail.ID,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Subject must be internal user of the found employee's company
 	}
 
@@ -643,6 +650,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateEmployee",
 		Description: "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
 		Effect:      "Allow",
+		EndPointID:  UpdateEmployeeById.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Employee Self-Update OR Manager Update",
 			LogicType:   "OR",
@@ -661,6 +669,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to delete employees.",
 		Effect:      "Allow",
+		EndPointID:  DeleteEmployeeById.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 	}
 
@@ -668,6 +677,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanAddServiceToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
 		Effect:      "Allow",
+		EndPointID:  AddServiceToEmployee.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
@@ -675,6 +685,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanRemoveServiceFromEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to remove services from employees.",
 		Effect:      "Allow",
+		EndPointID:  RemoveServiceFromEmployee.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
 	}
 
@@ -682,6 +693,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanAddBranchToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
 		Effect:      "Allow",
+		EndPointID:  AddBranchToEmployee.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -697,6 +709,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanRemoveBranchFromEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
 		Effect:      "Allow",
+		EndPointID:  RemoveBranchFromEmployee.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Assignment Check",
 			LogicType:   "OR",
@@ -714,6 +727,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to create holidays for the company/branch.",
 		Effect:      "Allow",
+		EndPointID:  CreateHoliday.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager in the relevant company context. Add branch check if needed.
 	}
 
@@ -721,6 +735,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewHolidayById",
 		Description: "Allows company members to view holiday details.",
 		Effect:      "Allow",
+		EndPointID:  GetHolidayById.ID,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the holiday's company
 	}
 
@@ -728,6 +743,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to update holidays.",
 		Effect:      "Allow",
+		EndPointID:  UpdateHolidayById.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
@@ -735,33 +751,34 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteHoliday",
 		Description: "Allows company managers (Owner, GM, BM) to delete holidays.",
 		Effect:      "Allow",
+		EndPointID:  DeleteHolidayById.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the holiday's company
 	}
 
 	// --- Sector Policies --- (Assuming Company Specific)
 
-	var AllowCreateSector = &PolicyRule{
-		Name:        "SDP: CanCreateSector",
-		Description: "Allows company Owner or General Manager to create sectors.",
-		Effect:      "Allow",
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of that company
-	}
+	// var AllowCreateSector = &PolicyRule{
+	// 	Name:        "SDP: CanCreateSector",
+	// 	Description: "Allows company Owner or General Manager to create sectors.",
+	// 	Effect:      "Allow",
+	// 	Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of that company
+	// }
 
-	// GetSectorById/Name assumed Public - No Policy Needed
+	// // GetSectorById/Name assumed Public - No Policy Needed
 
-	var AllowUpdateSectorById = &PolicyRule{
-		Name:        "SDP: CanUpdateSector",
-		Description: "Allows company Owner or General Manager to update sectors.",
-		Effect:      "Allow",
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
-	}
+	// var AllowUpdateSectorById = &PolicyRule{
+	// 	Name:        "SDP: CanUpdateSector",
+	// 	Description: "Allows company Owner or General Manager to update sectors.",
+	// 	Effect:      "Allow",
+	// 	Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
+	// }
 
-	var AllowDeleteSectorById = &PolicyRule{
-		Name:        "SDP: CanDeleteSector",
-		Description: "Allows company Owner or General Manager to delete sectors.",
-		Effect:      "Allow",
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
-	}
+	// var AllowDeleteSectorById = &PolicyRule{
+	// 	Name:        "SDP: CanDeleteSector",
+	// 	Description: "Allows company Owner or General Manager to delete sectors.",
+	// 	Effect:      "Allow",
+	// 	Conditions:  JsonRawMessage(company_admin_check), // Only Owner/GM of the sector's company
+	// }
 
 	// --- Service Policies --- (Assuming Company Specific)
 
@@ -769,6 +786,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateService",
 		Description: "Allows company managers (Owner, GM, BM) to create services.",
 		Effect:      "Allow",
+		EndPointID:  CreateService.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the company context
 	}
 
@@ -776,6 +794,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanViewServiceById",
 		Description: "Allows company members to view service details.",
 		Effect:      "Allow",
+		EndPointID:  GetServiceById.ID,
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the service's company
 	}
 
@@ -785,6 +804,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanUpdateService",
 		Description: "Allows company managers (Owner, GM, BM) to update services.",
 		Effect:      "Allow",
+		EndPointID:  UpdateServiceById.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
@@ -792,6 +812,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanDeleteService",
 		Description: "Allows company managers (Owner, GM, BM) to delete services.",
 		Effect:      "Allow",
+		EndPointID:  DeleteServiceById.ID,
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
@@ -841,9 +862,9 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowDeleteHolidayById,
 
 		// Sectors (Managed by Admins)
-		AllowCreateSector,
-		AllowUpdateSectorById,
-		AllowDeleteSectorById,
+		// AllowCreateSector,
+		// AllowUpdateSectorById,
+		// AllowDeleteSectorById,
 
 		// Services
 		AllowCreateService,

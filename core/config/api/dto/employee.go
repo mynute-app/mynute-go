@@ -55,7 +55,7 @@ type Employee struct {
 	Verified     bool               `json:"verified" example:"true"`
 	WorkSchedule WorkSchedule       `json:"work_schedule"`
 	Appointments []Appointment      `json:"appointments"`
-	CompanyID    uint               `json:"company_id" example:"1"`
+	CompanyID    uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	Company      CompanyPopulated   `json:"company"`
 	Branches     []BranchPopulated  `json:"branches"`
 	Services     []ServicePopulated `json:"services"`

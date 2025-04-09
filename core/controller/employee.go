@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type employee_controller struct {
@@ -81,18 +82,20 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 //	@Failure		404		{object}	nil
 //	@Router			/employee/verify-email/{email}/{code} [post]
 func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
-	res := &lib.SendResponse{Ctx: c}
 	email := c.Params("email")
 	var employee model.Employee
 	employee.Email = email
 	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
-		return res.Send(400, err)
+		return lib.Error.General.BadRequest.WithError(err)
 	}
 	if err := ec.Request.Gorm.GetOneBy("email", email, &employee, []string{}); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("employee with email %s not found", email))
+		}
 		return err
 	}
-	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &model.Employee{}, map[string]interface{}{"verified": true}, []string{}); err != nil {
-		return err
+	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]interface{}{"verified": true}, []string{}); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
 	}
 	return nil
 }

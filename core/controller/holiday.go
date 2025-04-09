@@ -11,7 +11,7 @@ import (
 )
 
 type holidays_controller struct {
-	service.Base[model.Holidays, DTO.Holidays]
+	service.Base[model.Holiday, DTO.Holidays]
 }
 
 // CreateHolidays creates a holiday
@@ -99,7 +99,7 @@ func (cc *holidays_controller) DeleteHolidayById(c *fiber.Ctx) error {
 // Holidays creates a new holidays_controller
 func Holiday(Gorm *handler.Gorm) *holidays_controller {
 	hc := &holidays_controller{
-		Base: service.Base[model.Holidays, DTO.Holidays]{
+		Base: service.Base[model.Holiday, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
 			Associations: []string{},
