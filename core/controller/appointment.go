@@ -79,9 +79,8 @@ func (ac *appointment_controller) DeleteAppointmentByID(c *fiber.Ctx) error {
 func Appointment(Gorm *handler.Gorm) *appointment_controller {
 	ac := &appointment_controller{
 		Base: service.Base[model.Appointment, DTO.Appointment]{
-			Name:         namespace.CompanyKey.Name,
-			Request:      handler.Request(Gorm),
-			Associations: []string{"Sector", "Branch", "Employee", "Client", "Service", "Company"},
+			Name:    namespace.CompanyKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}

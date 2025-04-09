@@ -39,7 +39,6 @@ type AutoReqActions struct {
 type ContextValues struct {
 	ModelArr any
 	Model    any
-	Assocs   []string
 	DtoArr   any
 	Dto      any
 	Changes  map[string]any
@@ -54,10 +53,6 @@ func (ac *AutoReqActions) fetchContextValues() error {
 		return err
 	}
 	model, err := lib.GetFromCtx[any](ac.ctx, keys.Model)
-	if err != nil {
-		return err
-	}
-	assocs, err := lib.GetFromCtx[[]string](ac.ctx, keys.Associations)
 	if err != nil {
 		return err
 	}
@@ -77,7 +72,6 @@ func (ac *AutoReqActions) fetchContextValues() error {
 	ac.ctxVal = &ContextValues{
 		ModelArr: modelArr,
 		Model:    model,
-		Assocs:   assocs,
 		DtoArr:   dtoArr,
 		Dto:      dto,
 		Changes:  changes,
@@ -119,7 +113,7 @@ func (ac *AutoReqActions) GetBy(paramKey string) error {
 	}
 
 	if paramKey == "" {
-		if err := ac.req.Gorm.GetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
+		if err := ac.req.Gorm.GetAll(ac.ctxVal.ModelArr); err != nil {
 			return lib.Error.General.RecordNotFound.WithError(err)
 		}
 		return ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
@@ -130,7 +124,7 @@ func (ac *AutoReqActions) GetBy(paramKey string) error {
 	if err != nil {
 		return err
 	}
-	if err := ac.req.Gorm.GetOneBy(paramKey, cleanedParamVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
+	if err := ac.req.Gorm.GetOneBy(paramKey, cleanedParamVal, ac.ctxVal.Model); err != nil {
 		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -143,13 +137,13 @@ func (ac *AutoReqActions) ForceGetBy(paramKey string) error {
 	}
 
 	if paramKey == "" {
-		if err := ac.req.Gorm.ForceGetAll(ac.ctxVal.ModelArr, ac.ctxVal.Assocs); err != nil {
+		if err := ac.req.Gorm.ForceGetAll(ac.ctxVal.ModelArr); err != nil {
 			return lib.Error.General.RecordNotFound.WithError(err)
 		}
 		return ac.ActionSuccess(200, ac.ctxVal.ModelArr, ac.ctxVal.DtoArr)
 	}
 	paramVal := ac.ctx.Params(paramKey)
-	if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
+	if err := ac.req.Gorm.ForceGetOneBy(paramKey, paramVal, ac.ctxVal.Model); err != nil {
 		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return ac.ActionSuccess(200, ac.ctxVal.Model, ac.ctxVal.Dto)
@@ -162,7 +156,7 @@ func (ac *AutoReqActions) CreateOne() error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := ac.req.Gorm.Create(ac.ctxVal.Model, ac.ctxVal.Assocs); err != nil {
+	if err := ac.req.Gorm.Create(ac.ctxVal.Model); err != nil {
 		return err
 	}
 
@@ -176,7 +170,7 @@ func (ac *AutoReqActions) DeleteOneById() error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
+	if err := ac.req.Gorm.GetOneBy("id", id, ac.ctxVal.Model); err != nil {
 		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 
@@ -194,7 +188,7 @@ func (ac *AutoReqActions) ForceDeleteOneById() error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model, nil); err != nil {
+	if err := ac.req.Gorm.ForceGetOneBy("id", id, ac.ctxVal.Model); err != nil {
 		return lib.Error.General.RecordNotFound.WithError(err)
 	}
 
@@ -212,7 +206,7 @@ func (ac *AutoReqActions) UpdateOneById() error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Changes, ac.ctxVal.Assocs); err != nil {
+	if err := ac.req.Gorm.UpdateOneById(id, ac.ctxVal.Model, ac.ctxVal.Changes); err != nil {
 		return err
 	}
 

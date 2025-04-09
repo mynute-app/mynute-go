@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Gorm struct {
@@ -11,7 +12,7 @@ type Gorm struct {
 }
 
 // UpdateOneById updates a single record by its ID
-func (p *Gorm) UpdateOneById(value string, model any, changes any, associations []string) error {
+func (p *Gorm) UpdateOneById(value string, model any, changes any) error {
 	// Start with the base query
 	query := p.DB.Model(model)
 
@@ -27,7 +28,7 @@ func (p *Gorm) UpdateOneById(value string, model any, changes any, associations 
 	}
 
 	// Omit all associations
-	query = query.Omit(associations...)
+	query = query.Omit(clause.Associations)
 
 	// Apply the changes
 	if err := query.Updates(changes).Error; err != nil {
@@ -35,11 +36,11 @@ func (p *Gorm) UpdateOneById(value string, model any, changes any, associations 
 	}
 
 	// Get the updated record and load it into the model
-	return p.GetOneBy("id", value, model, associations)
+	return p.GetOneBy("id", value, model)
 }
 
 // Create creates a new record
-func (p *Gorm) Create(model any, assocs []string) error {
+func (p *Gorm) Create(model any) error {
 	query := p.DB
 
 	if query.Error != nil {
@@ -47,7 +48,7 @@ func (p *Gorm) Create(model any, assocs []string) error {
 	}
 
 	// Omit all associations
-	query = query.Omit(assocs...)
+	query = query.Omit(clause.Associations)
 
 	return query.Create(model).Error
 }
@@ -59,34 +60,30 @@ func (p *Gorm) UpdateMany(v any) error {
 	return p.DB.Model(v).Updates(v).Error
 }
 
-// GetOneBy fetches a single record by a specified parameter
-func (p Gorm) GetOneBy(param string, value string, model any, associations []string) error {
-	query := p.DB
+// GetOneBy fetches a single record by a specified parameter, preloading associations.
+func (p Gorm) GetOneBy(param string, value string, model any) error {
+	query := p.DB // Start with the base DB instance
 
-	if query.Error != nil {
-		return query.Error
-	}
+	// Apply Preload and update the query variable
+	// The result of Preload is assigned back to query.
+	query = query.Preload(clause.Associations)
 
-	// Forcefully preload associations
-	for _, preload := range associations {
-		query = query.Preload(preload)
-	}
-
+	// Build the WHERE condition
 	cond := fmt.Sprintf("%s = ?", param)
 
-	// Run query and return result
-	return query.First(model, cond, value).Error
+	if err := query.First(model, cond, value).Error; err != nil {
+		return err
+	}
+
+	return nil // Return nil on success
 }
 
 // ForceGetOneBy fetches a single record by a specified parameter, including soft-deleted records
-func (p Gorm) ForceGetOneBy(param string, value string, model any, associations []string) error {
+func (p Gorm) ForceGetOneBy(param string, value string, model any) error {
 	// Start with the base query unscoped
 	query := p.DB.Unscoped()
 
-	// Iterate over the preloads and apply each one
-	for _, preload := range associations {
-		query = query.Preload(preload)
-	}
+	query = query.Preload(clause.Associations)
 
 	cond := fmt.Sprintf("%s = ?", param)
 
@@ -121,17 +118,16 @@ func (p Gorm) ForceDeleteOneById(value string, model any) error {
 }
 
 // GetAll fetches all records
-func (p Gorm) GetAll(model any, associations []string) error {
+func (p Gorm) GetAll(model any) error {
 	// Verifique se model é um ponteiro antes de chamar Find()
 	if model == nil {
 		return fmt.Errorf("model não pode ser nil")
 	}
 
-	query := p.DB
+	query := p.DB.Preload(clause.Associations)
 
-	// Aplicar os Preloads
-	for _, preload := range associations {
-		query = query.Preload(preload)
+	if query.Error != nil {
+		return query.Error
 	}
 
 	// **Certifique-se de que `model` é um ponteiro ao chamar Find()**
@@ -139,14 +135,11 @@ func (p Gorm) GetAll(model any, associations []string) error {
 }
 
 // ForceGetAll fetches all records, including soft-deleted records
-func (p Gorm) ForceGetAll(model any, associations []string) error {
+func (p Gorm) ForceGetAll(model any) error {
 	// Start with the base query unscoped
 	query := p.DB.Unscoped()
 
-	// Iterate over the preloads and apply each one
-	for _, preload := range associations {
-		query = query.Preload(preload)
-	}
+	query = query.Preload(clause.Associations)
 
 	// Fetch all records after applying all preloads
 	return query.Find(model).Error

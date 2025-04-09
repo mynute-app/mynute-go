@@ -103,7 +103,6 @@ func Service(Gorm *handler.Gorm) *service_controller {
 		Base: service.Base[model.Service, DTO.Service]{
 			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Company", "Branches", "Employees"},
 		},
 	}
 	endpoint := handler.Endpoint{DB: Gorm.DB}

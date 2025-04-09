@@ -52,7 +52,7 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	var employee model.Employee
-	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee); err != nil {
 		return err
 	}
 	if !employee.Verified {
@@ -88,13 +88,13 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
-	if err := ec.Request.Gorm.GetOneBy("email", email, &employee, []string{}); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("email", email, &employee); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("employee with email %s not found", email))
 		}
 		return err
 	}
-	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]any{"verified": true}, []string{}); err != nil {
+	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]any{"verified": true}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 	return nil
@@ -190,10 +190,10 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
 		return err
 	}
 	if employee.CompanyID != service.CompanyID {
@@ -202,7 +202,7 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
@@ -231,10 +231,10 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
 		return err
 	}
 	if employee.CompanyID != service.CompanyID {
@@ -243,7 +243,7 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Delete(&service); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
@@ -272,10 +272,10 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch, []string{}); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
 		return err
 	}
 	if employee.CompanyID != branch.CompanyID {
@@ -284,7 +284,7 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Append(&branch); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
@@ -313,10 +313,10 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch, []string{}); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
 		return err
 	}
 	if employee.CompanyID != branch.CompanyID {
@@ -325,7 +325,7 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Delete(&branch); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee, ec.Associations); err != nil {
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
 	res := &lib.SendResponse{Ctx: c}
@@ -340,7 +340,6 @@ func Employee(Gorm *handler.Gorm) *employee_controller {
 		Base: service.Base[model.Employee, DTO.Employee]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Company", "Services", "Appointments"},
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}

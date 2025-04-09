@@ -101,7 +101,6 @@ func Sector(Gorm *handler.Gorm) *sector_controller {
 		Base: service.Base[model.Sector, DTO.Sector]{
 			Name:         namespace.SectorKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{},
 		},
 	}
 	endpoint := handler.Endpoint{DB: Gorm.DB}

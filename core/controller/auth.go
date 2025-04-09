@@ -36,7 +36,7 @@ func (cc *auth_controller) VerifyExistingAccount(c *fiber.Ctx) error {
 	}
 	body := c.Locals(namespace.GeneralKey.Model).(*model.Client)
 	var client model.Client
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client); err != nil {
 		if err.Error() == "record not found" {
 			return cc.AutoReqActions.ActionFailed(200, err)
 		}
@@ -83,9 +83,8 @@ func (cc *auth_controller) LogoutProvider(c *fiber.Ctx) error {
 func Auth(Gorm *handler.Gorm) *auth_controller {
 	ac := &auth_controller{
 		Base: service.Base[model.Client, DTO.Client]{
-			Name:         namespace.ClientKey.Name,
-			Request:      handler.Request(Gorm),
-			Associations: []string{"Branches", "Services", "Appointment", "Company"},
+			Name:    namespace.ClientKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}

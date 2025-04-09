@@ -59,7 +59,7 @@ func (cc *client_controller) LoginClient(c *fiber.Ctx) error {
 		return err
 	}
 	var client model.Client
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client); err != nil {
 		return err
 	}
 	if !client.Verified {
@@ -96,7 +96,7 @@ func (cc *client_controller) VerifyClientEmail(c *fiber.Ctx) error {
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
 		return res.Send(400, err)
 	}
-	if err := cc.Request.Gorm.GetOneBy("email", email, &client, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("email", email, &client); err != nil {
 		return err
 	}
 	// code := c.Params("code")
@@ -169,7 +169,6 @@ func Client(Gorm *handler.Gorm) *client_controller {
 		Base: service.Base[model.Client, DTO.Client]{
 			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Appointments"},
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}

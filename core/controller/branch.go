@@ -114,10 +114,10 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
 	if employee.CompanyID != branch.CompanyID {
@@ -152,10 +152,10 @@ func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
 	var service model.Service
 	branch_id := c.Params("branch_id")
 	service_id := c.Params("service_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
 		return err
 	}
 	if service.CompanyID != branch.CompanyID {
@@ -197,10 +197,10 @@ func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
 	var service model.Service
 	branch_id := c.Params("branch_id")
 	service_id := c.Params("service_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch, cc.Associations); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service, []string{}); err != nil {
+	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
 		return err
 	}
 	if service.CompanyID != branch.CompanyID {
@@ -230,7 +230,6 @@ func Branch(Gorm *handler.Gorm) *branch_controller {
 		Base: service.Base[model.Branch, DTO.Branch]{
 			Name:         namespace.ClientKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{"Employees", "Services", "Company", "Appointments"},
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}

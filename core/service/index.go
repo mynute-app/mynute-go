@@ -29,7 +29,6 @@ type Base[MODEL any, DTO any] struct {
 	Name           string
 	Request        *handler.Req
 	AutoReqActions *handler.AutoReqActions
-	Associations   []string
 }
 
 func CreateRoutes(r fiber.Router, ci IService) {
@@ -89,7 +88,6 @@ func (b *Base[MODEL, DTO]) saveLocals(c *fiber.Ctx) error {
 	c.Locals(keys.ModelArr, &modelArr)
 	c.Locals(keys.Model, &model)
 	c.Locals(keys.Changes, changes)
-	c.Locals(keys.Associations, b.Associations)
 	return nil
 }
 

@@ -102,7 +102,6 @@ func Holiday(Gorm *handler.Gorm) *holidays_controller {
 		Base: service.Base[model.Holiday, DTO.Holidays]{
 			Name:         namespace.HolidaysKey.Name,
 			Request:      handler.Request(Gorm),
-			Associations: []string{},
 		},
 	}
 	endpoint := handler.Endpoint{DB: Gorm.DB}
