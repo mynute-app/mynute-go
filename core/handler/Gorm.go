@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"agenda-kaki-go/core/lib"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -13,62 +14,43 @@ type Gorm struct {
 
 // UpdateOneById updates a single record by its ID and reloads it
 func (p *Gorm) UpdateOneById(value string, model any, changes any) error {
-	// === Phase 1: Update ===
 
-	// Define the target for the update operation.
-	// Note: We don't need .Omit(clause.Associations) if 'changes' only contains
-	//       direct column names/values of the 'model' table.
-	//       If 'changes' might contain struct values that GORM could mistake
-	//       for associations you want to skip updating, keep Omit.
-	//       Alternatively, use .Select() in Updates for explicit control.
-	// Example using Select (if 'changes' is a map[string]interface{}):
-	// updateFields := make([]string, 0, len(changes))
-	// for k := range changes {
-	//  updateFields = append(updateFields, k)
-	// }
-	// result := p.DB.Model(model).Where("id = ?", value).Select(updateFields).Updates(changes)
-
-	// Original approach (simpler if 'changes' is well-behaved):
-	result := p.DB.
+	if err := p.DB.
 		Model(model).
 		Where("id = ?", value).
-		Omit(clause.Associations).
-		Updates(changes)
-
-	if result.Error != nil {
-		return fmt.Errorf("gorm update failed: %w", result.Error) // Wrap error
+		First(model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record with id %s not found", value))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error checking record existence: %w", err))
 	}
 
-	// Optional but Recommended: Check if the record was actually found and updated.
-	// Updates doesn't return ErrRecordNotFound if the WHERE condition matches 0 rows.
-	if result.RowsAffected == 0 {
-		// To be sure it wasn't found vs. data was identical, check existence separately
+	if result := p.DB.
+		Model(model).
+		Omit(clause.Associations).
+		Where("id = ?", value).
+		Updates(changes); result.Error != nil {
+		return fmt.Errorf("gorm update failed: %w", result.Error) // Wrap error
+	} else if result.RowsAffected == 0 {
 		var count int64
 		countErr := p.DB.Model(model).Where("id = ?", value).Count(&count).Error
 		if countErr != nil {
-			// Error during count check, return this error
-			return fmt.Errorf("failed to verify existence after 0 rows affected: %w", countErr)
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error checking record existence: %w", countErr))
 		}
 		if count == 0 {
-			// Record definitively doesn't exist
-			return gorm.ErrRecordNotFound // Return standard GORM error
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record with id %s not found", value))
 		}
-		// If count > 0, it means the record exists, but the data in 'changes'
-		// was identical to the existing data, so RowsAffected was 0. We can continue.
-		fmt.Printf("Record %s existed but was not modified (data likely identical)\n", value) // Or log warning
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record `id = %s` exists but was not modified maybe the changes passed are likely identical to database", value))
 	}
 
-	// === Phase 2: Reload ===
-
-	// Perform a *new*, clean query to fetch the updated record with associations
-	// Use First or Take. First is generally preferred when expecting exactly one result.
-	err := p.DB.Preload(clause.Associations).First(model, "id = ?", value).Error
+	err := p.DB.
+		Model(model).
+		Where("id = ?", value).
+		First(model).Error
 	if err != nil {
-		// If it fails here (e.g., record not found), it reflects the state *after* the update attempt.
 		return fmt.Errorf("gorm reload after update failed: %w", err) // Wrap error
 	}
 
-	// 'model' pointer now holds the latest data with preloaded associations
 	return nil
 }
 

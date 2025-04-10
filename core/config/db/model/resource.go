@@ -169,6 +169,7 @@ var EmployeeResource = &Resource{
 		MultiplePathRef("employee_id"),
 		MultipleQueryRef("employee_id"),
 		MultipleBodyRef("employee_id"),
+		MultiplePathRef("email"),
 	},
 }
 
