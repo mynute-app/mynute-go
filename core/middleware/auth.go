@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -131,6 +132,12 @@ forLoop:
 
 	if RequestVal == "" {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("request is malformed. Endpoint.Resource.ID: %s", EndPoint.Resource.ID.String()))
+	}
+
+	RequestVal, err = url.QueryUnescape(RequestVal)
+
+	if err != nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("failed to unescape request value: %w", err))
 	}
 
 	var resource any

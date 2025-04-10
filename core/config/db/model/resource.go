@@ -76,25 +76,25 @@ func SinglePathRef() ResourceReference {
 	}
 }
 
-func MultipleQueryRef(name string) ResourceReference {
+func MultipleQueryRef(name, dbKey string) ResourceReference {
 	return ResourceReference{
-		DatabaseKey: "id",
+		DatabaseKey: dbKey,
 		RequestKey:  name,
 		RequestRef:  "query",
 	}
 }
 
-func MultiplePathRef(name string) ResourceReference {
+func MultiplePathRef(name, dbKey string) ResourceReference {
 	return ResourceReference{
-		DatabaseKey: "id",
+		DatabaseKey: dbKey,
 		RequestKey:  name,
 		RequestRef:  "path",
 	}
 }
 
-func MultipleBodyRef(name string) ResourceReference {
+func MultipleBodyRef(name, dbKey string) ResourceReference {
 	return ResourceReference{
-		DatabaseKey: "id",
+		DatabaseKey: dbKey,
 		RequestKey:  name,
 		RequestRef:  "body",
 	}
@@ -113,10 +113,10 @@ var AppointmentResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("appointment_id"),
-		MultipleQueryRef("appointment_id"),
-		MultipleBodyRef("appointment_id"),
-		MultiplePathRef("name"),
+		MultiplePathRef("appointment_id", "id"),
+		MultipleQueryRef("appointment_id", "id"),
+		MultipleBodyRef("appointment_id", "id"),
+		MultiplePathRef("name", "name"),
 	},
 }
 
@@ -127,9 +127,10 @@ var BranchResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("branch_id"),
-		MultipleQueryRef("branch_id"),
-		MultipleBodyRef("branch_id"),
+		MultiplePathRef("branch_id", "id"),
+		MultipleQueryRef("branch_id", "id"),
+		MultipleBodyRef("branch_id", "id"),
+		MultiplePathRef("name", "name"),
 	},
 }
 
@@ -140,9 +141,10 @@ var ClientResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("client_id"),
-		MultipleQueryRef("client_id"),
-		MultipleBodyRef("client_id"),
+		MultiplePathRef("client_id", "id"),
+		MultipleQueryRef("client_id", "id"),
+		MultipleBodyRef("client_id", "id"),
+		MultiplePathRef("email", "email"),
 	},
 }
 
@@ -153,9 +155,9 @@ var CompanyResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("company_id"),
-		MultipleQueryRef("company_id"),
-		MultipleBodyRef("company_id"),
+		MultiplePathRef("company_id", "id"),
+		MultipleQueryRef("company_id", "id"),
+		MultipleBodyRef("company_id", "id"),
 	},
 }
 
@@ -166,10 +168,10 @@ var EmployeeResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("employee_id"),
-		MultipleQueryRef("employee_id"),
-		MultipleBodyRef("employee_id"),
-		MultiplePathRef("email"),
+		MultiplePathRef("employee_id", "id"),
+		MultipleQueryRef("employee_id", "id"),
+		MultipleBodyRef("employee_id", "id"),
+		MultiplePathRef("email", "email"),
 	},
 }
 
@@ -180,9 +182,9 @@ var HolidayResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("holiday_id"),
-		MultipleQueryRef("holiday_id"),
-		MultipleBodyRef("holiday_id"),
+		MultiplePathRef("holiday_id", "id"),
+		MultipleQueryRef("holiday_id", "id"),
+		MultipleBodyRef("holiday_id", "id"),
 	},
 }
 
@@ -193,9 +195,9 @@ var RoleResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("role_id"),
-		MultipleQueryRef("role_id"),
-		MultipleBodyRef("role_id"),
+		MultiplePathRef("role_id", "id"),
+		MultipleQueryRef("role_id", "id"),
+		MultipleBodyRef("role_id", "id"),
 	},
 }
 
@@ -206,9 +208,9 @@ var SectorResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("sector_id"),
-		MultipleQueryRef("sector_id"),
-		MultipleBodyRef("sector_id"),
+		MultiplePathRef("sector_id", "id"),
+		MultipleQueryRef("sector_id", "id"),
+		MultipleBodyRef("sector_id", "id"),
 	},
 }
 
@@ -219,9 +221,9 @@ var ServiceResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("service_id"),
-		MultipleQueryRef("service_id"),
-		MultipleBodyRef("service_id"),
+		MultiplePathRef("service_id", "id"),
+		MultipleQueryRef("service_id", "id"),
+		MultipleBodyRef("service_id", "id"),
 	},
 }
 
@@ -232,9 +234,9 @@ var AuthResource = &Resource{
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
-		MultiplePathRef("auth_id"),
-		MultipleQueryRef("auth_id"),
-		MultipleBodyRef("auth_id"),
+		MultiplePathRef("auth_id", "id"),
+		MultipleQueryRef("auth_id", "id"),
+		MultipleBodyRef("auth_id", "id"),
 	},
 }
 

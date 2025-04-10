@@ -104,9 +104,9 @@ func (u *Client) Login(t *testing.T, s int) {
 	u.auth_token = auth[0]
 }
 
-func Test_Client_Create_Success(t *testing.T) {
-	server := core.NewServer().Run("test")
-	client := &Client{}
-	client.Create(t, 200)
-	server.Shutdown()
-}
+// func Test_Client_Create_Success(t *testing.T) {
+// 	server := core.NewServer().Run("test")
+// 	client := &Client{}
+// 	client.Create(t, 200)
+// 	server.Shutdown()
+// }

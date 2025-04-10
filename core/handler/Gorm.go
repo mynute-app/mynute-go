@@ -108,15 +108,31 @@ func (p Gorm) ForceGetOneBy(param string, value string, model any) error {
 
 // DeleteOneById deletes a single record by its ID
 func (p Gorm) DeleteOneById(value string, model any) error {
-	query := p.DB
-
-	if query.Error != nil {
-		return query.Error
+	if p.DB.Error != nil {
+		return p.DB.Error
 	}
 
-	cond := fmt.Sprintf("%s = ?", "id")
+	if err := p.DB.
+		Model(model).
+		Where("id = ?", value).
+		First(model).
+		Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.DeletedError.WithError(fmt.Errorf("record with id %s not found", value))
+		}
+		return lib.Error.General.DeletedError.WithError(fmt.Errorf("error checking record existence: %w", err))
+	}
 
-	return query.Model(model).Delete(cond, value).Error
+	if err := p.DB.
+		Model(model).
+		Omit(clause.Associations).
+		Where("id = ?", value).
+		Delete(model).
+		Error; err != nil {
+		return lib.Error.General.DeletedError.WithError(fmt.Errorf("gorm delete failed: %w", err)) // Wrap error
+	}
+
+	return nil
 }
 
 // ForceDeleteOneById deletes a single record by its ID, including soft-deleted records

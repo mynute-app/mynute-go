@@ -81,6 +81,7 @@ func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/branch/name/%s", b.created.Name))
 	http.ExpectStatus(status)
+	http.Header("Authorization", b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
 	return http.ResBody
