@@ -93,7 +93,7 @@ func Log(logger *slog.Logger) fiber.Handler {
 			lokiDefaultMap["level"] = "info"
 			lokiDefaultMap["type"] = "response"
 			resStatus = c.Response().Header.StatusCode()
-			if resStatus == 401 {
+			if resStatus == 401 || resStatus == 403 {
 				lokiDefaultMap["level"] = "warning"
 				labelMsg = "Request unauthorized!"
 			} else {

@@ -50,7 +50,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, path, claim.CompanyID.String()))
 		}
-		return lib.Error.Auth.Unauthorized.WithError(err)
+		return lib.Error.General.AuthError.WithError(err)
 	}
 
 	if len(policies) == 0 {
@@ -180,7 +180,7 @@ forLoop:
 
 	resource_data := make(map[string]any)
 
-	jsonData, err = json.Marshal(user) // Convert struct to JSON bytes
+	jsonData, err = json.Marshal(resource) // Convert struct to JSON bytes
 	if err != nil {
 		// Handle marshaling error (should be rare for valid structs)
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to marshal user subject: %w", err))
@@ -195,7 +195,7 @@ forLoop:
 		decision := am.PolicyEngine.CanAccess(subject_data, resource_data, policy)
 		if decision.Error != nil {
 			return lib.Error.General.AuthError.WithError(err)
-		} else if !ok {
+		} else if !decision.Allowed {
 			denied := lib.Error.Auth.Unauthorized.WithError(errors.New("policy engine denied access"))
 			denied.WithError(fmt.Errorf("reason: %s", decision.Reason))
 			denied.WithError(fmt.Errorf("endpoint: %s %s", method, path))

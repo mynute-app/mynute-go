@@ -82,12 +82,11 @@ type AppointmentErrors struct {
 
 // Grouped errors per domain
 type AuthErrors struct {
-	InvalidLogin                ErrorStruct
-	NoToken                     ErrorStruct
-	InvalidToken                ErrorStruct
-	Unauthorized                ErrorStruct
-	EmailCodeInvalid            ErrorStruct
-	MissingResourceKeyAttribute ErrorStruct
+	InvalidLogin     ErrorStruct
+	NoToken          ErrorStruct
+	InvalidToken     ErrorStruct
+	Unauthorized     ErrorStruct
+	EmailCodeInvalid ErrorStruct
 }
 
 type BranchErrors struct {
@@ -144,12 +143,11 @@ type RoleErrors struct {
 // Global error instances
 var Error = ErrorCategory{
 	Auth: AuthErrors{
-		InvalidLogin:                NewError("Invalid login", "Login inválido", fiber.StatusUnauthorized),
-		NoToken:                     NewError("No token provided", "Nenhum token fornecido", fiber.StatusUnauthorized),
-		InvalidToken:                NewError("Invalid token", "Token inválido", fiber.StatusUnauthorized),
-		Unauthorized:                NewError("You are not authorized to access this endpoint", "Você não está autorizado a acessar este recurso", fiber.StatusUnauthorized),
-		EmailCodeInvalid:            NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
-		MissingResourceKeyAttribute: NewError("Resource key attribute lookup (resource_key) is missing at the request target object lookup (resource_key_at) that was set in the policy.", "Lookup do atributo de chave de recurso (resource_key) não encontrado no objeto de destino (resource_key_at) que foi definido na política.", fiber.StatusBadRequest),
+		InvalidLogin:     NewError("Invalid login", "Login inválido", fiber.StatusUnauthorized),
+		NoToken:          NewError("No token provided", "Nenhum token fornecido", fiber.StatusUnauthorized),
+		InvalidToken:     NewError("Invalid token", "Token inválido", fiber.StatusUnauthorized),
+		Unauthorized:     NewError("You are not authorized to access this endpoint", "Você não está autorizado a acessar este recurso", fiber.StatusForbidden),
+		EmailCodeInvalid: NewError("Email's verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
 		StartTimeInThePast: NewError("Start time is in the past", "A data de início está no passado", fiber.StatusBadRequest),

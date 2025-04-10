@@ -56,6 +56,10 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
+	if err := cc.Request.Gorm.DB.Model(&owner).Association("Roles").Append(model.SystemRoleOwner); err != nil {
+		return err
+	}
+
 	if err := cc.Request.Gorm.GetOneBy("id", company.ID.String(), &company); err != nil {
 		return err
 	}
@@ -148,8 +152,8 @@ func (cc *company_controller) DeleteCompanyById(c *fiber.Ctx) error {
 func Company(Gorm *handler.Gorm) *company_controller {
 	cc := &company_controller{
 		Base: service.Base[model.Company, DTO.Company]{
-			Name:         namespace.CompanyKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.CompanyKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
 	endpoint := &handler.Endpoint{DB: Gorm.DB}
