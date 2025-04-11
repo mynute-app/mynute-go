@@ -53,8 +53,10 @@ type ConditionNode struct {
 
 // --- ConditionLeaf (Represents a single atomic check) ---
 type ConditionLeaf struct {
-	Attribute   string `json:"attribute"`             // The primary attribute (e.g., "subject.role_id")
-	Operator    string `json:"operator"`              // The comparison operator (e.g., "Equals", "IsNull", "Contains")
+	Attribute string `json:"attribute"` // The primary attribute (e.g., "subject.role_id")
+	// The comparison operator
+	// Equals - "==", NotEquals - "!=", IsNull - "== null", IsNotNull - "!= null"
+	Operator    string `json:"operator"`
 	Description string `json:"description,omitempty"` // Optional human-readable description of the check
 
 	// Use EITHER Value OR ResourceAttribute for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
@@ -309,11 +311,25 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 				},
 			},
 			{
-				Leaf: &ConditionLeaf{
-					Attribute:         "subject.company_id",
-					Operator:          "Equals",
-					ResourceAttribute: "resource.company_id", // Assumes context provides resource.company_id from resource/path/body
-					Description:       "Subject company must match the resource's company",
+				Description: "Either company ID is at .id or .company_id",
+				LogicType:   "OR",
+				Children: []ConditionNode{
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.company_id",
+							Operator:          "Equals",
+							ResourceAttribute: "resource.company_id", // Assumes context provides resource.company_id from the fetched resource
+							Description:       "Subject company must match the resource's company",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.company_id",
+							Operator:          "Equals",
+							ResourceAttribute: "resource.id", // Assumes context provides resource.id from the fetched resource
+							Description:       "Subject company must match the resource's ID",
+						},
+					},
 				},
 			},
 		},
@@ -326,8 +342,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attribute: "subject.role_id",
-					Operator:  "Equals",
+					Attribute: "subject.roles[*].ID",
+					Operator:  "Contains",
 					Value:     JsonRawMessage(SystemRoleOwner.ID),
 				},
 			},
@@ -340,7 +356,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is General Manager of the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -350,7 +366,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is Branch Manager within the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -377,7 +393,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is the Employee associated with the Resource",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 			company_membership_access_check, // Must be in the same company
 			{
 				Leaf: &ConditionLeaf{
@@ -424,10 +440,10 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 				Description: "Role Check (Is Owner, GM, BM, or Employee)",
 				LogicType:   "OR",
 				Children: []ConditionNode{
-					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleOwner.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.role_id", Operator: "Equals", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleOwner.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 				},
 			},
 		},

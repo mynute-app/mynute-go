@@ -138,6 +138,7 @@ type GeneralErrors struct {
 
 type RoleErrors struct {
 	NameReserved ErrorStruct
+	NilCompanyID	ErrorStruct
 }
 
 // Global error instances
@@ -196,5 +197,6 @@ var Error = ErrorCategory{
 	},
 	Role: RoleErrors{
 		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),
+		NilCompanyID: NewError("The role has a nil company ID", "O cargo tem um ID de empresa nulo", fiber.StatusBadRequest),
 	},
 }

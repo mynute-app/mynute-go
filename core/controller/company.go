@@ -9,6 +9,7 @@ import (
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm/clause"
 )
 
 // company_controller embeds service.Base in order to extend it with the functions below
@@ -34,12 +35,28 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
+	tx := cc.Request.Gorm.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			if err, ok := r.(error); ok {
+				res.Http500(err)
+			} else {
+				res.Http500(lib.Error.General.InternalError)
+			}
+		} else if tx.Error != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
 	var company model.Company
 
 	company.Name = body.Name
 	company.TaxID = body.TaxID
 
-	if err := cc.Request.Gorm.DB.Create(&company).Error; err != nil {
+	if err := tx.Create(&company).Error; err != nil {
 		return err
 	}
 
@@ -52,21 +69,28 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	owner.Password = body.OwnerPassword
 	owner.CompanyID = company.ID
 
-	if err := cc.Request.Gorm.DB.Create(&owner).Error; err != nil {
+	if err := tx.Create(&owner).Error; err != nil {
 		return err
 	}
 
-	if err := cc.Request.Gorm.DB.Model(&owner).Association("Roles").Append(model.SystemRoleOwner); err != nil {
+	var ownerRole model.Role
+
+	if err := tx.First(&ownerRole, "id = ?", model.SystemRoleOwner.ID).Error; err != nil {
 		return err
 	}
 
-	if err := cc.Request.Gorm.GetOneBy("id", company.ID.String(), &company); err != nil {
+	if err := tx.Model(&owner).Association("Roles").Append(&ownerRole); err != nil {
+		return err
+	}
+
+	if err := tx.Model(&company).Preload(clause.Associations).Where("id = ?", company.ID.String()).First(&company).Error; err != nil {
 		return err
 	}
 
 	if err := res.SendDTO(200, &company, &DTO.Company{}); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"log"
 
+	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
 	"gorm.io/gorm"
@@ -28,8 +29,8 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 	if err := r.isRoleNameReserved(tx); err != nil {
 		return err
 	}
-	if !AllowSystemRoleCreation && r.CompanyID == nil {
-		return lib.Error.Company.NotSame
+	if r.ID == uuid.Nil && !AllowSystemRoleCreation && r.CompanyID == nil {
+		return lib.Error.Role.NilCompanyID
 	}
 	return nil
 }
