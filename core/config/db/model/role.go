@@ -79,18 +79,12 @@ var SystemRoleBranchSupervisor = &Role{
 	Description: "Company Branch Supervisor. Can see anything within the branch's scope but can't change or delete anything related to branch services, employees and properties; Can also manage appointments in the branch.",
 }
 
-var SystemRoleEmployee = &Role{
-	Name:        namespace.Role.Employee,
-	Description: "Company Employee. Can only see branches, services and appointments assigned. Besides also being able to edit its own properties.",
-}
-
 // --- Combine all system roles into a slice for seeding ---
 var Roles = []*Role{
 	SystemRoleOwner,
 	SystemRoleGeneralManager,
 	SystemRoleBranchManager,
 	SystemRoleBranchSupervisor,
-	SystemRoleEmployee,
 }
 
 func SeedRoles(db *gorm.DB) ([]*Role, error) {

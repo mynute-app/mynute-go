@@ -342,7 +342,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			{
 				Leaf: &ConditionLeaf{
-					Attribute: "subject.roles[*].ID",
+					Attribute: "subject.roles[*].id",
 					Operator:  "Contains",
 					Value:     JsonRawMessage(SystemRoleOwner.ID),
 				},
@@ -356,7 +356,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is General Manager of the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].id", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -366,7 +366,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is Branch Manager within the Resource's Company",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
+			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].id", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
 			company_membership_access_check, // Re-use the company match check
 		},
 	}
@@ -393,7 +393,6 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allow if Subject is the Employee associated with the Resource",
 		LogicType:   "AND",
 		Children: []ConditionNode{
-			{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
 			company_membership_access_check, // Must be in the same company
 			{
 				Leaf: &ConditionLeaf{
@@ -428,6 +427,31 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		},
 	}
 
+	var company_employee_himself = ConditionNode{
+		Description: "Company Employee Check (Employee accessing their own profile/resource)",
+		LogicType:   "AND",
+		Children: []ConditionNode{
+			company_membership_access_check, // Must be in the same company
+			{
+				Leaf: &ConditionLeaf{
+					Attribute:         "subject.id",
+					Operator:          "Equals",
+					ResourceAttribute: "resource.id", // Assumes context provides resource.id from the resource
+					Description:       "Subject ID must match the Resource's ID",
+				},
+			},
+		},
+	}
+
+	var company_admin_or_employee_himself_check = ConditionNode{
+		Description: "Company Admin or Employee Check (Owner, GM, or Employee)",
+		LogicType:   "OR",
+		Children: []ConditionNode{
+			company_admin_check,      // Owner or GM of the resource's company
+			company_employee_himself, // Employee can access their own profile/resource
+		},
+	}
+
 	// Reusable node for ALL Company Internal Users (Owner, GM, BM, Employee) belonging to the resource's company
 	var company_internal_user_check = ConditionNode{
 		Description: "Company Internal User Check (Any Role within Resource's Company)",
@@ -440,12 +464,20 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 				Description: "Role Check (Is Owner, GM, BM, or Employee)",
 				LogicType:   "OR",
 				Children: []ConditionNode{
-					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleOwner.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
-					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].ID", Operator: "Contains", Value: JsonRawMessage(SystemRoleEmployee.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].id", Operator: "Contains", Value: JsonRawMessage(SystemRoleOwner.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].id", Operator: "Contains", Value: JsonRawMessage(SystemRoleGeneralManager.ID)}},
+					{Leaf: &ConditionLeaf{Attribute: "subject.roles[*].id", Operator: "Contains", Value: JsonRawMessage(SystemRoleBranchManager.ID)}},
 				},
 			},
+		},
+	}
+
+	var company_admin_or_assigned_branch_manager_check = ConditionNode{
+		Description: "Company Admin or Assigned Branch Manager Check (Owner, GM, or BM in Company)",
+		LogicType:   "OR",
+		Children: []ConditionNode{
+			company_admin_check,                          // Owner or GM of the resource's company
+			company_branch_manager_assigned_branch_check, // BM assigned to the resource's branch
 		},
 	}
 
@@ -775,18 +807,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows employee to update self, or company managers (Owner, GM, BM) to update employees.",
 		Effect:      "Allow",
 		EndPointID:  UpdateEmployeeById.ID,
-		Conditions: JsonRawMessage(ConditionNode{
-			Description: "Allow Employee Self-Update OR Manager Update",
-			LogicType:   "OR",
-			Children: []ConditionNode{
-				employee_self_access_check, // Employee can update own profile
-				// Any manager (Owner, GM, BM) can update employees in the same company.
-				// Note: BM is not restricted to only employees in their assigned branch here.
-				// If stricter control is needed, replace company_manager_check with a more complex OR:
-				// OR (company_admin_check, specific_bm_check_for_employee_branch )
-				company_manager_check,
-			},
-		}),
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check),
 	}
 
 	var AllowDeleteEmployeeById = &PolicyRule{
@@ -802,7 +823,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
 		Effect:      "Allow",
 		EndPointID:  AddServiceToEmployee.ID,
-		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Manager of the employee's company
 	}
 
 	var AllowRemoveServiceFromEmployee = &PolicyRule{
@@ -810,7 +831,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows company managers (Owner, GM, BM) to remove services from employees.",
 		Effect:      "Allow",
 		EndPointID:  RemoveServiceFromEmployee.ID,
-		Conditions:  JsonRawMessage(company_manager_check), // Manager of the employee's company
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Manager of the employee's company
 	}
 
 	var AllowAddBranchToEmployee = &PolicyRule{
@@ -818,15 +839,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows company managers (Owner, GM, BM) to assign employees to branches (respecting BM scope).",
 		Effect:      "Allow",
 		EndPointID:  AddBranchToEmployee.ID,
-		Conditions: JsonRawMessage(ConditionNode{
-			Description: "Admin or Assigned Branch Manager Assignment Check",
-			LogicType:   "OR",
-			Children: []ConditionNode{
-				company_admin_check, // Owner/GM can assign any branch in company
-				// BM can only assign employees TO a branch THEY MANAGE
-				company_branch_manager_assigned_branch_check, // Checks subject.branches CONTAINS resource.branch_id (branch being added)
-			},
-		}),
+		Conditions:  JsonRawMessage(company_admin_or_assigned_branch_manager_check),
 	}
 
 	var AllowRemoveBranchFromEmployee = &PolicyRule{
@@ -834,15 +847,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows company managers (Owner, GM, BM) to remove employees from branches (respecting BM scope).",
 		Effect:      "Allow",
 		EndPointID:  RemoveBranchFromEmployee.ID,
-		Conditions: JsonRawMessage(ConditionNode{
-			Description: "Admin or Assigned Branch Manager Assignment Check",
-			LogicType:   "OR",
-			Children: []ConditionNode{
-				company_admin_check, // Owner/GM can unassign from any branch
-				// BM can only unassign employees FROM a branch THEY MANAGE
-				company_branch_manager_assigned_branch_check, // Checks subject.branches CONTAINS resource.branch_id (branch being removed)
-			},
-		}),
+		Conditions:  JsonRawMessage(company_admin_or_assigned_branch_manager_check),
 	}
 
 	// --- Holiday Policies ---

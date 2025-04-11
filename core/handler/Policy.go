@@ -345,7 +345,7 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]any, depth 
 		}
 
 		if compareErr == nil {
-			// Resolve the base path (e.g., "subject.roles[*].ID" or the full "subject.tags")
+			// Resolve the base path (e.g., "subject.roles[*].id" or the full "subject.tags")
 			left, err = resolveAttr(basePath, subject, resource)
 			if err != nil {
 				// Specific error for Contains path resolution
