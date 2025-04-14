@@ -40,7 +40,7 @@ func Test_Service(t *testing.T) {
 	branch.auth_token = client.auth_token
 	branch.company = company
 	branch.Create(t, 200)
-	branch.AddService(t, 200, service)
+	branch.AddService(t, 200, service, nil)
 	service.Delete(t, 200)
 	branch.Delete(t, 200)
 }

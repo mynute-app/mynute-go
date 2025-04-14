@@ -58,8 +58,8 @@ func (c *Company) Set(t *testing.T) {
 	c.services = append(c.services, service)
 	c.GetById(t, 200)
 	c.employees[0].AddService(t, 200, c.services[0])
-	c.employees[0].AddBranch(t, 200, c.branches[0])
-	c.branches[0].AddService(t, 200, c.services[0])
+	c.employees[0].AddBranch(t, 200, c.branches[0], &c.owner.auth_token)
+	c.branches[0].AddService(t, 200, c.services[0], nil)
 	c.employees[0].Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
 		{
 			Monday: []model.WorkRange{
@@ -89,6 +89,7 @@ func (c *Company) Set(t *testing.T) {
 			Sunday: []model.WorkRange{},
 		},
 	}})
+	
 }
 
 func (c *Company) Create(t *testing.T, status int) {

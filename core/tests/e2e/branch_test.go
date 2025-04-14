@@ -39,8 +39,8 @@ func Test_Branch(t *testing.T) {
 	service.auth_token = company.auth_token
 	service.company = company
 	service.Create(t, 200)
-	branch.AddService(t, 200, service)
-	company.owner.AddBranch(t, 200, branch)
+	branch.AddService(t, 200, service, nil)
+	company.owner.AddBranch(t, 200, branch, nil)
 	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
@@ -107,12 +107,16 @@ func (b *Branch) Delete(t *testing.T, status int) {
 	http.Send(nil)
 }
 
-func (b *Branch) AddService(t *testing.T, status int, service *Service) {
+func (b *Branch) AddService(t *testing.T, status int, service *Service, token *string) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL(fmt.Sprintf("/branch/%s/service/%s", b.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	if token != nil {
+		http.Header("Authorization", *token)
+	} else {
+		http.Header("Authorization", b.auth_token)
+	}
 	http.Send(nil)
 	http.ParseResponse(&b.created)
 	service.branches = append(service.branches, b)

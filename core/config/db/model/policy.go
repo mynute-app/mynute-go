@@ -403,11 +403,41 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			company_branch_manager_check, // Must be a BM in the correct company first
 			{
-				Leaf: &ConditionLeaf{
-					Attribute:         "subject.branches",   // Assumes subject context has assigned branch IDs (e.g., [10, 25])
-					Operator:          "Contains",           // Checks if the list contains the value
-					ResourceAttribute: "resource.branch_id", // Assumes context provides resource.branch_id from the resource/path/body
-					Description:       "Subject's assigned branches must include the resource's branch",
+				Description: "Branch Manager Assigned to Branch Check",
+				LogicType:   "OR",
+				Children: []ConditionNode{
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.branches",   // Assumes subject context has assigned branch IDs (e.g., [10, 25])
+							Operator:          "Contains",           // Checks if the list contains the value
+							ResourceAttribute: "resource.branch_id", // Assumes context provides resource.branch_id from the resource/path/body
+							Description:       "Subject's assigned branches must include the resource's branch",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.branches",
+							Operator:          "Contains",
+							ResourceAttribute: "path.branch_id", // Assumes context provides branch_id from the path parameter
+							Description:       "Subject ID must match the path parameter branch_id",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.branches",
+							Operator:          "Contains",
+							ResourceAttribute: "body.branch_id", // Assumes context provides branch_id from the body
+							Description:       "Subject ID must match the body branch_id",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.branches",
+							Operator:          "Contains",
+							ResourceAttribute: "query.branch_id", // Assumes context provides branch_id from the query parameter
+							Description:       "Subject ID must match the query parameter branch_id",
+						},
+					},
 				},
 			},
 		},

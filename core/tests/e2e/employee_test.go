@@ -161,12 +161,16 @@ func (e *Employee) VerifyEmail(t *testing.T, s int) {
 	http.Send(nil)
 }
 
-func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch) {
+func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch, token *string) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL(fmt.Sprintf("/employee/%s/branch/%s", e.created.ID.String(), branch.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.auth_token)
+	if token != nil {
+		http.Header("Authorization", *token)
+	} else {
+		http.Header("Authorization", e.auth_token)
+	}
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	branch.GetById(t, 200)
