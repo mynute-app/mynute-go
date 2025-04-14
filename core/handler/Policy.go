@@ -33,7 +33,7 @@ const indentStep = "  "
 
 // CanAccess evaluates if the subject can perform an action on a resource,
 // considering context from the request path, body, and query parameters.
-//// subject: Information about the entity performing the action.
+// // subject: Information about the entity performing the action.
 // resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
 // path: Data extracted from URL path parameters.
 // body: Data parsed from the request body.
@@ -72,13 +72,21 @@ func (p *Policy) CanAccess(subject, resource, path, body, query, headers map[str
 		decision.Allowed = result
 		if !decision.Allowed {
 			decision.Reason = fmt.Sprintf("Policy %s %s denied", effectDesc, policyIdentifier)
-			if reason != "" { decision.Reason += ":\n" + reason } else { decision.Reason += " (conditions not met)." }
+			if reason != "" {
+				decision.Reason += ":\n" + reason
+			} else {
+				decision.Reason += " (conditions not met)."
+			}
 		}
 	} else if policy.Effect == "Deny" {
 		decision.Allowed = !result
 		if !decision.Allowed { // Denied because Deny rule evaluated to TRUE
 			decision.Reason = fmt.Sprintf("Policy %s %s enforced", effectDesc, policyIdentifier)
-			if reason != "" { decision.Reason += ":\n" + reason } else { decision.Reason += " (conditions met)." }
+			if reason != "" {
+				decision.Reason += ":\n" + reason
+			} else {
+				decision.Reason += " (conditions met)."
+			}
 		}
 	} else {
 		decision.Error = fmt.Errorf("unknown policy effect '%s' in policy %s", policy.Effect, policyIdentifier)
@@ -91,17 +99,27 @@ func (p *Policy) CanAccess(subject, resource, path, body, query, headers map[str
 func evalNode(node model.ConditionNode, subject, resource, path, body, query, headers map[string]any, depth int) (bool, string, error) {
 	indent := strings.Repeat(indentStep, depth)
 	nodeDescription := ""
-	if node.Description != "" { nodeDescription = fmt.Sprintf("'%s'", node.Description) } else { nodeDescription = "(unnamed node)" }
+	if node.Description != "" {
+		nodeDescription = fmt.Sprintf("'%s'", node.Description)
+	} else {
+		nodeDescription = "(unnamed node)"
+	}
 
 	if node.Leaf != nil {
 		// Evaluate leaf node, passing all maps
 		res, reason, err := evalLeaf(*node.Leaf, subject, resource, path, body, query, headers, depth) // Pass headers
-		if err != nil { return false, "", fmt.Errorf("%sLeaf Node %s evaluation failed: %w", indent, nodeDescription, err) }
+		if err != nil {
+			return false, "", fmt.Errorf("%sLeaf Node %s evaluation failed: %w", indent, nodeDescription, err)
+		}
 		return res, reason, nil
 	}
 
-	if len(node.Children) == 0 { return false, "", fmt.Errorf("%sNode %s has logic type '%s' but no children", indent, nodeDescription, node.LogicType) }
-	if node.LogicType != "AND" && node.LogicType != "OR" { return false, "", fmt.Errorf("%sNode %s has unknown logic type: %s", indent, nodeDescription, node.LogicType) }
+	if len(node.Children) == 0 {
+		return false, "", fmt.Errorf("%sNode %s has logic type '%s' but no children", indent, nodeDescription, node.LogicType)
+	}
+	if node.LogicType != "AND" && node.LogicType != "OR" {
+		return false, "", fmt.Errorf("%sNode %s has unknown logic type: %s", indent, nodeDescription, node.LogicType)
+	}
 
 	childResults := make([]bool, len(node.Children))
 	childReasons := make([]string, len(node.Children))
@@ -109,101 +127,272 @@ func evalNode(node model.ConditionNode, subject, resource, path, body, query, he
 	for i, child := range node.Children {
 		// Evaluate child with increased depth, passing all maps
 		res, reason, err := evalNode(child, subject, resource, path, body, query, headers, depth+1) // Pass headers
-		if err != nil { return false, "", fmt.Errorf("%sChild evaluation failed within %s node: %w", indent, nodeDescription, err) }
+		if err != nil {
+			return false, "", fmt.Errorf("%sChild evaluation failed within %s node: %w", indent, nodeDescription, err)
+		}
 		childResults[i] = res
-		if !res { childReasons[i] = reason } else { childReasons[i] = "" }
+		if !res {
+			childReasons[i] = reason
+		} else {
+			childReasons[i] = ""
+		}
 
 		switch node.LogicType {
-		case "AND": if !res { finalReason := fmt.Sprintf("%s- [%s Node: %s] failed:\n%s", indent, node.LogicType, nodeDescription, reason); return false, finalReason, nil }
-		case "OR": if res { return true, "", nil }
+		case "AND":
+			if !res {
+				finalReason := fmt.Sprintf("%s- [%s Node: %s] failed:\n%s", indent, node.LogicType, nodeDescription, reason)
+				return false, finalReason, nil
+			}
+		case "OR":
+			if res {
+				return true, "", nil
+			}
 		}
 	}
 
 	switch node.LogicType {
-	case "AND": return true, "", nil
+	case "AND":
+		return true, "", nil
 	case "OR":
 		var failingReasons []string
-		for _, r := range childReasons { if r != "" { failingReasons = append(failingReasons, r) } }
-		combinedReason := strings.Join(failingReasons, "\n"); finalReason := fmt.Sprintf("%s- [%s Node: %s] failed (all children false):\n%s", indent, node.LogicType, nodeDescription, combinedReason)
+		for _, r := range childReasons {
+			if r != "" {
+				failingReasons = append(failingReasons, r)
+			}
+		}
+		combinedReason := strings.Join(failingReasons, "\n")
+		finalReason := fmt.Sprintf("%s- [%s Node: %s] failed (all children false):\n%s", indent, node.LogicType, nodeDescription, combinedReason)
 		return false, finalReason, nil
-	default: return false, "", fmt.Errorf("%sInternal Error: Unhandled logic type %s", indent, node.LogicType)
+	default:
+		return false, "", fmt.Errorf("%sInternal Error: Unhandled logic type %s", indent, node.LogicType)
 	}
 }
 
 // evalLeaf evaluates a leaf condition, passing all context maps.
 func evalLeaf(leaf model.ConditionLeaf, subject, resource, path, body, query, headers map[string]any, depth int) (bool, string, error) {
 	indent := strings.Repeat(indentStep, depth)
-	leafDescription := ""; if leaf.Description != "" { leafDescription = fmt.Sprintf("'%s' ", leaf.Description) }
+	leafDescription := ""
+	if leaf.Description != "" {
+		leafDescription = fmt.Sprintf("'%s' ", leaf.Description)
+	}
 
 	// --- Resolve Right-Hand Value ---
-	var right any; var rightSourceDesc string; var err error
+	var right any
+	var rightSourceDesc string
+	var err error
 	if leaf.ResourceAttribute != "" {
-		// Use resolveAttr which now handles 6 prefixes
 		rightSourceDesc = fmt.Sprintf("attribute '%s'", leaf.ResourceAttribute)
-		right, err = resolveAttr(leaf.ResourceAttribute, subject, resource, path, body, query, headers) // Pass headers
-		if err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: resolve %s: %v", indent, leafDescription, rightSourceDesc, err); return false, reason, fmt.Errorf("%sResolve %s failed: %w", indent, rightSourceDesc, err) }
+		right, err = resolveAttr(leaf.ResourceAttribute, subject, resource, path, body, query, headers)
+		if err != nil {
+			reason := fmt.Sprintf("%s- Condition %sfailed: resolve %s: %v", indent, leafDescription, rightSourceDesc, err)
+			return false, reason, fmt.Errorf("%sResolve attribute '%s' failed: %w", indent, leaf.ResourceAttribute, err) // Use full attribute name in error
+		}
 	} else if leaf.Value != nil {
-		if err = json.Unmarshal(leaf.Value, &right); err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: invalid static JSON value '%s': %v", indent, leafDescription, string(leaf.Value), err); return false, reason, fmt.Errorf("%sInvalid static JSON '%s': %w", indent, string(leaf.Value), err) }
-		valueStr := strings.Trim(string(leaf.Value), `"`); rightSourceDesc = fmt.Sprintf("static value '%s'", valueStr)
+		if err = json.Unmarshal(leaf.Value, &right); err != nil {
+			reason := fmt.Sprintf("%s- Condition %sfailed: invalid static JSON '%s': %v", indent, leafDescription, string(leaf.Value), err)
+			return false, reason, fmt.Errorf("%sInvalid static JSON '%s': %w", indent, string(leaf.Value), err)
+		}
+		// Format the static value description better for logging
+		formattedStaticVal := formatValueForLog(right) // Format after unmarshal
+		rightSourceDesc = fmt.Sprintf("static value %s", formattedStaticVal)
 	} else if leaf.Operator != "IsNull" && leaf.Operator != "IsNotNull" {
-		reason := fmt.Sprintf("%s- Condition %sfailed: operator '%s' requires value/resource_attribute", indent, leafDescription, leaf.Operator); return false, reason, fmt.Errorf("%sOp '%s' needs value/attr", indent, leaf.Operator)
-	} else { rightSourceDesc = "(not applicable)" }
+		reason := fmt.Sprintf("%s- Condition %sfailed: operator '%s' requires value/resource_attribute", indent, leafDescription, leaf.Operator)
+		return false, reason, fmt.Errorf("%sOp '%s' needs value/attribute", indent, leaf.Operator)
+	} else {
+		rightSourceDesc = "(comparison value not applicable)" // Clearer description
+	}
 
 	// --- Resolve Left-Hand Value ---
-	var left any; var leftStr string
-	left, err = resolveAttr(leaf.Attribute, subject, resource, path, body, query, headers) // Pass headers
-	if err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: resolve attribute '%s': %v", indent, leafDescription, leaf.Attribute, err); return false, reason, fmt.Errorf("%sResolve attribute '%s' failed: %w", indent, leaf.Attribute, err) }
+	var left any
+	var leftStr string // Formatted string representation of the left value for logs/reasons
+	left, err = resolveAttr(leaf.Attribute, subject, resource, path, body, query, headers)
+	if err != nil {
+		// Provide more context in the reason message
+		reason := fmt.Sprintf("%s- Condition %s(attribute '%s') failed: could not resolve: %v", indent, leafDescription, leaf.Attribute, err)
+		return false, reason, fmt.Errorf("%sResolve attribute '%s' failed: %w", indent, leaf.Attribute, err)
+	}
 	leftStr = formatValueForLog(left)
 
-	// --- Helper for failure reason ---
-	failReason := func(opResult bool, lValFmt, compDesc, rValFmt string) (bool, string) { /* ... as before ... */
-		if opResult { return true, "" }
-		var reasonCore string; if compDesc != "" { reasonCore = fmt.Sprintf("%s: %s %s", leaf.Attribute, lValFmt, compDesc) } else { reasonCore = fmt.Sprintf("%s: %s comp (%s) vs %s (%s) failed", leaf.Attribute, lValFmt, leaf.Operator, rightSourceDesc, rValFmt) }
-		reason := fmt.Sprintf("%s- Condition %s(%s)", indent, leafDescription, reasonCore); return false, reason
+	// --- Helper for creating indented failure reason ---
+	// Uses comparisonDescription set by the specific operator logic below
+	failReason := func(opResult bool, lValFmt, compDesc string) (bool, string) {
+		if opResult {
+			return true, ""
+		}
+		var reasonCore string
+		// comparisonDesc should contain the explanation of failure (e.g., "is not null", "does not equal X")
+		if compDesc != "" {
+			reasonCore = fmt.Sprintf("%s: %s %s", leaf.Attribute, lValFmt, compDesc)
+		} else {
+			// Fallback if comparisonDescription wasn't set (should be avoided)
+			reasonCore = fmt.Sprintf("%s: %s comparison (%s) failed", leaf.Attribute, lValFmt, leaf.Operator)
+		}
+		reason := fmt.Sprintf("%s- Condition %s(%s)", indent, leafDescription, reasonCore) // Removed extra closing parenthesis
+		return false, reason
 	}
 
 	// --- Perform Comparison ---
-	var res bool; var compareErr error; var comparisonDescription string
+	var res bool                     // The boolean result of the comparison
+	var compareErr error             // Any error occurring during comparison (e.g., type mismatch)
+	var comparisonDescription string // Human-readable explanation of *why* a comparison failed (if res == false)
+
 	switch leaf.Operator {
-	// ... (Cases for Equals, NotEquals, IsNull, IsNotNull, Numerics, Strings, Times remain exactly the same as before) ...
-	case "Equals": res = robustCompareEquals(left, right); if !res { comparisonDescription = fmt.Sprintf("!= %s (%s)", rightSourceDesc, formatValueForLog(right)) } // Shortened example reason part
-	case "NotEquals": res = !robustCompareEquals(left, right); if !res { comparisonDescription = fmt.Sprintf("== %s (%s)", rightSourceDesc, formatValueForLog(right)) }
-	// ...
+	case "Equals":
+		res = robustCompareEquals(left, right)
+		if !res {
+			comparisonDescription = fmt.Sprintf("does not equal %s", rightSourceDesc)
+		}
+	case "NotEquals":
+		res = !robustCompareEquals(left, right)
+		if !res {
+			comparisonDescription = fmt.Sprintf("equals %s", rightSourceDesc)
+		}
+	case "IsNull":
+		// Consider pointer nils as well as interface nil
+		leftValCheck := reflect.ValueOf(left)
+		isConsideredNil := left == nil || (leftValCheck.IsValid() && leftValCheck.Kind() == reflect.Ptr && leftValCheck.IsNil())
+		res = isConsideredNil
+		if !res {
+			comparisonDescription = "is not null"
+		}
+	case "IsNotNull":
+		leftValCheck := reflect.ValueOf(left)
+		isConsideredNil := left == nil || (leftValCheck.IsValid() && leftValCheck.Kind() == reflect.Ptr && leftValCheck.IsNil())
+		res = !isConsideredNil
+		if !res {
+			comparisonDescription = "is null"
+		}
+	case "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual":
+		res, compareErr = compareNumbers(left, right, leaf.Operator)
+		if compareErr != nil {
+			// Error during comparison (e.g., type mismatch)
+			comparisonDescription = fmt.Sprintf("could not be compared numerically with %s: %v", rightSourceDesc, compareErr)
+			// res remains false (default)
+		} else if !res {
+			// Comparison successful but returned false
+			opSymbols := map[string]string{">": ">", ">=": ">=", "<": "<", "<=": "<="}
+			comparisonDescription = fmt.Sprintf("is not %s %s", opSymbols[leaf.Operator], rightSourceDesc)
+		}
+	case "StartsWith", "EndsWith", "Includes":
+		res, compareErr = compareStrings(left, right, leaf.Operator)
+		if compareErr != nil {
+			comparisonDescription = fmt.Sprintf("could not be compared as strings with %s: %v", rightSourceDesc, compareErr)
+		} else if !res {
+			opDesc := map[string]string{"StartsWith": "start with", "EndsWith": "end with", "Includes": "include"} // Using "include" for clarity
+			comparisonDescription = fmt.Sprintf("does not %s %s", opDesc[leaf.Operator], rightSourceDesc)
+		}
+	case "Before", "After":
+		res, compareErr = compareTimes(left, right, leaf.Operator)
+		if compareErr != nil {
+			comparisonDescription = fmt.Sprintf("could not be compared as times with %s: %v", rightSourceDesc, compareErr)
+		} else if !res {
+			opDesc := map[string]string{"Before": "before", "After": "after"}[leaf.Operator]
+			// Include formatted time values in description for clarity
+			lTime, l_err := toTime(left)
+			rTime, r_err := toTime(right)
+			lValDesc := leftStr // Use formatted string if time conversion fails
+			if l_err == nil {
+				lValDesc = lTime.Format(time.RFC3339)
+			}
+			rValDesc := rightSourceDesc // Use original description (static/attr)
+			if r_err == nil {
+				rValDesc = fmt.Sprintf("%s (%s)", rightSourceDesc, rTime.Format(time.RFC3339))
+			} // Add formatted time if available
+			comparisonDescription = fmt.Sprintf("(value: %s) is not %s %s", lValDesc, opDesc, rValDesc)
+		}
 	case "Contains":
-		targetValue := right
+		targetValue := right // Value being searched for
 		syntaxParts := strings.SplitN(leaf.Attribute, "[*].", 2)
 		isObjectSyntax := len(syntaxParts) == 2
 		var fieldToExtract string
-		if isObjectSyntax { fieldToExtract = syntaxParts[1]; if fieldToExtract == "" { compareErr = fmt.Errorf("invalid 'Contains' syntax: missing field name after [*]") } }
-		if compareErr == nil {
-			collValue := reflect.ValueOf(left)
-			if !collValue.IsValid() || (collValue.Kind() != reflect.Slice && collValue.Kind() != reflect.Array) { compareErr = fmt.Errorf("resolved attr '%s' not slice/array for 'Contains'", leaf.Attribute)
-			} else {
-				found := false
-				if isObjectSyntax {
-					comparisonDescription = fmt.Sprintf("coll !contains obj where '%s' == %s (%s)", fieldToExtract, rightSourceDesc, formatValueForLog(right)) // Default failure reason for object syntax
-					for i := range collValue.Len() { element := collValue.Index(i); extractedValue, fieldFound := extractFieldByName(element, fieldToExtract); if fieldFound && robustCompareEquals(extractedValue, targetValue) { found = true; break } }
-				} else {
-                    comparisonDescription = fmt.Sprintf("coll !contains element == %s (%s)", rightSourceDesc, formatValueForLog(right)) // Default failure reason for simple syntax
-					for i := range collValue.Len() { element := collValue.Index(i); if !element.IsValid() || !element.CanInterface() { continue }; if robustCompareEquals(element.Interface(), targetValue) { found = true; break } }
-				}
-				res = found; if res { comparisonDescription = "" } // Clear reason on success
+
+		if isObjectSyntax {
+			fieldToExtract = syntaxParts[1]
+			if fieldToExtract == "" {
+				compareErr = fmt.Errorf("invalid 'Contains' syntax in attribute '%s': missing field name after [*]", leaf.Attribute)
 			}
 		}
-	default: compareErr = fmt.Errorf("unsupported operator '%s'", leaf.Operator)
+
+		if compareErr == nil {
+			collValue := reflect.ValueOf(left) // 'left' is the collection from the resolved Attribute
+			if !collValue.IsValid() || (collValue.Kind() != reflect.Slice && collValue.Kind() != reflect.Array) {
+				// Generate error if the resolved left value isn't a collection
+				comparisonDescription = fmt.Sprintf("resolved attribute '%s' is type %T (value: %s), not slice/array, cannot perform 'Contains'", leaf.Attribute, left, leftStr)
+			} else {
+				// Proceed with iteration and comparison
+				found := false
+				if isObjectSyntax {
+					// --- Behavior A: Object Syntax ("path[*].Field") ---
+					for i := range collValue.Len() {
+						element := collValue.Index(i)
+						extractedValue, fieldFound := extractFieldByName(element, fieldToExtract)
+						// Important: comparison happens between extractedValue and targetValue
+						if fieldFound && robustCompareEquals(extractedValue, targetValue) {
+							found = true
+							break
+						}
+					}
+					if !found { // Set failure reason only if not found
+						comparisonDescription = fmt.Sprintf("collection does not contain an object where field '%s' equals %s", fieldToExtract, rightSourceDesc)
+					}
+				} else {
+					// --- Behavior B: Simple Syntax ("path") ---
+					for i := range collValue.Len() {
+						element := collValue.Index(i)
+						if !element.IsValid() || !element.CanInterface() {
+							continue
+						}
+						elementInterface := element.Interface()
+						// Important: comparison happens between elementInterface and targetValue
+						if robustCompareEquals(elementInterface, targetValue) {
+							found = true
+							break
+						}
+					}
+					if !found { // Set failure reason only if not found
+						comparisonDescription = fmt.Sprintf("collection does not contain an element equal to %s", rightSourceDesc)
+					}
+				}
+				res = found // Final result of the Contains operation
+				if res {
+					comparisonDescription = ""
+				} // Clear description on success
+			}
+		}
+		// If compareErr was set (invalid syntax or non-collection), it will be handled below.
+	default:
+		compareErr = fmt.Errorf("unsupported operator '%s'", leaf.Operator)
 	}
 
 	// --- Final Result and Reason ---
-	if compareErr != nil { rValFmt := formatValueForLog(right); reason := fmt.Sprintf("%s- Condition %s(%s: %s failed comp vs %s (%s): %v)", indent, leafDescription, leaf.Attribute, leftStr, rightSourceDesc, rValFmt, compareErr); return false, reason, fmt.Errorf("%sComp Error (%s): %w", indent, leaf.Attribute, compareErr) }
-	rValFmt := formatValueForLog(right); finalRes, finalReason := failReason(res, leftStr, comparisonDescription, rValFmt); return finalRes, finalReason, nil
-}
+	if compareErr != nil {
+		// An error occurred *during* the comparison itself (e.g., type mismatch, invalid syntax)
+		// Generate reason based on the comparison error. comparisonDescription might also contain info.
+		reasonMsg := fmt.Sprintf("Comparison error: %v", compareErr)
+		if comparisonDescription != "" {
+			reasonMsg = comparisonDescription // Use more specific description if available
+		}
+		// Use failReason, passing false and the detailed error description
+		_, finalReason := failReason(false, leftStr, reasonMsg)
+		// Return the error as well for detailed logging
+		return false, finalReason, fmt.Errorf("%sComparison Error on attribute '%s': %w", indent, leaf.Attribute, compareErr)
+	}
 
+	// If no comparison error occurred, use the standard failReason helper
+	// comparisonDescription will be populated if 'res' is false
+	finalRes, finalReason := failReason(res, leftStr, comparisonDescription)
+	return finalRes, finalReason, nil // No error occurred during comparison itself
+}
 
 // resolveAttr resolves attribute path against ALL provided context maps, including headers.
 func resolveAttr(attr string, subject, resource, path, body, query, headers map[string]any) (any, error) {
-	if attr == "" { return nil, errors.New("attribute name cannot be empty") }
+	if attr == "" {
+		return nil, errors.New("attribute name cannot be empty")
+	}
 
-	var sourceMap map[string]any; var key string; var contextName string
+	var sourceMap map[string]any
+	var key string
+	var contextName string
 
 	switch {
 	case strings.HasPrefix(attr, "subject."):
@@ -223,21 +412,32 @@ func resolveAttr(attr string, subject, resource, path, body, query, headers map[
 		return nil, fmt.Errorf("invalid attribute format: '%s' (must start with 'subject.', 'resource.', 'path.', 'body.', 'query.', or 'header.')", attr)
 	}
 
-	if key == "" { return nil, fmt.Errorf("invalid %s attribute key (e.g., '%s.id')", contextName, contextName) }
+	if key == "" {
+		return nil, fmt.Errorf("invalid %s attribute key (e.g., '%s.id')", contextName, contextName)
+	}
 
 	// Allow context map to be nil (e.g., no headers sent, no body, etc.)
-	if sourceMap == nil { return nil, nil }
+	if sourceMap == nil {
+		return nil, nil
+	}
 
 	// Handle nested keys (less common for headers/path/query, but possible for subject/resource/body)
 	parts := strings.Split(key, ".")
 	currentVal, ok := sourceMap[parts[0]]
-	if !ok { return nil, nil /* Top-level key not found */ }
+	if !ok {
+		return nil, nil /* Top-level key not found */
+	}
 
 	for i := 1; i < len(parts); i++ {
 		currentMap, isMap := currentVal.(map[string]any)
-		if !isMap { nestedPath := strings.Join(parts[:i], "."); return nil, fmt.Errorf("attr '%s': value at '%s.%s' is %T, not map for nested access", attr, contextName, nestedPath, currentVal) }
+		if !isMap {
+			nestedPath := strings.Join(parts[:i], ".")
+			return nil, fmt.Errorf("attr '%s': value at '%s.%s' is %T, not map for nested access", attr, contextName, nestedPath, currentVal)
+		}
 		currentVal, ok = currentMap[parts[i]]
-		if !ok { return nil, nil /* Nested key not found */ }
+		if !ok {
+			return nil, nil /* Nested key not found */
+		}
 	}
 
 	return currentVal, nil
@@ -422,17 +622,33 @@ func compareNumbers(left, right any, op string) (bool, error) {
 }
 
 func toString(val any) (string, bool) { /* ... Copy from previous correct version ... */
-	if val == nil { return "", false }
-	if s, ok := val.(string); ok { return s, true }
-	if stringer, ok := val.(fmt.Stringer); ok { return stringer.String(), true }
+	if val == nil {
+		return "", false
+	}
+	if s, ok := val.(string); ok {
+		return s, true
+	}
+	if stringer, ok := val.(fmt.Stringer); ok {
+		return stringer.String(), true
+	}
 	return "", false
 }
 
 func toUUID(val any) (uuid.UUID, bool) { /* ... Copy from previous correct version ... */
-	if val == nil { return uuid.Nil, false }
-	if u, ok := val.(uuid.UUID); ok { return u, true }
-	if s, ok := val.(string); ok { u, err := uuid.Parse(s); return u, err == nil }
-	if b, ok := val.([]byte); ok { u, err := uuid.FromBytes(b); return u, err == nil }
+	if val == nil {
+		return uuid.Nil, false
+	}
+	if u, ok := val.(uuid.UUID); ok {
+		return u, true
+	}
+	if s, ok := val.(string); ok {
+		u, err := uuid.Parse(s)
+		return u, err == nil
+	}
+	if b, ok := val.([]byte); ok {
+		u, err := uuid.FromBytes(b)
+		return u, err == nil
+	}
 	return uuid.Nil, false
 }
 

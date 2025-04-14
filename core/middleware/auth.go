@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,13 +30,14 @@ func Auth(Gorm *handler.Gorm) *auth_middleware {
 func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	db := am.Gorm.DB
 	method := c.Method()
-	path := c.Route().Path
+	routePath := c.Route().Path // Use routePath for consistency
 
 	var EndPoint model.EndPoint
-	if err := db.Where("method = ? AND path = ?", method, path).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("endpoint not found: %s %s", method, path))
+	if err := db.Where("method = ? AND path = ?", method, routePath).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("endpoint not found: %s %s", method, routePath))
 	}
 
+	// --- Get Subject ---
 	auth_claims := c.Locals(namespace.RequestKey.Auth_Claims)
 	claim, ok := auth_claims.(*DTO.Claims)
 	if !ok || claim.ID == uuid.Nil || claim.ID.Variant() != uuid.RFC4122 || !claim.Verified {
@@ -44,17 +46,20 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 	var policies []*model.PolicyRule
 	PoliciesWhereClause := "end_point_id = ? AND (company_id IS NULL OR company_id = ?)"
-	if err := db.
-		Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).
-		Find(&policies).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, path, claim.CompanyID.String()))
+	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).Find(&policies).Error; err != nil {
+		// Note: gorm.ErrRecordNotFound is handled by the len(policies) == 0 check later
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("DB Error fetching policies: %v", err)
+			return lib.Error.General.AuthError.WithError(err)
 		}
-		return lib.Error.General.AuthError.WithError(err)
 	}
 
 	if len(policies) == 0 {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, path, claim.CompanyID.String()))
+		companyIDStr := "NULL"
+		if claim.CompanyID != uuid.Nil {
+			companyIDStr = claim.CompanyID.String()
+		}
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, routePath, companyIDStr))
 	}
 
 	var user any
@@ -63,152 +68,208 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	} else {
 		user = &model.Employee{}
 	}
-
 	subject_data := make(map[string]any)
-
-	if err := db.
-		Model(user).                  // Tell GORM which model (and thus table)
-		Preload(clause.Associations). // Preload ALL defined top-level associations
-		Where("id = ?", claim.ID).
-		Take(user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+	if err := db.Model(user).Preload(clause.Associations).Where("id = ?", claim.ID).Take(user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.Auth.Unauthorized
 		}
+		log.Printf("DB Error fetching subject %s: %v", claim.ID, err)
 		return lib.Error.General.AuthError.WithError(err)
 	}
-
-	jsonData, err := json.Marshal(user) // Convert struct to JSON bytes
-	if err != nil {
-		// Handle marshaling error (should be rare for valid structs)
-		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to marshal user subject: %w", err))
+	jsonDataSub, errSub := json.Marshal(user)
+	if errSub != nil {
+		log.Printf("Error marshaling subject: %v", errSub)
+		return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal subject error: %w", errSub))
 	}
-	err = json.Unmarshal(jsonData, &subject_data) // Convert JSON bytes to map
-	if err != nil {
-		// Handle unmarshaling error (should be rare)
-		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to unmarshal user subject to map: %w", err))
+	if errSub = json.Unmarshal(jsonDataSub, &subject_data); errSub != nil {
+		log.Printf("Error unmarshaling subject: %v", errSub)
+		return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal subject error: %w", errSub))
 	}
 
+	// --- Parse Body ONCE ---
+	body_data := make(map[string]any)
+	body_bytes := c.Request().Body()
+	if len(body_bytes) > 0 {
+		if err := json.Unmarshal(body_bytes, &body_data); err != nil {
+			log.Printf("Error unmarshaling request body: %v", err)
+			return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal body error: %w", err))
+		}
+	} else {
+		log.Println("No request body found")
+	}
+
+	// --- Find Resource Reference Key/Value ---
 	var RequestVal string
 	var ResourceReference model.ResourceReference
-forLoop:
+	resourceRefFound := false
+forLoop: // Label is optional but can improve readability
 	for _, ref := range EndPoint.Resource.References {
 		switch ref.RequestRef {
 		case "query":
-			if c.Query(ref.RequestKey) != "" {
+			val := c.Query(ref.RequestKey)
+			if val != "" {
 				ResourceReference = ref
-				RequestVal = c.Query(ref.RequestKey)
+				RequestVal = val
+				resourceRefFound = true
 				break forLoop
 			}
 		case "body":
-			var body map[string]any
-			bbytes := c.Request().Body()
-			if len(bbytes) == 0 {
-				continue forLoop
-			}
-			if err := json.Unmarshal(bbytes, &body); err != nil {
-				return err
-			}
-			if body[ref.RequestKey] != nil && body[ref.RequestKey] != "" {
+			// Use the pre-parsed body_data map
+			if val, exists := body_data[ref.RequestKey]; exists && val != nil && fmt.Sprintf("%v", val) != "" {
 				ResourceReference = ref
-				RequestVal = fmt.Sprintf("%v", body[ref.RequestKey])
+				RequestVal = fmt.Sprintf("%v", val) // Convert potentially varied types to string
+				resourceRefFound = true
 				break forLoop
 			}
 		case "header":
-			if c.Get(ref.RequestKey) != "" {
+			// Fiber's Get respects Canonical-MIME-Header-Key format
+			val := c.Get(ref.RequestKey)
+			if val != "" {
 				ResourceReference = ref
-				RequestVal = c.Get(ref.RequestKey)
+				RequestVal = val
+				resourceRefFound = true
 				break forLoop
 			}
 		case "path":
-			if c.Params(ref.RequestKey) != "" {
+			val := c.Params(ref.RequestKey)
+			if val != "" {
 				ResourceReference = ref
-				RequestVal = c.Params(ref.RequestKey)
+				RequestVal = val
+				resourceRefFound = true
 				break forLoop
 			}
 		default:
-			return fmt.Errorf("invalid request reference type: %s. Endpoint.Resource.ID: %s", ref.RequestRef, EndPoint.Resource.ID.String())
+			log.Printf("Error: Invalid RequestRef '%s' in Resource %s", ref.RequestRef, EndPoint.Resource.ID)
+			return fmt.Errorf("invalid request reference type: %s", ref.RequestRef) // Consider returning AuthError
 		}
 	}
 
-	if RequestVal == "" {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("request is malformed. Endpoint.Resource.ID: %s", EndPoint.Resource.ID.String()))
+	// Check if a reference value was actually found, otherwise resource lookup is impossible
+	// Allow CREATE style endpoints where maybe no resource is expected/needed for the lookup step.
+	// Need a way to know if resource lookup is required vs optional for this endpoint.
+	// Let's assume for now Resource lookup IS required if references are defined.
+	if EndPoint.Resource != nil && len(EndPoint.Resource.References) > 0 && !resourceRefFound {
+		log.Printf("Auth Error: Could not find required resource reference value for Endpoint %s %s (Resource ID %s)", method, routePath, EndPoint.Resource.ID)
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("required resource identifier missing in request"))
 	}
 
-	RequestVal, err = url.QueryUnescape(RequestVal)
+	// --- Fetch Actual Resource (based on reference found) ---
+	resource_data := make(map[string]any) // Initialize as empty map
+	var resourceFetchError error
 
-	if err != nil {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("failed to unescape request value: %w", err))
-	}
-
-	var resource any
-
-	switch EndPoint.Resource.Table {
-	case "appointments":
-		resource = &model.Appointment{}
-	case "branches":
-		resource = &model.Branch{}
-	case "clients":
-		resource = &model.Client{}
-	case "companies":
-		resource = &model.Company{}
-	case "employees":
-		resource = &model.Employee{}
-	case "holidays":
-		resource = &model.Holiday{}
-	case "policies":
-		resource = &model.PolicyRule{}
-	case "roles":
-		resource = &model.Role{}
-	case "sectors":
-		resource = &model.Sector{}
-	case "services":
-		resource = &model.Service{}
-	default:
-		return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
-	}
-
-	if err := db.
-		Model(resource). // Tell GORM which model (and thus table)
-		Where(ResourceReference.DatabaseKey+" = ?", RequestVal).
-		Preload(clause.Associations).
-		Take(resource).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found: [%s] = %s at table `%s`", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
+	if resourceRefFound { // Only attempt fetch if we have the reference value
+		var errUnescape error
+		RequestVal, errUnescape = url.QueryUnescape(RequestVal) // Unescape value (e.g., from path/query)
+		if errUnescape != nil {
+			log.Printf("Error unescaping request val '%s': %v", RequestVal, errUnescape)
+			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("invalid resource identifier format"))
 		}
-		return lib.Error.General.AuthError.WithError(err)
+
+		var resource any
+		switch EndPoint.Resource.Table { // Determine model struct based on table name
+		case "appointments":
+			resource = &model.Appointment{}
+		case "branches":
+			resource = &model.Branch{}
+		case "clients":
+			resource = &model.Client{}
+		case "companies":
+			resource = &model.Company{}
+		case "employees":
+			resource = &model.Employee{}
+		case "holidays":
+			resource = &model.Holiday{}
+		case "policy_rules":
+			resource = &model.PolicyRule{} // Corrected table name likely
+		case "roles":
+			resource = &model.Role{}
+		case "sectors":
+			resource = &model.Sector{}
+		case "services":
+			resource = &model.Service{}
+		default:
+			log.Printf("Error: Invalid resource table '%s'", EndPoint.Resource.Table)
+			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
+		}
+
+		// Fetch the resource from DB
+		resourceFetchError = db.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
+
+		if resourceFetchError == nil {
+			// Convert fetched resource struct to map
+			jsonDataRes, errRes := json.Marshal(resource)
+			if errRes != nil {
+				log.Printf("Error marshaling resource: %v", errRes)
+				return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal resource error: %w", errRes))
+			}
+			if errRes = json.Unmarshal(jsonDataRes, &resource_data); errRes != nil {
+				log.Printf("Error unmarshaling resource: %v", errRes)
+				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal resource error: %w", errRes))
+			}
+		} else if !errors.Is(resourceFetchError, gorm.ErrRecordNotFound) {
+			// Handle unexpected DB errors
+			log.Printf("DB Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
+			return lib.Error.General.AuthError.WithError(resourceFetchError)
+		}
 	}
 
-	resource_data := make(map[string]any)
-
-	jsonData, err = json.Marshal(resource) // Convert struct to JSON bytes
-	if err != nil {
-		// Handle marshaling error (should be rare for valid structs)
-		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to marshal user subject: %w", err))
-	}
-	err = json.Unmarshal(jsonData, &resource_data) // Convert JSON bytes to map
-	if err != nil {
-		// Handle unmarshaling error (should be rare)
-		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to unmarshal user subject to map: %w", err))
-	}
-
+	// --- Collect Path, Query, Header data ---
 	path_data := make(map[string]any)
-	query_data := make(map[string]any)
-	body_data := make(map[string]any)
-	header_data := make(map[string]any)
-
-	for _, policy := range policies {
-		decision := am.PolicyEngine.CanAccess(subject_data, resource_data, policy)
-		if decision.Error != nil {
-			return lib.Error.General.AuthError.WithError(decision.Error)
-		} else if !decision.Allowed {
-			denied := lib.Error.Auth.Unauthorized.WithError(errors.New("policy engine denied access"))
-			denied.WithError(fmt.Errorf("reason: %s", decision.Reason))
-			denied.WithError(fmt.Errorf("endpoint: %s %s", method, path))
-			denied.WithError(fmt.Errorf("policy.name: %s", policy.Name))
-			return denied
+	if route := c.Route(); route != nil {
+		for _, paramName := range route.Params {
+			paramValue := c.Params(paramName)
+			if paramValue != "" {
+				path_data[paramName] = paramValue
+			}
 		}
 	}
 
+	query_data := make(map[string]any)
+	for key, value := range c.Queries() {
+		query_data[key] = value
+	}
+
+	header_data := make(map[string]any)
+	for key, value := range c.GetReqHeaders() {
+		// Use canonical keys provided by Fiber
+		header_data[key] = value
+	}
+
+	// --- Evaluate Policies ---
+	for _, policy := range policies {
+		log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
+		decision := am.PolicyEngine.CanAccess(
+			subject_data,
+			resource_data, // The data fetched (or empty map)
+			path_data,     // Path parameters
+			body_data,     // Parsed request body (or empty map)
+			query_data,    // Query parameters
+			header_data,   // Request headers
+			policy,        // The policy rule being checked
+		)
+
+		if decision.Error != nil {
+			log.Printf("ERROR: Policy '%s' evaluation failed: %v", policy.Name, decision.Error)
+			// Provide more specific error details if possible
+			detailedErr := fmt.Errorf("policy '%s' evaluation error: %w", policy.Name, decision.Error)
+			return lib.Error.General.AuthError.WithError(detailedErr)
+		} else if !decision.Allowed {
+			// Denied access
+			log.Printf("INFO: Access denied by policy '%s'. Reason: %s", policy.Name, decision.Reason)
+			// Create structured error for potential upstream logging/handling
+			deniedErr := fmt.Errorf("policy '%s' denied access", policy.Name)
+			detailedReason := fmt.Errorf("%w. Reason: %s", deniedErr, decision.Reason) // Wrap reason
+			return lib.Error.Auth.Unauthorized.WithError(detailedReason)
+		}
+		// If allowed by this policy, continue (implicitly, maybe next policy needs check - currently loop allows if ANY policy permits)
+		// TODO: Consider if ALL policies must pass, or just one. Current logic allows if *any* policy evaluates to allowed.
+		// If you need ALL policies to pass, you might need different logic (e.g., track if any deny, and only allow if none deny)
+		// For now, assume any allowing policy is sufficient.
+		log.Printf("DEBUG: Policy '%s' allowed access.", policy.Name)
+	}
+
+	// If loop finished and no policy explicitly denied (and no errors occurred), access is granted
+	log.Printf("INFO: Access granted for Endpoint %s %s (Subject: %s)", method, routePath, claim.ID)
 	return c.Next()
 }
 

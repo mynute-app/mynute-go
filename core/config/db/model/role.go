@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 
 	"gorm.io/gorm"
 )
@@ -20,7 +19,6 @@ type Role struct {
 	CompanyID          *uint             `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
 	Company            *Company          `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
 	IsSystemRole       bool              `gorm:"not null;default:false" json:"is_system_role"`
-	TemplateAttributes datatypes.JSONMap `gorm:"type:jsonb" json:"template_attributes"`
 	Employees          []*Employee       `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"employees,omitempty"`
 	Clients            []*Client         `gorm:"many2many:client_roles;constraint:OnDelete:CASCADE;" json:"clients,omitempty"`
 }
