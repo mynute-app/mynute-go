@@ -191,10 +191,15 @@ forLoop:
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("failed to unmarshal user subject to map: %w", err))
 	}
 
+	path_data := make(map[string]any)
+	query_data := make(map[string]any)
+	body_data := make(map[string]any)
+	header_data := make(map[string]any)
+
 	for _, policy := range policies {
 		decision := am.PolicyEngine.CanAccess(subject_data, resource_data, policy)
 		if decision.Error != nil {
-			return lib.Error.General.AuthError.WithError(err)
+			return lib.Error.General.AuthError.WithError(decision.Error)
 		} else if !decision.Allowed {
 			denied := lib.Error.Auth.Unauthorized.WithError(errors.New("policy engine denied access"))
 			denied.WithError(fmt.Errorf("reason: %s", decision.Reason))

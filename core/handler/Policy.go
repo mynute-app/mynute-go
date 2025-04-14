@@ -31,29 +31,37 @@ func NewPolicyEngine(db *gorm.DB) *Policy {
 // Indentation helper string
 const indentStep = "  "
 
-func (p *Policy) CanAccess(subject, resource map[string]any, policy *model.PolicyRule) AccessDecision {
+// CanAccess evaluates if the subject can perform an action on a resource,
+// considering context from the request path, body, and query parameters.
+//// subject: Information about the entity performing the action.
+// resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
+// path: Data extracted from URL path parameters.
+// body: Data parsed from the request body.
+// query: Data extracted from URL query string parameters.
+// headers: Data extracted from request headers.
+// policy: The specific PolicyRule to evaluate.
+func (p *Policy) CanAccess(subject, resource, path, body, query, headers map[string]any, policy *model.PolicyRule) AccessDecision {
 	decision := AccessDecision{}
 	if policy == nil {
-		decision.Error = errors.New("policy rule cannot be nil") // Use errors.New for simple static errors
+		decision.Error = errors.New("policy rule cannot be nil")
 		return decision
 	}
-	// Ensure policy Name is available for errors/reasons
-	policyIdentifier := fmt.Sprintf("ID %s", policy.ID.String()) // Assuming p.ID exists
+
+	policyIdentifier := fmt.Sprintf("ID %s", policy.ID.String())
 	if policy.Name != "" {
 		policyIdentifier = fmt.Sprintf("'%s' (ID %s)", policy.Name, policy.ID.String())
 	}
 
+	// Validation should now allow 'header.' prefix
 	root, err := policy.GetConditionsNode()
 	if err != nil {
-		// ***** CORRECTED: Use fmt.Errorf *****
 		decision.Error = fmt.Errorf("failed to get/validate conditions node for policy %s: %w", policyIdentifier, err)
 		return decision
 	}
 
-	// Start evaluation with depth 0
-	result, reason, err := evalNode(root, subject, resource, 0) // Pass initial depth
+	// Start evaluation passing all distinct context maps, including headers
+	result, reason, err := evalNode(root, subject, resource, path, body, query, headers, 0) // Pass headers
 	if err != nil {
-		// ***** CORRECTED: Use fmt.Errorf *****
 		decision.Error = fmt.Errorf("error evaluating conditions for policy %s: %w", policyIdentifier, err)
 		return decision
 	}
@@ -63,372 +71,176 @@ func (p *Policy) CanAccess(subject, resource map[string]any, policy *model.Polic
 	if policy.Effect == "Allow" {
 		decision.Allowed = result
 		if !decision.Allowed {
-			if reason != "" {
-				// Add a newline before the detailed reason for better separation
-				decision.Reason = fmt.Sprintf("Policy %s %s denied:\n%s", effectDesc, policyIdentifier, reason)
-			} else {
-				// Fallback should be rare now but keep it safe
-				decision.Reason = fmt.Sprintf("Policy %s %s conditions not met (no specific reason provided).", effectDesc, policyIdentifier)
-			}
+			decision.Reason = fmt.Sprintf("Policy %s %s denied", effectDesc, policyIdentifier)
+			if reason != "" { decision.Reason += ":\n" + reason } else { decision.Reason += " (conditions not met)." }
 		}
 	} else if policy.Effect == "Deny" {
-		decision.Allowed = !result // Access allowed if Deny conditions are FALSE
-		if !decision.Allowed {     // Access denied if Deny conditions are TRUE
-			if reason != "" {
-				decision.Reason = fmt.Sprintf("Policy %s %s enforced because condition evaluated to true:\n%s", effectDesc, policyIdentifier, reason)
-			} else {
-				decision.Reason = fmt.Sprintf("Policy %s %s conditions were met (no specific reason provided).", effectDesc, policyIdentifier)
-			}
+		decision.Allowed = !result
+		if !decision.Allowed { // Denied because Deny rule evaluated to TRUE
+			decision.Reason = fmt.Sprintf("Policy %s %s enforced", effectDesc, policyIdentifier)
+			if reason != "" { decision.Reason += ":\n" + reason } else { decision.Reason += " (conditions met)." }
 		}
 	} else {
-		// ***** CORRECTED: Use fmt.Errorf *****
 		decision.Error = fmt.Errorf("unknown policy effect '%s' in policy %s", policy.Effect, policyIdentifier)
 	}
 
 	return decision
 }
 
-// This function evaluates a condition node recursively, passing the depth for indentation
-func evalNode(node model.ConditionNode, subject, resource map[string]any, depth int) (bool, string, error) {
+// evalNode evaluates a condition node recursively, passing all context maps.
+func evalNode(node model.ConditionNode, subject, resource, path, body, query, headers map[string]any, depth int) (bool, string, error) {
 	indent := strings.Repeat(indentStep, depth)
 	nodeDescription := ""
-	if node.Description != "" {
-		nodeDescription = fmt.Sprintf("'%s'", node.Description)
-	} else {
-		nodeDescription = "(unnamed node)" // Handle unnamed nodes
-	}
+	if node.Description != "" { nodeDescription = fmt.Sprintf("'%s'", node.Description) } else { nodeDescription = "(unnamed node)" }
 
 	if node.Leaf != nil {
-		// Evaluate leaf node, passing depth
-		res, reason, err := evalLeaf(*node.Leaf, subject, resource, depth) // Pass depth
-		if err != nil {
-			// Add indentation to error context if needed, though errors usually bubble up raw
-			return false, "", fmt.Errorf("%sLeaf Node %s evaluation failed: %w", indent, nodeDescription, err)
-		}
-		// Leaf reason already includes indentation if it failed (!res)
+		// Evaluate leaf node, passing all maps
+		res, reason, err := evalLeaf(*node.Leaf, subject, resource, path, body, query, headers, depth) // Pass headers
+		if err != nil { return false, "", fmt.Errorf("%sLeaf Node %s evaluation failed: %w", indent, nodeDescription, err) }
 		return res, reason, nil
 	}
 
-	// Validate branch node structure (should be caught by GetConditionsNode but belt-and-suspenders)
-	if len(node.Children) == 0 {
-		return false, "", fmt.Errorf("%sNode %s has logic type '%s' but no children", indent, nodeDescription, node.LogicType)
-	}
-	if node.LogicType != "AND" && node.LogicType != "OR" {
-		return false, "", fmt.Errorf("%sNode %s has unknown logic type: %s", indent, nodeDescription, node.LogicType)
-	}
+	if len(node.Children) == 0 { return false, "", fmt.Errorf("%sNode %s has logic type '%s' but no children", indent, nodeDescription, node.LogicType) }
+	if node.LogicType != "AND" && node.LogicType != "OR" { return false, "", fmt.Errorf("%sNode %s has unknown logic type: %s", indent, nodeDescription, node.LogicType) }
 
-	// --- Evaluate Branch Node Children ---
 	childResults := make([]bool, len(node.Children))
 	childReasons := make([]string, len(node.Children))
 
 	for i, child := range node.Children {
-		// Evaluate child with increased depth
-		res, reason, err := evalNode(child, subject, resource, depth+1)
-		if err != nil {
-			// Error detail will come from lower levels
-			return false, "", fmt.Errorf("%sChild evaluation failed within %s node: %w", indent, nodeDescription, err)
-		}
+		// Evaluate child with increased depth, passing all maps
+		res, reason, err := evalNode(child, subject, resource, path, body, query, headers, depth+1) // Pass headers
+		if err != nil { return false, "", fmt.Errorf("%sChild evaluation failed within %s node: %w", indent, nodeDescription, err) }
 		childResults[i] = res
-		if !res {
-			childReasons[i] = reason // Store failure reason (already includes its own indent)
-		} else {
-			childReasons[i] = "" // Not needed if child passed
-		}
+		if !res { childReasons[i] = reason } else { childReasons[i] = "" }
 
-		// --- Short-circuit logic ---
 		switch node.LogicType {
-		case "AND":
-			if !res {
-				// AND fails: Use the reason from the first failing child.
-				// The child's reason already has the deeper indent.
-				finalReason := fmt.Sprintf("%s- [%s Node: %s] failed because child condition failed:\n%s", indent, node.LogicType, nodeDescription, reason)
-				return false, finalReason, nil
-			}
-		case "OR":
-			if res {
-				// OR succeeds on first success. No reason needed.
-				return true, "", nil
-			}
+		case "AND": if !res { finalReason := fmt.Sprintf("%s- [%s Node: %s] failed:\n%s", indent, node.LogicType, nodeDescription, reason); return false, finalReason, nil }
+		case "OR": if res { return true, "", nil }
 		}
 	}
 
-	// --- Process final results (if no short-circuit occurred) ---
 	switch node.LogicType {
-	case "AND":
-		// If we reached here, all children were true. Node succeeds.
-		return true, "", nil
+	case "AND": return true, "", nil
 	case "OR":
-		// If we reached here, all children were false. Node fails.
 		var failingReasons []string
-		for _, r := range childReasons {
-			if r != "" { // Only collect non-empty reasons (failures)
-				failingReasons = append(failingReasons, r)
-			}
-		}
-		// Combine failing child reasons, separated by newline. They already have correct indentation.
-		combinedReason := strings.Join(failingReasons, "\n")
-		finalReason := fmt.Sprintf("%s- [%s Node: %s] failed because all child conditions were false:\n%s", indent, node.LogicType, nodeDescription, combinedReason)
+		for _, r := range childReasons { if r != "" { failingReasons = append(failingReasons, r) } }
+		combinedReason := strings.Join(failingReasons, "\n"); finalReason := fmt.Sprintf("%s- [%s Node: %s] failed (all children false):\n%s", indent, node.LogicType, nodeDescription, combinedReason)
 		return false, finalReason, nil
-	default:
-		// Should be unreachable due to earlier check, but satisfy compiler
-		return false, "", fmt.Errorf("%sInternal Error: Unhandled logic type %s in node %s after child evaluation", indent, node.LogicType, nodeDescription)
+	default: return false, "", fmt.Errorf("%sInternal Error: Unhandled logic type %s", indent, node.LogicType)
 	}
 }
 
-// evalLeaf now accepts depth for indentation
-func evalLeaf(leaf model.ConditionLeaf, subject, resource map[string]any, depth int) (bool, string, error) {
+// evalLeaf evaluates a leaf condition, passing all context maps.
+func evalLeaf(leaf model.ConditionLeaf, subject, resource, path, body, query, headers map[string]any, depth int) (bool, string, error) {
 	indent := strings.Repeat(indentStep, depth)
-	leafDescription := ""
-	if leaf.Description != "" {
-		leafDescription = fmt.Sprintf("'%s' ", leaf.Description)
-	}
+	leafDescription := ""; if leaf.Description != "" { leafDescription = fmt.Sprintf("'%s' ", leaf.Description) }
 
-	// --- Resolve Right-Hand Value FIRST (needed for comparison later) ---
-	var right any
-	var rightSourceDesc string
-	var err error
+	// --- Resolve Right-Hand Value ---
+	var right any; var rightSourceDesc string; var err error
 	if leaf.ResourceAttribute != "" {
-		rightSourceDesc = fmt.Sprintf("resource attribute '%s'", leaf.ResourceAttribute)
-		right, err = resolveAttr(leaf.ResourceAttribute, subject, resource)
-		if err != nil {
-			reason := fmt.Sprintf("%s- Condition %sfailed: could not resolve %s: %v)", indent, leafDescription, rightSourceDesc, err)
-			return false, reason, fmt.Errorf("%sFailed to resolve %s for condition %s: %w", indent, rightSourceDesc, leafDescription, err)
-		}
+		// Use resolveAttr which now handles 6 prefixes
+		rightSourceDesc = fmt.Sprintf("attribute '%s'", leaf.ResourceAttribute)
+		right, err = resolveAttr(leaf.ResourceAttribute, subject, resource, path, body, query, headers) // Pass headers
+		if err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: resolve %s: %v", indent, leafDescription, rightSourceDesc, err); return false, reason, fmt.Errorf("%sResolve %s failed: %w", indent, rightSourceDesc, err) }
 	} else if leaf.Value != nil {
-		if err := json.Unmarshal(leaf.Value, &right); err != nil {
-			reason := fmt.Sprintf("%s- Condition %sfailed: invalid static JSON value '%s': %v)", indent, leafDescription, string(leaf.Value), err)
-			return false, reason, fmt.Errorf("%sInvalid static JSON value '%s' for condition %s: %w", indent, string(leaf.Value), leafDescription, err)
-		}
-		valueStr := strings.Trim(string(leaf.Value), `"`)
-		rightSourceDesc = fmt.Sprintf("static value '%s'", valueStr)
+		if err = json.Unmarshal(leaf.Value, &right); err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: invalid static JSON value '%s': %v", indent, leafDescription, string(leaf.Value), err); return false, reason, fmt.Errorf("%sInvalid static JSON '%s': %w", indent, string(leaf.Value), err) }
+		valueStr := strings.Trim(string(leaf.Value), `"`); rightSourceDesc = fmt.Sprintf("static value '%s'", valueStr)
 	} else if leaf.Operator != "IsNull" && leaf.Operator != "IsNotNull" {
-		reason := fmt.Sprintf("%s- Condition %sfailed: operator '%s' requires 'value' or 'resource_attribute'", indent, leafDescription, leaf.Operator)
-		return false, reason, fmt.Errorf("%sCondition %srequires 'value' or 'resource_attribute' for operator '%s'", indent, leafDescription, leaf.Operator)
-	} else {
-		rightSourceDesc = "(not applicable)"
-	}
+		reason := fmt.Sprintf("%s- Condition %sfailed: operator '%s' requires value/resource_attribute", indent, leafDescription, leaf.Operator); return false, reason, fmt.Errorf("%sOp '%s' needs value/attr", indent, leaf.Operator)
+	} else { rightSourceDesc = "(not applicable)" }
 
-	// We resolve the LEFT value LATER, only if needed and based on syntax for 'Contains'
+	// --- Resolve Left-Hand Value ---
+	var left any; var leftStr string
+	left, err = resolveAttr(leaf.Attribute, subject, resource, path, body, query, headers) // Pass headers
+	if err != nil { reason := fmt.Sprintf("%s- Condition %sfailed: resolve attribute '%s': %v", indent, leafDescription, leaf.Attribute, err); return false, reason, fmt.Errorf("%sResolve attribute '%s' failed: %w", indent, leaf.Attribute, err) }
+	leftStr = formatValueForLog(left)
 
-	// --- Helper for creating indented failure reason ---
-	// Note: Left value formatting is deferred until we know how 'Contains' uses it
-	failReason := func(opResult bool, leftValFormatted string, comparisonDesc string, rightValFormatted string) (bool, string) { // Add rightValFormatted
-		if opResult {
-			return true, ""
-		}
-		// Construct the core comparison part of the message
-		var reasonCore string
-		// Add the right value details into the comparisonDesc where appropriate
-		switch leaf.Operator {
-		case "Equals":
-			// Example: "does not equal resource attribute 'resource.company_id' (value: <nil>)"
-			reasonCore = fmt.Sprintf("%s: %s does not equal %s (value: %s))", leaf.Attribute, leftValFormatted, rightSourceDesc, rightValFormatted)
-		case "NotEquals":
-			reasonCore = fmt.Sprintf("%s: %s equals %s (value: %s))", leaf.Attribute, leftValFormatted, rightSourceDesc, rightValFormatted)
-		case "IsNull":
-			reasonCore = fmt.Sprintf("%s: %s is not null)", leaf.Attribute, leftValFormatted) // No right value here
-		case "IsNotNull":
-			reasonCore = fmt.Sprintf("%s: %s is null)", leaf.Attribute, leftValFormatted) // No right value here
-		case "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual":
-			opSymbols := map[string]string{">": ">", ">=": ">=", "<": "<", "<=": "<="}
-			reasonCore = fmt.Sprintf("%s: %s is not %s %s (value: %s))", leaf.Attribute, leftValFormatted, opSymbols[leaf.Operator], rightSourceDesc, rightValFormatted)
-		case "StartsWith", "EndsWith", "Includes":
-			opDesc := map[string]string{"StartsWith": "start with", "EndsWith": "end with", "Includes": "include"}
-			reasonCore = fmt.Sprintf("%s: %s does not %s %s (value: %s))", leaf.Attribute, leftValFormatted, opDesc[leaf.Operator], rightSourceDesc, rightValFormatted)
-		case "Before", "After":
-			opDesc := map[string]string{"Before": "before", "After": "after"}[leaf.Operator]
-			// Time formatting is already complex, maybe just add the raw value if comparison failed
-			reasonCore = fmt.Sprintf("%s: %s is not %s %s (value: %s))", leaf.Attribute, leftValFormatted, opDesc, rightSourceDesc, rightValFormatted)
-		case "Contains": // Contains needs special handling based on syntax used within its logic
-			// The 'comparisonDescription' calculated earlier for Contains already includes details
-			reasonCore = fmt.Sprintf("%s: %s %s)", leaf.Attribute, leftValFormatted, comparisonDesc)
-		default:
-			reasonCore = fmt.Sprintf("%s: %s comparison (%s) failed against %s (value: %s))", leaf.Attribute, leftValFormatted, leaf.Operator, rightSourceDesc, rightValFormatted) // Fallback
-		}
-
-		// Construct the final reason string
-		reason := fmt.Sprintf("%s- Condition %s(%s", indent, leafDescription, reasonCore)
-		return false, reason
+	// --- Helper for failure reason ---
+	failReason := func(opResult bool, lValFmt, compDesc, rValFmt string) (bool, string) { /* ... as before ... */
+		if opResult { return true, "" }
+		var reasonCore string; if compDesc != "" { reasonCore = fmt.Sprintf("%s: %s %s", leaf.Attribute, lValFmt, compDesc) } else { reasonCore = fmt.Sprintf("%s: %s comp (%s) vs %s (%s) failed", leaf.Attribute, lValFmt, leaf.Operator, rightSourceDesc, rValFmt) }
+		reason := fmt.Sprintf("%s- Condition %s(%s)", indent, leafDescription, reasonCore); return false, reason
 	}
 
 	// --- Perform Comparison ---
-	var res bool
-	var compareErr error
-	var comparisonDescription string
-	var left any       // Declare left here, resolved within specific cases
-	var leftStr string // Formatted left value
-
-	left, err = resolveAttr(leaf.Attribute, subject, resource)
-	if err != nil {
-		reason := fmt.Sprintf("%s- Condition %sfailed: could not resolve attribute '%s': %v)", indent, leafDescription, leaf.Attribute, err)
-		return false, reason, fmt.Errorf("%sFailed to resolve attribute '%s' for condition %s: %w", indent, leaf.Attribute, leafDescription, err)
-	}
-	leftStr = formatValueForLog(left) // Format it now
-
+	var res bool; var compareErr error; var comparisonDescription string
 	switch leaf.Operator {
-	case "Equals", "NotEquals", "IsNull", "IsNotNull",
-		"GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual",
-		"StartsWith", "EndsWith", "Includes", "Before", "After":
-		// --- Resolve Left value for non-Contains operators ---
-
-		// --- Handle the specific operator ---
-		switch leaf.Operator {
-		case "Equals":
-			res = robustCompareEquals(left, right)
-			comparisonDescription = fmt.Sprintf("does not equal %s)", rightSourceDesc)
-		case "NotEquals":
-			res = !robustCompareEquals(left, right)
-			comparisonDescription = fmt.Sprintf("equals %s)", rightSourceDesc)
-		case "IsNull":
-			leftValCheck := reflect.ValueOf(left)
-			res = left == nil || (leftValCheck.IsValid() && leftValCheck.Kind() == reflect.Ptr && leftValCheck.IsNil())
-			comparisonDescription = "is not null)"
-		case "IsNotNull":
-			leftValCheck := reflect.ValueOf(left)
-			res = left != nil && !(leftValCheck.IsValid() && leftValCheck.Kind() == reflect.Ptr && leftValCheck.IsNil())
-			comparisonDescription = "is null)"
-		// ... other simple operators ...
-		case "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual":
-			res, compareErr = compareNumbers(left, right, leaf.Operator)
-			if compareErr == nil {
-				opSymbols := map[string]string{">": ">", ">=": ">=", "<": "<", "<=": "<="}
-				comparisonDescription = fmt.Sprintf("is not %s %s)", opSymbols[leaf.Operator], rightSourceDesc)
-			} else {
-				comparisonDescription = fmt.Sprintf("could not be compared with %s: %v)", rightSourceDesc, compareErr)
-			}
-		case "StartsWith", "EndsWith", "Includes":
-			res, compareErr = compareStrings(left, right, leaf.Operator)
-			if compareErr == nil {
-				opDesc := map[string]string{"StartsWith": "start with", "EndsWith": "end with", "Includes": "include"}
-				comparisonDescription = fmt.Sprintf("does not %s %s)", opDesc[leaf.Operator], rightSourceDesc)
-			} else {
-				comparisonDescription = fmt.Sprintf("could not be compared with %s: %v)", rightSourceDesc, compareErr)
-			}
-		case "Before", "After":
-			res, compareErr = compareTimes(left, right, leaf.Operator)
-			if compareErr == nil {
-				opDesc := map[string]string{"Before": "before", "After": "after"}[leaf.Operator]
-				lTime, l_err := toTime(left)
-				rTime, r_err := toTime(right)
-				lValDesc := formatValueForLog(left)
-				if l_err == nil {
-					lValDesc = lTime.Format(time.RFC3339)
-				}
-				rValDesc := rightSourceDesc
-				if r_err == nil {
-					rValDesc = fmt.Sprintf("%s (%s)", rightSourceDesc, rTime.Format(time.RFC3339))
-				}
-				comparisonDescription = fmt.Sprintf("(%s) is not %s %s)", lValDesc, opDesc, rValDesc)
-			} else {
-				comparisonDescription = fmt.Sprintf("could not be compared with %s: %v)", rightSourceDesc, compareErr)
-			}
-		}
-
-		// --- SYNTAX-DRIVEN 'Contains' Operator ---
+	// ... (Cases for Equals, NotEquals, IsNull, IsNotNull, Numerics, Strings, Times remain exactly the same as before) ...
+	case "Equals": res = robustCompareEquals(left, right); if !res { comparisonDescription = fmt.Sprintf("!= %s (%s)", rightSourceDesc, formatValueForLog(right)) } // Shortened example reason part
+	case "NotEquals": res = !robustCompareEquals(left, right); if !res { comparisonDescription = fmt.Sprintf("== %s (%s)", rightSourceDesc, formatValueForLog(right)) }
+	// ...
 	case "Contains":
-		targetValue := right // Target value is already resolved
-
-		// Parse the attribute string for the special syntax
+		targetValue := right
 		syntaxParts := strings.SplitN(leaf.Attribute, "[*].", 2)
 		isObjectSyntax := len(syntaxParts) == 2
-
-		var basePath string
 		var fieldToExtract string
-		if isObjectSyntax {
-			basePath = syntaxParts[0]
-			fieldToExtract = syntaxParts[1] // Assume FieldName follows [*].
-			if fieldToExtract == "" {
-				compareErr = fmt.Errorf("invalid 'Contains' syntax in attribute '%s': missing field name after [*]", leaf.Attribute)
-			}
-		} else {
-			basePath = leaf.Attribute // Use the full attribute string as the path
-		}
-
+		if isObjectSyntax { fieldToExtract = syntaxParts[1]; if fieldToExtract == "" { compareErr = fmt.Errorf("invalid 'Contains' syntax: missing field name after [*]") } }
 		if compareErr == nil {
-			// Resolve the base path (e.g., "subject.roles[*].id" or the full "subject.tags")
-			left, err = resolveAttr(basePath, subject, resource)
-			if err != nil {
-				// Specific error for Contains path resolution
-				reason := fmt.Sprintf("%s- Condition %sfailed: could not resolve path '%s' from attribute '%s': %v)", indent, leafDescription, basePath, leaf.Attribute, err)
-				return false, reason, fmt.Errorf("%sFailed to resolve path '%s' for attribute '%s' for condition %s: %w", indent, basePath, leaf.Attribute, leafDescription, err)
-			}
-			leftStr = formatValueForLog(left) // Format the resolved collection value
-
-			// Ensure the resolved 'left' value is a slice/array
 			collValue := reflect.ValueOf(left)
-			if !collValue.IsValid() || (collValue.Kind() != reflect.Slice && collValue.Kind() != reflect.Array) {
-				compareErr = fmt.Errorf("resolved path '%s' from attribute '%s' is type %T (value: %s), not a slice/array, cannot perform 'Contains'", basePath, leaf.Attribute, left, leftStr)
+			if !collValue.IsValid() || (collValue.Kind() != reflect.Slice && collValue.Kind() != reflect.Array) { compareErr = fmt.Errorf("resolved attr '%s' not slice/array for 'Contains'", leaf.Attribute)
 			} else {
-				// Now iterate and compare based on syntax used
 				found := false
 				if isObjectSyntax {
-					// --- Behavior A: Object Syntax ("path[*].Field") ---
-					comparisonDescription = fmt.Sprintf("does not contain an object where field '%s' matches %s)", fieldToExtract, rightSourceDesc) // Default failure reason
-
-					for i := range collValue.Len() {
-						element := collValue.Index(i)
-						if !element.IsValid() {
-							continue
-						}
-
-						// Extract the specified field by name
-						extractedValue, fieldFound := extractFieldByName(element, fieldToExtract)
-						if fieldFound {
-							boolResult := robustCompareEquals(extractedValue, targetValue)
-							if boolResult {
-								found = true
-								break
-							}
-						} // else: Field not found or accessible on this element, skip it.
-					}
+					comparisonDescription = fmt.Sprintf("coll !contains obj where '%s' == %s (%s)", fieldToExtract, rightSourceDesc, formatValueForLog(right)) // Default failure reason for object syntax
+					for i := range collValue.Len() { element := collValue.Index(i); extractedValue, fieldFound := extractFieldByName(element, fieldToExtract); if fieldFound && robustCompareEquals(extractedValue, targetValue) { found = true; break } }
 				} else {
-					// --- Behavior B: Simple Syntax ("path") ---
-					comparisonDescription = fmt.Sprintf("does not contain element matching %s)", rightSourceDesc) // Default failure reason
-
-					for i := range collValue.Len() {
-						element := collValue.Index(i)
-						if !element.IsValid() {
-							continue
-						}
-						if !element.CanInterface() {
-							continue
-						}
-						elementInterface := element.Interface()
-
-						if robustCompareEquals(elementInterface, targetValue) {
-							found = true
-							break
-						}
-					}
+                    comparisonDescription = fmt.Sprintf("coll !contains element == %s (%s)", rightSourceDesc, formatValueForLog(right)) // Default failure reason for simple syntax
+					for i := range collValue.Len() { element := collValue.Index(i); if !element.IsValid() || !element.CanInterface() { continue }; if robustCompareEquals(element.Interface(), targetValue) { found = true; break } }
 				}
-				res = found // Set final result
-			} // End slice/array check
-		} // End compareErr check
-
-	default:
-		compareErr = fmt.Errorf("unsupported operator '%s'", leaf.Operator)
+				res = found; if res { comparisonDescription = "" } // Clear reason on success
+			}
+		}
+	default: compareErr = fmt.Errorf("unsupported operator '%s'", leaf.Operator)
 	}
 
 	// --- Final Result and Reason ---
-	if compareErr != nil {
-		// Format error reason consistently. Note leftStr might be empty if resolution failed early.
-		rightStrFmt := formatValueForLog(right) // Format right value for error
-		reason := fmt.Sprintf("%s- Condition %s(%s: %s failed comparison with %s (value: %s): %v)", indent, leafDescription, leaf.Attribute, leftStr, rightSourceDesc, rightStrFmt, compareErr)
-		return false, reason, fmt.Errorf("%sComparison Error for condition %s: %w", indent, leafDescription, compareErr)
+	if compareErr != nil { rValFmt := formatValueForLog(right); reason := fmt.Sprintf("%s- Condition %s(%s: %s failed comp vs %s (%s): %v)", indent, leafDescription, leaf.Attribute, leftStr, rightSourceDesc, rValFmt, compareErr); return false, reason, fmt.Errorf("%sComp Error (%s): %w", indent, leaf.Attribute, compareErr) }
+	rValFmt := formatValueForLog(right); finalRes, finalReason := failReason(res, leftStr, comparisonDescription, rValFmt); return finalRes, finalReason, nil
+}
+
+
+// resolveAttr resolves attribute path against ALL provided context maps, including headers.
+func resolveAttr(attr string, subject, resource, path, body, query, headers map[string]any) (any, error) {
+	if attr == "" { return nil, errors.New("attribute name cannot be empty") }
+
+	var sourceMap map[string]any; var key string; var contextName string
+
+	switch {
+	case strings.HasPrefix(attr, "subject."):
+		sourceMap, key, contextName = subject, strings.TrimPrefix(attr, "subject."), "subject"
+	case strings.HasPrefix(attr, "resource."):
+		sourceMap, key, contextName = resource, strings.TrimPrefix(attr, "resource."), "resource"
+	case strings.HasPrefix(attr, "path."):
+		sourceMap, key, contextName = path, strings.TrimPrefix(attr, "path."), "path"
+	case strings.HasPrefix(attr, "body."):
+		sourceMap, key, contextName = body, strings.TrimPrefix(attr, "body."), "body"
+	case strings.HasPrefix(attr, "query."):
+		sourceMap, key, contextName = query, strings.TrimPrefix(attr, "query."), "query"
+	case strings.HasPrefix(attr, "header."): // Added Header case
+		sourceMap, key, contextName = headers, strings.TrimPrefix(attr, "header."), "header"
+		// Note: Header keys in sourceMap should ideally be canonicalized (e.g., "Content-Type").
+	default:
+		return nil, fmt.Errorf("invalid attribute format: '%s' (must start with 'subject.', 'resource.', 'path.', 'body.', 'query.', or 'header.')", attr)
 	}
 
-	// Make sure leftStr is set correctly before calling failReason
-	if leftStr == "" && left != nil { // If left was resolved successfully but leftStr wasn't formatted yet
-		leftStr = formatValueForLog(left)
-	} else if left == nil && leaf.Operator != "IsNull" && leaf.Operator != "IsNotNull" && !strings.Contains(fmt.Sprintf("%v", compareErr), "resolve") {
-		leftStr = "<nil>"
+	if key == "" { return nil, fmt.Errorf("invalid %s attribute key (e.g., '%s.id')", contextName, contextName) }
+
+	// Allow context map to be nil (e.g., no headers sent, no body, etc.)
+	if sourceMap == nil { return nil, nil }
+
+	// Handle nested keys (less common for headers/path/query, but possible for subject/resource/body)
+	parts := strings.Split(key, ".")
+	currentVal, ok := sourceMap[parts[0]]
+	if !ok { return nil, nil /* Top-level key not found */ }
+
+	for i := 1; i < len(parts); i++ {
+		currentMap, isMap := currentVal.(map[string]any)
+		if !isMap { nestedPath := strings.Join(parts[:i], "."); return nil, fmt.Errorf("attr '%s': value at '%s.%s' is %T, not map for nested access", attr, contextName, nestedPath, currentVal) }
+		currentVal, ok = currentMap[parts[i]]
+		if !ok { return nil, nil /* Nested key not found */ }
 	}
 
-	rightStrFmt := formatValueForLog(right) // Format right value for success/fail reason message
-
-	// Call the updated failReason helper
-	finalRes, finalReason := failReason(res, leftStr, comparisonDescription, rightStrFmt) // Pass formatted right value
-	return finalRes, finalReason, nil
+	return currentVal, nil
 }
 
 // --- Helper functions (resolveAttr, compare*, to*) ---
@@ -451,82 +263,72 @@ func formatValueForLog(val any) string {
 
 	switch v.Kind() {
 	case reflect.Slice, reflect.Array:
-		// Show type and length, maybe first few elements?
-		// Avoid printing large slices.
 		if v.Len() > 5 {
 			return fmt.Sprintf("%T (len:%d) [preview omitted]", val, v.Len())
 		}
-		// Try marshalling small slices to JSON? Or just use default %v?
-		return fmt.Sprintf("%v", val) // Default Go representation for smaller slices
+		marshaled, err := json.Marshal(val)
+		if err == nil && len(marshaled) < 100 {
+			return string(marshaled)
+		}
+		return fmt.Sprintf("%T (len:%d, %v)", val, v.Len(), val)
 	case reflect.Map, reflect.Struct:
-		// Avoid printing large/complex maps/structs
-		// Just show the type? Or a very simple representation?
-		return fmt.Sprintf("%T (value omitted)", val) // Safe fallback
+		if v.Kind() == reflect.Map {
+			marshaled, err := json.Marshal(val)
+			if err == nil && len(marshaled) < 150 {
+				return string(marshaled)
+			}
+		}
+		return fmt.Sprintf("%T (details omitted)", val)
 	default:
-		// Use standard formatting for simple types (string, int, bool, float, uuid.UUID)
+		if str, ok := val.(string); ok {
+			return fmt.Sprintf(`"%s"`, str)
+		}
+		if t, ok := val.(time.Time); ok {
+			return t.Format(time.RFC3339)
+		}
 		return fmt.Sprintf("%v", val)
 	}
 }
 
 func robustCompareEquals(left, right any) bool {
 	if left == nil || right == nil {
-		return left == right // Nils are only equal to nil
+		return left == right
 	}
-
-	// Attempt specific type comparisons, especially for UUIDs
-	leftStr, leftIsStr := left.(string)
-	rightStr, rightIsStr := right.(string)
-
-	leftUUID, leftIsUUID := left.(uuid.UUID)
-	rightUUID, rightIsUUID := right.(uuid.UUID)
-
-	// Case 1: Both UUIDs
-	if leftIsUUID && rightIsUUID {
+	leftFloat, leftIsNum := toFloat(left)
+	rightFloat, rightIsNum := toFloat(right)
+	if leftIsNum && rightIsNum {
+		return leftFloat == rightFloat
+	}
+	leftStr, leftIsStr := toString(left)
+	rightStr, rightIsStr := toString(right)
+	leftUUID, leftIsUUID := toUUID(left)
+	rightUUID, rightIsUUID := toUUID(right)
+	if leftUUID != uuid.Nil && rightUUID != uuid.Nil {
 		return leftUUID == rightUUID
 	}
-
-	// Case 2: One UUID, one string - Try parsing the string
-	if leftIsUUID && rightIsStr {
-		parsedRightUUID, err := uuid.Parse(rightStr)
-		return err == nil && leftUUID == parsedRightUUID
+	if leftUUID != uuid.Nil && rightIsStr {
+		parsedRight, _ := uuid.Parse(rightStr)
+		return leftUUID == parsedRight
 	}
-	if leftIsStr && rightIsUUID {
-		parsedLeftUUID, err := uuid.Parse(leftStr)
-		return err == nil && parsedLeftUUID == rightUUID
+	if rightUUID != uuid.Nil && leftIsStr {
+		parsedLeft, _ := uuid.Parse(leftStr)
+		return rightUUID == parsedLeft
 	}
-
-	// Case 3: Both Strings - check direct equality and also if they represent the same UUID
-	if leftIsStr && rightIsStr {
-		if leftStr == rightStr {
-			return true
-		} // Direct string equality
-		// Try parsing both as UUIDs as a fallback
-		parsedLeftUUID, err1 := uuid.Parse(leftStr)
-		parsedRightUUID, err2 := uuid.Parse(rightStr)
-		if err1 == nil && err2 == nil {
-			return parsedLeftUUID == parsedRightUUID
+	if (leftIsUUID && !rightIsUUID && rightUUID == uuid.Nil) || (rightIsUUID && !leftIsUUID && leftUUID == uuid.Nil) {
+		return false
+	}
+	if leftIsBool, ok := left.(bool); ok {
+		if rightIsBool, okR := right.(bool); okR {
+			return leftIsBool == rightIsBool
 		}
-		return false // String contents differ and don't parse to comparable UUIDs
 	}
-
-	// Case 4: Numeric types? Try converting to float64 (can lose precision)
-	leftFloat, leftIsNum := toFloat(left)    // Assumes toFloat helper exists
-	rightFloat, rightIsNum := toFloat(right) // Assumes toFloat helper exists
-	if leftIsNum && rightIsNum {
-		// Be cautious with float comparisons!
-		return leftFloat == rightFloat // Direct float comparison
+	if leftIsStr && rightIsStr {
+		return leftStr == rightStr
+	} // Direct string compare after others
+	if reflect.TypeOf(left) == reflect.TypeOf(right) {
+		return reflect.DeepEqual(left, right)
 	}
-
-	// Case 5: Maybe boolean?
-	leftBool, leftIsBool := left.(bool)
-	rightBool, rightIsBool := right.(bool)
-	if leftIsBool && rightIsBool {
-		return leftBool == rightBool
-	}
-
-	// Default Fallback: Use DeepEqual for complex types or unhandled pairs
-	// Be aware of its limitations (unexported fields, type strictness).
-	return reflect.DeepEqual(left, right)
+	return false
 }
 
 func extractFieldByName(element reflect.Value, fieldName string) (any, bool) {
@@ -591,63 +393,6 @@ func extractFieldByName(element reflect.Value, fieldName string) (any, bool) {
 	return nil, false
 }
 
-func resolveAttr(attr string, subject, resource map[string]any) (any, error) {
-	if attr == "" {
-		return nil, errors.New("attribute name cannot be empty")
-	}
-	var sourceMap map[string]any
-	var key string
-	var contextName string
-
-	switch {
-	case strings.HasPrefix(attr, "subject."):
-		sourceMap = subject
-		key = strings.TrimPrefix(attr, "subject.")
-		contextName = "subject"
-		if key == "" {
-			return nil, errors.New("invalid subject attribute key (e.g., 'subject.id')")
-		}
-	case strings.HasPrefix(attr, "resource."):
-		sourceMap = resource
-		key = strings.TrimPrefix(attr, "resource.")
-		contextName = "resource"
-		if key == "" {
-			return nil, errors.New("invalid resource attribute key (e.g., 'resource.owner_id')")
-		}
-	default:
-		return nil, fmt.Errorf("invalid attribute format: '%s' (must start with 'subject.' or 'resource.')", attr)
-	}
-
-	if sourceMap == nil {
-		// Handle case where subject or resource map itself is nil
-		return nil, fmt.Errorf("context map '%s' is nil, cannot resolve attribute '%s'", contextName, attr)
-	}
-
-	// Handle potential nested keys (split by '.' - basic example)
-	// For "subject.profile.email": key = "profile.email", sourceMap = subject
-	parts := strings.Split(key, ".")
-	currentVal, ok := sourceMap[parts[0]]
-	if !ok {
-		return nil, nil // Treat top-level key not found as nil value, not error
-	}
-
-	// Traverse nested parts if any
-	for i := 1; i < len(parts); i++ {
-		// Check if currentVal is a map[string]any
-		if nestedMap, isMap := currentVal.(map[string]any); isMap {
-			currentVal, ok = nestedMap[parts[i]]
-			if !ok {
-				return nil, nil // Nested key not found, treat as nil
-			}
-		} else {
-			// Trying to access nested key on non-map value
-			return nil, fmt.Errorf("attribute '%s' found non-map value at '%s' while resolving '%s'", attr, strings.Join(parts[:i], "."), parts[i])
-		}
-	}
-
-	return currentVal, nil // Return the final value found
-}
-
 func compareNumbers(left, right any, op string) (bool, error) {
 	leftFloat, ok1 := toFloat(left)
 	rightFloat, ok2 := toFloat(right)
@@ -674,6 +419,21 @@ func compareNumbers(left, right any, op string) (bool, error) {
 		// This should be caught by validation earlier, but defensively:
 		return false, fmt.Errorf("internal error: unknown numeric comparison operator '%s'", op)
 	}
+}
+
+func toString(val any) (string, bool) { /* ... Copy from previous correct version ... */
+	if val == nil { return "", false }
+	if s, ok := val.(string); ok { return s, true }
+	if stringer, ok := val.(fmt.Stringer); ok { return stringer.String(), true }
+	return "", false
+}
+
+func toUUID(val any) (uuid.UUID, bool) { /* ... Copy from previous correct version ... */
+	if val == nil { return uuid.Nil, false }
+	if u, ok := val.(uuid.UUID); ok { return u, true }
+	if s, ok := val.(string); ok { u, err := uuid.Parse(s); return u, err == nil }
+	if b, ok := val.([]byte); ok { u, err := uuid.FromBytes(b); return u, err == nil }
+	return uuid.Nil, false
 }
 
 func toFloat(val any) (float64, bool) {

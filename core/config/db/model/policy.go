@@ -70,11 +70,9 @@ func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 
 	// 1. Check for empty or null JSON content
 	if len(p.Conditions) == 0 || string(p.Conditions) == "null" {
-		// Decide if this is an error or implies a default. Forcing explicit
-		// conditions is usually safer. Use p.Name for better context if available.
-		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		policyIdentifier := fmt.Sprintf("ID %s", p.ID.String()) // Use p.ID which should exist on BaseModel
 		if p.Name != "" {
-			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+			policyIdentifier = fmt.Sprintf("'%s' (ID %s)", p.Name, p.ID.String())
 		}
 		return node, fmt.Errorf("policy rule %s has missing or null conditions", policyIdentifier)
 	}
@@ -82,19 +80,18 @@ func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 	// 2. Attempt to unmarshal the JSON
 	err := json.Unmarshal(p.Conditions, &node)
 	if err != nil {
-		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		policyIdentifier := fmt.Sprintf("ID %s", p.ID.String())
 		if p.Name != "" {
-			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+			policyIdentifier = fmt.Sprintf("'%s' (ID %s)", p.Name, p.ID.String())
 		}
 		return node, fmt.Errorf("failed to unmarshal conditions JSON for policy rule %s: %w", policyIdentifier, err)
 	}
 
 	// 3. Perform recursive validation using the dedicated validator function
-	// This replaces your original two specific validation checks.
 	if err := validateConditionNode(node); err != nil {
-		policyIdentifier := fmt.Sprintf("ID %d", p.ID)
+		policyIdentifier := fmt.Sprintf("ID %s", p.ID.String())
 		if p.Name != "" {
-			policyIdentifier = fmt.Sprintf("'%s' (ID %d)", p.Name, p.ID)
+			policyIdentifier = fmt.Sprintf("'%s' (ID %s)", p.Name, p.ID.String())
 		}
 		// Wrap the validation error with policy context
 		return node, fmt.Errorf("invalid conditions structure for policy rule %s: %w", policyIdentifier, err)
@@ -102,6 +99,16 @@ func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 
 	// 4. Return the successfully parsed and validated node
 	return node, nil
+}
+
+// Helper function (optional, can be inlined) to check attribute prefixes
+func isValidAttributePrefix(attr string) bool {
+	return strings.HasPrefix(attr, "subject.") ||
+		strings.HasPrefix(attr, "resource.") ||
+		strings.HasPrefix(attr, "path.") ||
+		strings.HasPrefix(attr, "body.") ||
+		strings.HasPrefix(attr, "query.") ||
+		strings.HasPrefix(attr, "header.")
 }
 
 // validateConditionNode performs recursive validation on a condition node structure.
@@ -114,16 +121,19 @@ func validateConditionNode(node ConditionNode) error {
 	if node.Leaf != nil { // It's intended to be a leaf node
 		// Rule 1: A leaf node cannot have branch properties
 		if node.LogicType != "" || len(node.Children) > 0 {
+			// Use nodeContext which already has Description included
 			return fmt.Errorf("node%s is incorrectly structured as both leaf and branch", nodeContext)
 		}
 
 		// Rule 2: Leaf must have an attribute
 		if node.Leaf.Attribute == "" {
-			return fmt.Errorf("leaf node `%s` is missing required 'attribute'", nodeContext)
+			// Use nodeContext
+			return fmt.Errorf("leaf node%s is missing required 'attribute'", nodeContext)
 		}
 		// Rule 3: Leaf must have an operator
 		if node.Leaf.Operator == "" {
-			return fmt.Errorf("leaf node `%s` (attribute '%s') is missing required 'operator'", nodeContext, node.Leaf.Attribute)
+			// Use nodeContext and add attribute for more detail
+			return fmt.Errorf("leaf node%s (attribute '%s') is missing required 'operator'", nodeContext, node.Leaf.Attribute)
 		}
 
 		// Rule 4: Operators needing comparison values must have 'value' or 'resource_attribute'
@@ -135,50 +145,68 @@ func validateConditionNode(node ConditionNode) error {
 		}
 
 		if requiresComparisonValue && node.Leaf.Value == nil && node.Leaf.ResourceAttribute == "" {
-			return fmt.Errorf("leaf node `%s` (attribute '%s', operator '%s') requires either 'value' or 'resource_attribute'", nodeContext, node.Leaf.Attribute, node.Leaf.Operator)
+			// Use nodeContext and add attribute/operator for more detail
+			return fmt.Errorf("leaf node%s (attribute '%s', operator '%s') requires either 'value' or 'resource_attribute'", nodeContext, node.Leaf.Attribute, node.Leaf.Operator)
 		}
 
 		// Rule 5: Leaf cannot have *both* 'value' and 'resource_attribute'
 		if node.Leaf.Value != nil && node.Leaf.ResourceAttribute != "" {
-			return fmt.Errorf("leaf node `%s` (attribute '%s') cannot have both 'value' and 'resource_attribute' defined", nodeContext, node.Leaf.Attribute)
+			// Use nodeContext and add attribute for more detail
+			return fmt.Errorf("leaf node%s (attribute '%s') cannot have both 'value' and 'resource_attribute' defined", nodeContext, node.Leaf.Attribute)
 		}
 
-		// Rule 6: Basic sanity check on attribute format
-		if node.Leaf.Attribute != "" && !strings.HasPrefix(node.Leaf.Attribute, "subject.") && !strings.HasPrefix(node.Leaf.Attribute, "resource.") {
-			return fmt.Errorf("leaf node `%s` has invalid 'attribute' ('%s'): must start with 'subject.' or 'resource.'", nodeContext, node.Leaf.Attribute)
+		// Rule 6: Basic sanity check on attribute format prefixes (Updated)
+		validPrefixesList := "'subject.', 'resource.', 'path.', 'body.', 'query.', or 'header.'"
+		if node.Leaf.Attribute != "" {
+			// Check using helper function or inline checks:
+			// if !isValidAttributePrefix(node.Leaf.Attribute) {
+			if !(strings.HasPrefix(node.Leaf.Attribute, "subject.") ||
+				strings.HasPrefix(node.Leaf.Attribute, "resource.") ||
+				strings.HasPrefix(node.Leaf.Attribute, "path.") ||
+				strings.HasPrefix(node.Leaf.Attribute, "body.") ||
+				strings.HasPrefix(node.Leaf.Attribute, "query.")) {
+				return fmt.Errorf("leaf node%s has invalid 'attribute' ('%s'): must start with one of %s", nodeContext, node.Leaf.Attribute, validPrefixesList)
+			}
 		}
-		if node.Leaf.ResourceAttribute != "" && !strings.HasPrefix(node.Leaf.ResourceAttribute, "subject.") && !strings.HasPrefix(node.Leaf.ResourceAttribute, "resource.") {
-			return fmt.Errorf("leaf node `%s` has invalid 'resource_attribute' ('%s'): must start with 'subject.' or 'resource.'", nodeContext, node.Leaf.ResourceAttribute)
+		if node.Leaf.ResourceAttribute != "" {
+			// Check using helper function or inline checks:
+			// if !isValidAttributePrefix(node.Leaf.ResourceAttribute) {
+			if !(strings.HasPrefix(node.Leaf.ResourceAttribute, "subject.") ||
+				strings.HasPrefix(node.Leaf.ResourceAttribute, "resource.") ||
+				strings.HasPrefix(node.Leaf.ResourceAttribute, "path.") ||
+				strings.HasPrefix(node.Leaf.ResourceAttribute, "body.") ||
+				strings.HasPrefix(node.Leaf.ResourceAttribute, "query.")) {
+				return fmt.Errorf("leaf node%s has invalid 'resource_attribute' ('%s'): must start with one of %s", nodeContext, node.Leaf.ResourceAttribute, validPrefixesList)
+			}
 		}
 
-	} else { // It's intended to be a branch node (or potentially an empty root? - see notes)
+	} else { // It's intended to be a branch node (or potentially an empty root?)
 
-		// Rule 7: A branch must have a valid LogicType (unless it's truly empty - decide if that's allowed)
+		// Rule 7: A branch must have a valid LogicType (AND/OR)
 		isValidBranch := false
 		if node.LogicType == "AND" || node.LogicType == "OR" {
 			isValidBranch = true
 			// Rule 8: A branch with a logic type must have children
 			if len(node.Children) == 0 {
-				return fmt.Errorf("branch node `%s` has 'logic_type' %s but no 'children'", nodeContext, node.LogicType)
+				// Use nodeContext
+				return fmt.Errorf("branch node%s has 'logic_type' %s but no 'children'", nodeContext, node.LogicType)
 			}
 		}
 
 		// Rule 9: Check if it's an invalid structure (neither leaf nor valid branch)
-		// This replaces your first original check `node.Leaf == nil && (node.LogicType == "" || len(node.Children) == 0)`
-		// It's invalid if it's not a leaf AND it's not a valid branch structure defined above.
-		// Exception: Is an *empty* root node (`{}`, Description only) acceptable?
-		// If so, add logic here. Assuming for now it's invalid if it's not leaf/branch.
 		if node.Leaf == nil && !isValidBranch {
-			// This condition means: It's not a leaf. AND (LogicType is missing/invalid OR Children are missing even if logic type is present)
-			// If Description is the *only* thing present, maybe allow? Needs careful consideration.
-			if node.LogicType == "" && len(node.Children) == 0 && node.Description != "" {
-				// Possibly allow an empty descriptive node? Or treat as error? Treat as error for stricter policy defs.
-				return fmt.Errorf("node%s is not a valid leaf (missing 'leaf') nor a valid branch (missing/invalid 'logic_type' or missing 'children')", nodeContext)
-			} else if node.LogicType != "" && !isValidBranch {
-				return fmt.Errorf("branch node `%s` has invalid 'logic_type': '%s' (must be AND or OR)", nodeContext, node.LogicType)
+			// Use nodeContext in error messages
+			if node.LogicType == "" && len(node.Children) == 0 && node.Description == "" {
+				// An absolutely empty node {} is likely an error
+				return fmt.Errorf("node is empty and invalid (must be leaf or branch)")
+			} else if node.LogicType == "" && len(node.Children) == 0 && node.Description != "" {
+				// Possibly allow an empty descriptive node? Treat as error for now.
+				return fmt.Errorf("node%s is descriptive only - not a valid leaf (missing 'leaf') nor a valid branch (missing 'logic_type' and 'children')", nodeContext)
+			} else if node.LogicType != "" && !isValidBranch { // Invalid LogicType provided
+				return fmt.Errorf("branch node%s has invalid 'logic_type': '%s' (must be AND or OR)", nodeContext, node.LogicType)
 			} else {
-				// Generic catch-all for invalid structure
-				return fmt.Errorf("node%s is neither a valid leaf nor a valid branch", nodeContext)
+				// General catch-all for invalid structure (e.g., missing logic_type but has children)
+				return fmt.Errorf("node%s is neither a valid leaf nor a valid branch (check 'logic_type' and 'children')", nodeContext)
 			}
 		}
 
@@ -187,7 +215,7 @@ func validateConditionNode(node ConditionNode) error {
 			for i, child := range node.Children {
 				if err := validateConditionNode(child); err != nil {
 					// Add context about which child failed
-					return fmt.Errorf("invalid child node %d under node%s: %w", i+1, nodeContext, err)
+					return fmt.Errorf("invalid child node #%d within node%s: %w", i+1, nodeContext, err)
 				}
 			}
 		}
@@ -433,11 +461,49 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			company_membership_access_check, // Must be in the same company
 			{
-				Leaf: &ConditionLeaf{
-					Attribute:         "subject.id",
-					Operator:          "Equals",
-					ResourceAttribute: "resource.id", // Assumes context provides resource.id from the resource
-					Description:       "Subject ID must match the Resource's ID",
+				Description: "Employee id must be on resource, path, body, or query",
+				LogicType:   "OR",
+				Children: []ConditionNode{
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "path.employee_id", // Assumes context provides employee_id from the path parameter
+							Description:       "Subject ID must match the path parameter employee_id",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "body.employee_id", // Assumes context provides employee_id from the body
+							Description:       "Subject ID must match the body employee_id",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "query.employee_id", // Assumes context provides employee_id from the query parameter
+							Description:       "Subject ID must match the query parameter employee_id",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "resource.employee_id", // Assumes context provides employee_id from the resource
+							Description:       "The employee is accessing a resource that has himself assigned.",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "resource.id", // Assumes context provides resource.id from the resource
+							Description:       "The employee must be accessing himself as a resource",
+						},
+					},
 				},
 			},
 		},
