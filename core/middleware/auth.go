@@ -239,7 +239,7 @@ forLoop: // Label is optional but can improve readability
 	for _, policy := range policies {
 		log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
 		decision := am.PolicyEngine.CanAccess(
-			subject_data,
+			subject_data,  // The subject (user) data
 			resource_data, // The data fetched (or empty map)
 			path_data,     // Path parameters
 			body_data,     // Parsed request body (or empty map)

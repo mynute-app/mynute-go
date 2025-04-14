@@ -15,22 +15,19 @@ var AllowNilCreatedBy = false
 var AllowNilResourceID = false
 
 // --- PolicyRule (Represents a policy rule for access control) ---
-// [Conditions] : Effect : Method : Resource : Property
-// --- [if is company owner] : Allow : PATCH : /company/{id} : nil
-// --- [if is not company owner] : Deny : PATCH : /company/{id} : tax_id
 type PolicyRule struct {
 	BaseModel
 	CompanyID           *uuid.UUID      `json:"company_id"`
-	Company             Company         `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
+	Company             *Company        `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
 	CreatedByEmployeeID *uuid.UUID      `json:"created_by_employee_id"`
-	CreatedByEmployee   Employee        `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
+	CreatedByEmployee   *Employee       `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
+	PropertyID          *uuid.UUID      `json:"property_id"`
+	Property            *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Name                string          `json:"name"`
 	Description         string          `json:"description"`
 	Effect              string          `json:"effect"` // "Allow" / "Deny"
 	EndPointID          uuid.UUID       `json:"end_point_id"`
 	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"end_point"`
-	PropertyID          *uuid.UUID      `json:"property_id"`
-	Property            *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 

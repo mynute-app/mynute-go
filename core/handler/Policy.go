@@ -33,7 +33,7 @@ const indentStep = "  "
 
 // CanAccess evaluates if the subject can perform an action on a resource,
 // considering context from the request path, body, and query parameters.
-// // subject: Information about the entity performing the action.
+// subject: Information about the entity performing the action.
 // resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
 // path: Data extracted from URL path parameters.
 // body: Data parsed from the request body.
@@ -301,65 +301,106 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource, path, body, query, he
 			comparisonDescription = fmt.Sprintf("(value: %s) is not %s %s", lValDesc, opDesc, rValDesc)
 		}
 	case "Contains":
-		targetValue := right // Value being searched for
-		syntaxParts := strings.SplitN(leaf.Attribute, "[*].", 2)
-		isObjectSyntax := len(syntaxParts) == 2
-		var fieldToExtract string
+		targetValue := right // Valor sendo procurado (resolvido anteriormente)
 
-		if isObjectSyntax {
-			fieldToExtract = syntaxParts[1]
-			if fieldToExtract == "" {
-				compareErr = fmt.Errorf("invalid 'Contains' syntax in attribute '%s': missing field name after [*]", leaf.Attribute)
+		var collectionPath string
+		var fieldToExtract string
+		isObjectSyntax := false
+
+		// 1. Separar caminho da coleção e nome do campo (se houver)
+		if strings.Contains(leaf.Attribute, "[*]") {
+			parts := strings.SplitN(leaf.Attribute, "[*]", 2)
+			collectionPath = parts[0] // Ex: "subject.roles"
+
+			if len(parts) > 1 && strings.HasPrefix(parts[1], ".") {
+				// Sintaxe "collection[*].field"
+				isObjectSyntax = true
+				fieldToExtract = strings.TrimPrefix(parts[1], ".") // Ex: "id"
+				if fieldToExtract == "" {
+					compareErr = fmt.Errorf("invalid 'Contains' object syntax in attribute '%s': missing field name after [*]. ", leaf.Attribute)
+					comparisonDescription = fmt.Sprintf("invalid syntax: missing field name after [*]. in '%s'", leaf.Attribute)
+				}
+			} else if len(parts) > 1 && parts[1] != "" {
+				// Sintaxe inválida como "collection[*]foo"
+				compareErr = fmt.Errorf("invalid 'Contains' syntax in attribute '%s': unexpected characters after [*]", leaf.Attribute)
+				comparisonDescription = fmt.Sprintf("invalid syntax: unexpected characters after [*] in '%s'", leaf.Attribute)
+			}
+			// Se for apenas "collection[*]", trata como `Contains` simples no passo seguinte (isObjectSyntax=false)
+
+		} else {
+			// Sintaxe simples: "subject.tags" (o atributo inteiro é o caminho da coleção)
+			collectionPath = leaf.Attribute
+			isObjectSyntax = false
+		}
+
+		// 2. Resolver APENAS o caminho da coleção
+		var leftCollection any
+		if compareErr == nil { // Só tenta resolver se a sintaxe era válida
+			leftCollection, err = resolveAttr(collectionPath, subject, resource, path, body, query, headers)
+			if err != nil {
+				// Erro ao resolver o *caminho da coleção*
+				compareErr = fmt.Errorf("resolve collection path '%s' failed: %w", collectionPath, err)
+				comparisonDescription = fmt.Sprintf("could not resolve collection path '%s': %v", collectionPath, err)
+				leftStr = "<unresolved collection>" // Placeholder para log
 			}
 		}
 
+		// 3. Avaliar 'Contains' se a coleção foi resolvida e a sintaxe estava OK
 		if compareErr == nil {
-			collValue := reflect.ValueOf(left) // 'left' is the collection from the resolved Attribute
+			leftStr = formatValueForLog(leftCollection) // Formatar a coleção para log
+			collValue := reflect.ValueOf(leftCollection)
+
+			// Verificar se é realmente uma coleção
 			if !collValue.IsValid() || (collValue.Kind() != reflect.Slice && collValue.Kind() != reflect.Array) {
-				// Generate error if the resolved left value isn't a collection
-				comparisonDescription = fmt.Sprintf("resolved attribute '%s' is type %T (value: %s), not slice/array, cannot perform 'Contains'", leaf.Attribute, left, leftStr)
+				// O caminho resolveu para algo que não é slice/array (pode ser nil ou outro tipo)
+				res = false // Não é uma coleção, então 'Contains' falha
+				// Fornecer uma razão clara na description
+				comparisonDescription = fmt.Sprintf("resolved path '%s' is type %T (value: %s), not a slice/array, cannot perform 'Contains'", collectionPath, leftCollection, leftStr)
+				// NÃO definir compareErr aqui, pois não foi um erro *de comparação*, apenas a condição não se aplica.
 			} else {
-				// Proceed with iteration and comparison
+				// É uma coleção válida, prosseguir com a iteração
 				found := false
 				if isObjectSyntax {
-					// --- Behavior A: Object Syntax ("path[*].Field") ---
-					for i := range collValue.Len() {
+					// --- Comportamento A: Sintaxe de Objeto ("path[*].Field") ---
+					for i := 0; i < collValue.Len(); i++ { // Usar loop padrão para compatibilidade
 						element := collValue.Index(i)
+						// extractFieldByName já lida com ponteiros e interfaces dentro do elemento
 						extractedValue, fieldFound := extractFieldByName(element, fieldToExtract)
-						// Important: comparison happens between extractedValue and targetValue
 						if fieldFound && robustCompareEquals(extractedValue, targetValue) {
 							found = true
 							break
 						}
 					}
-					if !found { // Set failure reason only if not found
-						comparisonDescription = fmt.Sprintf("collection does not contain an object where field '%s' equals %s", fieldToExtract, rightSourceDesc)
+					if !found {
+						// Formatar a descrição da falha especificamente para este caso
+						comparisonDescription = fmt.Sprintf("in path '%s', no object found where field '%s' equals %s", collectionPath, fieldToExtract, rightSourceDesc)
 					}
 				} else {
-					// --- Behavior B: Simple Syntax ("path") ---
-					for i := range collValue.Len() {
+					// --- Comportamento B: Sintaxe Simples ("path" ou "path[*]") ---
+					for i := 0; i < collValue.Len(); i++ {
 						element := collValue.Index(i)
 						if !element.IsValid() || !element.CanInterface() {
-							continue
+							continue // Ignorar elementos inválidos/não-exportáveis
 						}
-						elementInterface := element.Interface()
-						// Important: comparison happens between elementInterface and targetValue
+						elementInterface := element.Interface() // Obter o valor real do elemento
 						if robustCompareEquals(elementInterface, targetValue) {
 							found = true
 							break
 						}
 					}
-					if !found { // Set failure reason only if not found
-						comparisonDescription = fmt.Sprintf("collection does not contain an element equal to %s", rightSourceDesc)
+					if !found {
+						// Formatar a descrição da falha especificamente para este caso
+						comparisonDescription = fmt.Sprintf("collection at path '%s' does not contain an element equal to %s", collectionPath, rightSourceDesc)
 					}
 				}
-				res = found // Final result of the Contains operation
+				res = found // Define o resultado da operação Contains
 				if res {
-					comparisonDescription = ""
-				} // Clear description on success
+					comparisonDescription = "" // Limpar descrição em caso de sucesso
+				}
 			}
 		}
-		// If compareErr was set (invalid syntax or non-collection), it will be handled below.
+		// `res`, `compareErr` e `comparisonDescription` estão definidos para o passo final.
+		// `leftStr` contém a coleção formatada (ou msg de erro)
 	default:
 		compareErr = fmt.Errorf("unsupported operator '%s'", leaf.Operator)
 	}
@@ -532,6 +573,16 @@ func robustCompareEquals(left, right any) bool {
 }
 
 func extractFieldByName(element reflect.Value, fieldName string) (any, bool) {
+	for element.Kind() == reflect.Ptr || element.Kind() == reflect.Interface {
+		if element.IsNil() {
+			return nil, false
+		}
+		element = element.Elem()
+		if !element.IsValid() {
+			return nil, false
+		}
+	}
+
 	// 1. Initial Validity Check
 	if !element.IsValid() {
 		return nil, false

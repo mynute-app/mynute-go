@@ -79,7 +79,7 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := tx.Model(&owner).Association("Roles").Append(&ownerRole); err != nil {
+	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.ID).Error; err != nil {
 		return err
 	}
 
