@@ -92,9 +92,12 @@ func Test_Permissions(t *testing.T) {
 	// Employee tries to edit a service : PATCH /service/{id} => 403
 	// Employee tries to delete a service : DELETE /service/{id} => 403
 	// Employee tries to add a service to himself : POST /employee/{id}/service/{id} => 200
+	http.
+		Method("POST").
+		URL("/employee/" + client.created.ID.String() + "/service/" + company.services[0].created.ID.String()).
+		ExpectStatus(200).
+		Send(nil)
 	// Employee tries to remove a service from himself : DELETE /employee/{id}/service/{id} => 200
 	// --- Employee x Appointments --- Interactions ---
-	
-
 
 }
