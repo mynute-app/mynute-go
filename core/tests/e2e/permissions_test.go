@@ -13,18 +13,20 @@ func Test_Permissions(t *testing.T) {
 	company1.SetupRandomized(t, 5, 3, 24)
 	company2 := &Company{}
 	company2.SetupRandomized(t, 3, 2, 6)
-	client := &Client{}
-	client.Set(t)
+	client1 := &Client{}
+	client1.Set(t)
+	client2 := &Client{}
+	client2.Set(t)
 	http := (&handler.HttpClient{}).SetTest(t)
 	// --- Client x Appointment --- Interactions ---
+	// Client tries to create his appointment : POST /appointment => 200
+	// Client tries to create someone else's appointment : POST /appointment => 403
 	// Client tries to get his appointment : GET /appointment/{id} => 200
 	// Client tries to get someone else's appointment : GET /appointment/{id} => 403
-	// Client tries to create an appointment : POST /appointment => 200
-	// Client tries to edit his appointment : PATCH /appointment/{id} => 404
-	// Client tries to delete his appointment : DELETE /appointment/{id} => 404
-	// Client tries to get someone else's appointment : GET /appointment/{id} => 403
-	// Client tries to edit someone else's appointment : PATCH /appointment/{id} => 403
-	// Client tries to delete someone else's appointment : DELETE /appointment/{id} => 403
+	// Client tries to reschedule his appointment : PATCH /appointment/{id} => 200
+	// Client tries to reschedule someone else's appointment : PATCH /appointment/{id} => 403
+	// Client tries to cancel his ongoing appointment : DELETE /appointment/{id} => 200
+	// Client tries to cancel someone else's appointment : DELETE /appointment/{id} => 403
 	// --- Client x Branch --- Interactions ---
 	// Client tries to get a branch : GET /branch/{id} => 200
 	// Client tries to create a branch : POST /branch => 403
@@ -37,9 +39,9 @@ func Test_Permissions(t *testing.T) {
 	// Client tries to change something on himself : PATCH /client/{id} => 200
 	http.
 		Method("PATCH").
-		URL("/client/"+client.created.ID.String()).
+		URL("/client/"+client1.created.ID.String()).
 		ExpectStatus(200).
-		Header("Authorization", client.auth_token).
+		Header("Authorization", client1.auth_token).
 		Send(map[string]any{
 			"name": "New Client Name",
 		})
@@ -52,7 +54,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header("Authorization", client.auth_token).
+		Header("Authorization", client1.auth_token).
 		Send(map[string]any{
 			"name": "New Company Name",
 		})
