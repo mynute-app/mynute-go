@@ -190,3 +190,14 @@ func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	service.employees = append(service.employees, e)
 	e.services = append(e.services, service)
 }
+
+func (e *Employee) AddRole(t *testing.T, s int, role *Role) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/employee/%s/role/%s", e.created.ID.String(), role.created.ID.String()))
+	http.ExpectStatus(s)
+	http.Header("Authorization", e.auth_token)
+	http.Send(nil)
+	http.ParseResponse(&e.created)
+	role.employees = append(role.employees, e)
+}

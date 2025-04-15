@@ -56,10 +56,10 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if !employee.Verified {
-		return lib.Error.Client.NotVerified.SendToClient(c)
+		return lib.Error.Client.NotVerified
 	}
 	if !handler.ComparePassword(employee.Password, body.Password) {
-		return lib.Error.Auth.InvalidLogin.SendToClient(c)
+		return lib.Error.Auth.InvalidLogin
 	}
 	token, err := handler.JWT(c).Encode(employee)
 	if err != nil {
@@ -197,7 +197,7 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if employee.CompanyID != service.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
+		return lib.Error.Company.NotSame
 	}
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
 		return err
@@ -238,7 +238,7 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if employee.CompanyID != service.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
+		return lib.Error.Company.NotSame
 	}
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Delete(&service); err != nil {
 		return err
@@ -279,7 +279,7 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
+		return lib.Error.Company.NotSame
 	}
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Append(&branch); err != nil {
 		return err
@@ -320,9 +320,63 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
+		return lib.Error.Company.NotSame
 	}
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Delete(&branch); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ec *employee_controller) AddRoleToEmployee(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	role_id := c.Params("role_id")
+	var employee model.Employee
+	var role model.Role
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", role_id, &role); err != nil {
+		return err
+	}
+	if role.CompanyID != nil && employee.CompanyID != *role.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Roles").Append(&role); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+		return err
+	}
+	res := &lib.SendResponse{Ctx: c}
+	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ec *employee_controller) RemoveRoleFromEmployee(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	role_id := c.Params("role_id")
+	var employee model.Employee
+	var role model.Role
+	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+		return err
+	}
+	if err := ec.Request.Gorm.GetOneBy("id", role_id, &role); err != nil {
+		return err
+	}
+	if role.CompanyID != nil && employee.CompanyID != *role.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+	if err := ec.Request.Gorm.DB.Model(&employee).Association("Roles").Delete(&role); err != nil {
 		return err
 	}
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {

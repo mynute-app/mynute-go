@@ -356,6 +356,22 @@ var RemoveBranchFromEmployee = &EndPoint{
 	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
+var AddRoleToEmployee = &EndPoint{
+	Path: 			"/employee/:employee_id/role/:role_id",
+	Method: 		namespace.CreateActionMethod,
+	Handler: 		"AddRoleToEmployee", // From ec.AddRoleToEmployee
+	Description: 	"Add role to employee",
+	IsPublic: 		false, // Access: "private"
+	Resource: 		RoleResource,
+}
+var RemoveRoleFromEmployee = &EndPoint{
+	Path: 			"/employee/:employee_id/role/:role_id",
+	Method: 		namespace.DeleteActionMethod,
+	Handler: 		"RemoveRoleFromEmployee", // From ec.RemoveRoleFromEmployee
+	Description: 	"Remove role from employee",
+	IsPublic: 		false, // Access: "private"
+	Resource: 		RoleResource,
+}
 
 // --- Holiday Endpoints --- //
 

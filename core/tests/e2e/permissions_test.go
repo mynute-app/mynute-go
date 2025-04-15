@@ -9,8 +9,10 @@ import (
 func Test_Permissions(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	company := &Company{}
-	company.SetupRandomized(t, 10, 2, 12)
+	company1 := &Company{}
+	company1.SetupRandomized(t, 33, 3, 24)
+	company2 := &Company{}
+	company2.SetupRandomized(t, 22, 6, 6)
 	client := &Client{}
 	client.Set(t)
 	http := (&handler.HttpClient{}).SetTest(t)
@@ -48,7 +50,7 @@ func Test_Permissions(t *testing.T) {
 	// Client tries to change something in a company : PATCH /company/{id} => 403
 	http.
 		Method("PATCH").
-		URL("/company/"+company.created.ID.String()).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
 		Header("Authorization", client.auth_token).
 		Send(map[string]any{
@@ -103,9 +105,9 @@ func Test_Permissions(t *testing.T) {
 	// Employee tries to add a service to himself : POST /employee/{id}/service/{id} => 200
 	http.
 		Method("POST").
-		URL("/employee/"+company.employees[0].created.ID.String()+"/service/"+company.services[0].created.ID.String()).
+		URL("/employee/"+company1.employees[0].created.ID.String()+"/service/"+company1.services[0].created.ID.String()).
 		ExpectStatus(200).
-		Header("Authorization", client.auth_token).
+		Header("Authorization", company1.owner.auth_token).
 		Send(nil)
 	// Employee tries to remove a service from himself : DELETE /employee/{id}/service/{id} => 200
 
