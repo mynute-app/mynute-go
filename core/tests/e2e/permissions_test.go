@@ -10,7 +10,7 @@ func Test_Permissions(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	company := &Company{}
-	company.Set(t)
+	company.SetupRandomized(t, 10, 2, 12)
 	client := &Client{}
 	client.Set(t)
 	http := (&handler.HttpClient{}).SetTest(t)
@@ -103,8 +103,9 @@ func Test_Permissions(t *testing.T) {
 	// Employee tries to add a service to himself : POST /employee/{id}/service/{id} => 200
 	http.
 		Method("POST").
-		URL("/employee/" + client.created.ID.String() + "/service/" + company.services[0].created.ID.String()).
+		URL("/employee/"+company.employees[0].created.ID.String()+"/service/"+company.services[0].created.ID.String()).
 		ExpectStatus(200).
+		Header("Authorization", client.auth_token).
 		Send(nil)
 	// Employee tries to remove a service from himself : DELETE /employee/{id}/service/{id} => 200
 
