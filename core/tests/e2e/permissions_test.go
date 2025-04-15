@@ -10,9 +10,9 @@ func Test_Permissions(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	company1 := &Company{}
-	company1.SetupRandomized(t, 33, 3, 24)
+	company1.SetupRandomized(t, 5, 3, 24)
 	company2 := &Company{}
-	company2.SetupRandomized(t, 22, 6, 6)
+	company2.SetupRandomized(t, 3, 2, 6)
 	client := &Client{}
 	client.Set(t)
 	http := (&handler.HttpClient{}).SetTest(t)
