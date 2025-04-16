@@ -78,6 +78,7 @@ type ErrorCategory struct {
 type AppointmentErrors struct {
 	StartTimeInThePast ErrorStruct
 	EndTimeBeforeStart ErrorStruct
+	NotFound           ErrorStruct
 }
 
 // Grouped errors per domain
@@ -138,7 +139,7 @@ type GeneralErrors struct {
 
 type RoleErrors struct {
 	NameReserved ErrorStruct
-	NilCompanyID	ErrorStruct
+	NilCompanyID ErrorStruct
 }
 
 // Global error instances
@@ -153,6 +154,7 @@ var Error = ErrorCategory{
 	Appointment: AppointmentErrors{
 		StartTimeInThePast: NewError("Start time is in the past", "A data de início está no passado", fiber.StatusBadRequest),
 		EndTimeBeforeStart: NewError("End time is before start time", "A data de término é anterior à data de início", fiber.StatusBadRequest),
+		NotFound:           NewError("Appointment not found", "Compromisso não encontrado", fiber.StatusNotFound),
 	},
 	Branch: BranchErrors{
 		ServiceDoesNotBelong:                NewError("Service is not registered in the branch", "Serviço não está registrado na filial", fiber.StatusBadRequest),

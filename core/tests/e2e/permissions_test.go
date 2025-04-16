@@ -4,7 +4,6 @@ import (
 	"agenda-kaki-go/core"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"testing"
-
 )
 
 func Test_Permissions(t *testing.T) {
@@ -53,10 +52,28 @@ func Test_Permissions(t *testing.T) {
 			"client_id":   client1.created.ID.String(),
 			"start_time":  employee_0_start_time,
 		})
+	appointment_id, ok := http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response")
+	}
+	// Client tries to get his appointment : GET /appointment/{id} => 200
+	http.
+		Method("GET").
+		URL("/appointment/"+appointment_id).
+		ExpectStatus(200).
+		Header("Authorization", client1.auth_token).
+		Send(nil)
+	// Client tries to get someone else's appointment : GET /appointment/{id} => 403
+	http.
+		Method("GET").
+		URL("/appointment/"+appointment_id).
+		ExpectStatus(403).
+		Header("Authorization", client2.auth_token).
+		Send(nil)
 	// Client tries to cancel his ongoing appointment : DELETE /appointment/{id} => 200
 	http.
 		Method("DELETE").
-		URL("/appointment/"+client1.created.Appointments[0].ID.String()).
+		URL("/appointment/"+appointment_id).
 		ExpectStatus(200).
 		Header("Authorization", client1.auth_token).
 		Send(nil)
@@ -74,8 +91,7 @@ func Test_Permissions(t *testing.T) {
 			"client_id":   client2.created.ID.String(),
 			"start_time":  employee_0_start_time,
 		})
-	// Client tries to get his appointment : GET /appointment/{id} => 200
-	// Client tries to get someone else's appointment : GET /appointment/{id} => 403
+
 	// Client tries to reschedule his appointment : PATCH /appointment/{id} => 200
 	// Client tries to reschedule someone else's appointment : PATCH /appointment/{id} => 403
 
