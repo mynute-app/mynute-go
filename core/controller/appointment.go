@@ -109,30 +109,26 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment has already been moved"))
 	}
 
-	hasChanges := false
-
 	if old_appointment.ServiceID != new_appointment.ServiceID {
-		old_appointment.ChangedService = true
-		hasChanges = true
+		old_appointment.Changed = true
 	}
 	if old_appointment.StartTime != new_appointment.StartTime {
-		old_appointment.ChangedTime = true
-		hasChanges = true
+		old_appointment.Changed = true
 	}
 	if old_appointment.EmployeeID != new_appointment.EmployeeID {
-		old_appointment.ChangedEmployee = true
-		hasChanges = true
+		old_appointment.Changed = true
 	}
 	if old_appointment.BranchID != new_appointment.BranchID {
-		old_appointment.ChangedBranch = true
-		hasChanges = true
+		old_appointment.Changed = true
 	}
 
-	if !hasChanges {
+	if !old_appointment.Changed {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("no changes detected"))
 	}
 
-	
+	if err := tx.Where("id = ?", old_appointment.ID.String()).Updates(&old_appointment).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	}
 
 }
 

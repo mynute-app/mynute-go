@@ -27,11 +27,8 @@ type Appointment struct {
 	StartTime time.Time `gorm:"not null" json:"start_time"`
 	EndTime   time.Time `gorm:"not null" json:"end_time"`
 
-	ChangedTime     bool `gorm:"index;default:false" json:"changed_time"`
-	ChangedEmployee bool `gorm:"index;default:false" json:"changed_employee"`
-	ChangedService  bool `gorm:"index;default:false" json:"changed_service"`
-	ChangedBranch   bool `gorm:"index;default:false" json:"changed_branch"`
-	Cancelled       bool `gorm:"index;default:false" json:"cancelled"`
+	Changed   bool `gorm:"index;default:false" json:"changed"`
+	Cancelled bool `gorm:"index;default:false" json:"cancelled"`
 
 	MovedToID   *uuid.UUID `json:"moved_to_id"`
 	MovedFromID *uuid.UUID `json:"moved_from_id"`
