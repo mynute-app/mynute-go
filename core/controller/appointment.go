@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -90,6 +91,10 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
+	if new_appointment.ID != uuid.Nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("new appointment can not have pre defined ID"))
+	}
+
 	var old_appointment model.Appointment
 
 	if err := ac.Request.Gorm.DB.Find(&old_appointment, "id = ?", appointment_id).Error; err != nil {
@@ -130,6 +135,19 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
+	new_appointment.MovedFromID = &old_appointment.ID
+
+	if err := tx.Create(&new_appointment).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	}
+
+	old_appointment.MovedToID = &new_appointment.ID
+
+	if err := tx.Where("id = ?", old_appointment.ID.String()).Updates(&old_appointment).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	}
+
+	return nil
 }
 
 // DeleteAppointmentByID deletes an appointment by ID
