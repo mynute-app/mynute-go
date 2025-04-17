@@ -12,7 +12,7 @@ import (
 // findNextAvailableSlot attempts to find the next available start time for an employee
 // based on their work schedule, starting from the one provided.
 // NOTE: This is a simplified helper for testing and might not cover all edge cases.
-func findNextAvailableSlot(t *testing.T, employee *EmployeeHelper, currentStartTime string) string {
+func findNextAvailableSlot(t *testing.T, employee *Employee, currentStartTime string) string {
 	t.Helper()
 	layout := "15:04" // Assuming time format HH:MM
 	start, err := time.Parse(layout, currentStartTime)
@@ -37,7 +37,7 @@ func findNextAvailableSlot(t *testing.T, employee *EmployeeHelper, currentStartT
 	// For simplicity in the test, we'll just iterate through days until we find a match
 	// that *could* contain the next slot. This is not robust for real scheduling.
 	foundDay := false
-	for _, daySchedule := range [][]core.WorkScheduleTime{
+	for _, daySchedule := range [][]model.WorkRange{
 		schedule.Monday, schedule.Tuesday, schedule.Wednesday, schedule.Thursday, schedule.Friday, schedule.Saturday, schedule.Sunday,
 	} {
 		for _, block := range daySchedule {
@@ -411,7 +411,7 @@ func Test_Permissions(t *testing.T) {
 
 	// --- Client x Role --- Interactions ---
 	t.Log("--- Testing Client x Role Interactions ---")
-	roleID := employee0.created.RoleID.String()
+	roleID := employee0.created.Roles[0].ID.String() // Assuming employee has at least one role
 	// Client tries to get a role : GET /role/{id} => 200 (Possibly public info)
 	http.
 		Method("GET").
@@ -579,7 +579,7 @@ func Test_Permissions(t *testing.T) {
 		var employee1StartTime string
 		// Find start time for employee1
 		schedule1 := employee1.created.WorkSchedule
-		days1 := [][]core.WorkScheduleTime{schedule1.Monday, schedule1.Tuesday, schedule1.Wednesday, schedule1.Thursday, schedule1.Friday, schedule1.Saturday, schedule1.Sunday}
+		days1 := [][]model.WorkRange{schedule1.Monday, schedule1.Tuesday, schedule1.Wednesday, schedule1.Thursday, schedule1.Friday, schedule1.Saturday, schedule1.Sunday}
 		foundTime1 := false
 		for _, day := range days1 {
 			if len(day) > 0 {
