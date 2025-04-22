@@ -35,6 +35,7 @@ var models = []any{
 	&model.PolicyRule{},
 	&model.Resource{},
 	&model.Property{},
+	&model.AppointmentHistory{},
 }
 
 // Connects to the database

@@ -11,6 +11,7 @@ import (
 
 type AppointmentHistoryAction string
 type ContextKey string
+
 const UserIDContextKey ContextKey = "currentUserID"
 
 var (
@@ -22,7 +23,7 @@ var (
 
 // AppointmentHistory struct remains largely the same
 type AppointmentHistory struct {
-	ID                   uuid.UUID                `gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
+	BaseModel
 	Timestamp            time.Time                `gorm:"not null;index;default:CURRENT_TIMESTAMP"`
 	AppointmentID        uuid.UUID                `gorm:"type:uuid;not null;index"`
 	Action               AppointmentHistoryAction `gorm:"type:varchar(50);not null"`
@@ -43,7 +44,6 @@ type AppointmentHistory struct {
 func (AppointmentHistory) TableName() string { return "appointment_history" }
 
 // CreateAppointmentHistory Helper
-// Now returns a standard Go error, to be wrapped by hooks if needed
 func CreateAppointmentHistory(tx *gorm.DB, app *Appointment, action AppointmentHistoryAction, notes string) error {
 	// --- Pre-checks ---
 	if app == nil || app.ID == uuid.Nil || app.ServiceID == uuid.Nil || app.EmployeeID == uuid.Nil || app.ClientID == uuid.Nil || app.BranchID == uuid.Nil || app.CompanyID == uuid.Nil || app.StartTime.IsZero() || app.EndTime.IsZero() {
