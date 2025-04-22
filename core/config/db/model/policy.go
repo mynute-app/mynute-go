@@ -98,16 +98,6 @@ func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
 	return node, nil
 }
 
-// Helper function (optional, can be inlined) to check attribute prefixes
-func isValidAttributePrefix(attr string) bool {
-	return strings.HasPrefix(attr, "subject.") ||
-		strings.HasPrefix(attr, "resource.") ||
-		strings.HasPrefix(attr, "path.") ||
-		strings.HasPrefix(attr, "body.") ||
-		strings.HasPrefix(attr, "query.") ||
-		strings.HasPrefix(attr, "header.")
-}
-
 // validateConditionNode performs recursive validation on a condition node structure.
 func validateConditionNode(node ConditionNode) error {
 	nodeContext := ""
@@ -592,7 +582,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 					LogicType:   "AND",
 					Children: []ConditionNode{
 						{Leaf: &ConditionLeaf{Attribute: "subject.company_id", Operator: "IsNull", Description: "Must be a Client"}},
-						{Leaf: &ConditionLeaf{Attribute: "subject.id", Operator: "Equals", ResourceAttribute: "resource.client_id", Description: "Client ID in body must match Subject ID"}},
+						{Leaf: &ConditionLeaf{Attribute: "subject.id", Operator: "Equals", ResourceAttribute: "body.client_id", Description: "Client ID in body must match Subject ID"}},
 					},
 				},
 				// Company User creating. Assumes 'branch_id' and maybe 'employee_id' are in the body.
