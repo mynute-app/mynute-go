@@ -152,8 +152,7 @@ func findValidAppointmentSlot(t *testing.T, employee *Employee, company *Company
 
 			// 4b. Branch services map (Requires branch.services []*Service helper type in setup)
 			branchServiceIDs := make(map[uuid.UUID]bool)
-			// Assumes targetBranch.services is []*Service helper type
-			if targetBranch.services == nil || len(targetBranch.services) == 0 {
+			if len(targetBranch.services) == 0 {
 				// Strict check: branch must explicitly list offered services
 				t.Logf("Warning: Branch %s (%s) has no specific services assigned in setup. Cannot validate service for this work range. Skipping.", targetBranch.created.Name, targetBranch.created.ID)
 				continue // Skip this work range if branch definition is incomplete
@@ -220,7 +219,7 @@ func findValidAppointmentSlot(t *testing.T, employee *Employee, company *Company
 				hasOverlap := false
 				// Assumes employee.created is model.Employee and has Appointments loaded
 				// Assumes model.Appointment has StartTime (time.Time) and Service preloaded or a Duration field
-				if employee.created.Appointments != nil && len(employee.created.Appointments) > 0 {
+				if len(employee.created.Appointments) > 0 {
 					t.Logf("  Checking against %d existing appointments for overlaps...", len(employee.created.Appointments))
 					for _, existingAppt := range employee.created.Appointments {
 						var existingApptDuration uint

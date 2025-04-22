@@ -1,245 +1,370 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/lib" // Adjust import path if necessary
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	//"gorm.io/gorm/clause" // Required for locking in service layer
 )
 
-// Fifth step: Scheduling with service and employee availability.
+// BaseModel should be defined elsewhere in your model package or a common place
+
+// --- Main Appointment Model ---
+// Using your actual Service, Employee, Client, Branch, Company types now
 type Appointment struct {
 	BaseModel
 
-	ServiceID  uuid.UUID `gorm:"not null;index" json:"service_id"`
-	Service    *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
-	EmployeeID uuid.UUID `gorm:"not null;index" json:"employee_id"`
-	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
-	ClientID   uuid.UUID `gorm:"not null;index" json:"client_id"`
-	Client     *Client   `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"`
-	BranchID   uuid.UUID `gorm:"not null;index" json:"branch_id"`
-	Branch     *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
-	CompanyID  uuid.UUID `gorm:"not null;index" json:"company_id"`
-	Company    *Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
+	ServiceID  uuid.UUID `gorm:"type:uuid;not null;index" json:"service_id"`
+	Service    *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
+	EmployeeID uuid.UUID `gorm:"type:uuid;not null;index" json:"employee_id"`
+	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	ClientID   uuid.UUID `gorm:"type:uuid;not null;index" json:"client_id"`
+	Client     *Client   `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
+	BranchID   uuid.UUID `gorm:"type:uuid;not null;index" json:"branch_id"`
+	Branch     *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
+	CompanyID  uuid.UUID `gorm:"type:uuid;not null;index" json:"company_id"`
+	Company    *Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
 
-	StartTime time.Time `gorm:"not null" json:"start_time"`
-	EndTime   time.Time `gorm:"not null" json:"end_time"`
+	StartTime time.Time `gorm:"not null;index" json:"start_time"`
+	EndTime   time.Time `gorm:"not null;index" json:"end_time"`
 
-	Changed   bool `gorm:"index;default:false" json:"changed"`
 	Cancelled bool `gorm:"index;default:false" json:"cancelled"`
-
-	MovedToID   *uuid.UUID `json:"moved_to_id"`
-	MovedFromID *uuid.UUID `json:"moved_from_id"`
 }
 
-// Custom Composite Index
-func (Appointment) TableName() string {
-	return "appointments"
-}
+func (Appointment) TableName() string { return "appointments" }
 
+// Indexes - ensure these align with your DB schema strategy
 func (Appointment) Indexes() map[string]string {
 	return map[string]string{
-		"idx_employee_time": "CREATE INDEX idx_employee_time ON appointments (employee_id, start_time, end_time)",
-		"idx_client_time":   "CREATE INDEX idx_client_time ON appointments (client_id, start_time, end_time)",
-		"idx_branch_time":   "CREATE INDEX idx_branch_time ON appointments (branch_id, start_time, end_time)",
+		"idx_employee_time_active": "CREATE INDEX IF NOT EXISTS idx_employee_time_active ON appointments (employee_id, start_time, end_time, cancelled)",
+		"idx_client_time_active":   "CREATE INDEX IF NOT EXISTS idx_client_time_active ON appointments (client_id, start_time, end_time, cancelled)",
+		"idx_branch_time_active":   "CREATE INDEX IF NOT EXISTS idx_branch_time_active ON appointments (branch_id, start_time, end_time, cancelled)",
+		"idx_company_active":       "CREATE INDEX IF NOT EXISTS idx_company_active ON appointments (company_id, cancelled)",
+		"idx_start_time_active":    "CREATE INDEX IF NOT EXISTS idx_start_time_active ON appointments (start_time, cancelled)",
 	}
 }
 
+// --- GORM Hooks ---
+
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
-	// Ensure start time is in the future
-	if a.StartTime.Before(time.Now()) {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+	// Run full validation rules, now returns lib.ErrorStruct on failure
+	err := a.validateAppointmentRules(tx, true) // isCreate = true
+	if err != nil {
+		// Return the lib.ErrorStruct directly
+		return err
+	}
+	return nil
+}
+
+func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
+	runValidation := tx.Statement.Changed("StartTime", "EndTime", "EmployeeID", "ServiceID", "BranchID") ||
+		(tx.Statement.Changed("Cancelled") && !a.Cancelled) // Run validation if reactivating
+
+	if runValidation {
+		// validateAppointmentRules loads associations if needed.
+		err := a.validateAppointmentRules(tx, false) // isCreate = false
+		if err != nil {
+			// Return the lib.ErrorStruct directly
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *Appointment) AfterCreate(tx *gorm.DB) error {
+	err := CreateAppointmentHistory(tx, a, ActionCreate, "Appointment created.")
+	if err != nil {
+		// Return the wrapped lib.ErrorStruct directly
+		return lib.Error.Appointment.HistoryLoggingFailed.WithError(err)
+	}
+	return nil
+}
+
+func (a *Appointment) AfterUpdate(tx *gorm.DB) error {
+	action := ActionUpdate
+	notes := "Appointment updated."
+	logHistory := true
+
+	if tx.Statement.Changed("Cancelled") {
+		if a.Cancelled {
+			action, notes = ActionCancel, "Appointment cancelled."
+		} else {
+			notes = "Appointment reactivated."
+		}
+	} else if !tx.Statement.Changed() {
+		logHistory = false
+	}
+
+	if logHistory {
+		err := CreateAppointmentHistory(tx, a, action, notes)
+		if err != nil {
+			// Return the wrapped lib.ErrorStruct directly
+			return lib.Error.Appointment.HistoryLoggingFailed.WithError(err)
+		}
+	}
+	return nil
+}
+
+// --- Validation Helper ---
+func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error {
+
+	// 0. Basic Required Fields & Time Checks
+	if a.StartTime.IsZero() {
 		return lib.Error.Appointment.StartTimeInThePast
+	} // Or a new required field error?
+	if a.ServiceID == uuid.Nil || a.EmployeeID == uuid.Nil || a.ClientID == uuid.Nil || a.BranchID == uuid.Nil || a.CompanyID == uuid.Nil {
+		return lib.Error.Appointment.MissingRequiredIDs
+	}
+	// Check start time only on creation or if it explicitly changed to the past
+	if isCreate || tx.Statement.Changed("StartTime") {
+		if a.StartTime.Before(time.Now().Add(-1 * time.Minute)) {
+			// Optionally, check if the appointment is in the past (strictly) or just warn
+			return lib.Error.Appointment.StartTimeInThePast // Use specific error for past time
+		}
+	} else if tx.Statement.Changed("CompanyID") {
+		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("can not change company id")) // Use specific error for company ID change
 	}
 
-	// TODO: Load all associations into the appointment struct
-	if err := tx.Model(&Service{}).Find(&a.Service, a.ServiceID).Error; err != nil {
-		return err
-	}
-	if err := tx.Model(&Employee{}).Find(&a.Employee, a.EmployeeID).Error; err != nil {
-		return err
-	}
-	if err := tx.Model(&Branch{}).Find(&a.Branch, a.BranchID).Error; err != nil {
-		return err
-	}
-	if err := tx.Model(&Company{}).Find(&a.Company, a.CompanyID).Error; err != nil {
-		return err
-	}
-	if err := tx.Model(&Client{}).Find(&a.Client, a.ClientID).Error; err != nil {
-		return err
-	}
+	// 1. Load Required Associations (Defensively)
+	var err error
+	// Use temporary variables for associations to avoid modifying 'a' directly until successful load
+	var tempService Service
+	var tempEmployee Employee
+	var tempBranch Branch
 
-	// Calculate EndTime based on Service duration
+	if a.Service == nil { // If not already loaded
+		err = tx.Model(&Service{}).Preload(clause.Associations).First(&tempService, a.ServiceID).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("service ID %s", a.ServiceID))
+		} // Reference new Service Not Found error
+		if err != nil {
+			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading service: %w", err))
+		}
+		a.Service = &tempService // Assign only if loaded successfully
+	}
+	if a.Employee == nil { // If not already loaded
+		// Ensure WorkSchedule JSON is loaded automatically by GORM or explicitly preload if needed
+		err = tx.Model(&Employee{}).Preload(clause.Associations).First(&a.Employee, a.EmployeeID).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Employee.NotFound.WithError(fmt.Errorf("employee ID %s", a.EmployeeID))
+		}
+		if err != nil {
+			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading employee: %w", err))
+		}
+		a.Employee = &tempEmployee
+	}
+	if a.Branch == nil { // If not already loaded
+		// ServiceDensity is JSONB, loaded automatically with Branch. No need to preload it explicitly.
+		err = tx.Model(&Branch{}).Preload(clause.Associations).First(&tempBranch, a.BranchID).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Branch.NotFound.WithError(fmt.Errorf("branch ID %s", a.BranchID))
+		} // Use Branch NotFound
+		if err != nil {
+			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading branch: %w", err))
+		}
+		a.Branch = &tempBranch
+	}
+	// Optional: Load Client and Company if rules need their fields.
+	// if a.Client == nil { ... load client ... }
+	// if a.Company == nil { ... load company ...}
+
+	// 2. Calculate & Validate EndTime
+	if a.Service.Duration <= 0 { // Use uint duration from your model
+		return lib.Error.Appointment.InvalidServiceDuration
+	}
+	// Convert uint duration (minutes) to time.Duration
 	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
-	if a.EndTime.Before(a.StartTime) {
+	if !a.EndTime.After(a.StartTime) {
 		return lib.Error.Appointment.EndTimeBeforeStart
 	}
 
-	// TODO: Check if branch belongs to company
+	// --- If being cancelled, validation stops here ---
+	if a.Cancelled {
+		return nil
+	}
+
+	// --- Remaining checks only apply to active (non-cancelled) appointments ---
+
+	// 3. Relationship & Existence Checks (Use loaded structs)
 	if a.Branch.CompanyID != a.CompanyID {
 		return lib.Error.Company.BranchDoesNotBelong
 	}
-	// TODO: Check if employee belongs to company
 	if a.Employee.CompanyID != a.CompanyID {
 		return lib.Error.Company.EmployeeDoesNotBelong
 	}
-	// TODO: Check if the service belongs to the company
 	if a.Service.CompanyID != a.CompanyID {
 		return lib.Error.Company.ServiceDoesNotBelong
 	}
-	// TODO: Check if service exists in the branch
-	var serviceExistsInBranch int64
-	if err := tx.Model(&Branch{}).
-		Where("id = ? AND EXISTS (SELECT 1 FROM branch_services WHERE branch_id = ? AND service_id = ?)", a.BranchID, a.BranchID, a.ServiceID).
-		Count(&serviceExistsInBranch).Error; err != nil {
-		return err
+
+	// Use simpler direct checks or JOINs if performance demands, raw SQL less type-safe.
+	// Example check if service is offered by branch (using loaded relations if available or querying)
+	var serviceInBranch bool
+	if a.Branch.Services != nil { // If relation was preloaded elsewhere (unlikely in hook)
+		for _, s := range a.Branch.Services {
+			if s.ID == a.ServiceID {
+				serviceInBranch = true
+				break
+			}
+		}
+	} else { // Query if not preloaded
+		var count int64
+		tx.Table("branch_services").Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count)
+		serviceInBranch = count > 0
 	}
-	if serviceExistsInBranch == 0 {
+	if !serviceInBranch {
 		return lib.Error.Branch.ServiceDoesNotBelong
 	}
-	// TODO: Check if employee has the service
-	var employeeHasService int64
-	if err := tx.Model(&Employee{}).
-		Where("id = ? AND EXISTS (SELECT 1 FROM employee_services WHERE employee_id = ? AND service_id = ?)", a.EmployeeID, a.EmployeeID, a.ServiceID).
-		Count(&employeeHasService).Error; err != nil {
-		return err
+
+	// Check if employee offers the service
+	var employeeService bool
+	if a.Employee.Services != nil { // Check preloaded (unlikely)
+		for _, s := range a.Employee.Services {
+			if s.ID == a.ServiceID {
+				employeeService = true
+				break
+			}
+		}
+	} else { // Query
+		var count int64
+		tx.Table("employee_services").Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Count(&count)
+		employeeService = count > 0
 	}
-	if employeeHasService == 0 {
-		return lib.Error.Employee.ServiceDoesNotBelong
+	if !employeeService {
+		return lib.Error.Employee.LacksService
+	} // Use specific error
+
+	// Check if employee works at the branch
+	var employeeInBranch bool
+	if a.Employee.Branches != nil { // Check preloaded (unlikely)
+		for _, b := range a.Employee.Branches {
+			if b.ID == a.BranchID {
+				employeeInBranch = true
+				break
+			}
+		}
+	} else { // Query
+		var count int64
+		tx.Table("employee_branches").Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).Count(&count)
+		employeeInBranch = count > 0
 	}
-	// TODO: Check if employee exists in the branch
-	var employeeExistsInBranch int64
-	if err := tx.Model(&Employee{}).
-		Where("id = ? AND EXISTS (SELECT 1 FROM employee_branches WHERE employee_id = ? AND branch_id = ?)", a.EmployeeID, a.EmployeeID, a.BranchID).
-		Count(&employeeExistsInBranch).Error; err != nil {
-		return err
-	}
-	if employeeExistsInBranch == 0 {
+	if !employeeInBranch {
 		return lib.Error.Employee.BranchDoesNotBelong
 	}
 
-	// Check if the employee is available in the branch at this start time
+	// 4. Check Employee Availability (Work Schedule)
+	if a.Employee.WorkSchedule.IsEmpty() { // Add an IsEmpty method to WorkSchedule?
+		// Or check if all day arrays are nil/empty
+		return lib.Error.Employee.NoWorkScheduleForDay // Assuming this implies no schedule at all
+	}
 	weekday := a.StartTime.Weekday()
-	var WorkRanges []WorkRange
+	var workRanges []WorkRange = a.Employee.WorkSchedule.GetRangesForDay(weekday) // Use helper if available
 
-	switch weekday {
-	case time.Monday:
-		WorkRanges = a.Employee.WorkSchedule.Monday
-	case time.Tuesday:
-		WorkRanges = a.Employee.WorkSchedule.Tuesday
-	case time.Wednesday:
-		WorkRanges = a.Employee.WorkSchedule.Wednesday
-	case time.Thursday:
-		WorkRanges = a.Employee.WorkSchedule.Thursday
-	case time.Friday:
-		WorkRanges = a.Employee.WorkSchedule.Friday
-	case time.Saturday:
-		WorkRanges = a.Employee.WorkSchedule.Saturday
-	case time.Sunday:
-		WorkRanges = a.Employee.WorkSchedule.Sunday
+	if len(workRanges) == 0 {
+		return lib.Error.Employee.NoWorkScheduleForDay // No ranges defined for this specific day
 	}
 
-	if len(WorkRanges) == 0 {
-		return lib.Error.Employee.NoWorkScheduleForDay
-	}
+	isAvailableInSchedule := false
+	appointmentDateStr := a.StartTime.Format("2006-01-02")
+	for _, wr := range workRanges {
+		if wr.BranchID != a.BranchID {
+			continue
+		}
 
-	available := false
-	for _, wr := range WorkRanges {
-		StartTimeDate := fmt.Sprintf("%d-%02d-%02d", a.StartTime.Year(), a.StartTime.Month(), a.StartTime.Day()) // Ensure zero-padding
-		wrStart, err := time.Parse("2006-01-02 15:04", fmt.Sprintf("%s %s", StartTimeDate, wr.Start))
-		if err != nil {
-			return err
+		// Use layout matching your "15:30:00" format
+		layout := "2006-01-02 15:04:05"
+		scheduleStart, errStart := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.Start), a.StartTime.Location())
+		scheduleEnd, errEnd := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.End), a.StartTime.Location())
+
+		if errStart != nil || errEnd != nil {
+			// Log internal error, return user-facing error
+			fmt.Printf("ERROR: Invalid work schedule format parse for employee %s, range %s-%s: %v/%v\n", a.EmployeeID, wr.Start, wr.End, errStart, errEnd)
+			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("employee %s, range %s-%s", a.EmployeeID, wr.Start, wr.End))
 		}
-		wrEnd, err := time.Parse("2006-01-02 15:04", fmt.Sprintf("%s %s", StartTimeDate, wr.End))
-		if err != nil {
-			return err
-		}
-		isAfterOrEqual := a.StartTime.After(wrStart) || a.StartTime.Equal(wrStart)
-		isBeforeOrEqual := a.StartTime.Before(wrEnd) || a.StartTime.Equal(wrEnd)
-		if wr.BranchID == a.BranchID && isAfterOrEqual && isBeforeOrEqual {
-			available = true
+		if !scheduleEnd.After(scheduleStart) {
+			continue
+		} // Ignore invalid ranges
+
+		fitsStart := !a.StartTime.Before(scheduleStart)
+		fitsEnd := a.EndTime.Before(scheduleEnd) || a.EndTime.Equal(scheduleEnd)
+
+		if fitsStart && fitsEnd {
+			isAvailableInSchedule = true
 			break
 		}
 	}
 
-	if !available {
-		return lib.Error.Employee.NotAvailableOnDate
+	if !isAvailableInSchedule {
+		return lib.Error.Employee.NotAvailableWorkSchedule // Use specific error
 	}
 
-	// Checks for Employee Overlapping
-	var EmployeeOverlappingCount int64
-	if err := tx.Model(&Appointment{}).
-		Where(`employee_id = ? AND (
-			(start_time < ? AND end_time > ?) 
-			OR (start_time >= ? AND start_time < ?) 
-			OR (end_time > ? AND end_time <= ?)
-		)`, a.EmployeeID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
-		Count(&EmployeeOverlappingCount).Error; err != nil {
-		return err
-	}
-	if EmployeeOverlappingCount > 0 {
+	// 5. Overlap Checks (for active, non-self appointments)
+	overlapCondition := `start_time < ? AND end_time > ?`
+	baseOverlapQuery := tx.Model(&Appointment{}).
+		Where("cancelled = ?", false).
+		Where("id != ?", a.ID). // Exclude self
+		Where(overlapCondition, a.EndTime, a.StartTime)
+
+	var count int64
+
+	// Check Employee Overlap
+	err = baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&count).Error
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
+	} // Generic load/db error
+	if count > 0 {
 		return lib.Error.Employee.ScheduleConflict
 	}
 
-	// Checks for Client Overlapping
-	var ClientOverlappingCount int64
-	if err := tx.Model(&Appointment{}).
-		Where(`client_id = ? AND (
-			(start_time < ? AND end_time > ?) 
-			OR (start_time >= ? AND start_time < ?) 
-			OR (end_time > ? AND end_time <= ?)
-		)`, a.ClientID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
-		Count(&ClientOverlappingCount).Error; err != nil {
-		return err
+	// Check Client Overlap
+	count = 0
+	err = baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking client overlap: %w", err))
 	}
-
-	if ClientOverlappingCount > 0 {
+	if count > 0 {
 		return lib.Error.Client.ScheduleConflict
 	}
 
-	// Check for overlapping schedules in the service at the branch
-	var ServiceScheduleOverlapping int64
-	if err := tx.Model(&Appointment{}).
-		Where(`branch_id = ? AND service_id = ? AND (
-			(start_time < ? AND end_time > ?) 
-			OR (start_time >= ? AND start_time < ?) 
-			OR (end_time > ? AND end_time <= ?)
-		)`, a.BranchID, a.ServiceID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
-		Count(&ServiceScheduleOverlapping).Error; err != nil {
-		return err
+	// Check Branch Service Capacity (Using JSONB field on Branch)
+	count = 0
+	err = baseOverlapQuery.Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count).Error
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking service capacity: %w", err))
 	}
 
-	var ServiceMaxSchedulesOverlap int64
-
-	for _, sd := range a.Branch.ServiceDensity {
+	serviceMax := uint(0) // Use uint to match your model
+	// Branch should be loaded, iterate over its ServiceDensity slice
+	for _, sd := range a.Branch.ServiceDensity { // Access JSONB field directly
 		if sd.ServiceID == a.ServiceID {
-			ServiceMaxSchedulesOverlap = int64(sd.MaxSchedulesOverlap)
+			serviceMax = sd.MaxSchedulesOverlap // Use uint MaxSchedulesOverlap
 			break
 		}
 	}
-
-	if ServiceMaxSchedulesOverlap > 0 && ServiceScheduleOverlapping >= ServiceMaxSchedulesOverlap {
-		return lib.Error.Branch.MaxConcurrentAppointmentsForService
+	// Cast serviceMax to int64 for comparison with count
+	if serviceMax > 0 && count >= int64(serviceMax) {
+		return lib.Error.Branch.MaxServiceCapacityReached // Use new specific error
 	}
 
-	// Check for overlapping schedules in the branch
-	var BranchOverlappingSchedules int64
-	if err := tx.Model(&Appointment{}).
-		Where(`branch_id = ? AND (
-			(start_time < ? AND end_time > ?)
-			OR (start_time >= ? AND start_time < ?)
-			OR (end_time > ? AND end_time <= ?)
-		)`, a.BranchID, a.EndTime, a.StartTime, a.StartTime, a.EndTime, a.StartTime, a.EndTime).
-		Count(&BranchOverlappingSchedules).Error; err != nil {
-		return err
+	// Check Overall Branch Capacity (Using BranchDensity field on Branch)
+	count = 0
+	err = baseOverlapQuery.Where("branch_id = ?", a.BranchID).Count(&count).Error
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking branch capacity: %w", err))
 	}
 
-	BranchMaxSchedulesOverlap := int64(a.Branch.BranchDensity)
-
-	if BranchOverlappingSchedules >= BranchMaxSchedulesOverlap {
-		return lib.Error.Branch.MaxConcurrentAppointmentsGeneral
+	branchMax := a.Branch.BranchDensity // Access uint field directly
+	// Cast branchMax to int64 for comparison
+	if branchMax > 0 && count >= int64(branchMax) {
+		return lib.Error.Branch.MaxCapacityReached // Use new specific error
 	}
 
-	return nil
+	return nil // All validations passed
 }

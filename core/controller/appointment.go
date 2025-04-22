@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type appointment_controller struct {
@@ -85,66 +86,33 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
 	}
 
-	var new_appointment model.Appointment
+	var appointment model.Appointment
 
-	if err := c.BodyParser(&new_appointment); err != nil {
-		return lib.Error.General.UpdatedError.WithError(err)
-	}
-
-	if new_appointment.ID != uuid.Nil {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("new appointment can not have pre defined ID"))
-	}
-
-	var old_appointment model.Appointment
-
-	if err := ac.Request.Gorm.DB.Find(&old_appointment, "id = ?", appointment_id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+	tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", appointment_id).Find(&appointment)
+	if tx.Error != nil {
+		if tx.Error == gorm.ErrRecordNotFound {
 			return lib.Error.Appointment.NotFound
 		}
-		return err
+		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
-	if old_appointment.CompanyID != new_appointment.CompanyID {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("company_id cannot be changed"))
-	} else if old_appointment.ClientID != new_appointment.ClientID {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("client_id cannot be changed"))
-	} else if old_appointment.Cancelled {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already cancelled"))
-	} else if old_appointment.MovedToID != nil {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment has already been moved"))
+	if appointment.Cancelled {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is cancelled"))
 	}
 
-	if old_appointment.ServiceID != new_appointment.ServiceID {
-		old_appointment.Changed = true
-	}
-	if old_appointment.StartTime != new_appointment.StartTime {
-		old_appointment.Changed = true
-	}
-	if old_appointment.EmployeeID != new_appointment.EmployeeID {
-		old_appointment.Changed = true
-	}
-	if old_appointment.BranchID != new_appointment.BranchID {
-		old_appointment.Changed = true
-	}
+	var updated_appointment model.Appointment
 
-	if !old_appointment.Changed {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("no changes detected"))
-	}
-
-	if err := tx.Where("id = ?", old_appointment.ID.String()).Updates(&old_appointment).Error; err != nil {
+	if err := c.BodyParser(&updated_appointment); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
-	new_appointment.MovedFromID = &old_appointment.ID
-
-	if err := tx.Create(&new_appointment).Error; err != nil {
-		return lib.Error.General.UpdatedError.WithError(err)
+	if updated_appointment.ID != uuid.Nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment update can not have pre defined ID"))
 	}
 
-	old_appointment.MovedToID = &new_appointment.ID
-
-	if err := tx.Where("id = ?", old_appointment.ID.String()).Updates(&old_appointment).Error; err != nil {
-		return lib.Error.General.UpdatedError.WithError(err)
+	tx.Model(&model.Appointment{}).Where("id = ?", appointment_id).Updates(updated_appointment)
+	if tx.Error != nil {
+		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
 	return nil

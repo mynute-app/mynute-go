@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -62,6 +63,39 @@ func (ws *WorkSchedule) Scan(value any) error {
 
 	return json.Unmarshal(bytes, ws)
 }
+
+func (ws *WorkSchedule) IsEmpty() bool {
+	if ws == nil {
+		return true
+	}
+	return len(ws.Monday) == 0 && len(ws.Tuesday) == 0 && len(ws.Wednesday) == 0 &&
+		len(ws.Thursday) == 0 && len(ws.Friday) == 0 && len(ws.Saturday) == 0 &&
+		len(ws.Sunday) == 0
+}
+func (ws *WorkSchedule) GetRangesForDay(day time.Weekday) []WorkRange {
+	if ws == nil {
+		return nil
+	}
+	switch day {
+	case time.Monday:
+		return ws.Monday
+	case time.Tuesday:
+		return ws.Tuesday
+	case time.Wednesday:
+		return ws.Wednesday
+	case time.Thursday:
+		return ws.Thursday
+	case time.Friday:
+		return ws.Friday
+	case time.Saturday:
+		return ws.Saturday
+	case time.Sunday:
+		return ws.Sunday
+	default:
+		return nil
+	}
+}
+
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 	if err := lib.ValidatorV10.Struct(e); err != nil {
