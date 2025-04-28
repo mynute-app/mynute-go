@@ -348,6 +348,5 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 	if branchMax > 0 && count >= int64(branchMax) {
 		return lib.Error.Branch.MaxCapacityReached // Use new specific error
 	}
-
 	return nil // All validations passed
 }
