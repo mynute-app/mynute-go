@@ -69,7 +69,7 @@ var DeleteAppointmentByID = &EndPoint{
 	Path:        "/appointment/:id",
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
-	Description: "Delete appointment by ID",
+	Description: "This wil cancel appointment by ID. Deleting appointments is forbidden.",
 	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }

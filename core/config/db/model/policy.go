@@ -675,29 +675,64 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	// Policy: Allow DELETE appointment by ID.
+	// var AllowDeleteAppointmentByID = &PolicyRule{
+	// 	Name:        "SDP: CanDeleteAppointment",
+	// 	Description: "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
+	// 	Effect:      "Allow",
+	// 	EndPointID:  DeleteAppointmentByID.ID,
+	// 	Conditions: JsonRawMessage(ConditionNode{
+	// 		Description: "Company User Delete Check",
+	// 		LogicType:   "AND",
+	// 		Children: []ConditionNode{
+	// 			company_membership_access_check, // User in same company as appointment
+	// 			{
+	// 				Description: "Role/Relation Check (Managers or Assigned Employee)",
+	// 				LogicType:   "OR",
+	// 				Children: []ConditionNode{
+	// 					company_owner_check,
+	// 					company_general_manager_check,
+	// 					company_branch_manager_assigned_branch_check, // BM can delete appointments in their branch
+	// 					company_employee_assigned_employee_check,     // Employee can delete their own appointments (?) Maybe not - adjust if needed. Let's assume managers only.
+	// 				},
+	// 			},
+	// 		},
+	// 	}),
+	// }
+
+	// Policy: Allow DELETE appointment by ID.
+
 	var AllowDeleteAppointmentByID = &PolicyRule{
-		Name:        "SDP: CanDeleteAppointment",
-		Description: "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
+		Name:        "SDP: CanCancelAppointment",
+		Description: "Allows clients to cancel their own appointments, or company managers/assigned employees.",
 		Effect:      "Allow",
 		EndPointID:  DeleteAppointmentByID.ID,
 		Conditions: JsonRawMessage(ConditionNode{
-			Description: "Company User Delete Check",
-			LogicType:   "AND",
+			Description: "Allow Client Self-Cancel OR Company User Cancel",
+			LogicType:   "OR",
 			Children: []ConditionNode{
-				company_membership_access_check, // User in same company as appointment
+				client_access_check, // Client can cancel if it's their appointment
 				{
-					Description: "Role/Relation Check (Managers or Assigned Employee)",
-					LogicType:   "OR",
+					Description: "Company User Cancel Check",
+					LogicType:   "AND",
 					Children: []ConditionNode{
-						company_owner_check,
-						company_general_manager_check,
-						company_branch_manager_assigned_branch_check, // BM can delete appointments in their branch
-						company_employee_assigned_employee_check,     // Employee can delete their own appointments (?) Maybe not - adjust if needed. Let's assume managers only.
+						company_membership_access_check, // User in same company as appointment
+						{
+							Description: "Role/Relation Check (Managers or Assigned Employee)",
+							LogicType:   "OR",
+							Children: []ConditionNode{
+								company_owner_check,
+								company_general_manager_check,
+								company_branch_manager_assigned_branch_check, // BM can cancel appointments in their branch
+								company_employee_assigned_employee_check,     // Employee can cancel their own appointments
+							},
+						},
 					},
 				},
 			},
 		}),
 	}
+
+
 
 	// --- Branch Policies ---
 
