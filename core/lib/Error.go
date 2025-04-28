@@ -177,7 +177,7 @@ var Error = ErrorCategory{
 		MissingRequiredIDs:         NewError("Appointment creation requires valid ServiceID, EmployeeID, ClientID, BranchID, and CompanyID", "Criação do compromisso requer ServiceID, EmployeeID, ClientID, BranchID e CompanyID válidos", fiber.StatusBadRequest),
 		AssociationLoadFailed:      NewError("Failed to load associated data for appointment validation", "Falha ao carregar dados associados para validação do compromisso", fiber.StatusInternalServerError),
 		InvalidServiceDuration:     NewError("Service duration must be positive", "A duração do serviço deve ser positiva", fiber.StatusBadRequest),
-		InvalidWorkScheduleFormat:  NewError("Employee work schedule time format is invalid, expected HH:MM:SS", "Formato de horário de trabalho do funcionário inválido, esperado HH:MM:SS", fiber.StatusBadRequest),
+		InvalidWorkScheduleFormat:  NewError("Employee work schedule time format is invalid, expected HH:MM", "Formato de horário de trabalho do funcionário inválido, esperado HH:MM", fiber.StatusBadRequest),
 		UpdateFailed:               NewError("Failed to update appointment in database", "Falha ao atualizar compromisso no banco de dados", fiber.StatusInternalServerError),
 		CreateFailed:               NewError("Failed to create appointment in database", "Falha ao criar compromisso no banco de dados", fiber.StatusInternalServerError),
 		HistoryLoggingFailed:       NewError("Failed to save appointment history log", "Falha ao salvar histórico do compromisso", fiber.StatusInternalServerError),

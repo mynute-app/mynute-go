@@ -114,19 +114,19 @@ func (a *Appointment) AfterUpdate(tx *gorm.DB) error {
 }
 
 // --- Validation Helper ---
+// This function is called from the hooks and can be reused in other contexts if needed
 func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error {
 
 	// 0. Basic Required Fields & Time Checks
 	if a.StartTime.IsZero() {
 		return lib.Error.Appointment.StartTimeInThePast
-	} // Or a new required field error?
+	}
 	if a.ServiceID == uuid.Nil || a.EmployeeID == uuid.Nil || a.ClientID == uuid.Nil || a.BranchID == uuid.Nil || a.CompanyID == uuid.Nil {
 		return lib.Error.Appointment.MissingRequiredIDs
 	}
 	// Check start time only on creation or if it explicitly changed to the past
 	if isCreate || tx.Statement.Changed("StartTime") {
 		if a.StartTime.Before(time.Now().Add(-1 * time.Minute)) {
-			// Optionally, check if the appointment is in the past (strictly) or just warn
 			return lib.Error.Appointment.StartTimeInThePast // Use specific error for past time
 		}
 	} else if tx.Statement.Changed("CompanyID") {
@@ -135,46 +135,30 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 
 	// 1. Load Required Associations (Defensively)
 	var err error
-	// Use temporary variables for associations to avoid modifying 'a' directly until successful load
-	var tempService Service
-	var tempEmployee Employee
-	var tempBranch Branch
 
-	if a.Service == nil { // If not already loaded
-		err = tx.Model(&Service{}).Preload(clause.Associations).First(&tempService, a.ServiceID).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("service ID %s", a.ServiceID))
-		} // Reference new Service Not Found error
-		if err != nil {
-			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading service: %w", err))
-		}
-		a.Service = &tempService // Assign only if loaded successfully
+	err = tx.Model(&Service{}).Preload(clause.Associations).First(&a.Service, a.ServiceID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("service ID %s", a.ServiceID))
 	}
-	if a.Employee == nil { // If not already loaded
-		// Ensure WorkSchedule JSON is loaded automatically by GORM or explicitly preload if needed
-		err = tx.Model(&Employee{}).Preload(clause.Associations).First(&a.Employee, a.EmployeeID).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Employee.NotFound.WithError(fmt.Errorf("employee ID %s", a.EmployeeID))
-		}
-		if err != nil {
-			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading employee: %w", err))
-		}
-		a.Employee = &tempEmployee
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading service: %w", err))
 	}
-	if a.Branch == nil { // If not already loaded
-		// ServiceDensity is JSONB, loaded automatically with Branch. No need to preload it explicitly.
-		err = tx.Model(&Branch{}).Preload(clause.Associations).First(&tempBranch, a.BranchID).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Branch.NotFound.WithError(fmt.Errorf("branch ID %s", a.BranchID))
-		} // Use Branch NotFound
-		if err != nil {
-			return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading branch: %w", err))
-		}
-		a.Branch = &tempBranch
+
+	err = tx.Model(&Employee{}).Preload(clause.Associations).First(&a.Employee, a.EmployeeID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return lib.Error.Employee.NotFound.WithError(fmt.Errorf("employee ID %s", a.EmployeeID))
 	}
-	// Optional: Load Client and Company if rules need their fields.
-	// if a.Client == nil { ... load client ... }
-	// if a.Company == nil { ... load company ...}
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading employee: %w", err))
+	}
+
+	err = tx.Model(&Branch{}).Preload(clause.Associations).First(&a.Branch, a.BranchID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return lib.Error.Branch.NotFound.WithError(fmt.Errorf("branch ID %s", a.BranchID))
+	} // Use Branch NotFound
+	if err != nil {
+		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading branch: %w", err))
+	}
 
 	// 2. Calculate & Validate EndTime
 	if a.Service.Duration <= 0 { // Use uint duration from your model
@@ -205,16 +189,15 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 	}
 
 	// Use simpler direct checks or JOINs if performance demands, raw SQL less type-safe.
-	// Example check if service is offered by branch (using loaded relations if available or querying)
 	var serviceInBranch bool
-	if a.Branch.Services != nil { // If relation was preloaded elsewhere (unlikely in hook)
+	if a.Branch.Services != nil {
 		for _, s := range a.Branch.Services {
 			if s.ID == a.ServiceID {
 				serviceInBranch = true
 				break
 			}
 		}
-	} else { // Query if not preloaded
+	} else {
 		var count int64
 		tx.Table("branch_services").Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count)
 		serviceInBranch = count > 0
@@ -225,14 +208,14 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 
 	// Check if employee offers the service
 	var employeeService bool
-	if a.Employee.Services != nil { // Check preloaded (unlikely)
+	if a.Employee.Services != nil {
 		for _, s := range a.Employee.Services {
 			if s.ID == a.ServiceID {
 				employeeService = true
 				break
 			}
 		}
-	} else { // Query
+	} else {
 		var count int64
 		tx.Table("employee_services").Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Count(&count)
 		employeeService = count > 0
@@ -250,7 +233,7 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 				break
 			}
 		}
-	} else { // Query
+	} else {
 		var count int64
 		tx.Table("employee_branches").Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).Count(&count)
 		employeeInBranch = count > 0
@@ -260,15 +243,14 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 	}
 
 	// 4. Check Employee Availability (Work Schedule)
-	if a.Employee.WorkSchedule.IsEmpty() { // Add an IsEmpty method to WorkSchedule?
-		// Or check if all day arrays are nil/empty
-		return lib.Error.Employee.NoWorkScheduleForDay // Assuming this implies no schedule at all
+	if a.Employee.WorkSchedule.IsEmpty() {
+		return lib.Error.Employee.NoWorkScheduleForDay
 	}
 	weekday := a.StartTime.Weekday()
-	var workRanges []WorkRange = a.Employee.WorkSchedule.GetRangesForDay(weekday) // Use helper if available
+	workRanges := a.Employee.WorkSchedule.GetRangesForDay(weekday) // Use helper if available
 
 	if len(workRanges) == 0 {
-		return lib.Error.Employee.NoWorkScheduleForDay // No ranges defined for this specific day
+		return lib.Error.Employee.NoWorkScheduleForDay
 	}
 
 	isAvailableInSchedule := false
@@ -279,18 +261,16 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 		}
 
 		// Use layout matching your "15:30:00" format
-		layout := "2006-01-02 15:04:05"
+		layout := "2006-01-02 15:04"
 		scheduleStart, errStart := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.Start), a.StartTime.Location())
 		scheduleEnd, errEnd := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.End), a.StartTime.Location())
 
 		if errStart != nil || errEnd != nil {
-			// Log internal error, return user-facing error
-			fmt.Printf("ERROR: Invalid work schedule format parse for employee %s, range %s-%s: %v/%v\n", a.EmployeeID, wr.Start, wr.End, errStart, errEnd)
-			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("employee %s, range %s-%s", a.EmployeeID, wr.Start, wr.End))
+			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("invalid work schedule format parse for employee %s with range %s-%s. start time error: %v / end time error: %v", a.EmployeeID, wr.Start, wr.End, errStart, errEnd))
 		}
 		if !scheduleEnd.After(scheduleStart) {
 			continue
-		} // Ignore invalid ranges
+		}
 
 		fitsStart := !a.StartTime.Before(scheduleStart)
 		fitsEnd := a.EndTime.Before(scheduleEnd) || a.EndTime.Equal(scheduleEnd)
@@ -309,7 +289,7 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 	overlapCondition := `start_time < ? AND end_time > ?`
 	baseOverlapQuery := tx.Model(&Appointment{}).
 		Where("cancelled = ?", false).
-		Where("id != ?", a.ID). // Exclude self
+		Where("id != ?", a.ID).
 		Where(overlapCondition, a.EndTime, a.StartTime)
 
 	var count int64
@@ -360,8 +340,7 @@ func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error
 		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking branch capacity: %w", err))
 	}
 
-	branchMax := a.Branch.BranchDensity // Access uint field directly
-	// Cast branchMax to int64 for comparison
+	branchMax := a.Branch.BranchDensity
 	if branchMax > 0 && count >= int64(branchMax) {
 		return lib.Error.Branch.MaxCapacityReached // Use new specific error
 	}
