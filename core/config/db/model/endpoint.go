@@ -65,10 +65,10 @@ var UpdateAppointmentByID = &EndPoint{
 	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }
-var DeleteAppointmentByID = &EndPoint{
+var CancelAppointmentByID = &EndPoint{
 	Path:        "/appointment/:id",
 	Method:      namespace.DeleteActionMethod,
-	Handler:     "DeleteAppointmentByID", // Assuming handler name matches reference ac.DeleteAppointmentByID
+	Handler:     "CancelAppointmentByID", // Assuming handler name matches reference ac.CancelAppointmentByID
 	Description: "This wil cancel appointment by ID. Deleting appointments is forbidden.",
 	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
@@ -357,20 +357,20 @@ var RemoveBranchFromEmployee = &EndPoint{
 	Resource:    BranchResource,
 }
 var AddRoleToEmployee = &EndPoint{
-	Path: 			"/employee/:employee_id/role/:role_id",
-	Method: 		namespace.CreateActionMethod,
-	Handler: 		"AddRoleToEmployee", // From ec.AddRoleToEmployee
-	Description: 	"Add role to employee",
-	IsPublic: 		false, // Access: "private"
-	Resource: 		RoleResource,
+	Path:        "/employee/:employee_id/role/:role_id",
+	Method:      namespace.CreateActionMethod,
+	Handler:     "AddRoleToEmployee", // From ec.AddRoleToEmployee
+	Description: "Add role to employee",
+	IsPublic:    false, // Access: "private"
+	Resource:    RoleResource,
 }
 var RemoveRoleFromEmployee = &EndPoint{
-	Path: 			"/employee/:employee_id/role/:role_id",
-	Method: 		namespace.DeleteActionMethod,
-	Handler: 		"RemoveRoleFromEmployee", // From ec.RemoveRoleFromEmployee
-	Description: 	"Remove role from employee",
-	IsPublic: 		false, // Access: "private"
-	Resource: 		RoleResource,
+	Path:        "/employee/:employee_id/role/:role_id",
+	Method:      namespace.DeleteActionMethod,
+	Handler:     "RemoveRoleFromEmployee", // From ec.RemoveRoleFromEmployee
+	Description: "Remove role from employee",
+	IsPublic:    false, // Access: "private"
+	Resource:    RoleResource,
 }
 
 // --- Holiday Endpoints --- //
@@ -504,7 +504,7 @@ var Endpoints = []*EndPoint{
 	CreateAppointment,
 	GetAppointmentByID,
 	UpdateAppointmentByID,
-	DeleteAppointmentByID,
+	CancelAppointmentByID,
 	// Auth
 	VerifyExistingAccount,
 	BeginAuthProviderCallback,

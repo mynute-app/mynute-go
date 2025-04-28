@@ -79,6 +79,10 @@ func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
+func (a *Appointment) BeforeDelete(tx *gorm.DB) error {
+	return lib.Error.General.DeletedError.WithError(fmt.Errorf("deleting appointments is totally forbidden in this system"))
+}
+
 func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 	err := CreateAppointmentHistory(tx, a, ActionCreate, "Appointment created.")
 	if err != nil {

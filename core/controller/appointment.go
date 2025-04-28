@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -118,7 +119,7 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 	return nil
 }
 
-// DeleteAppointmentByID deletes an appointment by ID
+// CancelAppointmentByID deletes an appointment by ID
 //
 //	@Summary		Delete appointment
 //	@Description	Delete an appointment by ID
@@ -129,8 +130,28 @@ func (ac *appointment_controller) UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Appointment
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
-func (ac *appointment_controller) DeleteAppointmentByID(c *fiber.Ctx) error {
-	return ac.DeleteOneById(c)
+func (ac *appointment_controller) CancelAppointmentByID(c *fiber.Ctx) error {
+	// Set the appointment to cancelled
+	// Check if the appointment is already cancelled
+	appointment_id := c.Params("id")
+	if appointment_id == "" {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
+	}
+	var appointment model.Appointment
+	if err := ac.Request.Gorm.DB.Where("id = ?", appointment_id).First(&appointment).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Appointment.NotFound
+		}
+		return lib.Error.General.UpdatedError.WithError(err)
+	}
+	if appointment.Cancelled {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already cancelled"))
+	}
+	if appointment.StartTime.Before(time.Now()) {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("cannot cancel appointment as it already happened"))
+	}
+	
+	return nil
 }
 
 // Constructor for appointment_controller
@@ -146,7 +167,7 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 		ac.CreateAppointment,
 		ac.GetAppointmentByID,
 		ac.UpdateAppointmentByID,
-		ac.DeleteAppointmentByID,
+		ac.CancelAppointmentByID,
 	})
 	return ac
 }

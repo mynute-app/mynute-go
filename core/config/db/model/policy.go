@@ -675,11 +675,11 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	}
 
 	// Policy: Allow DELETE appointment by ID.
-	// var AllowDeleteAppointmentByID = &PolicyRule{
-	// 	Name:        "SDP: CanDeleteAppointment",
+	// var AllowCancelAppointmentByID = &PolicyRule{
+	// 	Name:        "SDP: CanCancelAppointment",
 	// 	Description: "Allows company managers or assigned employees to delete appointments. (Clients typically cannot delete).",
 	// 	Effect:      "Allow",
-	// 	EndPointID:  DeleteAppointmentByID.ID,
+	// 	EndPointID:  CancelAppointmentByID.ID,
 	// 	Conditions: JsonRawMessage(ConditionNode{
 	// 		Description: "Company User Delete Check",
 	// 		LogicType:   "AND",
@@ -701,11 +701,11 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 
 	// Policy: Allow DELETE appointment by ID.
 
-	var AllowDeleteAppointmentByID = &PolicyRule{
+	var AllowCancelAppointmentByID = &PolicyRule{
 		Name:        "SDP: CanCancelAppointment",
 		Description: "Allows clients to cancel their own appointments, or company managers/assigned employees.",
 		Effect:      "Allow",
-		EndPointID:  DeleteAppointmentByID.ID,
+		EndPointID:  CancelAppointmentByID.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Allow Client Self-Cancel OR Company User Cancel",
 			LogicType:   "OR",
@@ -731,8 +731,6 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 			},
 		}),
 	}
-
-
 
 	// --- Branch Policies ---
 
@@ -1069,7 +1067,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetAppointmentByID,
 		AllowCreateAppointment,
 		AllowUpdateAppointmentByID,
-		AllowDeleteAppointmentByID,
+		AllowCancelAppointmentByID,
 
 		// Branches
 		AllowCreateBranch,
