@@ -2,8 +2,11 @@ package model
 
 import (
 	"agenda-kaki-go/core/lib" // Adjust import path if necessary
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,21 +22,61 @@ import (
 type Appointment struct {
 	BaseModel
 
-	ServiceID  uuid.UUID `gorm:"type:uuid;not null;index" json:"service_id"`
-	Service    *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
-	EmployeeID uuid.UUID `gorm:"type:uuid;not null;index" json:"employee_id"`
-	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	ClientID   uuid.UUID `gorm:"type:uuid;not null;index" json:"client_id"`
-	Client     *Client   `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
-	BranchID   uuid.UUID `gorm:"type:uuid;not null;index" json:"branch_id"`
-	Branch     *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	CompanyID  uuid.UUID `gorm:"type:uuid;not null;index" json:"company_id"`
-	Company    *Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
+	ServiceID  uuid.UUID          `gorm:"type:uuid;not null;index" json:"service_id"`
+	Service    *Service           `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
+	EmployeeID uuid.UUID          `gorm:"type:uuid;not null;index" json:"employee_id"`
+	Employee   *Employee          `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	ClientID   uuid.UUID          `gorm:"type:uuid;not null;index" json:"client_id"`
+	Client     *Client            `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
+	BranchID   uuid.UUID          `gorm:"type:uuid;not null;index" json:"branch_id"`
+	Branch     *Branch            `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
+	CompanyID  uuid.UUID          `gorm:"type:uuid;not null;index" json:"company_id"`
+	Company    *Company           `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
+	StartTime  time.Time          `gorm:"not null;index" json:"start_time"`
+	EndTime    time.Time          `gorm:"not null;index" json:"end_time"`
+	Cancelled  bool               `gorm:"index;default:false" json:"cancelled"`
+	History    AppointmentHistory `gorm:"type:jsonb" json:"history"` // JSONB field for history changes
+}
 
-	StartTime time.Time `gorm:"not null;index" json:"start_time"`
-	EndTime   time.Time `gorm:"not null;index" json:"end_time"`
+type AppointmentHistory struct {
+	FieldChanges []FieldChange `json:"field_changes"`
+}
 
-	Cancelled bool `gorm:"index;default:false" json:"cancelled"`
+type FieldChange struct {
+	CreatedAt time.Time `json:"created_at"`
+	Field     string    `json:"field"`
+	OldValue  string    `json:"old_value"`
+	NewValue  string    `json:"new_value"`
+}
+
+func (ah *AppointmentHistory) Value() (driver.Value, error) {
+	return json.Marshal(ah)
+}
+
+func (ah *AppointmentHistory) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan WorkSchedule: expected []byte")
+	}
+
+	return json.Unmarshal(bytes, ah)
+}
+
+func (ah *AppointmentHistory) IsEmpty() bool {
+	return ah == nil || len(ah.FieldChanges) == 0
+}
+
+func (ah *AppointmentHistory) FilterByField(field string) []FieldChange {
+	if ah == nil {
+		return nil
+	}
+	var filteredChanges []FieldChange
+	for _, change := range ah.FieldChanges {
+		if change.Field == field {
+			filteredChanges = append(filteredChanges, change)
+		}
+	}
+	return filteredChanges
 }
 
 func (Appointment) TableName() string { return "appointments" }
@@ -52,11 +95,10 @@ func (Appointment) Indexes() map[string]string {
 // --- GORM Hooks ---
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
-	if a.ID == uuid.Nil {
-		a.ID = uuid.New()
+	if !a.History.IsEmpty() {
+		return lib.Error.Appointment.HistoryManualUpdateForbidden
 	}
-	// Run full validation rules, now returns lib.ErrorStruct on failure
-	err := a.validateAppointmentRules(tx, true) // isCreate = true
+	err := a.ValidateRules(tx, true) // isCreate = true
 	if err != nil {
 		// Return the lib.ErrorStruct directly
 		return err
@@ -65,17 +107,55 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
-	runValidation := tx.Statement.Changed("StartTime", "EndTime", "EmployeeID", "ServiceID", "BranchID") ||
-		(tx.Statement.Changed("Cancelled") && !a.Cancelled) // Run validation if reactivating
+	if tx.Statement.Changed("History") {
+		return lib.Error.Appointment.HistoryManualUpdateForbidden
+	}
 
-	if runValidation {
-		// validateAppointmentRules loads associations if needed.
-		err := a.validateAppointmentRules(tx, false) // isCreate = false
-		if err != nil {
-			// Return the lib.ErrorStruct directly
-			return err
+	var changes []FieldChange
+
+	if a.History.IsEmpty() {
+		a.History = AppointmentHistory{FieldChanges: []FieldChange{}}
+	}
+
+	if tx.Statement.Schema == nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("statement schema is nil at database transaction layer"))
+	}
+
+	var originalAppointment Appointment
+	if err := tx.Model(&Appointment{}).
+		Where("id = ?", a.ID).
+		First(&originalAppointment).
+		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("appointment ID %s", a.ID))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
+	}
+
+	for _, field := range tx.Statement.Schema.Fields {
+		if (!tx.Statement.Changed(field.Name) && field.Name != "history") || field.Name == "id" {
+			continue
+		}
+		oldValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(originalAppointment))
+		newValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(a))
+		if oldValue != newValue {
+			changes = append(changes, FieldChange{
+				CreatedAt: time.Now(),
+				Field:     field.Name,
+				OldValue:  fmt.Sprintf("%v", oldValue),
+				NewValue:  fmt.Sprintf("%v", newValue),
+			})
 		}
 	}
+
+	if len(changes) > 0 {
+		err := a.ValidateRules(tx, false)
+		if err != nil {
+			return err
+		}
+		a.History.FieldChanges = append(originalAppointment.History.FieldChanges, changes...)
+	}
+
 	return nil
 }
 
@@ -83,43 +163,9 @@ func (a *Appointment) BeforeDelete(tx *gorm.DB) error {
 	return lib.Error.General.DeletedError.WithError(fmt.Errorf("deleting appointments is totally forbidden in this system"))
 }
 
-func (a *Appointment) AfterCreate(tx *gorm.DB) error {
-	err := CreateAppointmentHistory(tx, a, ActionCreate, "Appointment created.")
-	if err != nil {
-		// Return the wrapped lib.ErrorStruct directly
-		return lib.Error.Appointment.HistoryLoggingFailed.WithError(err)
-	}
-	return nil
-}
-
-func (a *Appointment) AfterUpdate(tx *gorm.DB) error {
-	action := ActionUpdate
-	notes := "Appointment updated."
-	logHistory := true
-
-	if tx.Statement.Changed("Cancelled") {
-		if a.Cancelled {
-			action, notes = ActionCancel, "Appointment cancelled."
-		} else {
-			notes = "Appointment reactivated."
-		}
-	} else if !tx.Statement.Changed() {
-		logHistory = false
-	}
-
-	if logHistory {
-		err := CreateAppointmentHistory(tx, a, action, notes)
-		if err != nil {
-			// Return the wrapped lib.ErrorStruct directly
-			return lib.Error.Appointment.HistoryLoggingFailed.WithError(err)
-		}
-	}
-	return nil
-}
-
 // --- Validation Helper ---
 // This function is called from the hooks and can be reused in other contexts if needed
-func (a *Appointment) validateAppointmentRules(tx *gorm.DB, isCreate bool) error {
+func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 
 	// 0. Basic Required Fields & Time Checks
 	if a.StartTime.IsZero() {

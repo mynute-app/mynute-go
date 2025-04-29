@@ -77,17 +77,18 @@ type ErrorCategory struct {
 }
 
 type AppointmentErrors struct {
-	StartTimeInThePast         ErrorStruct
-	EndTimeBeforeStart         ErrorStruct
-	NotFound                   ErrorStruct
-	MissingRequiredIDs         ErrorStruct // New: For missing FKs
-	AssociationLoadFailed      ErrorStruct // New: General DB error loading related data
-	InvalidServiceDuration     ErrorStruct // New: Service duration <= 0
-	InvalidWorkScheduleFormat  ErrorStruct // New: Error parsing work schedule time
-	UpdateFailed               ErrorStruct // New: Generic update DB error
-	CreateFailed               ErrorStruct // New: Generic create DB error
-	HistoryLoggingFailed       ErrorStruct // New: Failure during history log save
-	CancelledAppointmentUpdate ErrorStruct // New: Attempt to modify a cancelled appointment
+	StartTimeInThePast           ErrorStruct
+	EndTimeBeforeStart           ErrorStruct
+	NotFound                     ErrorStruct
+	MissingRequiredIDs           ErrorStruct // New: For missing FKs
+	AssociationLoadFailed        ErrorStruct // New: General DB error loading related data
+	InvalidServiceDuration       ErrorStruct // New: Service duration <= 0
+	InvalidWorkScheduleFormat    ErrorStruct // New: Error parsing work schedule time
+	UpdateFailed                 ErrorStruct // New: Generic update DB error
+	CreateFailed                 ErrorStruct // New: Generic create DB error
+	HistoryLoggingFailed         ErrorStruct // New: Failure during history log save
+	HistoryManualUpdateForbidden ErrorStruct // New: Manual update of history log not allowed
+	CancelledAppointmentUpdate   ErrorStruct // New: Attempt to modify a cancelled appointment
 }
 
 // Grouped errors per domain
@@ -171,17 +172,18 @@ var Error = ErrorCategory{
 		EmailCodeInvalid: NewError("Email verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
-		StartTimeInThePast:         NewError("Appointment start time cannot be in the past", "A data de início do compromisso não pode ser no passado", fiber.StatusBadRequest),
-		EndTimeBeforeStart:         NewError("Appointment end time must be after start time", "A data de término do compromisso deve ser posterior à data de início", fiber.StatusBadRequest),
-		NotFound:                   NewError("Appointment not found", "Compromisso não encontrado", fiber.StatusNotFound),
-		MissingRequiredIDs:         NewError("Appointment creation requires valid ServiceID, EmployeeID, ClientID, BranchID, and CompanyID", "Criação do compromisso requer ServiceID, EmployeeID, ClientID, BranchID e CompanyID válidos", fiber.StatusBadRequest),
-		AssociationLoadFailed:      NewError("Failed to load associated data for appointment validation", "Falha ao carregar dados associados para validação do compromisso", fiber.StatusInternalServerError),
-		InvalidServiceDuration:     NewError("Service duration must be positive", "A duração do serviço deve ser positiva", fiber.StatusBadRequest),
-		InvalidWorkScheduleFormat:  NewError("Employee work schedule time format is invalid, expected HH:MM", "Formato de horário de trabalho do funcionário inválido, esperado HH:MM", fiber.StatusBadRequest),
-		UpdateFailed:               NewError("Failed to update appointment in database", "Falha ao atualizar compromisso no banco de dados", fiber.StatusInternalServerError),
-		CreateFailed:               NewError("Failed to create appointment in database", "Falha ao criar compromisso no banco de dados", fiber.StatusInternalServerError),
-		HistoryLoggingFailed:       NewError("Failed to save appointment history log", "Falha ao salvar histórico do compromisso", fiber.StatusInternalServerError),
-		CancelledAppointmentUpdate: NewError("Cannot modify a cancelled appointment", "Não é possível modificar um compromisso cancelado", fiber.StatusForbidden),
+		StartTimeInThePast:           NewError("Appointment start time cannot be in the past", "A data de início do compromisso não pode ser no passado", fiber.StatusBadRequest),
+		EndTimeBeforeStart:           NewError("Appointment end time must be after start time", "A data de término do compromisso deve ser posterior à data de início", fiber.StatusBadRequest),
+		NotFound:                     NewError("Appointment not found", "Compromisso não encontrado", fiber.StatusNotFound),
+		MissingRequiredIDs:           NewError("Appointment creation requires valid ServiceID, EmployeeID, ClientID, BranchID, and CompanyID", "Criação do compromisso requer ServiceID, EmployeeID, ClientID, BranchID e CompanyID válidos", fiber.StatusBadRequest),
+		AssociationLoadFailed:        NewError("Failed to load associated data for appointment validation", "Falha ao carregar dados associados para validação do compromisso", fiber.StatusInternalServerError),
+		InvalidServiceDuration:       NewError("Service duration must be positive", "A duração do serviço deve ser positiva", fiber.StatusBadRequest),
+		InvalidWorkScheduleFormat:    NewError("Employee work schedule time format is invalid, expected HH:MM", "Formato de horário de trabalho do funcionário inválido, esperado HH:MM", fiber.StatusBadRequest),
+		UpdateFailed:                 NewError("Failed to update appointment in database", "Falha ao atualizar compromisso no banco de dados", fiber.StatusInternalServerError),
+		CreateFailed:                 NewError("Failed to create appointment in database", "Falha ao criar compromisso no banco de dados", fiber.StatusInternalServerError),
+		HistoryLoggingFailed:         NewError("Failed to save appointment history log", "Falha ao salvar histórico do compromisso", fiber.StatusInternalServerError),
+		CancelledAppointmentUpdate:   NewError("Cannot modify a cancelled appointment", "Não é possível modificar um compromisso cancelado", fiber.StatusForbidden),
+		HistoryManualUpdateForbidden: NewError("Manual update of appointment log is not allowed", "Atualização manual do histórico não é permitida", fiber.StatusForbidden),
 	},
 	Branch: BranchErrors{
 		NotFound:                  NewError("Branch not found", "Filial não encontrada", fiber.StatusNotFound),
@@ -190,8 +192,8 @@ var Error = ErrorCategory{
 		MaxServiceCapacityReached: NewError("Branch maximum concurrent capacity for this specific service reached", "Capacidade máxima de compromissos simultâneos da filial para este serviço atingida", fiber.StatusConflict), // 409 Conflict better?
 	},
 	Client: ClientErrors{
-		NotFound:         NewError("Client not found", "Cliente não encontrado", fiber.StatusNotFound),
-		ScheduleConflict: NewError("Client already has a conflicting appointment", "Cliente já possui um compromisso conflitante", fiber.StatusConflict), // 409 Conflict
+		NotFound:          NewError("Client not found", "Cliente não encontrado", fiber.StatusNotFound),
+		ScheduleConflict:  NewError("Client already has a conflicting appointment", "Cliente já possui um compromisso conflitante", fiber.StatusConflict), // 409 Conflict
 		NotVerified:       NewError("Client not verified", "Usuário não verificado", fiber.StatusUnauthorized),
 		EmailExists:       NewError("Email already exists", "Email já cadastrado", fiber.StatusBadRequest),
 		InvalidClientName: NewError("Invalid client name", "Nome de usuário inválido", fiber.StatusBadRequest),
