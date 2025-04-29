@@ -65,15 +65,16 @@ func NewError(en, br string, status int) ErrorStruct {
 
 // ErrorCategory groups all domain-specific error types.
 type ErrorCategory struct {
-	Auth        AuthErrors
-	Appointment AppointmentErrors
-	Branch      BranchErrors
-	Client      ClientErrors
-	Company     CompanyErrors
-	Employee    EmployeeErrors
-	General     GeneralErrors
-	Role        RoleErrors
-	Validation  ValidationErrors
+	Auth               AuthErrors
+	Appointment        AppointmentErrors
+	AppointmentArchive AppointmentArchiveErrors
+	Branch             BranchErrors
+	Client             ClientErrors
+	Company            CompanyErrors
+	Employee           EmployeeErrors
+	General            GeneralErrors
+	Role               RoleErrors
+	Validation         ValidationErrors
 }
 
 type AppointmentErrors struct {
@@ -89,6 +90,12 @@ type AppointmentErrors struct {
 	HistoryLoggingFailed         ErrorStruct // New: Failure during history log save
 	HistoryManualUpdateForbidden ErrorStruct // New: Manual update of history log not allowed
 	CancelledAppointmentUpdate   ErrorStruct // New: Attempt to modify a cancelled appointment
+}
+
+type AppointmentArchiveErrors struct {
+	IdNotSet        ErrorStruct // New: For nil ID in appointment archive
+	UpdateForbidden ErrorStruct
+	DeleteForbidden ErrorStruct
 }
 
 // Grouped errors per domain
@@ -184,6 +191,11 @@ var Error = ErrorCategory{
 		HistoryLoggingFailed:         NewError("Failed to save appointment history log", "Falha ao salvar histórico do compromisso", fiber.StatusInternalServerError),
 		CancelledAppointmentUpdate:   NewError("Cannot modify a cancelled appointment", "Não é possível modificar um compromisso cancelado", fiber.StatusForbidden),
 		HistoryManualUpdateForbidden: NewError("Manual update of appointment log is not allowed", "Atualização manual do histórico não é permitida", fiber.StatusForbidden),
+	},
+	AppointmentArchive: AppointmentArchiveErrors{
+		IdNotSet: NewError("Appointment archive ID cannot be nil", "ID do arquivo de compromisso não pode ser nulo", fiber.StatusBadRequest),
+		UpdateForbidden: NewError("Can not update archived appointments", "Não é possível atualizar compromissos arquivados", fiber.StatusForbidden),
+		DeleteForbidden: NewError("Can not delete archived appointments", "Não é possível deletar compromissos arquivados", fiber.StatusForbidden),
 	},
 	Branch: BranchErrors{
 		NotFound:                  NewError("Branch not found", "Filial não encontrada", fiber.StatusNotFound),

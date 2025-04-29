@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	//"gorm.io/gorm/clause" // Required for locking in service layer
 )
 
 // BaseModel should be defined elsewhere in your model package or a common place
@@ -81,7 +80,6 @@ func (ah *AppointmentHistory) FilterByField(field string) []FieldChange {
 
 func (Appointment) TableName() string { return "appointments" }
 
-// Indexes - ensure these align with your DB schema strategy
 func (Appointment) Indexes() map[string]string {
 	return map[string]string{
 		"idx_employee_time_active": "CREATE INDEX IF NOT EXISTS idx_employee_time_active ON appointments (employee_id, start_time, end_time, cancelled)",
@@ -92,7 +90,7 @@ func (Appointment) Indexes() map[string]string {
 	}
 }
 
-// --- GORM Hooks ---
+// --- Appointment Hooks ---
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if !a.History.IsEmpty() {
