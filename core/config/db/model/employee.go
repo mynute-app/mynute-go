@@ -48,7 +48,7 @@ type WorkRange struct {
 	Start    string       `json:"start"` // Store as "15:30:00"
 	End      string       `json:"end"`   // Store as "18:00:00"
 	BranchID uuid.UUID    `json:"branch_id"`
-	Services *[]uuid.UUID `json:"services"` // List of service IDs
+	Services []uuid.UUID `json:"services"` // List of service IDs
 }
 
 // Implement driver.Valuer
@@ -214,7 +214,7 @@ func (e *Employee) ValiateWorkSchedule(tx *gorm.DB) error {
 		}
 
 		// --- Check 2: Service Validity (if specified in WorkRange) ---
-		if wr.Services != nil && len(*wr.Services) > 0 {
+		if len(wr.Services) > 0 {
 			branchServices, ok := branchServiceCache[wr.BranchID]
 
 			// If not in cache, fetch services for the branch
@@ -233,7 +233,7 @@ func (e *Employee) ValiateWorkSchedule(tx *gorm.DB) error {
 			}
 
 			// Check each specified service in the work range
-			for _, serviceID := range *wr.Services {
+			for _, serviceID := range wr.Services {
 				if serviceID == uuid.Nil {
 					return fmt.Errorf("work range (Branch: %s) contains a nil ServiceID", wr.BranchID)
 				}
