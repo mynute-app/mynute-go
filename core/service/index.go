@@ -32,10 +32,10 @@ type Base[MODEL any, DTO any] struct {
 }
 
 func CreateRoutes(r fiber.Router, ci IService) {
-	r.Post("/", ci.CreateOne)       // ok
-	r.Get("/", ci.GetAll)           // ok
-	r.Get("/force", ci.ForceGetAll) // ok
-	id := r.Group("/:id")
+	r.Post("/", ci.CreateOne)                  // ok
+	r.Get("/", ci.GetAll)                      // ok
+	r.Get("/force", ci.ForceGetAll)            // ok
+	id := r.Group("/:id")                      // ok
 	id.Get("/", ci.GetOneById)                 // ok
 	id.Patch("/", ci.UpdateOneById)            // ok
 	id.Delete("/", ci.DeleteOneById)           // ok

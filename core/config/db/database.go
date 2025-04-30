@@ -21,21 +21,26 @@ type Test struct {
 	name string
 }
 
-var models = []any{
+var generalModels = []any{
 	&model.Sector{},
 	&model.Company{},
-	&model.Branch{},
-	&model.Appointment{},
 	&model.Holiday{},
 	&model.Client{},
-	&model.Employee{},
-	&model.Service{},
 	&model.EndPoint{},
 	&model.Role{},
 	&model.PolicyRule{},
 	&model.Resource{},
 	&model.Property{},
 }
+
+var tenantModels = []any{
+	&model.Appointment{},
+	&model.AppointmentArchive{},
+	&model.Branch{},
+	&model.Employee{},
+	&model.Service{},
+}
+	
 
 // Connects to the database
 func Connect() *Database {
@@ -88,7 +93,7 @@ func Connect() *Database {
 
 // Migrate the database schema
 func (db *Database) Migrate() *Database {
-	for _, model := range models {
+	for _, model := range generalModels {
 		if err := db.Gorm.AutoMigrate(model); err != nil {
 			log.Fatalf("Failed to migrate %T: %v", model, err)
 		}
@@ -121,12 +126,6 @@ func (t *Test) Clear() {
 	if os.Getenv("APP_ENV") != "test" {
 		return
 	}
-	// for _, model := range models {
-	// 	log.Printf("Clearing: %T", model)
-	// 	if err := t.Gorm.Migrator().DropTable(model); err != nil {
-	// 		log.Fatalf("Failed to clear %T: %v", model, err)
-	// 	}
-	// }
 	query := `
 		DROP SCHEMA public CASCADE;
 		CREATE SCHEMA public;

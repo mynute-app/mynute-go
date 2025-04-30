@@ -1,7 +1,7 @@
 package model
 
 import (
-	"errors"
+	"agenda-kaki-go/core/lib"
 	"fmt"
 	"time"
 
@@ -17,16 +17,14 @@ type BaseModel struct {
 }
 
 func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("ID") {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("ID cannot be changed after creation"))
+	}
 	if m.ID == uuid.Nil {
 		m.ID = uuid.New()
 	} else if m.ID.Variant() != uuid.RFC4122 {
-		// 2. ID is not nil. Check if it's structurally valid (conforms to RFC 4122).
-		// This covers updates *and* creates where an ID might have been manually assigned.
-		// uuid.Nil has Variant() == uuid.Invalid.
-		// A correctly formatted UUID (v1-v5) has Variant() == uuid.RFC4122.
-		// Return an error to prevent saving an invalid UUID.
-		errMsg := fmt.Sprintf("BeforeSave: Invalid UUID variant for ID %s in %T", m.ID.String(), m)
-		return errors.New(errMsg)
+		errMsg := fmt.Errorf("BeforeSave: Invalid UUID variant for ID %s in %T", m.ID.String(), m)
+		return lib.Error.General.UpdatedError.WithError(errMsg)
 	}
 	return nil
 }

@@ -134,7 +134,8 @@ type CompanyErrors struct {
 	BranchDoesNotBelong   ErrorStruct
 	EmployeeDoesNotBelong ErrorStruct
 	ServiceDoesNotBelong  ErrorStruct
-	CompanyMismatch       ErrorStruct // New: General mismatch error
+	CompanyMismatch       ErrorStruct
+	IdUpdateForbidden     ErrorStruct
 }
 
 type EmployeeErrors struct {
@@ -220,6 +221,7 @@ var Error = ErrorCategory{
 		ServiceDoesNotBelong:  NewError("Service does not belong to the specified company", "Serviço não pertence à empresa especificada", fiber.StatusBadRequest),
 		CnpjAlreadyExists:     NewError("Company CNPJ already exists", "Empresa já cadastrada", fiber.StatusBadRequest),
 		CompanyMismatch:       NewError("Company ID mismatch between related entities", "Incompatibilidade de ID da empresa entre entidades relacionadas", fiber.StatusBadRequest),
+		IdUpdateForbidden:     NewError("Company ID cannot be updated", "ID da empresa não pode ser atualizado", fiber.StatusBadRequest),
 	},
 	Employee: EmployeeErrors{
 		NotFound:                 NewError("Employee not found", "Funcionário não encontrado", fiber.StatusNotFound),
