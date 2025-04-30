@@ -14,27 +14,75 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// BaseModel should be defined elsewhere in your model package or a common place
+type AppointmentBase struct {
+	ServiceID  uuid.UUID           `gorm:"type:uuid;not null;index" json:"service_id"`
+	Service    *Service            `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
+	EmployeeID uuid.UUID           `gorm:"type:uuid;not null;index" json:"employee_id"`
+	Employee   *Employee           `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	ClientID   uuid.UUID           `gorm:"type:uuid;not null;index" json:"client_id"`
+	Client     *Client             `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
+	BranchID   uuid.UUID           `gorm:"type:uuid;not null;index" json:"branch_id"`
+	Branch     *Branch             `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
+	CompanyID  uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
+	Company    *Company            `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
+	StartTime  time.Time           `gorm:"not null;index" json:"start_time"`
+	EndTime    time.Time           `gorm:"not null;index" json:"end_time"`
+	Cancelled  bool                `gorm:"index;default:false" json:"cancelled"`
+	History    AppointmentHistory  `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
+	Comments   AppointmentComments `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
+}
 
 // --- Main Appointment Model ---
 // Using your actual Service, Employee, Client, Branch, Company types now
 type Appointment struct {
 	BaseModel
+	AppointmentBase
+}
 
-	ServiceID  uuid.UUID          `gorm:"type:uuid;not null;index" json:"service_id"`
-	Service    *Service           `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
-	EmployeeID uuid.UUID          `gorm:"type:uuid;not null;index" json:"employee_id"`
-	Employee   *Employee          `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	ClientID   uuid.UUID          `gorm:"type:uuid;not null;index" json:"client_id"`
-	Client     *Client            `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
-	BranchID   uuid.UUID          `gorm:"type:uuid;not null;index" json:"branch_id"`
-	Branch     *Branch            `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	CompanyID  uuid.UUID          `gorm:"type:uuid;not null;index" json:"company_id"`
-	Company    *Company           `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
-	StartTime  time.Time          `gorm:"not null;index" json:"start_time"`
-	EndTime    time.Time          `gorm:"not null;index" json:"end_time"`
-	Cancelled  bool               `gorm:"index;default:false" json:"cancelled"`
-	History    AppointmentHistory `gorm:"type:jsonb" json:"history"` // JSONB field for history changes
+type AppointmentComments []Comment
+
+type Comment struct {
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	Comment   string         `json:"comment"`
+	CreatedBy uuid.UUID      `gorm:"type:uuid;not null;index" json:"created_by"`
+	Type      string         `json:"type"` // "internal" or "external"
+}
+
+// --- Implement Scanner/Valuer for AppointmentComments ---
+func (ac *AppointmentComments) Value() (driver.Value, error) {
+	if ac == nil || len(*ac) == 0 {
+		// Return empty JSON array `[]` which is valid JSON
+		return json.Marshal([]Comment{})
+	}
+	return json.Marshal(ac)
+}
+
+func (ac *AppointmentComments) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		// Handle nil from DB
+		if value == nil {
+			*ac = []Comment{} // Initialize to empty slice
+			return nil
+		}
+		return errors.New("failed to scan AppointmentComments: expected []byte")
+	}
+	// Handle empty JSON array or null from DB
+	if len(bytes) == 0 || string(bytes) == "null" {
+		*ac = []Comment{} // Initialize to empty slice
+		return nil
+	}
+	// Important: Unmarshal into the pointer *ac
+	return json.Unmarshal(bytes, ac)
+}
+
+// Optional: Add helper methods directly to the type
+func (ac *AppointmentComments) Add(c Comment) {
+	if ac != nil {
+		*ac = append(*ac, c)
+	}
 }
 
 type AppointmentHistory struct {
