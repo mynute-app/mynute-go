@@ -28,3 +28,23 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 	}
 	return nil
 }
+
+var TenantModels = []any{
+	&Appointment{},
+	&AppointmentArchive{},
+	&Branch{},
+	&Employee{},
+	&Service{},
+}
+
+var GeneralModels = []any{
+	&Sector{},
+	&Company{},
+	&Holiday{},
+	&Client{},
+	&EndPoint{},
+	&Role{},
+	&PolicyRule{},
+	&Resource{},
+	&Property{},
+}

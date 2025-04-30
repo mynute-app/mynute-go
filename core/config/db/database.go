@@ -21,27 +21,6 @@ type Test struct {
 	name string
 }
 
-var generalModels = []any{
-	&model.Sector{},
-	&model.Company{},
-	&model.Holiday{},
-	&model.Client{},
-	&model.EndPoint{},
-	&model.Role{},
-	&model.PolicyRule{},
-	&model.Resource{},
-	&model.Property{},
-}
-
-var tenantModels = []any{
-	&model.Appointment{},
-	&model.AppointmentArchive{},
-	&model.Branch{},
-	&model.Employee{},
-	&model.Service{},
-}
-	
-
 // Connects to the database
 func Connect() *Database {
 	// Get environment variables
@@ -93,7 +72,7 @@ func Connect() *Database {
 
 // Migrate the database schema
 func (db *Database) Migrate() *Database {
-	for _, model := range generalModels {
+	for _, model := range model.GeneralModels {
 		if err := db.Gorm.AutoMigrate(model); err != nil {
 			log.Fatalf("Failed to migrate %T: %v", model, err)
 		}
