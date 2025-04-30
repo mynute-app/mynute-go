@@ -15,21 +15,25 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID  uuid.UUID           `gorm:"type:uuid;not null;index" json:"service_id"`
-	Service    *Service            `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
-	EmployeeID uuid.UUID           `gorm:"type:uuid;not null;index" json:"employee_id"`
-	Employee   *Employee           `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	ClientID   uuid.UUID           `gorm:"type:uuid;not null;index" json:"client_id"`
-	Client     *Client             `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
-	BranchID   uuid.UUID           `gorm:"type:uuid;not null;index" json:"branch_id"`
-	Branch     *Branch             `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	CompanyID  uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
-	Company    *Company            `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
-	StartTime  time.Time           `gorm:"not null;index" json:"start_time"`
-	EndTime    time.Time           `gorm:"not null;index" json:"end_time"`
-	Cancelled  bool                `gorm:"index;default:false" json:"cancelled"`
-	History    AppointmentHistory  `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
-	Comments   AppointmentComments `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
+	ServiceID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"service_id"`
+	Service           *Service            `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
+	EmployeeID        uuid.UUID           `gorm:"type:uuid;not null;index" json:"employee_id"`
+	Employee          *Employee           `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	ClientID          uuid.UUID           `gorm:"type:uuid;not null;index" json:"client_id"`
+	Client            *Client             `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
+	BranchID          uuid.UUID           `gorm:"type:uuid;not null;index" json:"branch_id"`
+	Branch            *Branch             `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
+	CompanyID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
+	Company           *Company            `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
+	PaymentID         uuid.UUID           `gorm:"type:uuid;index" json:"payment_id"`
+	Payment           *Payment            `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Payment type
+	StartTime         time.Time           `gorm:"not null;index" json:"start_time"`
+	EndTime           time.Time           `gorm:"not null;index" json:"end_time"`
+	Cancelled         bool                `gorm:"index;default:false" json:"cancelled"`
+	ConfirmedByClient bool                `gorm:"index;default:false" json:"confirmed_by_client"`
+	Fulfilled         bool                `gorm:"index;default:false" json:"fulfilled"`
+	History           AppointmentHistory  `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
+	Comments          AppointmentComments `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
 }
 
 // --- Main Appointment Model ---
