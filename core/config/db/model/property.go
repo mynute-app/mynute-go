@@ -8,6 +8,10 @@ type Property struct {
 	Resource     Resource `gorm:"foreignKey:ResourceName;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
+func (Property) TableName() string {
+	return "public.properties"
+}
+
 var CompanyCNPJ = &Property{
 	Name:         "company_cnpj",
 	Description:  "CNPJ of the company",

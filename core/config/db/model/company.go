@@ -1,10 +1,12 @@
 package model
 
 import (
+	"agenda-kaki-go/core/lib"
 	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Company struct {
@@ -16,24 +18,32 @@ type Company struct {
 	Sector     *Sector    `gorm:"foreignKey:SectorID;constraint:OnDelete:SET NULL;"`
 }
 
-func (c *Company) GenerateSchemaName() string {
-	return c.Name + "_" + c.ID.String()
+func (Company) TableName() string {
+	return "public.companies"
 }
 
-func (c *Company) AfterCreate(tx *gorm.DB) error {
+func (c *Company) GenerateSchemaName() string {
+	return "company" + "_" + c.ID.String()
+}
+
+func (c *Company) MigrateSchema(tx *gorm.DB) error {
 	c.SchemaName = c.GenerateSchemaName()
+
+	if err := c.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
 
 	if err := tx.Save(c).Error; err != nil {
 		return err
 	}
 
 	// Create the schema in the database
-	if err := tx.Exec("CREATE SCHEMA IF NOT EXISTS " + c.SchemaName).Error; err != nil {
+	if err := c.CreateSchema(tx); err != nil {
 		return err
 	}
-	
+
 	// Set the search path to the new schema
-	if err := tx.Exec("SET search_path TO " + c.SchemaName).Error; err != nil {
+	if err := c.ChangeToTenantSchema(tx); err != nil {
 		return err
 	}
 
@@ -44,12 +54,128 @@ func (c *Company) AfterCreate(tx *gorm.DB) error {
 		}
 	}
 
+	roleViewSQL := fmt.Sprintf(`CREATE OR REPLACE VIEW "%s".roles AS SELECT * FROM public.roles`, c.SchemaName)
+	if err := tx.Exec(roleViewSQL).Error; err != nil {
+		return err
+	}
+
+	clientViewSQL := fmt.Sprintf(`CREATE OR REPLACE VIEW "%s".clients AS SELECT * FROM public.clients`, c.SchemaName)
+	if err := tx.Exec(clientViewSQL).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) ChangeToTenantSchema(tx *gorm.DB) error {
+	if c.SchemaName == "" {
+		return fmt.Errorf("schema name is empty")
+	}
+
+	// Set the search path to the new schema
+	if err := tx.Exec(fmt.Sprintf(`SET search_path TO "%s"`, c.SchemaName)).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) ChangeToPublicSchema(tx *gorm.DB) error {
+	// Set the search path to the general_schema schema
+	if err := tx.Exec("SET search_path TO public").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) Create(tx *gorm.DB) error {
+	if err := c.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Create(c).Error; err != nil {
+		return err
+	}
+
+	if err := c.MigrateSchema(tx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) CreateSchema(tx *gorm.DB) error {
+	if err := c.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if c.SchemaName == "" {
+		return lib.Error.Company.SchemaIsEmpty
+	}
+
+	if err := tx.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS "%s"`, c.SchemaName)).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) CreateOwner(tx *gorm.DB, owner *Employee) error {
+	if err := c.ChangeToTenantSchema(tx); err != nil {
+		return err
+	}
+
+	if c.ID == uuid.Nil {
+		return lib.Error.Company.CouldNotCreateOwner.WithError(fmt.Errorf("company ID is empty"))
+	}
+
+	owner.CompanyID = c.ID
+
+	if err := tx.Create(&owner).Error; err != nil {
+		return err
+	}
+
+	var ownerRole Role
+
+	if err := c.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.First(&ownerRole, "id = ?", SystemRoleOwner.ID).Error; err != nil {
+		return err
+	}
+
+	if err := c.ChangeToTenantSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.ID).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Model(&owner).Preload("Roles").Where("id = ?", owner.ID.String()).First(&owner).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Company) Refresh(tx *gorm.DB) error {
+	if err := c.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Model(c).Preload(clause.Associations).Where("id = ?", c.ID.String()).First(c).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 
 type CompanyMerged struct {
 	Company
-	Branches []Branch `json:"branches"`
+	Branches  []Branch   `json:"branches"`
 	Employees []Employee `json:"employees"`
-	Services []Service `json:"services"`
+	Services  []Service  `json:"services"`
 }

@@ -18,6 +18,10 @@ type Resource struct {
 	References  ResourceReferences `gorm:"type:jsonb" json:"references"`
 }
 
+func (Resource) TableName() string {
+	return "public.resources"
+}
+
 // --- Define ResourceReference first ---
 type ResourceReference struct {
 	DatabaseKey string `json:"database_key"` // The key in the database, e.g. "id", "tax_id".

@@ -17,10 +17,6 @@ var AllowNilResourceID = false
 // --- PolicyRule (Represents a policy rule for access control) ---
 type PolicyRule struct {
 	BaseModel
-	CompanyID           *uuid.UUID      `json:"company_id"`
-	Company             *Company        `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"company"`
-	CreatedByEmployeeID *uuid.UUID      `json:"created_by_employee_id"`
-	CreatedByEmployee   *Employee       `gorm:"foreignKey:CreatedByEmployeeID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"created_by_employee"`
 	PropertyID          *uuid.UUID      `json:"property_id"`
 	Property            *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Name                string          `json:"name"`
@@ -29,6 +25,16 @@ type PolicyRule struct {
 	EndPointID          uuid.UUID       `json:"end_point_id"`
 	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"end_point"`
 	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
+}
+
+func (PolicyRule) TableName() string {
+	return "public.policy_rules"
+}
+
+func (PolicyRule) Indexes() map[string]string {
+	return map[string]string{
+		"idx_policy_company_endpoint": "CREATE INDEX idx_policy_company_endpoint ON policy_rules (company_id, end_point_id)",
+	}
 }
 
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
@@ -210,16 +216,6 @@ func validateConditionNode(node ConditionNode) error {
 
 	// All checks passed for this node and its children (if any)
 	return nil
-}
-
-func (PolicyRule) TableName() string {
-	return "policy_rules"
-}
-
-func (PolicyRule) Indexes() map[string]string {
-	return map[string]string{
-		"idx_policy_company_endpoint": "CREATE INDEX idx_policy_company_endpoint ON policy_rules (company_id, end_point_id)",
-	}
 }
 
 // --- Helper Functions ---
@@ -1159,8 +1155,8 @@ func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
 
 		// Create a placeholder to find existing policy
 		var existingPolicy PolicyRule
-		// Find system policies specifically (company_id IS NULL)
-		err := tx.Where("name = ? AND company_id IS NULL", policy.Name).First(&existingPolicy).Error
+
+		err := tx.Where("name = ?", policy.Name).First(&existingPolicy).Error
 
 		if err == gorm.ErrRecordNotFound {
 			// Policy doesn't exist, create it

@@ -13,14 +13,16 @@ import (
 var AllowSystemRoleCreation = false
 
 type Role struct {
-	BaseModel                // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
-	Name         string      `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
-	Description  string      `json:"description"`
-	CompanyID    *uuid.UUID  `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
-	Company      *Company    `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
-	IsSystemRole bool        `gorm:"not null;default:false" json:"is_system_role"`
-	Employees    []*Employee `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"employees,omitempty"`
-	Clients      []*Client   `gorm:"many2many:client_roles;constraint:OnDelete:CASCADE;" json:"clients,omitempty"`
+	BaseModel               // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
+	Name         string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
+	Description  string     `json:"description"`
+	CompanyID    *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
+	Company      *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
+	IsSystemRole bool       `gorm:"not null;default:false" json:"is_system_role"`
+}
+
+func (Role) TableName() string {
+	return "public.roles"
 }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {
@@ -48,7 +50,7 @@ func (r *Role) isRoleNameReserved(tx *gorm.DB) error {
 		var count int64
 		if err := tx.
 			Model(&Role{}).
-			Where("name = ? AND company_id IS NULL", r.Name).
+			Where("name = ?", r.Name).
 			Count(&count).Error; err != nil {
 			return err
 		}
@@ -100,7 +102,7 @@ func SeedRoles(db *gorm.DB) ([]*Role, error) {
 		log.Print("System Roles seeded successfully")
 	}()
 	for _, role := range Roles {
-		err := tx.Where("name = ? AND company_id IS NULL", role.Name).First(role).Error
+		err := tx.Where("name = ?", role.Name).First(role).Error
 		if err == gorm.ErrRecordNotFound {
 			if err := tx.Create(role).Error; err != nil {
 				return nil, err

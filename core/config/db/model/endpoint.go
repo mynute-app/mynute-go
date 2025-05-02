@@ -21,22 +21,22 @@ type EndPoint struct {
 	Resource    *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
-func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
-	if !AllowEndpointCreation {
-		panic("EndPoint creation is not allowed")
-	}
-	return nil
+func (EndPoint) TableName() string {
+	return "public.endpoints"
 }
 
-// Custom Composite Index
-func (EndPoint) TableName() string {
-	return "endpoints"
-}
 
 func (EndPoint) Indexes() map[string]string {
 	return map[string]string{
 		"idx_method_path": "CREATE UNIQUE INDEX idx_method_path ON routes (method, path)",
 	}
+}
+
+func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
+	if !AllowEndpointCreation {
+		panic("EndPoint creation is not allowed")
+	}
+	return nil
 }
 
 // --- Appointment Endpoints --- //

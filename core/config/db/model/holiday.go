@@ -13,3 +13,7 @@ type Holiday struct {
 	Recurrent   bool      `gorm:"not null;index" json:"recurrent"`
 	DayMonth    string    `gorm:"not null" json:"dayMonth"`
 }
+
+func (Holiday) TableName() string {
+	return "public.holidays"
+}

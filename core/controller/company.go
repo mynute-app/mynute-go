@@ -9,7 +9,6 @@ import (
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm/clause"
 )
 
 // company_controller embeds service.Base in order to extend it with the functions below
@@ -56,7 +55,7 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	company.Name = body.Name
 	company.TaxID = body.TaxID
 
-	if err := tx.Create(&company).Error; err != nil {
+	if err := company.Create(tx); err != nil {
 		return err
 	}
 
@@ -69,21 +68,11 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 	owner.Password = body.OwnerPassword
 	owner.CompanyID = company.ID
 
-	if err := tx.Create(&owner).Error; err != nil {
+	if err := company.CreateOwner(tx, &owner); err != nil {
 		return err
 	}
 
-	var ownerRole model.Role
-
-	if err := tx.First(&ownerRole, "id = ?", model.SystemRoleOwner.ID).Error; err != nil {
-		return err
-	}
-
-	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.ID).Error; err != nil {
-		return err
-	}
-
-	if err := tx.Model(&company).Preload(clause.Associations).Where("id = ?", company.ID.String()).First(&company).Error; err != nil {
+	if err := company.Refresh(tx); err != nil {
 		return err
 	}
 

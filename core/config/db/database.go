@@ -100,17 +100,39 @@ func (db *Database) Test() *Test {
 	return &Test{Database: db, name: dbName}
 }
 
-// Clear the database. Only in test environment
 func (t *Test) Clear() {
 	if os.Getenv("APP_ENV") != "test" {
 		return
 	}
-	query := `
-		DROP SCHEMA public CASCADE;
+
+	// Step 1: Drop all schemas except 'public'
+	dropSchemasSQL := `
+		DO $$ DECLARE
+			schema_name text;
+		BEGIN
+			FOR schema_name IN
+				SELECT nspname FROM pg_namespace
+				WHERE nspname NOT IN ('pg_catalog', 'information_schema', 'public')
+				  AND nspname NOT LIKE 'pg_toast%'
+			LOOP
+				EXECUTE format('DROP SCHEMA IF EXISTS %I CASCADE', schema_name);
+			END LOOP;
+		END $$;
+	`
+
+	// Step 2: Drop and recreate 'public' just in case
+	resetPublicSQL := `
+		DROP SCHEMA IF EXISTS public CASCADE;
 		CREATE SCHEMA public;
 	`
-	if err := t.Gorm.Exec(query).Error; err != nil {
-		log.Fatalf("Failed to clear database: %v", err)
+
+	// Execute both
+	if err := t.Gorm.Exec(dropSchemasSQL).Error; err != nil {
+		log.Fatalf("Failed to drop non-public schemas: %v", err)
 	}
-	log.Printf("Erased all tables on %s database.\n", t.name)
+	if err := t.Gorm.Exec(resetPublicSQL).Error; err != nil {
+		log.Fatalf("Failed to reset public schema: %v", err)
+	}
+
+	log.Printf("Erased all schemas on %s database.\n", t.name)
 }

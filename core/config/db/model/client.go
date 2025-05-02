@@ -28,7 +28,10 @@ type Client struct {
 	Verified         bool          `gorm:"default:false;not null" json:"verified"`
 	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
 	Appointments     []Appointment `gorm:"foreignKey:ClientID;constraint:OnDelete:CASCADE;" json:"appointments"`
-	Roles            []*Role       `gorm:"many2many:client_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+}
+
+func (Client) TableName() string {
+	return "public.clients"
 }
 
 func (u *Client) BeforeCreate(tx *gorm.DB) (err error) {

@@ -35,6 +35,7 @@ var TenantModels = []any{
 	&Branch{},
 	&Employee{},
 	&Service{},
+	&Payment{},
 }
 
 var GeneralModels = []any{

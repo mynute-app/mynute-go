@@ -136,6 +136,8 @@ type CompanyErrors struct {
 	ServiceDoesNotBelong  ErrorStruct
 	CompanyMismatch       ErrorStruct
 	IdUpdateForbidden     ErrorStruct
+	CouldNotCreateOwner   ErrorStruct
+	SchemaIsEmpty         ErrorStruct
 }
 
 type EmployeeErrors struct {
@@ -194,7 +196,7 @@ var Error = ErrorCategory{
 		HistoryManualUpdateForbidden: NewError("Manual update of appointment log is not allowed", "Atualização manual do histórico não é permitida", fiber.StatusForbidden),
 	},
 	AppointmentArchive: AppointmentArchiveErrors{
-		IdNotSet: NewError("Appointment archive ID cannot be nil", "ID do arquivo de compromisso não pode ser nulo", fiber.StatusBadRequest),
+		IdNotSet:        NewError("Appointment archive ID cannot be nil", "ID do arquivo de compromisso não pode ser nulo", fiber.StatusBadRequest),
 		UpdateForbidden: NewError("Can not update archived appointments", "Não é possível atualizar compromissos arquivados", fiber.StatusForbidden),
 		DeleteForbidden: NewError("Can not delete archived appointments", "Não é possível deletar compromissos arquivados", fiber.StatusForbidden),
 	},
@@ -222,6 +224,8 @@ var Error = ErrorCategory{
 		CnpjAlreadyExists:     NewError("Company CNPJ already exists", "Empresa já cadastrada", fiber.StatusBadRequest),
 		CompanyMismatch:       NewError("Company ID mismatch between related entities", "Incompatibilidade de ID da empresa entre entidades relacionadas", fiber.StatusBadRequest),
 		IdUpdateForbidden:     NewError("Company ID cannot be updated", "ID da empresa não pode ser atualizado", fiber.StatusBadRequest),
+		CouldNotCreateOwner:   NewError("Could not create owner account for the company", "Não foi possível criar a conta de proprietário para a empresa", fiber.StatusInternalServerError),
+		SchemaIsEmpty:         NewError("Company schema is empty", "Esquema da empresa está vazio", fiber.StatusBadRequest),
 	},
 	Employee: EmployeeErrors{
 		NotFound:                 NewError("Employee not found", "Funcionário não encontrado", fiber.StatusNotFound),

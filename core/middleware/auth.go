@@ -45,7 +45,7 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	var policies []*model.PolicyRule
-	PoliciesWhereClause := "end_point_id = ? AND (company_id IS NULL OR company_id = ?)"
+	PoliciesWhereClause := "end_point_id = ?"
 	if err := db.Where(PoliciesWhereClause, EndPoint.ID, claim.CompanyID).Find(&policies).Error; err != nil {
 		// Note: gorm.ErrRecordNotFound is handled by the len(policies) == 0 check later
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
