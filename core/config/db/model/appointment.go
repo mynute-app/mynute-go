@@ -23,10 +23,9 @@ type AppointmentBase struct {
 	Client            *Client             `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
 	BranchID          uuid.UUID           `gorm:"type:uuid;not null;index" json:"branch_id"`
 	Branch            *Branch             `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	CompanyID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
-	Company           *Company            `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"-"` // Company loaded via FK, json:"-" often good practice
 	PaymentID         uuid.UUID           `gorm:"type:uuid;index" json:"payment_id"`
 	Payment           *Payment            `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Payment type
+	CompanyID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
 	StartTime         time.Time           `gorm:"not null;index" json:"start_time"`
 	EndTime           time.Time           `gorm:"not null;index" json:"end_time"`
 	Cancelled         bool                `gorm:"index;default:false" json:"cancelled"`

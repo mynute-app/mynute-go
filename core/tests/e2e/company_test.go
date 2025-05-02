@@ -14,7 +14,7 @@ import (
 )
 
 type Company struct {
-	created    model.Company
+	created    model.CompanyMerged
 	owner      *Employee
 	employees  []*Employee
 	branches   []*Branch

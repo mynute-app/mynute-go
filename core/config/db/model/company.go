@@ -21,8 +21,8 @@ func (c *Company) GenerateSchemaName() string {
 }
 
 func (c *Company) AfterCreate(tx *gorm.DB) error {
-	// Generate the schema name after the company is created
 	c.SchemaName = c.GenerateSchemaName()
+
 	if err := tx.Save(c).Error; err != nil {
 		return err
 	}
@@ -45,4 +45,11 @@ func (c *Company) AfterCreate(tx *gorm.DB) error {
 	}
 
 	return nil
+}
+
+type CompanyMerged struct {
+	Company
+	Branches []Branch `json:"branches"`
+	Employees []Employee `json:"employees"`
+	Services []Service `json:"services"`
 }
