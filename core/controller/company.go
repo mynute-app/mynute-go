@@ -72,12 +72,12 @@ func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := company.Refresh(tx); err != nil {
+	if fullCompany, err := company.GetFullCompany(tx); err != nil {
 		return err
-	}
-
-	if err := res.SendDTO(200, &company, &DTO.Company{}); err != nil {
-		return err
+	} else {
+		if err := res.SendDTO(200, fullCompany, &DTO.Company{}); err != nil {
+			return err
+		}
 	}
 
 	return nil

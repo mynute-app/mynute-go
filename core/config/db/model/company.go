@@ -173,6 +173,47 @@ func (c *Company) Refresh(tx *gorm.DB) error {
 	return nil
 }
 
+func (c *Company) GetFullCompany(tx *gorm.DB) (*CompanyMerged, error) {
+
+	if err := c.Refresh(tx); err != nil {
+		return nil, err
+	}
+
+	if err := c.ChangeToTenantSchema(tx); err != nil {
+		return nil, err
+	}
+
+	fullCompany := &CompanyMerged{
+		Company: *c,
+	}
+
+	// Get Branches
+	var branches []Branch
+	if err := tx.Model(&Branch{}).Find(&branches).Error; err != nil {
+		return nil, err
+	}
+
+	fullCompany.Branches = branches
+
+	// Get Employees
+	var employees []Employee
+	if err := tx.Model(&Employee{}).Find(&employees).Error; err != nil {
+		return nil, err
+	}
+
+	fullCompany.Employees = employees
+
+	// Get Services
+	var services []Service
+	if err := tx.Model(&Service{}).Find(&services).Error; err != nil {
+		return nil, err
+	}
+
+	fullCompany.Services = services
+
+	return fullCompany, nil
+}
+
 type CompanyMerged struct {
 	Company
 	Branches  []Branch   `json:"branches"`
