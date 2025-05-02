@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"encoding/json"
 
@@ -228,11 +229,11 @@ func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
 func Branch(Gorm *handler.Gorm) *branch_controller {
 	bc := &branch_controller{
 		Base: service.Base[model.Branch, DTO.Branch]{
-			Name:         namespace.ClientKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.ClientKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		bc.CreateBranch,
 		bc.GetBranchById,

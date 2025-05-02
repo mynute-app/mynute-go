@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"errors"
 
@@ -87,7 +88,7 @@ func Auth(Gorm *handler.Gorm) *auth_controller {
 			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		ac.VerifyExistingAccount,
 		ac.BeginAuthProviderCallback,

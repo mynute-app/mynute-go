@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"fmt"
 
@@ -392,11 +393,11 @@ func (ec *employee_controller) RemoveRoleFromEmployee(c *fiber.Ctx) error {
 func Employee(Gorm *handler.Gorm) *employee_controller {
 	ec := &employee_controller{
 		Base: service.Base[model.Employee, DTO.Employee]{
-			Name:         namespace.HolidaysKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.HolidaysKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		ec.CreateEmployee,
 		ec.GetEmployeeById,

@@ -26,14 +26,10 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
 
-	a := middleware.Auth(Gorm)
-
 	r := App.Group("/")
-	mdwPub := []fiber.Handler{a.WhoAreYou}
-	mdwPrv := []fiber.Handler{a.WhoAreYou, a.DenyUnauthorized}
 
-	endpoint := &handler.Endpoint{DB: DB}
-	if err := endpoint.Build(r, r, mdwPub, mdwPrv); err != nil {
+	endpoints := &middleware.Endpoint{DB: Gorm}
+	if err := endpoints.Build(r); err != nil {
 		panic(err)
 	}
 }

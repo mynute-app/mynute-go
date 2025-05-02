@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"agenda-kaki-go/core/config/namespace"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -100,11 +101,12 @@ type AppointmentArchiveErrors struct {
 
 // Grouped errors per domain
 type AuthErrors struct {
-	InvalidLogin     ErrorStruct
-	NoToken          ErrorStruct
-	InvalidToken     ErrorStruct
-	Unauthorized     ErrorStruct
-	EmailCodeInvalid ErrorStruct
+	InvalidLogin         ErrorStruct
+	NoToken              ErrorStruct
+	InvalidToken         ErrorStruct
+	Unauthorized         ErrorStruct
+	EmailCodeInvalid     ErrorStruct
+	CompanyHeaderMissing ErrorStruct // New: For missing X-Company-ID header
 }
 
 type BranchErrors struct {
@@ -175,11 +177,12 @@ type ValidationErrors struct {
 // Global error instances
 var Error = ErrorCategory{
 	Auth: AuthErrors{
-		InvalidLogin:     NewError("Invalid login credentials", "Credenciais de login inválidas", fiber.StatusUnauthorized),
-		NoToken:          NewError("Authorization token not provided", "Token de autorização não fornecido", fiber.StatusUnauthorized),
-		InvalidToken:     NewError("Authorization token is invalid or expired", "Token de autorização inválido ou expirado", fiber.StatusUnauthorized),
-		Unauthorized:     NewError("You are not authorized for this action", "Você não está autorizado para esta ação", fiber.StatusForbidden),
-		EmailCodeInvalid: NewError("Email verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
+		InvalidLogin:         NewError("Invalid login credentials", "Credenciais de login inválidas", fiber.StatusUnauthorized),
+		NoToken:              NewError("Authorization token not provided", "Token de autorização não fornecido", fiber.StatusUnauthorized),
+		InvalidToken:         NewError("Authorization token is invalid or expired", "Token de autorização inválido ou expirado", fiber.StatusUnauthorized),
+		Unauthorized:         NewError("You are not authorized for this action", "Você não está autorizado para esta ação", fiber.StatusForbidden),
+		EmailCodeInvalid:     NewError("Email verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
+		CompanyHeaderMissing: NewError(fmt.Sprintf(`%s required at headers`, namespace.HeadersKey.Company), fmt.Sprintf(`%s requerido no cabeçalho`, namespace.HeadersKey.Company), fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
 		StartTimeInThePast:           NewError("Appointment start time cannot be in the past", "A data de início do compromisso não pode ser no passado", fiber.StatusBadRequest),

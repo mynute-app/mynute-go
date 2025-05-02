@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 	"fmt"
 	"time"
@@ -150,7 +151,7 @@ func (ac *appointment_controller) CancelAppointmentByID(c *fiber.Ctx) error {
 	if appointment.StartTime.Before(time.Now()) {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("cannot cancel appointment as it already happened"))
 	}
-	
+
 	return nil
 }
 
@@ -162,7 +163,7 @@ func Appointment(Gorm *handler.Gorm) *appointment_controller {
 			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := &handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		ac.CreateAppointment,
 		ac.GetAppointmentByID,

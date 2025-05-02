@@ -1,39 +1,42 @@
-package handler
+package middleware
 
 import (
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/handler"
 	"log"
 	"reflect"
 	"runtime"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 var EndpointHandlers = make(map[string]fiber.Handler)
 
 type Endpoint struct {
-	DB *gorm.DB
+	DB *handler.Gorm
 }
 
-func (ep *Endpoint) Build(rPub fiber.Router, rPrv fiber.Router, mdwPub []fiber.Handler, mdwPrv []fiber.Handler) error {
+func (ep *Endpoint) Build(r fiber.Router) error {
 	var EndPoints []*model.EndPoint
-	db := ep.DB
+	db := ep.DB.DB
 	if err := db.Find(&EndPoints).Error; err != nil {
 		return err
 	}
+	auth := Auth(ep.DB)
 	for _, EndPoint := range EndPoints {
 		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
-
-		if EndPoint.IsPublic {
-			handlers := append(mdwPub, dbRouteHandler)
-			rPub.Add(method, EndPoint.Path, handlers...)
-		} else {
-			handlers := append(mdwPrv, dbRouteHandler)
-			rPrv.Add(method, EndPoint.Path, handlers...)
+		funcs := []fiber.Handler{}
+		funcs = append(funcs, auth.WhoAreYou)
+		if EndPoint.NeedsCompanyId {
+			funcs = append(funcs, GetTenant)
 		}
+		if !EndPoint.IsPublic {
+			funcs = append(funcs, auth.DenyUnauthorized)
+		}
+		funcs = append(funcs, dbRouteHandler)
+		r.Add(method, EndPoint.Path, funcs...)
 	}
 	log.Println("Routes build finished!")
 	return nil
@@ -86,4 +89,3 @@ func getHandlerName(fn fiber.Handler) string {
 	last = strings.Split(last, "-")[0]
 	return last
 }
-

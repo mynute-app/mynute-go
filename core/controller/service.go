@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -101,11 +102,11 @@ func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
 func Service(Gorm *handler.Gorm) *service_controller {
 	sc := &service_controller{
 		Base: service.Base[model.Service, DTO.Service]{
-			Name:         namespace.ClientKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.ClientKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		sc.CreateService,
 		sc.GetServiceById,
@@ -113,6 +114,6 @@ func Service(Gorm *handler.Gorm) *service_controller {
 		sc.UpdateServiceById,
 		sc.DeleteServiceById,
 	})
-	
+
 	return sc
 }

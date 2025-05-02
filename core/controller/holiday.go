@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -100,11 +101,11 @@ func (cc *holidays_controller) DeleteHolidayById(c *fiber.Ctx) error {
 func Holiday(Gorm *handler.Gorm) *holidays_controller {
 	hc := &holidays_controller{
 		Base: service.Base[model.Holiday, DTO.Holidays]{
-			Name:         namespace.HolidaysKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.HolidaysKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		hc.CreateHoliday,
 		hc.GetHolidayById,

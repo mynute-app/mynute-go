@@ -44,6 +44,14 @@ var QueryKey = QueryStruct{
 	CompanyId: "companyId",
 }
 
+type HeadersStruct struct {
+	Company string
+}
+
+var HeadersKey = HeadersStruct{
+	Company: "X-Company-ID",
+}
+
 type TypeStruct struct {
 	Name  string
 	Model string

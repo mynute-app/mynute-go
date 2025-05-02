@@ -12,19 +12,19 @@ var AllowEndpointCreation = false
 
 type EndPoint struct {
 	BaseModel
-	Handler     string     `json:"handler"`
-	Description string     `json:"description"`
-	Method      string     `gorm:"type:varchar(10)" json:"method"`
-	Path        string     `json:"path"`
-	IsPublic    bool       `gorm:"default:false" json:"is_public"`
-	ResourceID  *uuid.UUID `json:"resource_id"`
-	Resource    *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
+	Handler        string     `json:"handler"`
+	Description    string     `json:"description"`
+	Method         string     `gorm:"type:varchar(10)" json:"method"`
+	Path           string     `json:"path"`
+	IsPublic       bool       `gorm:"default:false" json:"is_public"`
+	NeedsCompanyId bool       `gorm:"default:true" json:"needs_company_id"`
+	ResourceID     *uuid.UUID `json:"resource_id"`
+	Resource       *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
 func (EndPoint) TableName() string {
 	return "public.endpoints"
 }
-
 
 func (EndPoint) Indexes() map[string]string {
 	return map[string]string{
@@ -46,7 +46,6 @@ var CreateAppointment = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateAppointment", // Assuming handler name matches reference ac.CreateAppointment
 	Description: "Create an appointment",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var GetAppointmentByID = &EndPoint{
@@ -54,7 +53,6 @@ var GetAppointmentByID = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetAppointmentByID", // Assuming handler name matches reference ac.GetAppointmentByID
 	Description: "View appointment by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }
 var UpdateAppointmentByID = &EndPoint{
@@ -62,7 +60,6 @@ var UpdateAppointmentByID = &EndPoint{
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateAppointmentByID", // Corrected from GetAppointmentByID based on reference
 	Description: "Update appointment by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }
 var CancelAppointmentByID = &EndPoint{
@@ -70,7 +67,6 @@ var CancelAppointmentByID = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "CancelAppointmentByID", // Assuming handler name matches reference ac.CancelAppointmentByID
 	Description: "This wil cancel appointment by ID. Deleting appointments is forbidden.",
-	IsPublic:    false, // Access: "private"
 	Resource:    AppointmentResource,
 }
 
@@ -82,13 +78,15 @@ var VerifyExistingAccount = &EndPoint{
 	Handler:     "VerifyExistingAccount", // From ac.VerifyExistingAccount
 	Description: "Verify if an account exists",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var BeginAuthProviderCallback = &EndPoint{
 	Path:        "/auth/oauth/:provider",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "BeginAuthProviderCallback", // From ac.BeginAuthProviderCallback
 	Description: "Begin auth provider callback",
-	IsPublic:    true, // Access: "public"
+	IsPublic:    true, // Access: "public"]
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetAuthCallbackFunction = &EndPoint{
 	Path:        "/auth/oauth/:provider/callback",
@@ -96,6 +94,7 @@ var GetAuthCallbackFunction = &EndPoint{
 	Handler:     "GetAuthCallbackFunction", // From ac.GetAuthCallbackFunction
 	Description: "View auth callback function",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var LogoutProvider = &EndPoint{
 	Path:        "/auth/oauth/logout",
@@ -103,6 +102,7 @@ var LogoutProvider = &EndPoint{
 	Handler:     "LogoutProvider", // From ac.LogoutProvider
 	Description: "Logout provider",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 
 // --- Branch Endpoints --- //
@@ -112,7 +112,6 @@ var CreateBranch = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateBranch", // From bc.CreateBranch
 	Description: "Create a branch",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
 }
 var GetBranchById = &EndPoint{
@@ -120,7 +119,6 @@ var GetBranchById = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetBranchById", // From bc.GetBranchById
 	Description: "View branch by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var GetBranchByName = &EndPoint{
@@ -128,7 +126,6 @@ var GetBranchByName = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetBranchByName", // From bc.GetBranchByName
 	Description: "View branch by name",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var UpdateBranchById = &EndPoint{
@@ -136,7 +133,6 @@ var UpdateBranchById = &EndPoint{
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateBranchById", // From bc.UpdateBranchById
 	Description: "Update branch by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var DeleteBranchById = &EndPoint{
@@ -144,7 +140,6 @@ var DeleteBranchById = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteBranchById", // From bc.DeleteBranchById
 	Description: "Delete branch by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var GetEmployeeServicesByBranchId = &EndPoint{
@@ -152,7 +147,6 @@ var GetEmployeeServicesByBranchId = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeServicesByBranchId", // From bc.GetEmployeeServicesByBranchId
 	Description: "View employee offered services at the branch by branch ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var AddServiceToBranch = &EndPoint{
@@ -160,7 +154,6 @@ var AddServiceToBranch = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "AddServiceToBranch", // From bc.AddServiceToBranch
 	Description: "Add service to branch",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var RemoveServiceFromBranch = &EndPoint{
@@ -168,7 +161,6 @@ var RemoveServiceFromBranch = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "RemoveServiceFromBranch", // From bc.RemoveServiceFromBranch
 	Description: "Remove service from branch",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 
@@ -180,6 +172,7 @@ var CreateClient = &EndPoint{
 	Handler:     "CreateClient", // From cc.CreateClient
 	Description: "Create client",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var LoginClient = &EndPoint{
 	Path:        "/client/login",
@@ -187,6 +180,7 @@ var LoginClient = &EndPoint{
 	Handler:     "LoginClient", // From cc.LoginClient
 	Description: "Login client",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var VerifyClientEmail = &EndPoint{
 	Path:        "/client/verify-email/:email/:code",
@@ -194,30 +188,31 @@ var VerifyClientEmail = &EndPoint{
 	Handler:     "VerifyClientEmail", // From cc.VerifyClientEmail
 	Description: "Verify client email",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetClientByEmail = &EndPoint{
 	Path:        "/client/email/:email",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetClientByEmail", // From cc.GetClientByEmail
 	Description: "View client by email",
-	IsPublic:    false, // Access: "private"
 	Resource:    ClientResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var UpdateClientById = &EndPoint{
 	Path:        "/client/:id",
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateClientById", // From cc.UpdateClientById
 	Description: "Update client by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    ClientResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var DeleteClientById = &EndPoint{
 	Path:        "/client/:id",
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteClientById", // From cc.DeleteClientById
 	Description: "Delete client by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    ClientResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 
 // --- Company Endpoints --- //
@@ -228,6 +223,7 @@ var CreateCompany = &EndPoint{
 	Handler:     "CreateCompany", // From cc.CreateCompany
 	Description: "Create a company",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetCompanyById = &EndPoint{
 	Path:        "/company/:id",
@@ -236,6 +232,7 @@ var GetCompanyById = &EndPoint{
 	Description: "View company by ID",
 	IsPublic:    true, // Access: "private"
 	Resource:    CompanyResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetCompanyByName = &EndPoint{
 	Path:        "/company/name/:name",
@@ -243,6 +240,7 @@ var GetCompanyByName = &EndPoint{
 	Handler:     "GetCompanyByName", // From cc.GetCompanyByName
 	Description: "View company by name",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetCompanyByTaxId = &EndPoint{
 	Path:        "/company/tax_id/:tax_id",
@@ -250,22 +248,23 @@ var GetCompanyByTaxId = &EndPoint{
 	Handler:     "GetCompanyByTaxId", // From cc.GetCompanyByTaxId
 	Description: "View company by tax ID",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var UpdateCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateCompanyById", // From cc.UpdateCompanyById
 	Description: "Update company by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var DeleteCompanyById = &EndPoint{
 	Path:        "/company/:id",
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteCompanyById", // From cc.DeleteCompanyById
 	Description: "Delete company by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 
 // --- Employee Endpoints --- //
@@ -275,7 +274,6 @@ var CreateEmployee = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateEmployee", // From ec.CreateEmployee
 	Description: "Create employee",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
 }
 var LoginEmployee = &EndPoint{
@@ -291,13 +289,13 @@ var VerifyEmployeeEmail = &EndPoint{
 	Handler:     "VerifyEmployeeEmail", // From ec.VerifyEmployeeEmail
 	Description: "Verify employee email",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false, // No need to pass company ID in the headers
 }
 var GetEmployeeById = &EndPoint{
 	Path:        "/employee/:id",
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeById", // From ec.GetEmployeeById
 	Description: "View employee by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
 var GetEmployeeByEmail = &EndPoint{
@@ -305,7 +303,6 @@ var GetEmployeeByEmail = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetEmployeeByEmail", // From ec.GetEmployeeByEmail
 	Description: "View employee by email",
-	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
 var UpdateEmployeeById = &EndPoint{
@@ -313,7 +310,6 @@ var UpdateEmployeeById = &EndPoint{
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateEmployeeById", // From ec.UpdateEmployeeById
 	Description: "Update employee by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
 var DeleteEmployeeById = &EndPoint{
@@ -321,7 +317,6 @@ var DeleteEmployeeById = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteEmployeeById", // From ec.DeleteEmployeeById
 	Description: "Delete employee by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    EmployeeResource,
 }
 var AddServiceToEmployee = &EndPoint{
@@ -329,7 +324,6 @@ var AddServiceToEmployee = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "AddServiceToEmployee", // From ec.AddServiceToEmployee
 	Description: "Add service to employee",
-	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
 var RemoveServiceFromEmployee = &EndPoint{
@@ -337,7 +331,6 @@ var RemoveServiceFromEmployee = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "RemoveServiceFromEmployee", // From ec.RemoveServiceFromEmployee
 	Description: "Remove service from employee",
-	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
 var AddBranchToEmployee = &EndPoint{
@@ -345,7 +338,6 @@ var AddBranchToEmployee = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "AddBranchToEmployee", // From ec.AddBranchToEmployee
 	Description: "Add employee to branch",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var RemoveBranchFromEmployee = &EndPoint{
@@ -353,7 +345,6 @@ var RemoveBranchFromEmployee = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "RemoveBranchFromEmployee", // From ec.RemoveBranchFromEmployee
 	Description: "Remove employee from branch",
-	IsPublic:    false, // Access: "private"
 	Resource:    BranchResource,
 }
 var AddRoleToEmployee = &EndPoint{
@@ -361,7 +352,6 @@ var AddRoleToEmployee = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "AddRoleToEmployee", // From ec.AddRoleToEmployee
 	Description: "Add role to employee",
-	IsPublic:    false, // Access: "private"
 	Resource:    RoleResource,
 }
 var RemoveRoleFromEmployee = &EndPoint{
@@ -369,7 +359,6 @@ var RemoveRoleFromEmployee = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "RemoveRoleFromEmployee", // From ec.RemoveRoleFromEmployee
 	Description: "Remove role from employee",
-	IsPublic:    false, // Access: "private"
 	Resource:    RoleResource,
 }
 
@@ -380,7 +369,6 @@ var CreateHoliday = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateHoliday", // From hc.CreateHoliday
 	Description: "Create a holiday",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
 }
 var GetHolidayById = &EndPoint{
@@ -388,7 +376,6 @@ var GetHolidayById = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetHolidayById", // From hc.GetHolidayById
 	Description: "View holiday by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    HolidayResource,
 }
 var GetHolidayByName = &EndPoint{
@@ -403,7 +390,6 @@ var UpdateHolidayById = &EndPoint{
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateHolidayById", // From hc.UpdateHolidayById
 	Description: "Update holiday by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    HolidayResource,
 }
 var DeleteHolidayById = &EndPoint{
@@ -411,7 +397,6 @@ var DeleteHolidayById = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteHolidayById", // From hc.DeleteHolidayById
 	Description: "Delete holiday by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    HolidayResource,
 }
 
@@ -422,8 +407,8 @@ var CreateSector = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateSector", // From sc.CreateSector
 	Description: "Creates a company sector",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
+	NeedsCompanyId: false,
 }
 var GetSectorById = &EndPoint{
 	Path:        "/sector/:id",
@@ -431,6 +416,7 @@ var GetSectorById = &EndPoint{
 	Handler:     "GetSectorById", // From sc.GetSectorById
 	Description: "Retrieves a company sector by ID",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false,
 }
 var GetSectorByName = &EndPoint{
 	Path:        "/sector/name/:name",
@@ -438,22 +424,23 @@ var GetSectorByName = &EndPoint{
 	Handler:     "GetSectorByName", // From sc.GetSectorByName
 	Description: "Retrieves a company sector by name",
 	IsPublic:    true, // Access: "public"
+	NeedsCompanyId: false,
 }
 var UpdateSectorById = &EndPoint{
 	Path:        "/sector/:id",
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateSectorById", // From sc.UpdateSectorById
 	Description: "Updates a company sector by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    SectorResource,
+	NeedsCompanyId: false,
 }
 var DeleteSectorById = &EndPoint{
 	Path:        "/sector/:id",
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteSectorById", // From sc.DeleteSectorById
 	Description: "Deletes a company sector by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    SectorResource,
+	NeedsCompanyId: false,
 }
 
 // --- Service Endpoints --- //
@@ -463,7 +450,6 @@ var CreateService = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "CreateService", // From sc.CreateService
 	Description: "Create a service",
-	IsPublic:    false, // Access: "private"
 	Resource:    CompanyResource,
 }
 var GetServiceById = &EndPoint{
@@ -471,7 +457,6 @@ var GetServiceById = &EndPoint{
 	Method:      namespace.ViewActionMethod,
 	Handler:     "GetServiceById", // From sc.GetServiceById
 	Description: "View service by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
 var GetServiceByName = &EndPoint{
@@ -486,7 +471,6 @@ var UpdateServiceById = &EndPoint{
 	Method:      namespace.UpdateActionMethod,
 	Handler:     "UpdateServiceById", // From sc.UpdateServiceById
 	Description: "Update service by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
 var DeleteServiceById = &EndPoint{
@@ -494,7 +478,6 @@ var DeleteServiceById = &EndPoint{
 	Method:      namespace.DeleteActionMethod,
 	Handler:     "DeleteServiceById", // From sc.DeleteServiceById
 	Description: "Delete service by ID",
-	IsPublic:    false, // Access: "private"
 	Resource:    ServiceResource,
 }
 

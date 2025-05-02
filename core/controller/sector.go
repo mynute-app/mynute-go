@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/middleware"
 	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -99,11 +100,11 @@ func (cc *sector_controller) DeleteSectorById(c *fiber.Ctx) error {
 func Sector(Gorm *handler.Gorm) *sector_controller {
 	sc := &sector_controller{
 		Base: service.Base[model.Sector, DTO.Sector]{
-			Name:         namespace.SectorKey.Name,
-			Request:      handler.Request(Gorm),
+			Name:    namespace.SectorKey.Name,
+			Request: handler.Request(Gorm),
 		},
 	}
-	endpoint := handler.Endpoint{DB: Gorm.DB}
+	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		sc.CreateSector,
 		sc.GetSectorByName,
