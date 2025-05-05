@@ -8,6 +8,8 @@ type GeneralStruct struct {
 	Dto          string
 	DtoArr       string
 	Associations string
+	Transaction  string
+	Company      string
 }
 
 type RequestStruct struct {
@@ -32,6 +34,8 @@ var GeneralKey = GeneralStruct{
 	Dto:          "dto_key",
 	DtoArr:       "dtoArr_key",
 	Associations: "associations_key",
+	Transaction:  "transaction_key",
+	Company:      "company_key",
 }
 
 type QueryStruct struct {
@@ -107,4 +111,3 @@ var (
 	UpdateActionMethod = "PATCH"
 	DeleteActionMethod = "DELETE"
 )
-

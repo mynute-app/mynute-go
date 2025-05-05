@@ -279,7 +279,7 @@ var LoginEmployee = &EndPoint{
 	Handler:        "LoginEmployee",
 	Description:    "Login employee",
 	IsPublic:       true,
-	NeedsCompanyId: true, // Added (assuming company context needed even if public)
+	NeedsCompanyId: true,
 }
 var VerifyEmployeeEmail = &EndPoint{
 	Path:           "/employee/verify-email/:email/:code",

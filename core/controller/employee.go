@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -52,6 +53,21 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
+	var company model.Company
+	if cID, ok := c.Locals("company_id").(string); !ok {
+		return lib.Error.Employee.NotFound.WithError(fmt.Errorf("company_id not found in context"))
+	} else {
+		// Transform cID into uuid.UUID
+		cID_uuid, err := uuid.Parse(cID)
+		if err != nil {
+			return lib.Error.Employee.NotFound.WithError(fmt.Errorf("company_id not found in context"))
+		}
+		company.ID = cID_uuid
+	}
+
+	
+
+	
 	var employee model.Employee
 	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee); err != nil {
 		return err

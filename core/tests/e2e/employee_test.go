@@ -5,6 +5,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -143,6 +144,7 @@ func (e *Employee) Login(t *testing.T, s int) {
 	http.Method("POST")
 	http.URL("/employee/login")
 	http.ExpectStatus(s)
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.Send(model.Employee{
 		Email:    e.created.Email,
 		Password: e.created.Password,

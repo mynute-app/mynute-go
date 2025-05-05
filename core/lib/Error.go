@@ -107,6 +107,7 @@ type AuthErrors struct {
 	Unauthorized         ErrorStruct
 	EmailCodeInvalid     ErrorStruct
 	CompanyHeaderMissing ErrorStruct // New: For missing X-Company-ID header
+	CompanyHeaderInvalid ErrorStruct // New: For invalid X-Company-ID header
 }
 
 type BranchErrors struct {
@@ -183,6 +184,7 @@ var Error = ErrorCategory{
 		Unauthorized:         NewError("You are not authorized for this action", "Você não está autorizado para esta ação", fiber.StatusForbidden),
 		EmailCodeInvalid:     NewError("Email verification code is invalid", "Código de verificação do email inválido", fiber.StatusBadRequest),
 		CompanyHeaderMissing: NewError(fmt.Sprintf(`%s required at headers`, namespace.HeadersKey.Company), fmt.Sprintf(`%s requerido no cabeçalho`, namespace.HeadersKey.Company), fiber.StatusBadRequest),
+		CompanyHeaderInvalid: NewError(fmt.Sprintf(`%s invalid at headers`, namespace.HeadersKey.Company), fmt.Sprintf(`%s inválido no cabeçalho`, namespace.HeadersKey.Company), fiber.StatusBadRequest),
 	},
 	Appointment: AppointmentErrors{
 		StartTimeInThePast:           NewError("Appointment start time cannot be in the past", "A data de início do compromisso não pode ser no passado", fiber.StatusBadRequest),

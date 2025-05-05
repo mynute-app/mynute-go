@@ -168,7 +168,11 @@ func (c *Company) Refresh(tx *gorm.DB) error {
 		return err
 	}
 
-	if err := tx.Model(c).Preload(clause.Associations).Where("id = ?", c.ID.String()).First(c).Error; err != nil {
+	if err := tx.
+		Model(c).
+		Preload(clause.Associations).
+		Where("id = ?", c.ID.String()).
+		First(c).Error; err != nil {
 		return err
 	}
 
