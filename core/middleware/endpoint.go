@@ -24,13 +24,14 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 		return err
 	}
 	auth := Auth(ep.DB)
+	tenant := Tenant(ep.DB.DB)
 	for _, EndPoint := range EndPoints {
 		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
 		funcs := []fiber.Handler{}
 		funcs = append(funcs, auth.WhoAreYou)
 		if EndPoint.NeedsCompanyId {
-			funcs = append(funcs, GetTenant)
+			funcs = append(funcs, tenant.Validate)
 		}
 		if !EndPoint.IsPublic {
 			funcs = append(funcs, auth.DenyUnauthorized)

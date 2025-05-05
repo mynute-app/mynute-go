@@ -1,15 +1,15 @@
 package namespace
 
 type GeneralStruct struct {
-	Name         string
-	Model        string
-	ModelArr     string
-	Changes      string
-	Dto          string
-	DtoArr       string
-	Associations string
-	Transaction  string
-	Company      string
+	Name            string
+	Model           string
+	ModelArr        string
+	Changes         string
+	Dto             string
+	DtoArr          string
+	Associations    string
+	DatabaseSession string
+	Company         string
 }
 
 type RequestStruct struct {
@@ -27,15 +27,15 @@ var RequestKey = RequestStruct{
 }
 
 var GeneralKey = GeneralStruct{
-	Name:         "name_key",
-	Model:        "model_key",
-	ModelArr:     "modelArr_key",
-	Changes:      "changes_key",
-	Dto:          "dto_key",
-	DtoArr:       "dtoArr_key",
-	Associations: "associations_key",
-	Transaction:  "transaction_key",
-	Company:      "company_key",
+	Name:            "name_key",
+	Model:           "model_key",
+	ModelArr:        "modelArr_key",
+	Changes:         "changes_key",
+	Dto:             "dto_key",
+	DtoArr:          "dtoArr_key",
+	Associations:    "associations_key",
+	DatabaseSession: "db_session_key",
+	Company:         "company_key",
 }
 
 type QueryStruct struct {

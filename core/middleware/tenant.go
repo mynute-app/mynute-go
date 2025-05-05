@@ -14,12 +14,18 @@ type tenant_middleware struct {
 	Gorm *gorm.DB
 }
 
-func (tm *tenant_middleware) GetTenant(c *fiber.Ctx) error {
+func Tenant(db *gorm.DB) *tenant_middleware {
+	return &tenant_middleware{
+		Gorm: db,
+	}
+}
+
+func (tm *tenant_middleware) Validate(c *fiber.Ctx) error {
 	companyID := c.Get(namespace.HeadersKey.Company)
 	if companyID == "" {
 		return lib.Error.Auth.CompanyHeaderMissing
 	}
-	tx := tm.Gorm.Begin()
+	tx := tm.Gorm.Session(&gorm.Session{NewDB: true, Context: c.Context()})
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -36,7 +42,7 @@ func (tm *tenant_middleware) GetTenant(c *fiber.Ctx) error {
 		return lib.Error.General.AuthError.WithError(err)
 	}
 	c.Locals(namespace.HeadersKey.Company, companyID)
-	c.Locals(namespace.GeneralKey.Transaction, tx)
+	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
 	c.Locals(namespace.GeneralKey.Company, &company)
 	return c.Next()
 }
