@@ -4,11 +4,12 @@ import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
-	"testing"
 	"math/rand"
+	"testing"
 
 	"github.com/google/uuid"
 )
@@ -63,36 +64,36 @@ func (c *Company) Set(t *testing.T) {
 	c.employees[0].AddService(t, 200, c.services[0])
 	c.employees[0].AddBranch(t, 200, c.branches[0], &c.owner.auth_token)
 	c.branches[0].AddService(t, 200, c.services[0], nil)
-	c.employees[0].Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
+	c.employees[0].Update(t, 200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
 		{
-			Monday: []model.WorkRange{
+			Monday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
 			},
-			Tuesday: []model.WorkRange{
+			Tuesday: []mJSON.WorkRange{
 				{Start: "09:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "18:00", BranchID: c.branches[0].created.ID},
 			},
-			Wednesday: []model.WorkRange{
+			Wednesday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
 			},
-			Thursday: []model.WorkRange{
+			Thursday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
 			},
-			Friday: []model.WorkRange{
+			Friday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
 			},
-			Saturday: []model.WorkRange{
+			Saturday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: c.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: c.branches[0].created.ID},
 			},
-			Sunday: []model.WorkRange{},
+			Sunday: []mJSON.WorkRange{},
 		},
 	}})
-	
+
 }
 
 // --- Randomized Company Setup Method ---
@@ -111,22 +112,22 @@ func (c *Company) SetupRandomized(t *testing.T, numEmployees, numBranches, numSe
 	t.Logf("Company created: ID %s, Owner Email: %s", c.created.ID, c.owner.created.Email)
 
 	// Link owner back to company and get token
-	c.owner.company = c       // Ensure back-reference for owner helper
+	c.owner.company = c // Ensure back-reference for owner helper
 	c.owner.VerifyEmail(t, 200)
-	c.owner.Login(t, 200) // Populates c.owner.auth_token
+	c.owner.Login(t, 200)             // Populates c.owner.auth_token
 	c.auth_token = c.owner.auth_token // Store owner's token in company helper
-	c.owner.GetById(t, 200)       // Refresh owner data
+	c.owner.GetById(t, 200)           // Refresh owner data
 	// Check if Create already added the owner to c.created.Employees and maybe sync c.employees
-    foundOwner := false
-    for _, empHelper := range c.employees { // Assuming c.employees is also populated by Create/Set logic initially if owner added
-        if empHelper.created.ID == c.owner.created.ID {
-            foundOwner = true
-            break
-        }
-    }
-    if !foundOwner {
-	    c.employees = append(c.employees, c.owner) // Add owner to the employee list if not already present
-    }
+	foundOwner := false
+	for _, empHelper := range c.employees { // Assuming c.employees is also populated by Create/Set logic initially if owner added
+		if empHelper.created.ID == c.owner.created.ID {
+			foundOwner = true
+			break
+		}
+	}
+	if !foundOwner {
+		c.employees = append(c.employees, c.owner) // Add owner to the employee list if not already present
+	}
 	t.Log("Company owner configured and logged in.")
 
 	// --- Entity Generation ---
@@ -192,7 +193,7 @@ func (c *Company) GenerateEmployees(t *testing.T, n int) {
 	initialEmployeeCount := len(c.employees)
 	createdCount := 0
 	for i := 0; i < n; i++ {
-		employee := &Employee{ company: c }
+		employee := &Employee{company: c}
 		employee.Create(t, 200)
 
 		if employee.created.ID == uuid.Nil {
@@ -213,7 +214,7 @@ func (c *Company) GenerateEmployees(t *testing.T, n int) {
 	if createdCount != n {
 		t.Logf("Warning: Tried to create %d employees, but only %d succeeded.", n, createdCount)
 	}
-    if len(c.employees) != initialEmployeeCount+createdCount {
+	if len(c.employees) != initialEmployeeCount+createdCount {
 		t.Logf("Warning: Company employee slice length (%d) does not match expected count (%d).", len(c.employees), initialEmployeeCount+createdCount)
 	}
 }
@@ -225,25 +226,25 @@ func (c *Company) GenerateBranches(t *testing.T, n int) {
 		return
 	}
 	initialBranchCount := len(c.branches)
-    createdCount := 0
+	createdCount := 0
 	for i := 0; i < n; i++ {
-		branch := &Branch{ company: c, auth_token: c.auth_token }
+		branch := &Branch{company: c, auth_token: c.auth_token}
 		branch.Create(t, 200)
 
 		if branch.created.ID == uuid.Nil {
 			t.Errorf("Failed to create branch %d/%d or retrieve ID.", i+1, n)
 			continue
 		}
-        createdCount++
+		createdCount++
 		t.Logf("Generated branch %d/%d: ID %s, Name %s", i+1, n, branch.created.ID, branch.created.Name)
 		c.branches = append(c.branches, branch)
 	}
-    if createdCount != n {
-         t.Logf("Warning: Tried to create %d branches, but only %d succeeded.", n, createdCount)
-     }
+	if createdCount != n {
+		t.Logf("Warning: Tried to create %d branches, but only %d succeeded.", n, createdCount)
+	}
 	if len(c.branches) != initialBranchCount+createdCount {
-        t.Logf("Warning: Company branch slice length (%d) does not match expected count (%d).", len(c.branches), initialBranchCount+createdCount)
-    }
+		t.Logf("Warning: Company branch slice length (%d) does not match expected count (%d).", len(c.branches), initialBranchCount+createdCount)
+	}
 }
 
 // GenerateServices creates n services for the company.
@@ -253,25 +254,25 @@ func (c *Company) GenerateServices(t *testing.T, n int) {
 		return
 	}
 	initialServiceCount := len(c.services)
-    createdCount := 0
+	createdCount := 0
 	for i := 0; i < n; i++ {
-		service := &Service{ company: c, auth_token: c.auth_token }
+		service := &Service{company: c, auth_token: c.auth_token}
 		service.Create(t, 200)
 
 		if service.created.ID == uuid.Nil {
 			t.Errorf("Failed to create service %d/%d or retrieve ID.", i+1, n)
 			continue
 		}
-        createdCount++
+		createdCount++
 		t.Logf("Generated service %d/%d: ID %s, Name %s", i+1, n, service.created.ID, service.created.Name)
 		c.services = append(c.services, service)
 	}
-    if createdCount != n {
-         t.Logf("Warning: Tried to create %d services, but only %d succeeded.", n, createdCount)
-     }
+	if createdCount != n {
+		t.Logf("Warning: Tried to create %d services, but only %d succeeded.", n, createdCount)
+	}
 	if len(c.services) != initialServiceCount+createdCount {
-        t.Logf("Warning: Company service slice length (%d) does not match expected count (%d).", len(c.services), initialServiceCount+createdCount)
-    }
+		t.Logf("Warning: Company service slice length (%d) does not match expected count (%d).", len(c.services), initialServiceCount+createdCount)
+	}
 }
 
 // --- Random Assignment Functions ---
@@ -298,7 +299,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches(t *testing.T) {
 			numBranchesToAssign = rand.Intn(maxBranchesPerEmployee) + 1
 		}
 		assignedBranchIndices := make(map[int]bool)
-        assignedCount := 0
+		assignedCount := 0
 
 		for k := 0; k < numBranchesToAssign && assignedCount < len(c.branches); k++ { // Use assignedCount guard
 			branchIndex := -1
@@ -316,7 +317,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches(t *testing.T) {
 
 			branch := c.branches[branchIndex]
 			assignedBranchIndices[branchIndex] = true
-            assignedCount++ // Increment count of successfully assigned unique branches
+			assignedCount++ // Increment count of successfully assigned unique branches
 
 			t.Logf("Assigning employee %d (%s, ID: %s) to branch %d (%s, ID: %s)",
 				i, employee.created.Email, employee.created.ID,
@@ -331,7 +332,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches(t *testing.T) {
 // RandomlyAssignServicesToEmployees assigns each employee 1 to N random services.
 func (c *Company) RandomlyAssignServicesToEmployees(t *testing.T) {
 	if len(c.employees) == 0 || len(c.services) == 0 {
-        t.Log("No employees or services to assign.")
+		t.Log("No employees or services to assign.")
 		return
 	}
 	maxServicesPerEmployee := 5
@@ -346,29 +347,29 @@ func (c *Company) RandomlyAssignServicesToEmployees(t *testing.T) {
 		}
 
 		numServicesToAssign := 1
-        if maxServicesPerEmployee > 1 {
-            numServicesToAssign = rand.Intn(maxServicesPerEmployee) + 1
-        }
+		if maxServicesPerEmployee > 1 {
+			numServicesToAssign = rand.Intn(maxServicesPerEmployee) + 1
+		}
 		assignedServiceIndices := make(map[int]bool)
-        assignedCount := 0
+		assignedCount := 0
 
 		for k := 0; k < numServicesToAssign && assignedCount < len(c.services); k++ {
-            serviceIndex := -1
+			serviceIndex := -1
 			for attempts := 0; attempts < len(c.services)*2; attempts++ {
-                potentialIndex := rand.Intn(len(c.services))
-                if !assignedServiceIndices[potentialIndex] && c.services[potentialIndex].created.ID != uuid.Nil {
-                    serviceIndex = potentialIndex
-                    break
-                }
-            }
-            if serviceIndex == -1 {
-                t.Logf("Could not find unique valid service for employee %s after attempts.", employee.created.Email)
+				potentialIndex := rand.Intn(len(c.services))
+				if !assignedServiceIndices[potentialIndex] && c.services[potentialIndex].created.ID != uuid.Nil {
+					serviceIndex = potentialIndex
+					break
+				}
+			}
+			if serviceIndex == -1 {
+				t.Logf("Could not find unique valid service for employee %s after attempts.", employee.created.Email)
 				break
-            }
+			}
 
 			service := c.services[serviceIndex]
 			assignedServiceIndices[serviceIndex] = true
-            assignedCount++
+			assignedCount++
 
 			t.Logf("Assigning service %d (%s, ID: %s) to employee %d (%s, ID: %s)",
 				serviceIndex, service.created.Name, service.created.ID,
@@ -383,7 +384,7 @@ func (c *Company) RandomlyAssignServicesToEmployees(t *testing.T) {
 // RandomlyAssignServicesToBranches assigns each branch 1 to N random services.
 func (c *Company) RandomlyAssignServicesToBranches(t *testing.T) {
 	if len(c.branches) == 0 || len(c.services) == 0 {
-        t.Log("No branches or services to assign.")
+		t.Log("No branches or services to assign.")
 		return
 	}
 	maxServicesPerBranch := 10
@@ -397,30 +398,30 @@ func (c *Company) RandomlyAssignServicesToBranches(t *testing.T) {
 			continue
 		}
 
-        numServicesToAssign := 1
-        if maxServicesPerBranch > 1 {
-             numServicesToAssign = rand.Intn(maxServicesPerBranch) + 1
-        }
+		numServicesToAssign := 1
+		if maxServicesPerBranch > 1 {
+			numServicesToAssign = rand.Intn(maxServicesPerBranch) + 1
+		}
 		assignedServiceIndices := make(map[int]bool)
-        assignedCount := 0
+		assignedCount := 0
 
 		for k := 0; k < numServicesToAssign && assignedCount < len(c.services); k++ {
-            serviceIndex := -1
-            for attempts := 0; attempts < len(c.services)*2; attempts++ {
-                potentialIndex := rand.Intn(len(c.services))
-                if !assignedServiceIndices[potentialIndex] && c.services[potentialIndex].created.ID != uuid.Nil {
-                    serviceIndex = potentialIndex
-                    break
-                }
-            }
-            if serviceIndex == -1 {
-                t.Logf("Could not find unique valid service for branch %s after attempts.", branch.created.Name)
+			serviceIndex := -1
+			for attempts := 0; attempts < len(c.services)*2; attempts++ {
+				potentialIndex := rand.Intn(len(c.services))
+				if !assignedServiceIndices[potentialIndex] && c.services[potentialIndex].created.ID != uuid.Nil {
+					serviceIndex = potentialIndex
+					break
+				}
+			}
+			if serviceIndex == -1 {
+				t.Logf("Could not find unique valid service for branch %s after attempts.", branch.created.Name)
 				break
-            }
+			}
 
 			service := c.services[serviceIndex]
 			assignedServiceIndices[serviceIndex] = true
-            assignedCount++
+			assignedCount++
 
 			t.Logf("Assigning service %d (%s, ID: %s) to branch %d (%s, ID: %s)",
 				serviceIndex, service.created.Name, service.created.ID,
@@ -437,7 +438,7 @@ func (c *Company) RandomlyAssignServicesToBranches(t *testing.T) {
 // RandomlyAssignWorkSchedules assigns a generated work schedule to each employee.
 func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 	if len(c.employees) == 0 || len(c.branches) == 0 {
-        t.Log("No employees or branches for work schedule assignment.")
+		t.Log("No employees or branches for work schedule assignment.")
 		return
 	}
 
@@ -461,28 +462,32 @@ func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 		scheduleModel := GenerateRandomModelWorkSchedule(validBranches)
 		t.Logf("Generated work schedule for employee %d (%s), referencing %d valid branch(es).", i, employee.created.Email, len(validBranches))
 
-        // Payload format for Employee.Update
+		// Payload format for Employee.Update
 		payload := map[string]any{
-			"work_schedule": []model.WorkSchedule{scheduleModel},
+			"work_schedule": []mJSON.WorkSchedule{scheduleModel},
 		}
 
 		// Call Employee.Update using owner's token (c.auth_token is implicitly used in helper via employee.company.auth_token)
 		employee.Update(t, 200, payload)
-        t.Logf("Attempted to update work schedule for employee %d (%s) via API.", i, employee.created.Email)
+		t.Logf("Attempted to update work schedule for employee %d (%s) via API.", i, employee.created.Email)
 
 		// Optional: Refresh employee data locally if needed, though Update should handle API state
-        // employee.GetById(t, 200)
+		// employee.GetById(t, 200)
 	}
 }
 
-// GenerateRandomModelWorkSchedule creates a *model.WorkSchedule* struct
-func GenerateRandomModelWorkSchedule(validBranches []*Branch) model.WorkSchedule {
-	schedule := model.WorkSchedule{}
+// GenerateRandomModelWorkSchedule creates a *mJSON.WorkSchedule* struct
+func GenerateRandomModelWorkSchedule(validBranches []*Branch) mJSON.WorkSchedule {
+	schedule := mJSON.WorkSchedule{}
 
 	randomTimeStringHHMM := func(minHour, maxHour int) string {
 		hour := minHour + rand.Intn(maxHour-minHour+1)
-		if hour < 6 { hour = 6 }
-		if hour > 21 { hour = 21 }
+		if hour < 6 {
+			hour = 6
+		}
+		if hour > 21 {
+			hour = 21
+		}
 		minute := rand.Intn(4) * 15
 		return fmt.Sprintf("%02d:%02d", hour, minute)
 	}
@@ -498,14 +503,14 @@ func GenerateRandomModelWorkSchedule(validBranches []*Branch) model.WorkSchedule
 	return schedule
 }
 
-// Helper for GenerateRandomModelWorkSchedule, returns []model.WorkRange
-func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int) string, workProbability float32) []model.WorkRange {
+// Helper for GenerateRandomModelWorkSchedule, returns []mJSON.WorkRange
+func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
 	// Use global rand.Float32() - auto-seeded
 	if rand.Float32() > workProbability || len(validBranches) == 0 {
-		return []model.WorkRange{}
+		return []mJSON.WorkRange{}
 	}
 
-	ranges := []model.WorkRange{}
+	ranges := []mJSON.WorkRange{}
 	numRanges := 1 + rand.Intn(2) // Use global rand.Intn()
 
 	lastEndTimeStr := "00:00"
@@ -520,34 +525,51 @@ func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int
 			minutePart := 0
 			fmt.Sscanf(lastEndTimeStr, "%02d:%02d", &hourPart, &minutePart) // Ensure Sscanf matches HH:MM
 			startHourLower = hourPart
-			if minutePart > 0 { startHourLower++ }
-            startHourLower++ // Buffer hour
-			if startHourLower < 13 && hourPart >= 12 { startHourLower = 13 }
+			if minutePart > 0 {
+				startHourLower++
+			}
+			startHourLower++ // Buffer hour
+			if startHourLower < 13 && hourPart >= 12 {
+				startHourLower = 13
+			}
 		}
-		if startHourLower > 19 { continue }
+		if startHourLower > 19 {
+			continue
+		}
 
 		// Use global rand.Intn()
 		startHour := startHourLower + rand.Intn(2)
 		startTime := randomTime(startHour, startHour)
 
 		if r > 0 && startTime <= lastEndTimeStr {
-            startHour++
-            if startHour > 20 { continue }
+			startHour++
+			if startHour > 20 {
+				continue
+			}
 			startTime = randomTime(startHour, startHour)
 		}
 
 		// Use global rand.Intn()
 		durationHours := 2 + rand.Intn(4)
 		endHour := startHour + durationHours
-		if endHour > 22 { endHour = 22 }
+		if endHour > 22 {
+			endHour = 22
+		}
 		endTime := randomTime(endHour, endHour)
 
 		if endTime <= startTime {
-            if endHour < 22 { endHour++; endTime = randomTime(endHour, endHour) } else { endTime = "23:00" }
-             if endTime <= startTime { endTime = "23:30" }
+			if endHour < 22 {
+				endHour++
+				endTime = randomTime(endHour, endHour)
+			} else {
+				endTime = "23:00"
+			}
+			if endTime <= startTime {
+				endTime = "23:30"
+			}
 		}
 
-		ranges = append(ranges, model.WorkRange{
+		ranges = append(ranges, mJSON.WorkRange{
 			Start:    startTime,
 			End:      endTime,
 			BranchID: targetBranchHelper.created.ID, // Get UUID from the created model within the helper

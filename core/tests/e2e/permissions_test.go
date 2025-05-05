@@ -2,13 +2,12 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
 	"time"
 )
-
 
 func Test_Permissions(t *testing.T) {
 	server := core.NewServer().Run("test")
@@ -375,7 +374,7 @@ func Test_Permissions(t *testing.T) {
 
 	// --- Client x Sector --- Interactions ---
 	t.Log("--- Testing Client x Sector Interactions ---")
-	sectorID := company1.created.SectorID.String()
+	sectorID := company1.created.Sectors[0].ID.String()
 	// Client tries to get a sector : GET /sector/{id} => 200 (Public classification)
 	http.
 		Method("GET").
@@ -495,7 +494,7 @@ func Test_Permissions(t *testing.T) {
 		var employee1StartTime string
 		// Find start time for employee1
 		schedule1 := employee1.created.WorkSchedule
-		days1 := [][]model.WorkRange{schedule1.Monday, schedule1.Tuesday, schedule1.Wednesday, schedule1.Thursday, schedule1.Friday, schedule1.Saturday, schedule1.Sunday}
+		days1 := [][]mJSON.WorkRange{schedule1.Monday, schedule1.Tuesday, schedule1.Wednesday, schedule1.Thursday, schedule1.Friday, schedule1.Saturday, schedule1.Sunday}
 		foundTime1 := false
 		for _, day := range days1 {
 			if len(day) > 0 {

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -89,7 +90,7 @@ func findValidAppointmentSlot(t *testing.T, employee *Employee, company *Company
 
 	// 1. Iterate through Employee's Schedule
 	schedule := employee.created.WorkSchedule // Assumes .created is model.Employee
-	weekdaySchedules := map[time.Weekday][]model.WorkRange{
+	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{
 		time.Monday:    schedule.Monday,
 		time.Tuesday:   schedule.Tuesday,
 		time.Wednesday: schedule.Wednesday,
@@ -110,7 +111,7 @@ func findValidAppointmentSlot(t *testing.T, employee *Employee, company *Company
 		}
 
 		for i := range daySchedule { // Loop through work ranges within the day
-			wr := &daySchedule[i] // Pointer to model.WorkRange
+			wr := &daySchedule[i] // Pointer to mJSON.WorkRange
 
 			// 2. Check if WorkRange is potentially valid
 			if wr.Start == "" || wr.BranchID == uuid.Nil {
@@ -380,7 +381,7 @@ func findNextAvailableSlotRFC3339(t *testing.T, employee *Employee, currentStart
 
 	// Get the day schedule based on the start time's day of the week
 	dayOfWeek := targetDate.Weekday()
-	var daySchedule []model.WorkRange
+	var daySchedule []mJSON.WorkRange
 	switch dayOfWeek {
 	case time.Monday:
 		daySchedule = schedule.Monday

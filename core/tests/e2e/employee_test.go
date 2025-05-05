@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -37,25 +38,25 @@ func Test_Employee(t *testing.T) {
 	employee.GetById(t, 200)
 	employee.GetByEmail(t, 200)
 	employee.Update(t, 200, map[string]any{"name": "Updated Employee Name xD"})
-	employee.Update(t, 200, map[string]any{"work_schedule": []model.WorkSchedule{
+	employee.Update(t, 200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
 		{
-			Monday: []model.WorkRange{
+			Monday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
 			},
-			Tuesday: []model.WorkRange{
+			Tuesday: []mJSON.WorkRange{
 				{Start: "09:00", End: "12:00", BranchID: company.branches[0].created.ID},
 				{Start: "13:00", End: "18:00", BranchID: company.branches[0].created.ID},
 			},
-			Friday: []model.WorkRange{
+			Friday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
 			},
-			Saturday: []model.WorkRange{
+			Saturday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: company.branches[0].created.ID},
 				{Start: "13:00", End: "17:00", BranchID: company.branches[0].created.ID},
 			},
-			Sunday: []model.WorkRange{},
+			Sunday: []mJSON.WorkRange{},
 		},
 	}})
 	employee.Delete(t, 200)
