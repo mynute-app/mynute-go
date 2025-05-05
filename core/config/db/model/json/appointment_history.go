@@ -16,6 +16,7 @@ type FieldChange struct {
 	Field     string    `json:"field"`
 	OldValue  string    `json:"old_value"`
 	NewValue  string    `json:"new_value"`
+	Reason    string    `json:"reason"`
 }
 
 func (ah *AppointmentHistory) Value() (driver.Value, error) {
