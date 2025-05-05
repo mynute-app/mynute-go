@@ -1,6 +1,7 @@
 package model
 
 import (
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	"fmt"
 
@@ -16,7 +17,7 @@ type Company struct {
 	SchemaName string       `gorm:"type:varchar(100);not null;uniqueIndex" json:"schema_name"`
 	Subdomains []*Subdomain `gorm:"constraint:OnDelete:CASCADE;" json:"subdomains"`                        // One-to-many relationship with Subdomain
 	Sectors    []*Sector    `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE;" json:"sectors"` // Many-to-many relationship with Sector
-	Design     DesignConfig `gorm:"type:jsonb" json:"design"`
+	Design     mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
 func (Company) TableName() string {
@@ -220,17 +221,4 @@ type CompanyMerged struct {
 	Branches  []Branch   `json:"branches"`
 	Employees []Employee `json:"employees"`
 	Services  []Service  `json:"services"`
-}
-
-type DesignConfig struct {
-	PrimaryColor   string `json:"primary"`
-	SecondaryColor string `json:"secondary"`
-	TertiaryColor  string `json:"tertiary"`
-	Font           string `json:"font"`
-	LogoURL        string `json:"logo_url"`
-	BannerURL      string `json:"banner_url"`
-	BackgroundURL  string `json:"background_url"`
-	FaviconURL     string `json:"favicon_url"`
-	DarkMode       bool   `json:"dark_mode"`
-	CustomCSS      string `json:"custom_css"`
 }

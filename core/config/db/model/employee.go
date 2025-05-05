@@ -1,10 +1,8 @@
 package model
 
 import (
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -25,7 +23,7 @@ type Employee struct {
 	VerificationCode string        `gorm:"type:varchar(100)" json:"verification_code"`
 	Verified         bool          `gorm:"default:false;not null" json:"verified"`
 	SlotTimeDiff     uint          `gorm:"default:30;not null" json:"slot_time_diff"`
-	WorkSchedule     WorkSchedule  `gorm:"type:jsonb" json:"work_schedule"`
+	WorkSchedule     mJSON.WorkSchedule  `gorm:"type:jsonb" json:"work_schedule"`
 	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
 	CompanyID        uuid.UUID     `gorm:"not null;index" json:"company_id"`
 	Branches         []*Branch     `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
@@ -33,88 +31,9 @@ type Employee struct {
 	Roles            []*Role       `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 }
 
-type WorkSchedule struct {
-	Monday    []WorkRange `json:"monday"`
-	Tuesday   []WorkRange `json:"tuesday"`
-	Wednesday []WorkRange `json:"wednesday"`
-	Thursday  []WorkRange `json:"thursday"`
-	Friday    []WorkRange `json:"friday"`
-	Saturday  []WorkRange `json:"saturday"`
-	Sunday    []WorkRange `json:"sunday"`
-}
-
-type WorkRange struct {
-	Start    string       `json:"start"` // Store as "15:30:00"
-	End      string       `json:"end"`   // Store as "18:00:00"
-	BranchID uuid.UUID    `json:"branch_id"`
-	Services []uuid.UUID `json:"services"` // List of service IDs
-}
-
-// Implement driver.Valuer
-func (ws WorkSchedule) Value() (driver.Value, error) {
-	return json.Marshal(ws)
-}
-
-// Implement sql.Scanner
-func (ws *WorkSchedule) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan WorkSchedule: expected []byte")
-	}
-
-	return json.Unmarshal(bytes, ws)
-}
-
-func (ws *WorkSchedule) IsEmpty() bool {
-	if ws == nil {
-		return true
-	}
-	return len(ws.Monday) == 0 && len(ws.Tuesday) == 0 && len(ws.Wednesday) == 0 &&
-		len(ws.Thursday) == 0 && len(ws.Friday) == 0 && len(ws.Saturday) == 0 &&
-		len(ws.Sunday) == 0
-}
-
-func (ws *WorkSchedule) GetRangesForDay(day time.Weekday) []WorkRange {
-	if ws == nil {
-		return nil
-	}
-	switch day {
-	case time.Monday:
-		return ws.Monday
-	case time.Tuesday:
-		return ws.Tuesday
-	case time.Wednesday:
-		return ws.Wednesday
-	case time.Thursday:
-		return ws.Thursday
-	case time.Friday:
-		return ws.Friday
-	case time.Saturday:
-		return ws.Saturday
-	case time.Sunday:
-		return ws.Sunday
-	default:
-		return nil
-	}
-}
-
-func (ws *WorkSchedule) GetAllRanges() []WorkRange {
-	if ws == nil {
-		return nil
-	}
-	ranges := []WorkRange{}
-	ranges = append(ranges, ws.Monday...)
-	ranges = append(ranges, ws.Tuesday...)
-	ranges = append(ranges, ws.Wednesday...)
-	ranges = append(ranges, ws.Thursday...)
-	ranges = append(ranges, ws.Friday...)
-	ranges = append(ranges, ws.Saturday...)
-	ranges = append(ranges, ws.Sunday...)
-	return ranges
-}
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
-	e.WorkSchedule = WorkSchedule{} // Do not ever let someone create an employee with WorkSchedule set.
+	e.WorkSchedule = mJSON.WorkSchedule{} // Do not ever let someone create an employee with WorkSchedule set.
 	if err := lib.ValidatorV10.Struct(e); err != nil {
 		return err
 	}

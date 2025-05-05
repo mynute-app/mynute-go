@@ -1,9 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib" // Adjust import path if necessary
-	"database/sql/driver"
-	"encoding/json"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
+	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
 	"reflect"
@@ -15,24 +14,24 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"service_id"`
-	Service           *Service            `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
-	EmployeeID        uuid.UUID           `gorm:"type:uuid;not null;index" json:"employee_id"`
-	Employee          *Employee           `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	ClientID          uuid.UUID           `gorm:"type:uuid;not null;index" json:"client_id"`
-	Client            *Client             `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
-	BranchID          uuid.UUID           `gorm:"type:uuid;not null;index" json:"branch_id"`
-	Branch            *Branch             `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	PaymentID         uuid.UUID           `gorm:"type:uuid;index" json:"payment_id"`
-	Payment           *Payment            `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Payment type
-	CompanyID         uuid.UUID           `gorm:"type:uuid;not null;index" json:"company_id"`
-	StartTime         time.Time           `gorm:"not null;index" json:"start_time"`
-	EndTime           time.Time           `gorm:"not null;index" json:"end_time"`
-	Cancelled         bool                `gorm:"index;default:false" json:"cancelled"`
-	ConfirmedByClient bool                `gorm:"index;default:false" json:"confirmed_by_client"`
-	Fulfilled         bool                `gorm:"index;default:false" json:"fulfilled"`
-	History           AppointmentHistory  `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
-	Comments          AppointmentComments `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
+	ServiceID         uuid.UUID                 `gorm:"type:uuid;not null;index" json:"service_id"`
+	Service           *Service                  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
+	EmployeeID        uuid.UUID                 `gorm:"type:uuid;not null;index" json:"employee_id"`
+	Employee          *Employee                 `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	ClientID          uuid.UUID                 `gorm:"type:uuid;not null;index" json:"client_id"`
+	Client            *Client                   `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
+	BranchID          uuid.UUID                 `gorm:"type:uuid;not null;index" json:"branch_id"`
+	Branch            *Branch                   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
+	PaymentID         uuid.UUID                 `gorm:"type:uuid;index" json:"payment_id"`
+	Payment           *Payment                  `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Payment type
+	CompanyID         uuid.UUID                 `gorm:"type:uuid;not null;index" json:"company_id"`
+	StartTime         time.Time                 `gorm:"not null;index" json:"start_time"`
+	EndTime           time.Time                 `gorm:"not null;index" json:"end_time"`
+	Cancelled         bool                      `gorm:"index;default:false" json:"cancelled"`
+	ConfirmedByClient bool                      `gorm:"index;default:false" json:"confirmed_by_client"`
+	Fulfilled         bool                      `gorm:"index;default:false" json:"fulfilled"`
+	History           mJSON.AppointmentHistory  `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
+	Comments          mJSON.Comments `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
 }
 
 // --- Main Appointment Model ---
@@ -40,93 +39,6 @@ type AppointmentBase struct {
 type Appointment struct {
 	BaseModel
 	AppointmentBase
-}
-
-type AppointmentComments []Comment
-
-type Comment struct {
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
-	Comment   string         `json:"comment"`
-	CreatedBy uuid.UUID      `gorm:"type:uuid;not null;index" json:"created_by"`
-	Type      string         `json:"type"` // "internal" or "external"
-}
-
-// --- Implement Scanner/Valuer for AppointmentComments ---
-func (ac *AppointmentComments) Value() (driver.Value, error) {
-	if ac == nil || len(*ac) == 0 {
-		// Return empty JSON array `[]` which is valid JSON
-		return json.Marshal([]Comment{})
-	}
-	return json.Marshal(ac)
-}
-
-func (ac *AppointmentComments) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		// Handle nil from DB
-		if value == nil {
-			*ac = []Comment{} // Initialize to empty slice
-			return nil
-		}
-		return errors.New("failed to scan AppointmentComments: expected []byte")
-	}
-	// Handle empty JSON array or null from DB
-	if len(bytes) == 0 || string(bytes) == "null" {
-		*ac = []Comment{} // Initialize to empty slice
-		return nil
-	}
-	// Important: Unmarshal into the pointer *ac
-	return json.Unmarshal(bytes, ac)
-}
-
-// Optional: Add helper methods directly to the type
-func (ac *AppointmentComments) Add(c Comment) {
-	if ac != nil {
-		*ac = append(*ac, c)
-	}
-}
-
-type AppointmentHistory struct {
-	FieldChanges []FieldChange `json:"field_changes"`
-}
-
-type FieldChange struct {
-	CreatedAt time.Time `json:"created_at"`
-	Field     string    `json:"field"`
-	OldValue  string    `json:"old_value"`
-	NewValue  string    `json:"new_value"`
-}
-
-func (ah *AppointmentHistory) Value() (driver.Value, error) {
-	return json.Marshal(ah)
-}
-
-func (ah *AppointmentHistory) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan WorkSchedule: expected []byte")
-	}
-
-	return json.Unmarshal(bytes, ah)
-}
-
-func (ah *AppointmentHistory) IsEmpty() bool {
-	return ah == nil || len(ah.FieldChanges) == 0
-}
-
-func (ah *AppointmentHistory) FilterByField(field string) []FieldChange {
-	if ah == nil {
-		return nil
-	}
-	var filteredChanges []FieldChange
-	for _, change := range ah.FieldChanges {
-		if change.Field == field {
-			filteredChanges = append(filteredChanges, change)
-		}
-	}
-	return filteredChanges
 }
 
 func (Appointment) TableName() string { return "appointments" }
@@ -160,10 +72,10 @@ func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
 		return lib.Error.Appointment.HistoryManualUpdateForbidden
 	}
 
-	var changes []FieldChange
+	var changes []mJSON.FieldChange
 
 	if a.History.IsEmpty() {
-		a.History = AppointmentHistory{FieldChanges: []FieldChange{}}
+		a.History = mJSON.AppointmentHistory{FieldChanges: []mJSON.FieldChange{}}
 	}
 
 	if tx.Statement.Schema == nil {
@@ -188,7 +100,7 @@ func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
 		oldValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(originalAppointment))
 		newValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(a))
 		if oldValue != newValue {
-			changes = append(changes, FieldChange{
+			changes = append(changes, mJSON.FieldChange{
 				CreatedAt: time.Now(),
 				Field:     field.Name,
 				OldValue:  fmt.Sprintf("%v", oldValue),
