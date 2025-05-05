@@ -65,6 +65,18 @@ func Connect() *Database {
 		log.Fatal("Failed to connect to the database: ", err)
 	}
 
+	// Tune the database connection pool
+	sqlDB, err := db.DB()
+
+	if err != nil {
+		log.Fatal("Failed to get database connection pool: ", err)
+	}
+	
+	sqlDB.SetMaxOpenConns(100)                // Max concurrent connections (e.g. 100–500)
+	sqlDB.SetMaxIdleConns(10)                 // How many idle connections to keep
+	sqlDB.SetConnMaxLifetime(time.Hour)       // Recycle connections after 1h (prevent reuse issues)
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute) // Optional: max idle time before closing
+
 	// Migrate the database schema
 
 	return &Database{Gorm: db}
