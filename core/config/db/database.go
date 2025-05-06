@@ -77,7 +77,7 @@ func Connect() *Database {
 	sqlDB.SetMaxIdleConns(5)                   // Max number of idle connections in the pool
 	sqlDB.SetMaxOpenConns(100)                 // Max number of open connections to the database
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
-	sqlDB.SetConnMaxIdleTime(5 * time.Second)  // Max idle time for a connection in the pool
+	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
 
 	return &Database{Gorm: db}
 }
