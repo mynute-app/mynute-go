@@ -12,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 // CreateAppointment creates an appointment
@@ -84,13 +83,10 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 	}
 
 	var appointment model.Appointment
-	tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", appointment_id).Find(&appointment)
-	if tx.Error != nil {
-		if tx.Error == gorm.ErrRecordNotFound {
-			return lib.Error.Appointment.NotFound
-		}
-		return lib.Error.General.UpdatedError.WithError(tx.Error)
+	if err := database.LockForUpdate(tx, &appointment, appointment_id); err != nil {
+		return err
 	}
+
 	if appointment.Cancelled {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is cancelled"))
 	}

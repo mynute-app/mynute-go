@@ -2,6 +2,7 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
@@ -9,8 +10,8 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CreateEmployee creates an employee
@@ -28,7 +29,16 @@ import (
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func CreateEmployee(c *fiber.Ctx) error {
-	return ec.CreateOne(c)
+	var employee model.Employee
+	if err := Create(c, &employee); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // LoginEmployee logs an employee in
@@ -47,21 +57,16 @@ func LoginEmployee(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
-	var company model.Company
-	if cID, ok := c.Locals("company_id").(string); !ok {
-		return lib.Error.Employee.NotFound.WithError(fmt.Errorf("company_id not found in context"))
-	} else {
-		// Transform cID into uuid.UUID
-		cID_uuid, err := uuid.Parse(cID)
-		if err != nil {
-			return lib.Error.Employee.NotFound.WithError(fmt.Errorf("company_id not found in context"))
-		}
-		company.ID = cID_uuid
-	}
-
-	var employee model.Employee
-	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee); err != nil {
+	tx, err := database.Session(c)
+	if err != nil {
 		return err
+	}
+	var employee model.Employee
+	if err := tx.Where("email = ?", body.Email).Preload(clause.Associations).First(&employee).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Employee.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	if !employee.Verified {
 		return lib.Error.Client.NotVerified
@@ -96,14 +101,23 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
-	if err := ec.Request.Gorm.GetOneBy("email", email, &employee); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("employee with email %s not found", email))
-		}
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.UpdateOneById(fmt.Sprintf("%v", employee.ID), &employee, map[string]any{"verified": true}); err != nil {
-		return lib.Error.General.UpdatedError.WithError(err)
+	if err := database.LockForUpdate(tx, &employee, email); err != nil {
+		return err
+	}
+	if employee.Verified {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email already verified"))
+	}
+	employee.Verified = true
+	if err := tx.Save(&employee).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Employee.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
 }
@@ -122,7 +136,16 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
-	return ec.GetBy("id", c)
+	var employee model.Employee
+	if err := GetOneBy("id", c, &employee); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetEmployeeByEmail retrieves an employee by email
@@ -139,7 +162,14 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
-	return ec.GetBy("email", c)
+	var employee model.Employee
+	if err := GetOneBy("email", c, &employee); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // UpdateEmployeeById updates an employee by ID
@@ -158,7 +188,14 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
-	return ec.UpdateOneById(c)
+	var employee model.Employee
+	if err := UpdateOneById(c, &employee); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // DeleteEmployeeById deletes an employee by ID
@@ -175,7 +212,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
-	return ec.DeleteOneById(c)
+	return DeleteOneById(c, &model.Employee{})
 }
 
 // AddEmployeeService adds a service to an employee
@@ -198,15 +235,27 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+	
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
+
+	if err := tx.Where("id = ?", service_id).Preload(clause.Associations).First(&service).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, employee_id); err != nil {
 		return err
 	}
+
 	if employee.CompanyID != service.CompanyID {
 		return lib.Error.Company.NotSame
 	}
+
+	// TODO: Continue from here...
+
 	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
 		return err
 	}

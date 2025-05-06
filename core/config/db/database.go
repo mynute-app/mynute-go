@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 )
 
@@ -149,6 +150,12 @@ func (t *Test) Clear() {
 	log.Printf("Erased all schemas on %s database.\n", t.name)
 }
 
+/*
+ * DeferTransaction is a helper function to handle transaction rollback and commit.
+ It should be deferred after starting a transaction.
+ * @param tx *gorm.DB - The transaction session
+*/
+// @return func() - The function to be defered
 func DeferTransaction(tx *gorm.DB) func() {
 	return func() {
 		if r := recover(); r != nil {
@@ -208,4 +215,18 @@ func Transaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
 		return nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
 	}
 	return tx, DeferTransaction(tx), nil
+}
+
+// Locks the record for update using the given transaction and model.
+// It uses the "UPDATE" locking strength to prevent other transactions 
+// from modifying the record until the current transaction is completed.
+// It will also retrieve the record with the specified ID from the database.
+func LockForUpdate(tx *gorm.DB, model any, id string) error {
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).First(model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound.WithError(err)
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }

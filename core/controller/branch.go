@@ -194,17 +194,14 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	if err := tx.Where("id = ?", branch_id).First(&branch).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
 	if err := tx.Where("id = ?", service_id).First(&service).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := database.LockForUpdate(tx, &branch, branch_id); err != nil {
+		return err
 	}
 	if err := branch.AddService(tx, &service); err != nil {
 		return err
@@ -244,17 +241,14 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	if err := tx.Where("id = ?", branch_id).First(&branch).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
 	if err := tx.Where("id = ?", service_id).First(&service).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := database.LockForUpdate(tx, &branch, branch_id); err != nil {
+		return err
 	}
 	if err := branch.RemoveService(tx, &service); err != nil {
 		return err
