@@ -12,6 +12,12 @@ type Gorm struct {
 	DB *gorm.DB
 }
 
+func MyGormWrapper(db *gorm.DB) *Gorm {
+	return &Gorm{
+		DB: db,
+	}
+}
+
 // UpdateOneById updates a single record by its ID and reloads it
 func (p *Gorm) UpdateOneById(value string, model any, changes any) error {
 

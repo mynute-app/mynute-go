@@ -18,7 +18,7 @@ import (
 
 type Authentication struct {
 	C           *fiber.Ctx
-	Res         *lib.SendResponse
+	Res         *lib.SendResponseStruct
 	sessionName string
 }
 
@@ -32,7 +32,7 @@ type SessionsOptions struct {
 func Auth(c *fiber.Ctx) *Authentication {
 	return &Authentication{
 		C:           c,
-		Res:         &lib.SendResponse{Ctx: c},
+		Res:         &lib.SendResponseStruct{Ctx: c},
 		sessionName: "user_session",
 	}
 }

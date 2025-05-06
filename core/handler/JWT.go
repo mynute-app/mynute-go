@@ -15,11 +15,11 @@ import (
 
 type jsonWebToken struct {
 	C   *fiber.Ctx
-	Res *lib.SendResponse
+	Res *lib.SendResponseStruct
 }
 
 func JWT(c *fiber.Ctx) *jsonWebToken {
-	return &jsonWebToken{C: c, Res: &lib.SendResponse{Ctx: c}}
+	return &jsonWebToken{C: c, Res: &lib.SendResponseStruct{Ctx: c}}
 }
 
 func (j *jsonWebToken) GetToken() string {

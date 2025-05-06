@@ -65,9 +65,6 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 		company.ID = cID_uuid
 	}
 
-	
-
-	
 	var employee model.Employee
 	if err := ec.Request.Gorm.GetOneBy("email", body.Email, &employee); err != nil {
 		return err
@@ -222,7 +219,7 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}
@@ -263,7 +260,7 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}
@@ -304,7 +301,7 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}
@@ -345,7 +342,7 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}
@@ -372,7 +369,7 @@ func (ec *employee_controller) AddRoleToEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}
@@ -399,7 +396,7 @@ func (ec *employee_controller) RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
 		return err
 	}
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
 		return err
 	}

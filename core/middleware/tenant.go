@@ -20,29 +20,37 @@ func Tenant(db *gorm.DB) *tenant_middleware {
 	}
 }
 
+func (tm *tenant_middleware) make_session(c *fiber.Ctx) (*gorm.DB, error) {
+	tx := tm.Gorm.Session(&gorm.Session{NewDB: true, Context: c.Context()})
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
+	return tx, nil
+}
+
 func (tm *tenant_middleware) Validate(c *fiber.Ctx) error {
 	companyID := c.Get(namespace.HeadersKey.Company)
 	if companyID == "" {
 		return lib.Error.Auth.CompanyHeaderMissing
 	}
-	tx := tm.Gorm.Session(&gorm.Session{NewDB: true, Context: c.Context()})
-	if tx.Error != nil {
-		return tx.Error
-	}
-	var company model.Company
+	var Company model.Company
 	if CompanyUUID, err := uuid.Parse(companyID); err != nil {
 		return lib.Error.Auth.CompanyHeaderInvalid
 	} else {
-		company.ID = CompanyUUID
+		Company.ID = CompanyUUID
 	}
-	if err := company.Refresh(tx); err != nil {
+	tx, err := tm.make_session(c)
+	if err != nil {
+		return err
+	}
+	if err := Company.Refresh(tx); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Company.NotFound
 		}
 		return lib.Error.General.AuthError.WithError(err)
 	}
 	c.Locals(namespace.HeadersKey.Company, companyID)
-	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
-	c.Locals(namespace.GeneralKey.Company, &company)
+	c.Locals(namespace.GeneralKey.Company, &Company)
 	return c.Next()
 }

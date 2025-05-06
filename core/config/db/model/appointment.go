@@ -28,6 +28,7 @@ type AppointmentBase struct {
 	StartTime         time.Time                `gorm:"not null;index" json:"start_time"`
 	EndTime           time.Time                `gorm:"not null;index" json:"end_time"`
 	Cancelled         bool                     `gorm:"index;default:false" json:"cancelled"`
+	CancelledAt       time.Time                `gorm:"index" json:"cancelled_at"`
 	ConfirmedByClient bool                     `gorm:"index;default:false" json:"confirmed_by_client"`
 	Fulfilled         bool                     `gorm:"index;default:false" json:"fulfilled"`
 	History           mJSON.AppointmentHistory `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
@@ -51,6 +52,10 @@ func (Appointment) Indexes() map[string]string {
 		"idx_company_active":       "CREATE INDEX IF NOT EXISTS idx_company_active ON appointments (company_id, cancelled)",
 		"idx_start_time_active":    "CREATE INDEX IF NOT EXISTS idx_start_time_active ON appointments (start_time, cancelled)",
 	}
+}
+
+func (a *Appointment) GetID() string {
+	return a.ID.String()
 }
 
 // --- Appointment Hooks ---
@@ -356,4 +361,37 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.Branch.MaxCapacityReached // Use new specific error
 	}
 	return nil // All validations passed
+}
+
+func (a *Appointment) Refresh(tx *gorm.DB) error {
+	if err := tx.Model(&Appointment{}).Where("id = ?", a.ID).Preload(clause.Associations).First(a).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("appointment ID %s", a.ID))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
+	}
+	return nil
+}
+
+func (a *Appointment) Cancel(tx *gorm.DB) error {
+	if err := tx.Model(&Appointment{}).Where("id = ?", a.ID).First(a).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("appointment ID %s", a.ID))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
+	}
+	if a.Cancelled {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already cancelled"))
+	} else if a.Fulfilled {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already fulfilled"))
+	} else if time.Now().After(a.StartTime) {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("cannot cancel appointment as it already happened"))
+	}
+	a.Cancelled = true
+	a.CancelledAt = time.Now()
+	err := tx.Save(a).Error
+	if err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling appointment: %w", err))
+	}
+	return nil
 }

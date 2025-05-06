@@ -2,20 +2,15 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
-
-// EmployeeController embeds service.Base in order to extend it with the functions below
-type client_controller struct {
-	service.Base[model.Client, DTO.Client]
-}
 
 // CreateClient creates an client
 //
@@ -28,17 +23,13 @@ type client_controller struct {
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client [post]
-func (cc *client_controller) CreateClient(c *fiber.Ctx) error {
+func CreateClient(c *fiber.Ctx) error {
 	var client model.Client
-	if err := c.BodyParser(&client); err != nil {
+	if err := Create(c, &client); err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.DB.Create(&client).Error; err != nil {
-		return err
-	}
-	res := &lib.SendResponse{Ctx: c}
-	if err := res.SendDTO(200, &client, &DTO.Client{}); err != nil {
-		return err
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
 }
@@ -54,14 +45,24 @@ func (cc *client_controller) CreateClient(c *fiber.Ctx) error {
 //	@Success		200
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/login [post]
-func (cc *client_controller) LoginClient(c *fiber.Ctx) error {
-	var body model.Client
+func LoginClient(c *fiber.Ctx) error {
+	var body DTO.LoginClient
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
-	var client model.Client
-	if err := cc.Request.Gorm.GetOneBy("email", body.Email, &client); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
+	}
+
+	var client model.Client
+	if err := tx.Where("email = ?", body.Email).First(&client).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	if !client.Verified {
 		return lib.Error.Client.NotVerified.SendToClient(c)
@@ -89,26 +90,34 @@ func (cc *client_controller) LoginClient(c *fiber.Ctx) error {
 //	@Success		200		{object}	nil
 //	@Failure		404		{object}	nil
 //	@Router			/client/verify-email/{email}/{code} [post]
-func (cc *client_controller) VerifyClientEmail(c *fiber.Ctx) error {
-	res := &lib.SendResponse{Ctx: c}
+func VerifyClientEmail(c *fiber.Ctx) error {
+	res := &lib.SendResponseStruct{Ctx: c}
 	email := c.Params("email")
 	var client model.Client
 	client.Email = email
+
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
 		return res.Send(400, err)
 	}
-	if err := cc.Request.Gorm.GetOneBy("email", email, &client); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	// code := c.Params("code")
-	// }
-	// if client.VerificationCode != code {
-	// 	return lib.Error.Auth.EmailCodeInvalid.SendToClient(c)
-	// }
+
+	if err := tx.Where("email = ?", client.Email).First(&client).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	client.Verified = true
-	if err := cc.Request.Gorm.DB.Save(&client).Error; err != nil {
+	if err := tx.Save(&client).Error; err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -125,8 +134,15 @@ func (cc *client_controller) VerifyClientEmail(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Client
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/email/{email} [get]
-func (cc *client_controller) GetClientByEmail(c *fiber.Ctx) error {
-	return cc.GetBy("email", c)
+func GetClientByEmail(c *fiber.Ctx) error {
+	var client model.Client
+	if err := GetOneBy("email", c, &client); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, client, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // UpdateClientById updates an client by ID
@@ -144,8 +160,18 @@ func (cc *client_controller) GetClientByEmail(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id} [patch]
-func (cc *client_controller) UpdateClientById(c *fiber.Ctx) error {
-	return cc.UpdateOneById(c)
+func UpdateClientById(c *fiber.Ctx) error {
+	var client model.Client
+	
+	if err := UpdateOneById(c, &client); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // DeleteClientById deletes an client by ID
@@ -161,25 +187,18 @@ func (cc *client_controller) UpdateClientById(c *fiber.Ctx) error {
 //	@Success		200	{object}	nil
 //	@Failure		404	{object}	nil
 //	@Router			/client/{id} [delete]
-func (cc *client_controller) DeleteClientById(c *fiber.Ctx) error {
-	return cc.DeleteOneById(c)
+func DeleteClientById(c *fiber.Ctx) error {
+	return DeleteOneById(c, &model.Client{})
 }
 
-func Client(Gorm *handler.Gorm) *client_controller {
-	cc := &client_controller{
-		Base: service.Base[model.Client, DTO.Client]{
-			Name:    namespace.ClientKey.Name,
-			Request: handler.Request(Gorm),
-		},
-	}
+func Client(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
-		cc.CreateClient,
-		cc.LoginClient,
-		cc.VerifyClientEmail,
-		cc.GetClientByEmail,
-		cc.UpdateClientById,
-		cc.DeleteClientById,
+		CreateClient,
+		LoginClient,
+		VerifyClientEmail,
+		GetClientByEmail,
+		UpdateClientById,
+		DeleteClientById,
 	})
-	return cc
 }

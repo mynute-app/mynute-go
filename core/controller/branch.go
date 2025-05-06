@@ -2,20 +2,16 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
-	"encoding/json"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
-
-type branch_controller struct {
-	service.Base[model.Branch, DTO.Branch]
-}
 
 // CreateBranch creates a branch
 //
@@ -31,8 +27,15 @@ type branch_controller struct {
 //	@Success		201		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
-func (cc *branch_controller) CreateBranch(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+func CreateBranch(c *fiber.Ctx) error {
+	var branch model.Branch
+	if err := Create(c, &branch); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // GetBranchById retrieves a branch by ID
@@ -45,8 +48,15 @@ func (cc *branch_controller) CreateBranch(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [get]
-func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
-	return cc.GetBy("id", c)
+func GetBranchById(c *fiber.Ctx) error {
+	var branch model.Branch
+	if err := GetOneBy("id", c, &branch); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // GetBranchByName retrieves a branch by name
@@ -59,8 +69,15 @@ func (cc *branch_controller) GetBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/name/{name} [get]
-func (cc *branch_controller) GetBranchByName(c *fiber.Ctx) error {
-	return cc.GetBy("name", c)
+func GetBranchByName(c *fiber.Ctx) error {
+	var branch model.Branch
+	if err := GetOneBy("name", c, &branch); err != nil {
+		return err
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // UpdateBranch updates a branch by ID
@@ -78,8 +95,18 @@ func (cc *branch_controller) GetBranchByName(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Branch
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [patch]
-func (cc *branch_controller) UpdateBranchById(c *fiber.Ctx) error {
-	return cc.UpdateOneById(c)
+func UpdateBranchById(c *fiber.Ctx) error {
+	var branch model.Branch
+
+	if err := UpdateOneById(c, &branch); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // DeleteBranchById deletes a branch by ID
@@ -95,8 +122,18 @@ func (cc *branch_controller) UpdateBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
-func (cc *branch_controller) DeleteBranchById(c *fiber.Ctx) error {
-	return cc.DeleteOneById(c)
+func DeleteBranchById(c *fiber.Ctx) error {
+	var branch model.Branch
+
+	if err := DeleteOneById(c, &branch); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetEmployeeServicesByBranchId retrieves all services of an employee included in the branch ID
@@ -110,25 +147,29 @@ func (cc *branch_controller) DeleteBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/employee/{employee_id}/services [get]
-func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
-	var branch model.Branch
+func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	var employee model.Employee
-	branch_id := c.Params("branch_id")
-	employee_id := c.Params("employee_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
-		return err
+	branchID := c.Params("branch_id")
+	employeeID := c.Params("employee_id")
+
+	tx, err := database.Session(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	// Verifica se o employee existe
+	if err := tx.
+		Preload("Services", "branch_id = ?", branchID).
+		Where("id = ?", employeeID).
+		First(&employee).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Employee.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
-	}
-	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Find(&employee.Services); err != nil {
-		return err
-	}
-	res := &lib.SendResponse{Ctx: c}
-	if err := res.SendDTO(200, &employee.Services, &DTO.Service{}); err != nil {
+
+	res := &lib.SendResponseStruct{Ctx: c}
+	if err := res.SendDTO(200, &employee.Services, &[]DTO.Service{}); err != nil {
 		return err
 	}
 	return nil
@@ -148,35 +189,49 @@ func (cc *branch_controller) GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [post]
-func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
+func AddServiceToBranch(c *fiber.Ctx) error {
 	var branch model.Branch
 	var service model.Service
 	branch_id := c.Params("branch_id")
 	service_id := c.Params("service_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
+	if branch_id == "" {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing branch_id in the url"))
+	} else if service_id == "" {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
+	}
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
-		return err
+	if err := tx.Where("id = ?", branch_id).First(&branch).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Where("id = ?", service_id).First(&service).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	if service.CompanyID != branch.CompanyID {
 		return lib.Error.Company.NotSame.SendToClient(c)
 	}
-	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Append(&service); err != nil {
-		return err
+	if err := tx.Model(&branch).Association("Services").Append(&service); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponse{Ctx: c}
-	// branch_marchal, err := json.Marshal(&branch)
-	// if err != nil {
-	// 	return err
-	// }
-	// var DTO DTO.Branch
-	// if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
-	// 	return err
-	// }
-	return res.SendDTO(200, &branch, &DTO.Branch{})
-	// res.Http200(&DTO)
-	// return nil
+	if err := tx.Model(&branch).Preload("Services").Where("id = ?", branch.ID).First(&branch).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }
 
 // RemoveServiceFromBranch removes a service from a branch
@@ -193,56 +248,62 @@ func (cc *branch_controller) AddServiceToBranch(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Branch
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [delete]
-func (cc *branch_controller) RemoveServiceFromBranch(c *fiber.Ctx) error {
+func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	var branch model.Branch
 	var service model.Service
 	branch_id := c.Params("branch_id")
 	service_id := c.Params("service_id")
-	if err := cc.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
+	if branch_id == "" {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing branch_id in the url"))
+	} else if service_id == "" {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
+	}
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := cc.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
-		return err
+	if err := tx.Where("id = ?", branch_id).First(&branch).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Where("id = ?", service_id).First(&service).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	if service.CompanyID != branch.CompanyID {
 		return lib.Error.Company.NotSame.SendToClient(c)
 	}
-	if err := cc.Request.Gorm.DB.Model(&branch).Association("Services").Delete(&service); err != nil {
-		return err
+	if err := tx.Model(&branch).Association("Services").Delete(&service); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponse{Ctx: c}
-	branch_marchal, err := json.Marshal(&branch)
-	if err != nil {
-		return err
+	if err := tx.Model(&branch).Preload("Services").Where("id = ?", branch.ID).First(&branch).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	var DTO DTO.Branch
-	if err := json.Unmarshal(branch_marchal, &DTO); err != nil {
-		return err
-	}
-	if err := res.Http200(&DTO); err != nil {
-		return err
+	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
 }
 
 // CreateBranch creates a branch
-func Branch(Gorm *handler.Gorm) *branch_controller {
-	bc := &branch_controller{
-		Base: service.Base[model.Branch, DTO.Branch]{
-			Name:    namespace.ClientKey.Name,
-			Request: handler.Request(Gorm),
-		},
-	}
+func Branch(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
-		bc.CreateBranch,
-		bc.GetBranchById,
-		bc.GetBranchByName,
-		bc.UpdateBranchById,
-		bc.DeleteBranchById,
-		bc.GetEmployeeServicesByBranchId,
-		bc.AddServiceToBranch,
-		bc.RemoveServiceFromBranch,
+		CreateBranch,
+		GetBranchById,
+		GetBranchByName,
+		UpdateBranchById,
+		DeleteBranchById,
+		GetEmployeeServicesByBranchId,
+		AddServiceToBranch,
+		RemoveServiceFromBranch,
 	})
-	return bc
 }

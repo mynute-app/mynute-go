@@ -9,19 +9,25 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type SendResponse struct {
+type SendResponseStruct struct {
 	Ctx *fiber.Ctx
 }
 
-func (sr *SendResponse) Next() error {
+func ResponseFactory(c *fiber.Ctx) *SendResponseStruct {
+	return &SendResponseStruct{
+		Ctx: c,
+	}
+}
+
+func (sr *SendResponseStruct) Next() error {
 	return sr.Ctx.Next()
 }
 
-func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
+func (sr *SendResponseStruct) SendDTO(s int, source any, dto any) error {
 	if source == nil || dto == nil {
 		return sr.sendStatus(s)
 	}
-	IsPointerToStruct := func (v any) bool {
+	IsPointerToStruct := func(v any) bool {
 		val := reflect.ValueOf(v)
 		return val.Kind() == reflect.Ptr && val.Elem().Kind() == reflect.Struct
 	}
@@ -39,35 +45,35 @@ func (sr *SendResponse) SendDTO(s int, source any, dto any) error {
 	return sr.send(s, dto)
 }
 
-func (sr *SendResponse) HttpError(s int, err error) error {
+func (sr *SendResponseStruct) HttpError(s int, err error) error {
 	if err2 := sr.send(s, err); err2 != nil {
 		return nil
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http400(err error) error {
+func (sr *SendResponseStruct) Http400(err error) error {
 	if err2 := sr.send(400, err); err2 != nil {
 		return nil
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http404() error {
+func (sr *SendResponseStruct) Http404() error {
 	if err := sr.sendStatus(404); err != nil {
 		return nil
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http401(err error) error {
+func (sr *SendResponseStruct) Http401(err error) error {
 	if err2 := sr.send(401, err); err2 != nil {
 		return nil
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http500(err error) error {
+func (sr *SendResponseStruct) Http500(err error) error {
 	log.Printf("An internal error occurred! \n Error: %v", err)
 	if err2 := sr.send(500, err); err2 != nil {
 		return nil
@@ -75,35 +81,35 @@ func (sr *SendResponse) Http500(err error) error {
 	return nil
 }
 
-func (sr *SendResponse) Http201(data any) error {
+func (sr *SendResponseStruct) Http201(data any) error {
 	if err := sr.send(201, data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http204() error {
+func (sr *SendResponseStruct) Http204() error {
 	if err := sr.sendStatus(204); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (sr *SendResponse) Http200(data any) error {
+func (sr *SendResponseStruct) Http200(data any) error {
 	if err := sr.send(200, data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (sr *SendResponse) Send(s int, data any) error {
+func (sr *SendResponseStruct) Send(s int, data any) error {
 	if err := sr.send(s, data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (sr *SendResponse) send(s int, data any) error {
+func (sr *SendResponseStruct) send(s int, data any) error {
 	if data == nil {
 		return sr.sendStatus(s)
 	}
@@ -117,7 +123,7 @@ func (sr *SendResponse) send(s int, data any) error {
 	return nil
 }
 
-func (sr *SendResponse) sendError(s int, err error) error {
+func (sr *SendResponseStruct) sendError(s int, err error) error {
 	sr.saveError(err)
 	if resErr := sr.Ctx.Status(s).JSON(map[string]any{"Error": err.Error()}); resErr != nil {
 		sr.saveError(resErr)
@@ -126,7 +132,7 @@ func (sr *SendResponse) sendError(s int, err error) error {
 	return nil
 }
 
-func (sr *SendResponse) sendStatus(s int) error {
+func (sr *SendResponseStruct) sendStatus(s int) error {
 	if err := sr.Ctx.SendStatus(s); err != nil {
 		sr.saveError(err)
 		fmt.Printf("Failed to send status: %d\n", s)
@@ -136,7 +142,7 @@ func (sr *SendResponse) sendStatus(s int) error {
 	return nil
 }
 
-func (sr *SendResponse) saveError(err error) *SendResponse {
+func (sr *SendResponseStruct) saveError(err error) *SendResponseStruct {
 	fmt.Printf("An error occurred!\n>>> %v\n", err.Error())
 	return sr
 }

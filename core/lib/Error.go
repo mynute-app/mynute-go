@@ -164,6 +164,8 @@ type GeneralErrors struct {
 	NotFoundError         ErrorStruct
 	InternalError         ErrorStruct
 	AuthError             ErrorStruct
+	SessionNotFound       ErrorStruct // New: For missing session in DB
+	DatabaseError         ErrorStruct // New: General DB error
 }
 
 type RoleErrors struct {
@@ -252,6 +254,8 @@ var Error = ErrorCategory{
 		NotFoundError:         NewError("EndPoint not found", "Recurso não encontrado", fiber.StatusNotFound),
 		BadRequest:            NewError("Bad request", "Requisição inválida", fiber.StatusBadRequest),
 		AuthError:             NewError("Internal Server Error while authenticating", "Erro Interno de Servidor enquanto autenticando", fiber.StatusInternalServerError),
+		SessionNotFound:       NewError("Database session not found in context", "Sessão de banco de dados não encontrada no contexto", fiber.StatusInternalServerError),
+		DatabaseError:         NewError("An internal error occurred regarding the database", "Ocorreu um erro interno relacionado ao banco de dados", fiber.StatusInternalServerError),
 	},
 	Role: RoleErrors{
 		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),

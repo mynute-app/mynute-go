@@ -29,7 +29,7 @@ type company_controller struct {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func (cc *company_controller) CreateCompany(c *fiber.Ctx) error {
-	res := &lib.SendResponse{Ctx: c}
+	res := &lib.SendResponseStruct{Ctx: c}
 	var body DTO.CreateCompany
 	if err := c.BodyParser(&body); err != nil {
 		return err

@@ -20,7 +20,7 @@ type Req struct {
 func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
 	return &AutoReqActions{
 		req: r,
-		res: &lib.SendResponse{Ctx: c},
+		res: &lib.SendResponseStruct{Ctx: c},
 		ctx: c,
 	}
 }
@@ -28,7 +28,7 @@ func (r *Req) SetAutomatedActions(c *fiber.Ctx) *AutoReqActions {
 // AutoReqActions holds the intermediate data for method chaining
 type AutoReqActions struct {
 	req      *Req
-	res      *lib.SendResponse
+	res      *lib.SendResponseStruct
 	ctx      *fiber.Ctx
 	ctxVal   *ContextValues
 	mute_res bool
