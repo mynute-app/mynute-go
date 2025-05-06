@@ -123,17 +123,7 @@ func UpdateBranchById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
 func DeleteBranchById(c *fiber.Ctx) error {
-	var branch model.Branch
-
-	if err := DeleteOneById(c, &branch); err != nil {
-		return err
-	}
-
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return nil
+	return DeleteOneById(c, &model.Branch{})
 }
 
 // GetEmployeeServicesByBranchId retrieves all services of an employee included in the branch ID
@@ -216,17 +206,8 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if service.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
-	}
-	if err := tx.Model(&branch).Association("Services").Append(&service); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	if err := tx.Model(&branch).Preload("Services").Where("id = ?", branch.ID).First(&branch).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	if err := branch.AddService(tx, &service); err != nil {
+		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -275,17 +256,8 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if service.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame.SendToClient(c)
-	}
-	if err := tx.Model(&branch).Association("Services").Delete(&service); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	if err := tx.Model(&branch).Preload("Services").Where("id = ?", branch.ID).First(&branch).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	if err := branch.RemoveService(tx, &service); err != nil {
+		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)

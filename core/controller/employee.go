@@ -3,21 +3,15 @@ package controller
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-type employee_controller struct {
-	service.Base[model.Employee, DTO.Employee]
-}
 
 // CreateEmployee creates an employee
 //
@@ -33,7 +27,7 @@ type employee_controller struct {
 //	@Success		200			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
-func (ec *employee_controller) CreateEmployee(c *fiber.Ctx) error {
+func CreateEmployee(c *fiber.Ctx) error {
 	return ec.CreateOne(c)
 }
 
@@ -48,7 +42,7 @@ func (ec *employee_controller) CreateEmployee(c *fiber.Ctx) error {
 //	@Success		200
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/login [post]
-func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
+func LoginEmployee(c *fiber.Ctx) error {
 	var body model.Employee
 	if err := c.BodyParser(&body); err != nil {
 		return err
@@ -95,7 +89,7 @@ func (ec *employee_controller) LoginEmployee(c *fiber.Ctx) error {
 //	@Success		200		{object}	nil
 //	@Failure		404		{object}	nil
 //	@Router			/employee/verify-email/{email}/{code} [post]
-func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
+func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var employee model.Employee
 	employee.Email = email
@@ -127,7 +121,7 @@ func (ec *employee_controller) VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
-func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
+func GetEmployeeById(c *fiber.Ctx) error {
 	return ec.GetBy("id", c)
 }
 
@@ -144,7 +138,7 @@ func (ec *employee_controller) GetEmployeeById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/email/{email} [get]
-func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
+func GetEmployeeByEmail(c *fiber.Ctx) error {
 	return ec.GetBy("email", c)
 }
 
@@ -163,7 +157,7 @@ func (ec *employee_controller) GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Success		200			{object}	DTO.Employee
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
-func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
+func UpdateEmployeeById(c *fiber.Ctx) error {
 	return ec.UpdateOneById(c)
 }
 
@@ -180,7 +174,7 @@ func (ec *employee_controller) UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
-func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
+func DeleteEmployeeById(c *fiber.Ctx) error {
 	return ec.DeleteOneById(c)
 }
 
@@ -199,7 +193,7 @@ func (ec *employee_controller) DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Success		200			{object}	DTO.Employee
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
-func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
+func AddServiceToEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	service_id := c.Params("service_id")
 	var employee model.Employee
@@ -240,7 +234,7 @@ func (ec *employee_controller) AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [delete]
-func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
+func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	service_id := c.Params("service_id")
 	var employee model.Employee
@@ -281,7 +275,7 @@ func (ec *employee_controller) RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [post]
-func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
+func AddBranchToEmployee(c *fiber.Ctx) error {
 	var branch model.Branch
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
@@ -322,7 +316,7 @@ func (ec *employee_controller) AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Employee
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [delete]
-func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
+func RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	var branch model.Branch
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
@@ -349,7 +343,7 @@ func (ec *employee_controller) RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	return nil
 }
 
-func (ec *employee_controller) AddRoleToEmployee(c *fiber.Ctx) error {
+func AddRoleToEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	role_id := c.Params("role_id")
 	var employee model.Employee
@@ -376,7 +370,7 @@ func (ec *employee_controller) AddRoleToEmployee(c *fiber.Ctx) error {
 	return nil
 }
 
-func (ec *employee_controller) RemoveRoleFromEmployee(c *fiber.Ctx) error {
+func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	role_id := c.Params("role_id")
 	var employee model.Employee
@@ -403,26 +397,19 @@ func (ec *employee_controller) RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	return nil
 }
 
-func Employee(Gorm *handler.Gorm) *employee_controller {
-	ec := &employee_controller{
-		Base: service.Base[model.Employee, DTO.Employee]{
-			Name:    namespace.HolidaysKey.Name,
-			Request: handler.Request(Gorm),
-		},
-	}
+func Employee(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
-		ec.CreateEmployee,
-		ec.GetEmployeeById,
-		ec.GetEmployeeByEmail,
-		ec.UpdateEmployeeById,
-		ec.DeleteEmployeeById,
-		ec.AddServiceToEmployee,
-		ec.RemoveServiceFromEmployee,
-		ec.AddBranchToEmployee,
-		ec.RemoveBranchFromEmployee,
-		ec.LoginEmployee,
-		ec.VerifyEmployeeEmail,
+		CreateEmployee,
+		GetEmployeeById,
+		GetEmployeeByEmail,
+		UpdateEmployeeById,
+		DeleteEmployeeById,
+		AddServiceToEmployee,
+		RemoveServiceFromEmployee,
+		AddBranchToEmployee,
+		RemoveBranchFromEmployee,
+		LoginEmployee,
+		VerifyEmployeeEmail,
 	})
-	return ec
 }
