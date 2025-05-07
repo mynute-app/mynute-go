@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // Branch model
@@ -39,10 +40,12 @@ func (b *Branch) AddService(tx *gorm.DB, service *Service) error {
 	if service.CompanyID != b.CompanyID {
 		return lib.Error.Company.NotSame
 	}
-	if err := tx.Model(&BranchResource).Association("Services").Append(&service); err != nil {
+	bID := b.ID.String()
+	sID := service.ID.String()
+	if err := tx.Exec("INSERT INTO branch_services (branch_id, service_id) VALUES (?, ?)", bID, sID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if err := tx.Model(&b).Preload("Services").Where("id = ?", b.ID).First(&b).Error; err != nil {
+	if err := tx.Preload(clause.Associations).First(&b, "id = ?", bID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
 		}
@@ -55,10 +58,12 @@ func (b *Branch) RemoveService(tx *gorm.DB, service *Service) error {
 	if service.CompanyID != b.CompanyID {
 		return lib.Error.Company.NotSame
 	}
-	if err := tx.Model(&b).Association("Services").Delete(&service); err != nil {
+	bID := b.ID.String()
+	sID := service.ID.String()
+	if err := tx.Exec("DELETE FROM branch_services WHERE branch_id = ? AND service_id = ?", bID, sID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if err := tx.Model(&b).Preload("Services").Where("id = ?", b.ID).First(&b).Error; err != nil {
+	if err := tx.Preload(clause.Associations).First(&b, "id = ?", bID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
 		}

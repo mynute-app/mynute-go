@@ -3,18 +3,12 @@ package controller
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-// service_controller embeds service.Base in order to extend it with the functions below
-type service_controller struct {
-	service.Base[model.Service, DTO.Service]
-}
 
 // CreateService creates a service
 //
@@ -30,8 +24,17 @@ type service_controller struct {
 //	@Success		201		{object}	DTO.Service
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service [post]
-func (cc *service_controller) CreateService(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+func CreateService(c *fiber.Ctx) error {
+	var service model.Service
+	if err := Create(c, &service); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &service, &DTO.Service{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetServiceById retrieves a service by ID
@@ -44,8 +47,18 @@ func (cc *service_controller) CreateService(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [get]
-func (cc *service_controller) GetServiceById(c *fiber.Ctx) error {
-	return cc.GetBy("id", c)
+func GetServiceById(c *fiber.Ctx) error {
+	var service model.Service
+
+	if err := GetOneBy("id", c, &service); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, service, &DTO.Service{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetServiceByName retrieves a service by name
@@ -58,8 +71,18 @@ func (cc *service_controller) GetServiceById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Service
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/name/{name} [get]
-func (cc *service_controller) GetServiceByName(c *fiber.Ctx) error {
-	return cc.GetBy("name", c)
+func GetServiceByName(c *fiber.Ctx) error {
+	var service model.Service
+
+	if err := GetOneBy("name", c, &service); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, service, &DTO.Service{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // UpdateServiceById updates a service by ID
@@ -77,8 +100,18 @@ func (cc *service_controller) GetServiceByName(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Service
 //	@Failure		404		{object}	nil
 //	@Router			/service/{id} [patch]
-func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
-	return cc.UpdateOneById(c)
+func UpdateServiceById(c *fiber.Ctx) error {
+	var service model.Service
+
+	if err := UpdateOneById(c, &service); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &service, &DTO.Service{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // DeleteServiceById deletes a service by ID
@@ -94,26 +127,18 @@ func (cc *service_controller) UpdateServiceById(c *fiber.Ctx) error {
 //	@Success		200	{object}	nil
 //	@Failure		404	{object}	nil
 //	@Router			/service/{id} [delete]
-func (cc *service_controller) DeleteServiceById(c *fiber.Ctx) error {
-	return cc.DeleteOneById(c)
+func DeleteServiceById(c *fiber.Ctx) error {
+	return DeleteOneById(c, &model.Service{})
 }
 
 // Service returns a service_controller
-func Service(Gorm *handler.Gorm) *service_controller {
-	sc := &service_controller{
-		Base: service.Base[model.Service, DTO.Service]{
-			Name:    namespace.ClientKey.Name,
-			Request: handler.Request(Gorm),
-		},
-	}
+func Service(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
-		sc.CreateService,
-		sc.GetServiceById,
-		sc.GetServiceByName,
-		sc.UpdateServiceById,
-		sc.DeleteServiceById,
+		CreateService,
+		GetServiceById,
+		GetServiceByName,
+		UpdateServiceById,
+		DeleteServiceById,
 	})
-
-	return sc
 }

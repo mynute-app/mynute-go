@@ -106,7 +106,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	if err := database.LockForUpdate(tx, &employee, email); err != nil {
+	if err := database.LockForUpdate(tx, &employee, "email", email); err != nil {
 		return err
 	}
 	if employee.Verified {
@@ -246,26 +246,18 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
 	}
 
-	if err := database.LockForUpdate(tx, &employee, employee_id); err != nil {
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
 
-	if employee.CompanyID != service.CompanyID {
-		return lib.Error.Company.NotSame
+	if err := employee.AddService(tx, &service); err != nil {
+		return err
 	}
 
-	// TODO: Continue from here...
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
 
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Append(&service); err != nil {
-		return err
-	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
-	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -288,25 +280,29 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", service_id, &service); err != nil {
+
+	if err := tx.Where("id = ?", service_id).Preload(clause.Associations).First(&service).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
-	if employee.CompanyID != service.CompanyID {
-		return lib.Error.Company.NotSame
-	}
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Services").Delete(&service); err != nil {
+
+	if err := employee.RemoveService(tx, &service); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -329,25 +325,29 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
+
+	if err := tx.Where("id = ?", branch_id).Preload(clause.Associations).First(&branch).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
-	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame
-	}
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Append(&branch); err != nil {
+
+	if err := employee.AddBranch(tx, &branch); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -370,25 +370,29 @@ func RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", branch_id, &branch); err != nil {
+
+	if err := tx.Where("id = ?", branch_id).Preload(clause.Associations).First(&branch).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
-	if employee.CompanyID != branch.CompanyID {
-		return lib.Error.Company.NotSame
-	}
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Branches").Delete(&branch); err != nil {
+
+	if err := employee.RemoveBranch(tx, &branch); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -397,25 +401,29 @@ func AddRoleToEmployee(c *fiber.Ctx) error {
 	role_id := c.Params("role_id")
 	var employee model.Employee
 	var role model.Role
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", role_id, &role); err != nil {
+
+	if err := tx.Where("id = ?", role_id).Preload(clause.Associations).First(&role).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("role not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
-	if role.CompanyID != nil && employee.CompanyID != *role.CompanyID {
-		return lib.Error.Company.NotSame
-	}
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Roles").Append(&role); err != nil {
+
+	if err := employee.AddRole(tx, &role); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -424,25 +432,29 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	role_id := c.Params("role_id")
 	var employee model.Employee
 	var role model.Role
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
+
+	tx, end, err := database.Transaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", role_id, &role); err != nil {
+
+	if err := tx.Where("id = ?", role_id).Preload(clause.Associations).First(&role).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("role not found"))
+	}
+
+	if err := database.LockForUpdate(tx, &employee, "id", employee_id); err != nil {
 		return err
 	}
-	if role.CompanyID != nil && employee.CompanyID != *role.CompanyID {
-		return lib.Error.Company.NotSame
-	}
-	if err := ec.Request.Gorm.DB.Model(&employee).Association("Roles").Delete(&role); err != nil {
+
+	if err := employee.RemoveRole(tx, &role); err != nil {
 		return err
 	}
-	if err := ec.Request.Gorm.GetOneBy("id", employee_id, &employee); err != nil {
-		return err
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee, &DTO.Employee{}); err != nil {
-		return err
-	}
+
 	return nil
 }
 

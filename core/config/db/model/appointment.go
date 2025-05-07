@@ -54,10 +54,6 @@ func (Appointment) Indexes() map[string]string {
 	}
 }
 
-func (a *Appointment) GetID() string {
-	return a.ID.String()
-}
-
 // --- Appointment Hooks ---
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {

@@ -221,8 +221,9 @@ func Transaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
 // It uses the "UPDATE" locking strength to prevent other transactions 
 // from modifying the record until the current transaction is completed.
 // It will also retrieve the record with the specified ID from the database.
-func LockForUpdate(tx *gorm.DB, model any, id string) error {
-	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).First(model).Error; err != nil {
+func LockForUpdate(tx *gorm.DB, model any, key, val string) error {
+	where := fmt.Sprintf("%s = ?", key)
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(where, val).First(model).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.RecordNotFound.WithError(err)
 		}

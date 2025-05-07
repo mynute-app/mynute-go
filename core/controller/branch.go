@@ -200,7 +200,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if err := database.LockForUpdate(tx, &branch, branch_id); err != nil {
+	if err := database.LockForUpdate(tx, &branch, "id", branch_id); err != nil {
 		return err
 	}
 	if err := branch.AddService(tx, &service); err != nil {
@@ -247,7 +247,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	if err := database.LockForUpdate(tx, &branch, branch_id); err != nil {
+	if err := database.LockForUpdate(tx, &branch, "id", branch_id); err != nil {
 		return err
 	}
 	if err := branch.RemoveService(tx, &service); err != nil {

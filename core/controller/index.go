@@ -4,8 +4,10 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
 	"fmt"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 func Create(c *fiber.Ctx, model any) error {
@@ -16,11 +18,22 @@ func Create(c *fiber.Ctx, model any) error {
 	if err := Service.Create(); err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
-	m, ok := model.(interface{ GetID() string })
-	if !ok {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("model does not implement GetID method"))
+	HasID := func (model any) (uuid.UUID, bool) {
+		val := reflect.ValueOf(model)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+		field := val.FieldByName("ID")
+		if !field.IsValid() || field.Type() != reflect.TypeOf(uuid.UUID{}) {
+			return uuid.Nil, false
+		}
+		return field.Interface().(uuid.UUID), true
 	}
-	if err := Service.MyGorm.GetOneBy("id", m.GetID(), model); err != nil {
+	id, ok := HasID(model)
+	if !ok {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("model does have ID field"))
+	}
+	if err := Service.MyGorm.GetOneBy("id", id.String(), model); err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 	return nil

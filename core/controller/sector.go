@@ -3,17 +3,12 @@ package controller
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-type sector_controller struct {
-	service.Base[model.Sector, DTO.Sector]
-}
 
 // CreateSector creates a sector
 //
@@ -29,8 +24,18 @@ type sector_controller struct {
 //	@Success		201		{object}	DTO.Sector
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/sector [post]
-func (cc *sector_controller) CreateSector(c *fiber.Ctx) error {
-	return cc.CreateOne(c)
+func CreateSector(c *fiber.Ctx) error {
+	var sector model.Sector
+
+	if err := Create(c, &sector); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &sector, &DTO.Sector{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetSectorByName retrieves a sector by ID
@@ -43,8 +48,18 @@ func (cc *sector_controller) CreateSector(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/name/{name} [get]
-func (cc *sector_controller) GetSectorByName(c *fiber.Ctx) error {
-	return cc.GetBy("name", c)
+func GetSectorByName(c *fiber.Ctx) error {
+	var sector model.Sector
+
+	if err := GetOneBy("name", c, &sector); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // GetSectorById retrieves a sector by ID
@@ -57,8 +72,19 @@ func (cc *sector_controller) GetSectorByName(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [get]
-func (cc *sector_controller) GetSectorById(c *fiber.Ctx) error {
-	return cc.GetBy("id", c)
+func GetSectorById(c *fiber.Ctx) error {
+	var sector model.Sector
+
+	if err := GetOneBy("id", c, &sector); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+
 }
 
 // UpdateSectorById updates a sector by ID
@@ -76,8 +102,18 @@ func (cc *sector_controller) GetSectorById(c *fiber.Ctx) error {
 //	@Success		200		{object}	DTO.Sector
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [patch]
-func (cc *sector_controller) UpdateSectorById(c *fiber.Ctx) error {
-	return cc.UpdateOneById(c)
+func UpdateSectorById(c *fiber.Ctx) error {
+	var sector model.Sector
+
+	if err := UpdateOneById(c, &sector); err != nil {
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // DeleteSectorById deletes a sector by ID
@@ -93,24 +129,17 @@ func (cc *sector_controller) UpdateSectorById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Sector
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [delete]
-func (cc *sector_controller) DeleteSectorById(c *fiber.Ctx) error {
-	return cc.DeleteOneById(c)
+func DeleteSectorById(c *fiber.Ctx) error {
+	return DeleteOneById(c, &model.Sector{})
 }
 
-func Sector(Gorm *handler.Gorm) *sector_controller {
-	sc := &sector_controller{
-		Base: service.Base[model.Sector, DTO.Sector]{
-			Name:    namespace.SectorKey.Name,
-			Request: handler.Request(Gorm),
-		},
-	}
+func Sector(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
-		sc.CreateSector,
-		sc.GetSectorByName,
-		sc.GetSectorById,
-		sc.UpdateSectorById,
-		sc.DeleteSectorById,
+		CreateSector,
+		GetSectorByName,
+		GetSectorById,
+		UpdateSectorById,
+		DeleteSectorById,
 	})
-	return sc
 }

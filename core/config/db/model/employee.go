@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Employee struct {
@@ -168,4 +169,128 @@ func (e *Employee) ValiateWorkSchedule(tx *gorm.DB) error {
 	}
 
 	return nil // All validations passed
+}
+
+func (e *Employee) AddService(tx *gorm.DB, service *Service) error {
+	if service.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	sID := service.ID.String()
+
+	if err := tx.Exec("INSERT INTO employee_services (employee_id, service_id) VALUES (?, ?)", eID, sID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
+}
+
+func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
+	if service.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	sID := service.ID.String()
+
+	if err := tx.Exec("DELETE FROM employee_services WHERE employee_id = ? AND service_id = ?", eID, sID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
+}
+
+func (e *Employee) AddBranch(tx *gorm.DB, branch *Branch) error {
+	if branch.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	bID := branch.ID.String()
+
+	if err := tx.Exec("INSERT INTO employee_branches (employee_id, branch_id) VALUES (?, ?)", eID, bID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
+}
+
+func (e *Employee) RemoveBranch(tx *gorm.DB, branch *Branch) error {
+	if branch.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	bID := branch.ID.String()
+
+	if err := tx.Exec("DELETE FROM employee_branches WHERE employee_id = ? AND branch_id = ?", eID, bID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
+}
+
+func (e *Employee) AddRole(tx *gorm.DB, role *Role) error {
+	if role.CompanyID != nil && *role.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	rID := role.ID.String()
+
+	if err := tx.Exec("INSERT INTO employee_roles (employee_id, role_id) VALUES (?, ?)", eID, rID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+func (e *Employee) RemoveRole(tx *gorm.DB, role *Role) error {
+	if role.CompanyID != nil && *role.CompanyID != e.CompanyID {
+		return lib.Error.Company.NotSame
+	}
+
+	eID := e.ID.String()
+	rID := role.ID.String()
+
+	if err := tx.Exec("DELETE FROM employee_roles WHERE employee_id = ? AND role_id = ?", eID, rID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Preload(clause.Associations).First(&e, "id = ?", eID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }

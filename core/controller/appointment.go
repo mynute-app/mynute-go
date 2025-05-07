@@ -83,7 +83,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 	}
 
 	var appointment model.Appointment
-	if err := database.LockForUpdate(tx, &appointment, appointment_id); err != nil {
+	if err := database.LockForUpdate(tx, &appointment, "id", appointment_id); err != nil {
 		return err
 	}
 
