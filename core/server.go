@@ -38,17 +38,17 @@ func NewServer() *Server {
 	if app_env == "test" {
 		db.Test().Clear()
 	}
-	db.Migrate()
-	if _, err := model.SeedResources(db.Gorm); err != nil {
-		panic(err)
-	}
-	if _, err := model.SeedEndpoints(db.Gorm); err != nil {
-		panic(err)
-	}
-	if _, err := model.SeedRoles(db.Gorm); err != nil {
-		panic(err)
-	}
-	if _, err := model.SeedPolicies(db.Gorm); err != nil {
+	db.Migrate(model.GeneralModels)
+	endpoints, deferEndpoint := model.EndPoints(&model.EndpointCfg{AllowCreation: true})
+	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
+	defer deferEndpoint()
+	defer deferPolicies()
+	if err := db.
+		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
+		Seed("Roles", model.Roles, "id = ?", []string{"ID"}).
+		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
+		Seed("Policies", policies, "name = ?", []string{"Name"}).
+		Error; err != nil {
 		panic(err)
 	}
 	routes.Build(db.Gorm, app)

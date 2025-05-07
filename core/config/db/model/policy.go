@@ -3,11 +3,9 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 var AllowNilCompanyID = false
@@ -17,14 +15,14 @@ var AllowNilResourceID = false
 // --- PolicyRule (Represents a policy rule for access control) ---
 type PolicyRule struct {
 	BaseModel
-	PropertyID          *uuid.UUID      `json:"property_id"`
-	Property            *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
-	Name                string          `json:"name"`
-	Description         string          `json:"description"`
-	Effect              string          `json:"effect"` // "Allow" / "Deny"
-	EndPointID          uuid.UUID       `json:"end_point_id"`
-	EndPoint            EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"end_point"`
-	Conditions          json.RawMessage `gorm:"type:jsonb" json:"conditions"`
+	PropertyID  *uuid.UUID      `json:"property_id"`
+	Property    *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Effect      string          `json:"effect"` // "Allow" / "Deny"
+	EndPointID  uuid.UUID       `json:"end_point_id"`
+	EndPoint    EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"end_point"`
+	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
 func (PolicyRule) TableName() string {
@@ -1117,62 +1115,77 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 	return Policies
 }
 
-var Policies []*PolicyRule
+type PolicyCfg struct {
+	AllowNilCompanyID  bool // Allow policies to be created without company_id
+	AllowNilCreatedBy  bool // Allow policies to be created without created_by
+}
 
-// SeedPolicies function needs to iterate through the *full* Policies list
-func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
-	AllowNilCompanyID = true // Allow seeding system policies without company_id
-	AllowNilCreatedBy = true // Allow seeding system policies without created_by
-
-	seededCount := 0
-	updatedCount := 0 // Optionally track updates if you modify seeding logic
-
-	tx := db.Begin()
-	if tx.Error != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
-	}
-
-	defer func() {
+func Policies(cfg *PolicyCfg) ([]*PolicyRule, func()) {
+	policies := init_policy_array()
+	AllowNilCompanyID = cfg.AllowNilCompanyID
+	AllowNilCreatedBy = cfg.AllowNilCreatedBy
+	deferFnc := func() {
 		AllowNilCompanyID = false
 		AllowNilCreatedBy = false
-		if r := recover(); r != nil {
-			tx.Rollback()
-			log.Printf("Panic occurred during policy seeding: %v", r)
-		}
-		if err := tx.Commit().Error; err != nil {
-			log.Printf("Failed to commit transaction: %v", err)
-		}
-		log.Printf("System policies seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
-	}()
-
-	Policies = init_policy_array()
-
-	for _, policy := range Policies {
-		if policy == nil {
-			log.Println("Warning: Encountered nil policy in Policies list.")
-			continue
-		}
-
-		// Create a placeholder to find existing policy
-		var existingPolicy PolicyRule
-
-		err := tx.Where("name = ?", policy.Name).First(&existingPolicy).Error
-
-		if err == gorm.ErrRecordNotFound {
-			// Policy doesn't exist, create it
-			if err := tx.Create(policy).Error; err != nil {
-				tx.Rollback()
-				return nil, fmt.Errorf("failed to create policy '%s': %w", policy.Name, err)
-			}
-			seededCount++
-		} else if err != nil {
-			// Other database error
-			tx.Rollback()
-			return nil, fmt.Errorf("failed to query policy '%s': %w", policy.Name, err)
-		} else {
-			updatedCount++ // Increment if you implement update logic
-		}
 	}
-
-	return Policies, nil // Return the original list (or query fresh if needed)
+	return policies, deferFnc
 }
+
+// // SeedPolicies function needs to iterate through the *full* Policies list
+// func SeedPolicies(db *gorm.DB) ([]*PolicyRule, error) {
+// 	AllowNilCompanyID = true // Allow seeding system policies without company_id
+// 	AllowNilCreatedBy = true // Allow seeding system policies without created_by
+
+// 	seededCount := 0
+// 	updatedCount := 0
+
+// 	tx := db.Begin()
+// 	if tx.Error != nil {
+// 		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
+// 	}
+
+// 	defer func() {
+// 		AllowNilCompanyID = false
+// 		AllowNilCreatedBy = false
+// 		if r := recover(); r != nil {
+// 			tx.Rollback()
+// 			log.Printf("Panic occurred during policy seeding: %v", r)
+// 		}
+// 		if err := tx.Commit().Error; err != nil {
+// 			log.Printf("Failed to commit transaction: %v", err)
+// 		}
+// 		log.Printf("System Policies seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
+// 	}()
+
+// 	Policies = init_policy_array()
+
+// 	for _, newPolicy := range Policies {
+// 		if newPolicy == nil {
+// 			panic("Encountered nil policy in Policies list.")
+// 		}
+// 		// Create a placeholder to find existing policy
+// 		var oldPolicy PolicyRule
+// 		err := tx.Where("name = ?", newPolicy.Name).First(&oldPolicy).Error
+// 		if err == gorm.ErrRecordNotFound {
+// 			// Policy doesn't exist, create it
+// 			if err := tx.Create(newPolicy).Error; err != nil {
+// 				tx.Rollback()
+// 				return nil, fmt.Errorf("failed to create policy '%s': %w", newPolicy.Name, err)
+// 			}
+// 			seededCount++
+// 		} else if err != nil {
+// 			// Other database error
+// 			tx.Rollback()
+// 			return nil, fmt.Errorf("failed to query policy '%s': %w", newPolicy.Name, err)
+// 		} else {
+// 			// Policy exists, update it if necessary
+// 			if err := tx.Model(newPolicy).Where("id = ?", oldPolicy.ID).Updates(newPolicy).Error; err != nil {
+// 				tx.Rollback()
+// 				return nil, fmt.Errorf("failed to update policy '%s': %w", newPolicy.Name, err)
+// 			}
+// 			updatedCount++ // Increment if you implement update logic
+// 		}
+// 	}
+
+// 	return Policies, nil // Return the original list (or query fresh if needed)
+// }

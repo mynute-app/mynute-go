@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-
-	"gorm.io/gorm"
 )
 
 type Resource struct {
@@ -257,31 +254,31 @@ var Resources = []*Resource{
 	AuthResource,
 }
 
-func SeedResources(db *gorm.DB) ([]*Resource, error) {
-	tx := db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-			log.Printf("Panic occurred during policy seeding: %v", r)
-		}
-		if err := tx.Commit().Error; err != nil {
-			log.Printf("Failed to commit transaction: %v", err)
-		}
-		log.Print("System Resources seeded successfully")
-	}()
-	for _, resource := range Resources {
-		if err := tx.Where(`"table" = ?`, resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {
-			if err := tx.Create(resource).Error; err != nil {
-				return nil, err
-			}
-		} else if err != nil {
-			return nil, err
-		} else {
-			// Update the resource if it already exists
-			if err := tx.Model(resource).Updates(resource).Error; err != nil {
-				return nil, err
-			}
-		}
-	}
-	return Resources, nil
-}
+// func SeedResources(db *gorm.DB) ([]*Resource, error) {
+// 	tx := db.Begin()
+// 	defer func() {
+// 		if r := recover(); r != nil {
+// 			tx.Rollback()
+// 			log.Printf("Panic occurred during policy seeding: %v", r)
+// 		}
+// 		if err := tx.Commit().Error; err != nil {
+// 			log.Printf("Failed to commit transaction: %v", err)
+// 		}
+// 		log.Print("System Resources seeded successfully")
+// 	}()
+// 	for _, resource := range Resources {
+// 		if err := tx.Where(`"table" = ?`, resource.Table).First(resource).Error; err == gorm.ErrRecordNotFound {
+// 			if err := tx.Create(resource).Error; err != nil {
+// 				return nil, err
+// 			}
+// 		} else if err != nil {
+// 			return nil, err
+// 		} else {
+// 			// Update the resource if it already exists
+// 			if err := tx.Model(resource).Updates(resource).Error; err != nil {
+// 				return nil, err
+// 			}
+// 		}
+// 	}
+// 	return Resources, nil
+// }

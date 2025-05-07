@@ -2,7 +2,6 @@ package model
 
 import (
 	"agenda-kaki-go/core/config/namespace"
-	"log"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -494,7 +493,7 @@ var DeleteServiceById = &EndPoint{
 }
 
 // --- Combine all Endpoints into a slice for seeding --- //
-var Endpoints = []*EndPoint{
+var endpoints = []*EndPoint{
 	// Appointment
 	CreateAppointment,
 	GetAppointmentByID,
@@ -560,39 +559,48 @@ var Endpoints = []*EndPoint{
 	DeleteServiceById,
 }
 
-func LoadEndpoints() {
-	for _, edp := range Endpoints {
+type EndpointCfg struct {
+	AllowCreation bool // Allow creation of endpoints
+}
+
+func EndPoints(cfg *EndpointCfg) ([]*EndPoint, func()) {
+	AllowEndpointCreation = cfg.AllowCreation
+	for _, edp := range endpoints {
 		if edp.Resource != nil {
 			edp.ResourceID = &edp.Resource.ID
 			edp.Resource = nil // Avoid circular reference
 		}
 	}
+	deferFnc := func() {
+		AllowEndpointCreation = false
+	}
+	return endpoints, deferFnc
 }
 
-func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
-	AllowEndpointCreation = true
-	tx := db.Begin()
-	defer func() {
-		AllowEndpointCreation = false
-		if r := recover(); r != nil {
-			tx.Rollback()
-			log.Printf("Panic occurred during policy seeding: %v", r)
-		}
-		if err := tx.Commit().Error; err != nil {
-			log.Printf("Failed to commit transaction: %v", err)
-		}
-		log.Print("System Endpoints seeded successfully")
-	}()
-	LoadEndpoints()
-	for _, edp := range Endpoints {
-		err := tx.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
-		if err == gorm.ErrRecordNotFound {
-			if err := tx.Create(edp).Error; err != nil {
-				return nil, err
-			}
-		} else if err != nil {
-			return nil, err
-		}
-	}
-	return Endpoints, nil
-}
+// func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
+// 	AllowEndpointCreation = true
+// 	tx := db.Begin()
+// 	defer func() {
+// 		AllowEndpointCreation = false
+// 		if r := recover(); r != nil {
+// 			tx.Rollback()
+// 			log.Printf("Panic occurred during policy seeding: %v", r)
+// 		}
+// 		if err := tx.Commit().Error; err != nil {
+// 			log.Printf("Failed to commit transaction: %v", err)
+// 		}
+// 		log.Print("System Endpoints seeded successfully")
+// 	}()
+// 	LoadEndpoints()
+// 	for _, edp := range Endpoints {
+// 		err := tx.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
+// 		if err == gorm.ErrRecordNotFound {
+// 			if err := tx.Create(edp).Error; err != nil {
+// 				return nil, err
+// 			}
+// 		} else if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	return Endpoints, nil
+// }

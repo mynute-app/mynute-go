@@ -1,12 +1,12 @@
 package database
 
 import (
-	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +17,8 @@ import (
 )
 
 type Database struct {
-	Gorm *gorm.DB
+	Gorm  *gorm.DB
+	Error error
 }
 
 type Test struct {
@@ -84,17 +85,125 @@ func Connect() *Database {
 }
 
 // Migrate the database schema
-func (db *Database) Migrate() *Database {
-	for _, model := range model.GeneralModels {
-		if err := db.Gorm.AutoMigrate(model); err != nil {
-			log.Fatalf("Failed to migrate %T: %v", model, err)
+func (db *Database) Migrate(models any) *Database {
+	if db.Error != nil {
+		return db
+	}
+	if models == nil {
+		db.Error = fmt.Errorf("models cannot be nil at Migrate function")
+		return db
+	}
+	// Make sure the models is a slice of pointers to structs
+	if reflect.TypeOf(models).Kind() != reflect.Slice {
+		db.Error = fmt.Errorf("models must be a slice of pointers to structs at Migrate function")
+		return db
+	}
+	for i := 0; i < reflect.ValueOf(models).Len(); i++ {
+		newModel := reflect.ValueOf(models).Index(i).Interface()
+		if newModel == nil {
+			db.Error = fmt.Errorf("model at index %d is nil at Migrate function", i)
+			return db
+		}
+		// Check if the model is a pointer to a struct
+		if reflect.TypeOf(newModel).Kind() != reflect.Ptr {
+			db.Error = fmt.Errorf("model at index %d is not a pointer to a struct at Migrate function", i)
+			return db
+		}
+
+		// Check if the model is a struct
+		if reflect.TypeOf(newModel).Elem().Kind() != reflect.Struct {
+			db.Error = fmt.Errorf("model at index %d is not a struct at Migrate function", i)
+			return db
+		}
+
+		if err := db.Gorm.AutoMigrate(newModel); err != nil {
+			db.Error = fmt.Errorf("failed to migrate model at index %d: %v", i, err)
+			return db
 		}
 	}
+
 	log.Println("Migration finished!")
 	return db
 }
 
-func (db *Database) Seed() *Database {
+func (db *Database) Seed(name string, models any, query string, keys []string) *Database {
+	if db.Error != nil {
+		return db
+	}
+
+	if models == nil {
+		db.Error = fmt.Errorf("models cannot be nil. seeding name: %s", name)
+		return db
+	}
+	modelsVal := reflect.ValueOf(models) // Use modelsVal consistently
+	modelsTyp := modelsVal.Type()        // Use modelsTyp consistently
+
+	if modelsTyp.Kind() != reflect.Slice {
+		db.Error = fmt.Errorf("models must be a slice. seeding name: %s. Got: %s", name, modelsTyp.Kind())
+		return db
+	}
+
+	modelsLen := modelsVal.Len()
+
+	if modelsLen == 0 {
+		log.Printf("models slice is empty, nothing to seed for: %s", name)
+		return db
+	}
+
+	// Check the type of the slice elements *once*
+	elemType := modelsTyp.Elem()
+	if elemType.Kind() != reflect.Ptr {
+		db.Error = fmt.Errorf("models slice elements must be pointers. seeding name: %s. Got element kind: %s", name, elemType.Kind())
+		return db
+	}
+	if elemType.Elem().Kind() != reflect.Struct {
+		db.Error = fmt.Errorf("models slice elements must be pointers to structs. seeding name: %s. Got pointer to: %s", name, elemType.Elem().Kind())
+		return db
+	}
+
+	tx := db.Gorm.Begin()
+	defer DeferTransaction(tx)
+
+	// Iterate over the slice of models
+	for i := range modelsLen { // Correct loop condition
+		newModelVal := modelsVal.Index(i)
+		if newModelVal.IsNil() {
+			db.Error = fmt.Errorf("model at index %d is a nil pointer. seeding name: %s", i, name)
+			return db
+		}
+		newModel := newModelVal.Interface()
+		underlyingStructType := newModelVal.Elem().Type() // Get the struct type that newModel points to
+		oldModel := reflect.New(underlyingStructType).Interface() // Create a new pointer to an instance of that struct type
+
+		args := make([]any, 0, len(keys)) // Pre-allocate capacity
+		for _, key := range keys {
+			field := newModelVal.Elem().FieldByName(key) // Operate on newModelVal.Elem() which is the struct
+			if !field.IsValid() {
+				db.Error = fmt.Errorf("field '%s' does not exist in model %s at index %d. seeding name: %s", key, underlyingStructType.Name(), i, name)
+				return db
+			}
+			args = append(args, field.Interface())
+		}
+
+		if err := tx.Where(query, args...).First(oldModel).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				if errCreate := tx.Create(newModel).Error; errCreate != nil {
+					db.Error = fmt.Errorf("failed to create model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, errCreate, name)
+					return db
+				}
+			} else {
+				db.Error = fmt.Errorf("failed to check if model %s at index %d exists: %v. seeding name: %s", underlyingStructType.Name(), i, err, name)
+				return db
+			}
+		} else {
+			// Model exists, update it
+			if errUpdate := tx.Model(oldModel).Updates(newModel).Error; errUpdate != nil {
+				db.Error = fmt.Errorf("failed to update model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, errUpdate, name)
+				return db
+			}
+		}
+	}
+
 	return db
 }
 
@@ -106,6 +215,7 @@ func (db *Database) Disconnect() {
 	}
 	sqlDB.Close()
 }
+
 func (db *Database) Test() *Test {
 	dbName := os.Getenv("POSTGRES_DB_NAME")
 	app_env := os.Getenv("APP_ENV")
@@ -218,7 +328,7 @@ func Transaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
 }
 
 // Locks the record for update using the given transaction and model.
-// It uses the "UPDATE" locking strength to prevent other transactions 
+// It uses the "UPDATE" locking strength to prevent other transactions
 // from modifying the record until the current transaction is completed.
 // It will also retrieve the record with the specified ID from the database.
 func LockForUpdate(tx *gorm.DB, model any, key, val string) error {

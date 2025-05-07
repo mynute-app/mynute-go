@@ -3,7 +3,6 @@ package model
 import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"log"
 
 	"github.com/google/uuid"
 
@@ -87,29 +86,41 @@ var Roles = []*Role{
 	SystemRoleBranchSupervisor,
 }
 
-func SeedRoles(db *gorm.DB) ([]*Role, error) {
-	AllowSystemRoleCreation = true
-	tx := db.Begin()
-	defer func() {
-		AllowSystemRoleCreation = false
-		if r := recover(); r != nil {
-			tx.Rollback()
-			log.Printf("Panic occurred during policy seeding: %v", r)
-		}
-		if err := tx.Commit().Error; err != nil {
-			log.Printf("Failed to commit transaction: %v", err)
-		}
-		log.Print("System Roles seeded successfully")
-	}()
-	for _, role := range Roles {
-		err := tx.Where("name = ?", role.Name).First(role).Error
-		if err == gorm.ErrRecordNotFound {
-			if err := tx.Create(role).Error; err != nil {
-				return nil, err
-			}
-		} else if err != nil {
-			return nil, err
-		}
-	}
-	return Roles, nil
-}
+// func SeedRoles(db *gorm.DB) ([]*Role, error) {
+// 	AllowSystemRoleCreation = true
+// 	tx := db.Begin()
+// 	seededCount := 0
+// 	updatedCount := 0
+// 	defer func() {
+// 		AllowSystemRoleCreation = false
+// 		if r := recover(); r != nil {
+// 			tx.Rollback()
+// 			log.Printf("Panic occurred during policy seeding: %v", r)
+// 		}
+// 		if err := tx.Commit().Error; err != nil {
+// 			log.Printf("Failed to commit transaction: %v", err)
+// 		}
+// 		log.Printf("System Roles seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
+// 	}()
+// 	for _, newRole := range Roles {
+// 		if newRole == nil {
+// 			panic("Encountered nil role in Roles slice")
+// 		}
+// 		var oldRole Role
+// 		err := tx.Where("name = ?", newRole.Name).First(oldRole).Error
+// 		if err == gorm.ErrRecordNotFound {
+// 			if err := tx.Create(newRole).Error; err != nil {
+// 				return nil, fmt.Errorf("failed to create role %s: %w", newRole.Name, err)
+// 			}
+// 			seededCount++
+// 		} else if err != nil {
+// 			return nil, fmt.Errorf("failed to check if role %s exists: %w", newRole.Name, err)
+// 		} else {
+// 			if err := tx.Model(newRole).Where("id = ?", ).Updates(newRole).Error; err != nil {
+// 				return nil, fmt.Errorf("failed to update role %s: %w", newRole.Name, err)
+// 			}
+// 			updatedCount++
+// 		}
+// 	}
+// 	return Roles, nil
+// }
