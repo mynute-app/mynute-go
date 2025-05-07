@@ -48,7 +48,7 @@ func (db *database) SaveTenantSession(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.AuthError.WithError(err)
 	}
-	if err := Company.ChangeToTenantSchema(tx); err != nil {
+	if err := lib.ChangeToTenantSchema(tx, Company.SchemaName); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
