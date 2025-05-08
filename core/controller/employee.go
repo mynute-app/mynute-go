@@ -101,7 +101,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -235,8 +235,8 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
-	
-	tx, end, err := database.Transaction(c)
+
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	var service model.Service
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -326,7 +326,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -371,7 +371,7 @@ func RemoveBranchFromEmployee(c *fiber.Ctx) error {
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -402,7 +402,7 @@ func AddRoleToEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	var role model.Role
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -433,7 +433,7 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	var role model.Role
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err

@@ -162,7 +162,7 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 	}
 
 	tx := db.Gorm.Begin()
-	defer DeferTransaction(tx)
+	defer Defer(tx)
 
 	// Iterate over the slice of models
 	for i := range modelsLen { // Correct loop condition
@@ -172,7 +172,7 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 			return db
 		}
 		newModel := newModelVal.Interface()
-		underlyingStructType := newModelVal.Elem().Type() // Get the struct type that newModel points to
+		underlyingStructType := newModelVal.Elem().Type()         // Get the struct type that newModel points to
 		oldModel := reflect.New(underlyingStructType).Interface() // Create a new pointer to an instance of that struct type
 
 		args := make([]any, 0, len(keys)) // Pre-allocate capacity
@@ -261,28 +261,36 @@ func (t *Test) Clear() {
 }
 
 /*
- * DeferTransaction is a helper function to handle transaction rollback and commit.
+Handle transaction rollback and commit.
+It should be deferred after starting a transaction.
+*/
+func Defer(tx *gorm.DB) {
+	if r := recover(); r != nil {
+		_ = tx.Rollback()
+		if err, ok := r.(error); ok {
+			log.Printf("ContextTransaction rolled back due to panic: %v", err)
+		} else {
+			log.Println("ContextTransaction rolled back due to unknown panic.")
+		}
+		panic(r) // re-throw
+	} else {
+		// Commit and log error if commit fails
+		if err := tx.Commit().Error; err != nil {
+			_ = tx.Rollback()
+			log.Printf("Commit failed, transaction rolled back: %v", err)
+		}
+	}
+}
+
+/*
+ * Callback function to handle transaction rollback and commit.
  It should be deferred after starting a transaction.
  * @param tx *gorm.DB - The transaction session
 */
 // @return func() - The function to be defered
-func DeferTransaction(tx *gorm.DB) func() {
+func DeferCallback(tx *gorm.DB) func() {
 	return func() {
-		if r := recover(); r != nil {
-			_ = tx.Rollback()
-			if err, ok := r.(error); ok {
-				log.Printf("Transaction rolled back due to panic: %v", err)
-			} else {
-				log.Println("Transaction rolled back due to unknown panic.")
-			}
-			panic(r) // re-throw
-		} else {
-			// Commit and log error if commit fails
-			if err := tx.Commit().Error; err != nil {
-				_ = tx.Rollback()
-				log.Printf("Commit failed, transaction rolled back: %v", err)
-			}
-		}
+		Defer(tx)
 	}
 }
 
@@ -301,6 +309,14 @@ func Session(c *fiber.Ctx) (*gorm.DB, error) {
 	return tx, nil
 }
 
+func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
+	tx := db.Begin()
+	if tx.Error != nil {
+		return nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
+	}
+	return tx, DeferCallback(tx), nil
+}
+
 /*
  * Opens a transaction session for the current request.
  Recomended when you need to perform multiple database operations dependant of each other.
@@ -309,22 +325,18 @@ func Session(c *fiber.Ctx) (*gorm.DB, error) {
  * @return error - The error if any
 */
 // @example
-//	tx, end, err := database.Transaction(c)
+//	tx, end, err := database.ContextTransaction(c)
 //	defer end()
 //	if err != nil {
 //		return err
 //	}
 //	// Then use the transaction session (tx) for your database operations
-func Transaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
+func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
 	session, err := Session(c)
 	if err != nil {
 		return nil, nil, err
 	}
-	tx := session.Begin()
-	if tx.Error != nil {
-		return nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
-	}
-	return tx, DeferTransaction(tx), nil
+	return Transaction(session)
 }
 
 // Locks the record for update using the given transaction and model.

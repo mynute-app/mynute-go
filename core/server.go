@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -39,20 +40,33 @@ func NewServer() *Server {
 		db.Test().Clear()
 	}
 	db.Migrate(model.GeneralModels)
+	if err := Seed(db.Gorm); err != nil {
+		panic(err)
+	}
+	routes.Build(db.Gorm, app)
+	return &Server{App: app, Db: db}
+}
+
+func Seed(db *gorm.DB) error {
+	tx, end, err := database.Transaction(db)
+	defer end()
+	if err != nil {
+		return err
+	}
 	endpoints, deferEndpoint := model.EndPoints(&model.EndpointCfg{AllowCreation: true})
 	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
 	defer deferEndpoint()
 	defer deferPolicies()
-	if err := db.
+	Database := &database.Database{Gorm: tx}
+	if err := Database.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "id = ?", []string{"ID"}).
 		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
 		Seed("Policies", policies, "name = ?", []string{"Name"}).
 		Error; err != nil {
-		panic(err)
+		return err
 	}
-	routes.Build(db.Gorm, app)
-	return &Server{App: app, Db: db}
+	return nil
 }
 
 func (s *Server) Shutdown() {

@@ -14,18 +14,6 @@ type DesignConfig struct {
 	CustomCSS string `json:"custom_css"`
 }
 
-func (DesignConfig) Value() (driver.Value, error) {
-	return json.Marshal(DesignConfig{})
-}
-
-func (DesignConfig) Scan(value any) error {
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan DesignConfig: expected []byte")
-	}
-	return json.Unmarshal(bytes, &DesignConfig{})
-}
-
 type Colors struct {
 	Primary    string `json:"primary"`
 	Secondary  string `json:"secondary"`
@@ -38,6 +26,19 @@ type Images struct {
 	BannerURL     string `json:"banner_url"`
 	BackgroundURL string `json:"background_url"`
 	FaviconURL    string `json:"favicon_url"`
+}
+
+
+func (DesignConfig) Value() (driver.Value, error) {
+	return json.Marshal(DesignConfig{})
+}
+
+func (DesignConfig) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan DesignConfig: expected []byte")
+	}
+	return json.Unmarshal(bytes, &DesignConfig{})
 }
 
 func (i *Images) GetLogoURL() string {

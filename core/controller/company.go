@@ -23,7 +23,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func CreateCompany(c *fiber.Ctx) error {
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 //	@Router			/company/tax_id/{tax_id} [get]
 func GetCompanyByTaxId(c *fiber.Ctx) error {
 	var company model.Company
-	
+
 	if err := GetOneBy("tax_id", c, &company); err != nil {
 		return err
 	}

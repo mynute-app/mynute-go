@@ -51,7 +51,7 @@ func LoginClient(c *fiber.Ctx) error {
 		return err
 	}
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 		return res.Send(400, err)
 	}
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Router			/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
 	var client model.Client
-	
+
 	if err := UpdateOneById(c, &client); err != nil {
 		return err
 	}

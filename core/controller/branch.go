@@ -189,7 +189,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 	} else if service_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -236,7 +236,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	} else if service_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err

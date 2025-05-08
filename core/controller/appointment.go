@@ -76,7 +76,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
 	}
 
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -145,7 +145,7 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 	}
 	var appointment model.Appointment
 	appointment.ID = uuid
-	tx, end, err := database.Transaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
