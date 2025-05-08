@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
+	"agenda-kaki-go/core/config/namespace"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"testing"
@@ -50,7 +51,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/appointment").
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"branch_id":   appointmentSlot.BranchID,
 			"service_id":  appointmentSlot.ServiceID,
@@ -70,7 +71,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 
 	// Client tries to get someone else's appointment : GET /appointment/{id} => 403
@@ -78,7 +79,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token). // Client 2 trying to access Client 1's appt
+		Header(namespace.HeadersKey.Auth, client2.auth_token). // Client 2 trying to access Client 1's appt
 		Send(nil)
 
 	// Client tries to reschedule someone else's appointment : PATCH /appointment/{id} => 403
@@ -87,7 +88,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token). // Client 2 trying to change Client 1's appt
+		Header(namespace.HeadersKey.Auth, client2.auth_token). // Client 2 trying to change Client 1's appt
 		Send(map[string]any{
 			"start_time": next_slot_attempt, // Provide a body even though it should fail
 		})
@@ -98,7 +99,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token). // Client 1 changing his own appt
+		Header(namespace.HeadersKey.Auth, client1.auth_token). // Client 1 changing his own appt
 		Send(map[string]any{
 			"start_time": next_slot_attempt, // Use the calculated next slot
 		})
@@ -109,7 +110,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST"). // Fixed: Method was /POST
 		URL("/appointment").
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token). // Client 1 trying to create for Client 2
+		Header(namespace.HeadersKey.Auth, client1.auth_token). // Client 1 trying to create for Client 2
 		Send(map[string]any{
 			"branch_id":   appointmentSlot.BranchID,
 			"service_id":  appointmentSlot.ServiceID,
@@ -125,7 +126,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to cancel his ongoing appointment : DELETE /appointment/{id} => 200
@@ -134,7 +135,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/appointment/"+appointment_id_client1).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 	t.Logf("Client 1 deleted appointment %s", appointment_id_client1)
 
@@ -146,7 +147,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token). // Any logged-in user can view?
+		Header(namespace.HeadersKey.Auth, client1.auth_token). // Any logged-in user can view?
 		Send(nil)
 
 	// Client tries to create a branch : POST /branch => 403
@@ -154,7 +155,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/branch").
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Client Branch Test",
@@ -166,7 +167,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Branch Name",
 		})
@@ -176,7 +177,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 
 	// --- Client x Client --- Interactions ---
@@ -186,7 +187,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/client/"+client2ID).
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 
 	// Client tries to create a client : POST /client => 403 (Client creation likely restricted / signup flow)
@@ -194,7 +195,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/client").
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"name":  "New Client By Client",
 			"email": fmt.Sprintf("clientbyclient%d@test.com", time.Now().UnixNano()), // Unique email
@@ -206,7 +207,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/client/"+client2ID).
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Other Client Name",
 		})
@@ -216,7 +217,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/client/"+client2ID).
 		ExpectStatus(403).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 
 	// Client tries to change something on himself : PATCH /client/{id} => 200
@@ -225,7 +226,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/client/"+client1ID).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"name": newClient1Name,
 		})
@@ -238,7 +239,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/client/"+client1ID).
 		ExpectStatus(200).
-		Header("Authorization", client1.auth_token). // Use token before it's invalidated
+		Header(namespace.HeadersKey.Auth, client1.auth_token). // Use token before it's invalidated
 		Send(nil)
 	t.Logf("Client 1 deleted himself (%s)", client1ID)
 	// client1.auth_token = "" // Mark token as invalid locally
@@ -254,7 +255,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/company/"+company1ID).
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to get all companies : GET /company => 403 (Listing all companies usually restricted)
@@ -262,7 +263,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/company").
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to change something in a company : PATCH /company/{id} => 403
@@ -270,7 +271,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/company/"+company1ID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Company Name",
 		})
@@ -280,7 +281,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/company/"+company1ID).
 		ExpectStatus(403). // Assuming 403 for permission denied
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Client x Employee --- Interactions ---
@@ -290,7 +291,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/employee/"+employee0ID).
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to create an employee : POST /employee => 403
@@ -298,7 +299,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/employee").
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Client Created Employee",
@@ -311,7 +312,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/employee/"+employee0ID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Employee Name",
 		})
@@ -321,7 +322,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/employee/"+employee0ID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Client x Role --- Interactions ---
@@ -332,7 +333,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/role/"+roleID).
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to get all roles : GET /role => 404 (Endpoint might not exist or be public)
@@ -340,7 +341,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/role").
 		ExpectStatus(404). // As per original comment
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to create a role : POST /role => 403
@@ -348,7 +349,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/role").
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Client Role",
@@ -359,7 +360,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/role/"+roleID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Role",
 		})
@@ -369,7 +370,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/role/"+roleID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Client x Sector --- Interactions ---
@@ -380,7 +381,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/sector/"+sectorID).
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to get all sectors : GET /sector => 200 (Public listing)
@@ -388,7 +389,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/sector").
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to create a sector : POST /sector => 403
@@ -396,7 +397,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/sector").
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Sector",
 		})
@@ -406,7 +407,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/sector/"+sectorID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Sector",
 		})
@@ -416,7 +417,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/sector/"+sectorID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Client x Service --- Interactions ---
@@ -427,7 +428,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/service/"+service0ID).
 		ExpectStatus(200).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// Client tries to create a service : POST /service => 403
@@ -435,7 +436,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/service").
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Client Service",
@@ -448,7 +449,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Service",
 		})
@@ -458,7 +459,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header("Authorization", client2.auth_token).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Setup for Employee Tests ---
@@ -469,7 +470,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/appointment").
 		ExpectStatus(200).
-		Header("Authorization", company1.owner.auth_token). // Owner creates appt for client2 with employee0
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates appt for client2 with employee0
 		Send(map[string]any{
 			"branch_id":   appointmentSlot.BranchID,
 			"service_id":  appointmentSlot.ServiceID,
@@ -508,7 +509,7 @@ func Test_Permissions(t *testing.T) {
 				Method("POST").
 				URL("/appointment").
 				ExpectStatus(200).
-				Header("Authorization", company1.owner.auth_token). // Owner creates
+				Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates
 				Send(map[string]any{
 					"branch_id":   employee1Branch0,
 					"service_id":  employee1Service0,
@@ -543,7 +544,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/appointment/"+employee0AppointmentID).
 		ExpectStatus(200).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to get someone else's appointment : GET /appointment/{id} => 403
@@ -552,7 +553,7 @@ func Test_Permissions(t *testing.T) {
 			Method("GET").
 			URL("/appointment/"+otherEmployeeAppointmentID).
 			ExpectStatus(403).
-			Header("Authorization", employee0AuthToken).
+			Header(namespace.HeadersKey.Auth, employee0AuthToken).
 			Send(nil)
 	} else {
 		t.Log("Skipping test: get someone else's appointment (no other employee appointment available)")
@@ -566,7 +567,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/appointment").
 		ExpectStatus(200).
-		Header("Authorization", employee0AuthToken). // Employee making the booking
+		Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee making the booking
 		Send(map[string]any{
 			"branch_id":   appointmentSlot.BranchID,
 			"service_id":  appointmentSlot.ServiceID,
@@ -588,7 +589,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/appointment/"+employee0AppointmentID).
 		ExpectStatus(404). // Following comment expectation
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"start_time": next_slot_for_employee_booking, // Attempt change
 		})
@@ -599,7 +600,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/appointment/"+employee0AppointmentID).
 		ExpectStatus(404). // Following comment expectation
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Re-test: Employee tries to get someone else's appointment : GET /appointment/{id} => 403 (Duplicate check from above)
@@ -608,7 +609,7 @@ func Test_Permissions(t *testing.T) {
 			Method("GET").
 			URL("/appointment/"+otherEmployeeAppointmentID).
 			ExpectStatus(403).
-			Header("Authorization", employee0AuthToken).
+			Header(namespace.HeadersKey.Auth, employee0AuthToken).
 			Send(nil)
 	} // Skipped if no other appt
 
@@ -618,7 +619,7 @@ func Test_Permissions(t *testing.T) {
 			Method("PATCH").
 			URL("/appointment/"+otherEmployeeAppointmentID).
 			ExpectStatus(403). // Should be forbidden (or 404 if PATCH route is generally unavailable to employees)
-			Header("Authorization", employee0AuthToken).
+			Header(namespace.HeadersKey.Auth, employee0AuthToken).
 			Send(map[string]any{
 				"start_time": next_slot_for_employee_booking,
 			})
@@ -632,7 +633,7 @@ func Test_Permissions(t *testing.T) {
 			Method("DELETE").
 			URL("/appointment/"+otherEmployeeAppointmentID).
 			ExpectStatus(403). // Should be forbidden (or 404 if DELETE route unavailable)
-			Header("Authorization", employee0AuthToken).
+			Header(namespace.HeadersKey.Auth, employee0AuthToken).
 			Send(nil)
 	} else {
 		t.Log("Skipping test: delete someone else's appointment (no other employee appointment available)")
@@ -644,7 +645,7 @@ func Test_Permissions(t *testing.T) {
 			Method("DELETE").
 			URL("/appointment/"+employeeCreatedApptID).
 			ExpectStatus(200). // Assume owner can delete any appt in their company
-			Header("Authorization", company1.owner.auth_token).
+			Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
 			Send(nil)
 		t.Logf("Cleaned up employee-created appointment %s using owner token", employeeCreatedApptID)
 	}
@@ -656,7 +657,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/company/"+company1ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to get all companies : GET /company => 403 (Definitely restricted)
@@ -664,7 +665,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/company").
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to change something in a company : PATCH /company/{id} => 403
@@ -672,7 +673,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/company/"+company1ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"name": "Employee Edited Company Name",
 		})
@@ -682,7 +683,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/company/"+company1ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// --- Employee x Branch --- Interactions ---
@@ -692,7 +693,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to create a branch : POST /branch => 403
@@ -700,7 +701,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/branch").
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Employee Branch",
@@ -712,7 +713,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"name": "Employee Edited Branch Name",
 		})
@@ -722,7 +723,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// --- Employee x Service --- Interactions ---
@@ -732,7 +733,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/service/"+service0ID).
 		ExpectStatus(200).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to create a service : POST /service => 403
@@ -740,7 +741,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/service").
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"company_id": company1ID,
 			"name":       "Employee Service",
@@ -753,7 +754,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(map[string]any{
 			"name": "Employee Edited Service",
 		})
@@ -763,7 +764,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
 	// Employee tries to add a service to himself : POST /employee/{id}/service/{id} => 403 (Assume only Owner/Admin can)
@@ -775,7 +776,7 @@ func Test_Permissions(t *testing.T) {
 			Method("POST").
 			URL("/employee/"+employee0ID+"/service/"+service1ID).
 			ExpectStatus(403).
-			Header("Authorization", employee0AuthToken). // Employee trying to add to himself
+			Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee trying to add to himself
 			Send(nil)
 	} else {
 		t.Log("Skipping test: employee add service to self (only one service defined)")
@@ -786,7 +787,7 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/employee/"+employee0ID+"/service/"+service0ID).
 		ExpectStatus(200).
-		Header("Authorization", company1.owner.auth_token). // Owner performs action
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner performs action
 		Send(nil)
 	t.Logf("Owner added service %s to employee %s", service0ID, employee0ID)
 
@@ -795,7 +796,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/employee/"+employee0ID+"/service/"+service0ID). // Try to remove the service added by owner
 		ExpectStatus(403).
-		Header("Authorization", employee0AuthToken). // Employee trying action
+		Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee trying action
 		Send(nil)
 
 	// Owner removes service from employee: DELETE /employee/{id}/service/{id} => 200 (Cleanup / successful case)
@@ -803,7 +804,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/employee/"+employee0ID+"/service/"+service0ID).
 		ExpectStatus(200).
-		Header("Authorization", company1.owner.auth_token). // Owner performs action
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner performs action
 		Send(nil)
 	t.Logf("Owner removed service %s from employee %s", service0ID, employee0ID)
 

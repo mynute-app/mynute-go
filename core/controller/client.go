@@ -4,6 +4,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -74,7 +75,7 @@ func LoginClient(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	c.Response().Header.Set("Authorization", token)
+	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
 	return nil
 }
 
@@ -127,7 +128,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an client by its email
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
 //	@Produce		json
@@ -151,7 +152,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Description	Update an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -180,7 +181,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Description	Delete an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Client ID"
 //	@Produce		json

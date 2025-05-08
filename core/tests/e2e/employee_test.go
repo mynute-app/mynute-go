@@ -68,7 +68,7 @@ func (e *Employee) Create(t *testing.T, s int) {
 	http.Method("POST")
 	http.URL("/employee")
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.company.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	pswd := "1SecurePswd!"
 	CreateEmployeeBody := &DTO.CreateEmployee{
 		CompanyID: e.company.created.ID,
@@ -104,7 +104,7 @@ func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 	http.Method("PATCH")
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.company.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	http.Send(changes)
 	http.ParseResponse(&e.created)
 }
@@ -114,7 +114,7 @@ func (e *Employee) GetById(t *testing.T, s int) {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.company.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
@@ -124,7 +124,7 @@ func (e *Employee) GetByEmail(t *testing.T, s int) {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/employee/email/%s", e.created.Email))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.company.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
@@ -134,7 +134,7 @@ func (e *Employee) Delete(t *testing.T, s int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.company.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 }
@@ -149,7 +149,7 @@ func (e *Employee) Login(t *testing.T, s int) {
 		Email:    e.created.Email,
 		Password: e.created.Password,
 	})
-	auth := http.ResHeaders["Authorization"]
+	auth := http.ResHeaders[namespace.HeadersKey.Auth]
 	if len(auth) == 0 {
 		t.Errorf("Authorization header not found")
 	}
@@ -159,6 +159,7 @@ func (e *Employee) Login(t *testing.T, s int) {
 func (e *Employee) VerifyEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
+	http.Header(namespace.HeadersKey.Company, e.created.CompanyID.String())
 	http.URL(fmt.Sprintf("/employee/verify-email/%v/%s", e.created.Email, "12345"))
 	http.ExpectStatus(s)
 	http.Send(nil)
@@ -170,9 +171,9 @@ func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch, token *string)
 	http.URL(fmt.Sprintf("/employee/%s/branch/%s", e.created.ID.String(), branch.created.ID.String()))
 	http.ExpectStatus(s)
 	if token != nil {
-		http.Header("Authorization", *token)
+		http.Header(namespace.HeadersKey.Auth, *token)
 	} else {
-		http.Header("Authorization", e.auth_token)
+		http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	}
 	http.Send(nil)
 	http.ParseResponse(&e.created)
@@ -186,7 +187,7 @@ func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	http.Method("POST")
 	http.URL(fmt.Sprintf("/employee/%s/service/%s", e.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	service.GetById(t, 200)
@@ -199,7 +200,7 @@ func (e *Employee) AddRole(t *testing.T, s int, role *Role) {
 	http.Method("POST")
 	http.URL(fmt.Sprintf("/employee/%s/role/%s", e.created.ID.String(), role.created.ID.String()))
 	http.ExpectStatus(s)
-	http.Header("Authorization", e.auth_token)
+	http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	role.employees = append(role.employees, e)

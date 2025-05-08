@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -50,7 +51,7 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 	http.Method("POST")
 	http.URL("/service")
 	http.ExpectStatus(status)
-	http.Header("Authorization", s.auth_token)
+	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(DTO.CreateService{
 		Name:        lib.GenerateRandomName("Service"),
 		Description: lib.GenerateRandomName("Description"),
@@ -67,7 +68,7 @@ func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 	http.Method("PATCH")
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", s.auth_token)
+	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(changes)
 	s.GetById(t, 200)
 }
@@ -77,7 +78,7 @@ func (s *Service) GetById(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", s.auth_token)
+	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&s.created)
 	return http.ResBody
@@ -88,7 +89,7 @@ func (s *Service) GetByName(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL("/service/name/" + s.created.Name)
 	http.ExpectStatus(status)
-	http.Header("Authorization", s.auth_token)
+	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&s.created)
 	return http.ResBody
@@ -99,6 +100,6 @@ func (s *Service) Delete(t *testing.T, status int) {
 	http.Method("DELETE")
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", s.auth_token)
+	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(nil)
 }

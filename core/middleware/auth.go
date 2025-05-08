@@ -274,7 +274,7 @@ forLoop: // Label is optional but can improve readability
 }
 
 func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
-	authorization := c.Get("Authorization")
+	authorization := c.Get(namespace.HeadersKey.Auth)
 	if authorization == "" {
 		return c.Next()
 	}

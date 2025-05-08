@@ -124,7 +124,7 @@ func maskSensibleInformation(body string) string {
 		`("secret"\s*:\s*")([^"]*)(")`,
 		`("access_token"\s*:\s*")([^"]*)(")`,
 		`("refresh_token"\s*:\s*")([^"]*)(")`,
-		`("authorization"\s*:\s*")([^"]*)(")`,
+		`(namespace.HeadersKey.Auth\s*:\s*")([^"]*)(")`,
 	}
 
 	masked := body

@@ -144,7 +144,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Description	Update a company by its ID
 //	@Tags			Company
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Company ID"
 //	@Accept			json
@@ -172,7 +172,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Description	Delete a company by its ID
 //	@Tags			Company
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Company ID"
 //	@Produce		json

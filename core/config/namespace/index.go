@@ -58,10 +58,12 @@ var QueryKey = QueryStruct{
 
 type HeadersStruct struct {
 	Company string
+	Auth    string
 }
 
 var HeadersKey = HeadersStruct{
 	Company: "X-Company-ID",
+	Auth: "X-Auth-Token",
 }
 
 type TypeStruct struct {

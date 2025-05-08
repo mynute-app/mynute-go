@@ -291,6 +291,7 @@ var VerifyEmployeeEmail = &EndPoint{
 	Method:      namespace.CreateActionMethod,
 	Handler:     "VerifyEmployeeEmail",
 	Description: "Verify employee email",
+	NeedsCompanyId: true,
 }
 var GetEmployeeById = &EndPoint{
 	Path:             "/employee/:id",

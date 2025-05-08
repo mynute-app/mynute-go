@@ -5,6 +5,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -584,7 +585,7 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.Method("POST")
 	http.URL("/company")
 	http.ExpectStatus(status)
-	http.Header("Authorization", c.auth_token)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
 	ownerEmail := lib.GenerateRandomEmail("owner")
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
@@ -628,7 +629,7 @@ func (c *Company) Update(t *testing.T, status int, changes map[string]any) {
 	http.Method("PATCH")
 	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", c.auth_token)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
 	http.Send(changes)
 }
 
@@ -637,6 +638,6 @@ func (c *Company) Delete(t *testing.T, status int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", c.auth_token)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
 	http.Send(nil)
 }

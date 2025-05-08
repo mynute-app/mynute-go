@@ -244,8 +244,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -331,8 +331,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -430,8 +430,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -485,8 +485,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -575,8 +575,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -626,8 +626,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -725,8 +725,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -851,8 +851,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -896,8 +896,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1098,8 +1098,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1149,8 +1149,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1211,8 +1211,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1263,8 +1263,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1389,8 +1389,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1444,8 +1444,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1504,8 +1504,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1559,8 +1559,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1616,8 +1616,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1664,8 +1664,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1715,8 +1715,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1777,8 +1777,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1897,8 +1897,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -1948,8 +1948,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2010,8 +2010,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2130,8 +2130,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2181,8 +2181,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2243,8 +2243,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2363,8 +2363,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -2408,8 +2408,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
+                        "description": namespace.HeadersKey.Auth,
+                        "name": namespace.HeadersKey.Auth,
                         "in": "header",
                         "required": true
                     },
@@ -3317,7 +3317,7 @@ const docTemplate = `{
         "ApiKeyAuth": {
             "description": "Enter the token in the format: \u003ctoken\u003e",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": namespace.HeadersKey.Auth,
             "in": "header"
         }
     }

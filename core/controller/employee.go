@@ -4,6 +4,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -20,7 +21,7 @@ import (
 //	@Description	Create an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -78,7 +79,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	c.Response().Header.Set("Authorization", token)
+	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
 	return nil
 }
 
@@ -128,7 +129,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an employee by its ID
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
@@ -154,7 +155,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Description	Retrieve an employee by its email
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
@@ -178,7 +179,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Description	Update an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -204,7 +205,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Description	Delete an employee by its ID
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
@@ -221,7 +222,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Description	Add a service to an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -267,7 +268,7 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Description	Remove a service from an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			service_id		path		string	true	"Service ID"
@@ -312,7 +313,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Description	Add an employee to a branch
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
@@ -357,7 +358,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Description	Remove an employee from a branch
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"

@@ -19,7 +19,7 @@ import (
 //	@Description	Create a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -86,7 +86,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 //	@Description	Update a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -115,7 +115,7 @@ func UpdateBranchById(c *fiber.Ctx) error {
 //	@Description	Delete a branch by its ID
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Branch ID"
 //	@Produce		json
@@ -171,7 +171,7 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Description	Add a service to a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"
@@ -218,7 +218,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 //	@Description	Remove a service from a branch
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"

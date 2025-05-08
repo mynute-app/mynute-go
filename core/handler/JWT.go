@@ -2,6 +2,7 @@ package handler
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"errors"
@@ -23,7 +24,7 @@ func JWT(c *fiber.Ctx) *jsonWebToken {
 }
 
 func (j *jsonWebToken) GetToken() string {
-	return j.C.Get("Authorization")
+	return j.C.Get(namespace.HeadersKey.Auth)
 }
 
 func (j *jsonWebToken) Encode(data any) (string, error) {
@@ -49,7 +50,7 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 }
 
 func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
-	auth_token := j.C.Get("Authorization")
+	auth_token := j.C.Get(namespace.HeadersKey.Auth)
 	if auth_token == "" {
 		return nil, nil
 	}

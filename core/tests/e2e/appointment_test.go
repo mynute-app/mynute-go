@@ -5,6 +5,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -51,7 +52,7 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	http.Method("POST")
 	http.URL("/appointment")
 	http.ExpectStatus(status)
-	http.Header("Authorization", auth_token)
+	http.Header(namespace.HeadersKey.Auth, auth_token)
 	if startTime == nil {
 		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
 		startTime = &tempStartTime

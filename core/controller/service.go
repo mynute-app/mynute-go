@@ -16,7 +16,7 @@ import (
 //	@Description	Create a service
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -91,7 +91,7 @@ func GetServiceByName(c *fiber.Ctx) error {
 //	@Description	Update a service by its ID
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Service ID"
 //	@Accept			json
@@ -120,7 +120,7 @@ func UpdateServiceById(c *fiber.Ctx) error {
 //	@Description	Delete a service by its ID
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"Authorization"
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json

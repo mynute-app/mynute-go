@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core"
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
@@ -50,7 +51,7 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 	http.Method("POST")
 	http.URL("/branch")
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(DTO.CreateBranch{
 		Name:         lib.GenerateRandomName("Branch Name"),
 		CompanyID:    b.company.created.ID,
@@ -71,7 +72,7 @@ func (b *Branch) Update(t *testing.T, status int, changes map[string]any) {
 	http.Method("PATCH")
 	http.URL("/branch/" + fmt.Sprintf("%v", b.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(changes)
 	http.ParseResponse(&b.created)
 }
@@ -81,7 +82,7 @@ func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/branch/name/%s", b.created.Name))
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
 	return http.ResBody
@@ -92,7 +93,7 @@ func (b *Branch) GetById(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
 	return http.ResBody
@@ -103,7 +104,7 @@ func (b *Branch) Delete(t *testing.T, status int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header("Authorization", b.auth_token)
+	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 }
 
@@ -113,9 +114,9 @@ func (b *Branch) AddService(t *testing.T, status int, service *Service, token *s
 	http.URL(fmt.Sprintf("/branch/%s/service/%s", b.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(status)
 	if token != nil {
-		http.Header("Authorization", *token)
+		http.Header(namespace.HeadersKey.Auth, *token)
 	} else {
-		http.Header("Authorization", b.auth_token)
+		http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	}
 	http.Send(nil)
 	http.ParseResponse(&b.created)
