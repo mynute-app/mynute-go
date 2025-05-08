@@ -90,13 +90,13 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 	}
 
 	// Turn bytes into model.Client{} struct
-	client := &DTO.Claims{}
-	err = json.Unmarshal(claim_data_bytes, client)
+	var client DTO.Claims
+	err = json.Unmarshal(claim_data_bytes, &client)
 	if err != nil {
 		return nil, err
 	}
 
-	return client, nil
+	return &client, nil
 }
 
 // getSecret retrieves the JWT secret from an environment variable

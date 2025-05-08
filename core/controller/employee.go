@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -54,7 +55,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/employee/login [post]
 func LoginEmployee(c *fiber.Ctx) error {
-	var body model.Employee
+	var body DTO.LoginEmployee
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
@@ -62,6 +63,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
 	var employee model.Employee
 	if err := tx.Where("email = ?", body.Email).Preload(clause.Associations).First(&employee).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -69,16 +71,30 @@ func LoginEmployee(c *fiber.Ctx) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
 	if !employee.Verified {
 		return lib.Error.Client.NotVerified
 	}
+
 	if !handler.ComparePassword(employee.Password, body.Password) {
 		return lib.Error.Auth.InvalidLogin
 	}
-	token, err := handler.JWT(c).Encode(employee)
+
+	var dto DTO.Claims
+
+	if employeeBytes, err := json.Marshal(&employee); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	} else {
+		if err := json.Unmarshal(employeeBytes, &dto); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	token, err := handler.JWT(c).Encode(dto)
 	if err != nil {
 		return err
 	}
+
 	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
 	return nil
 }

@@ -23,7 +23,11 @@ func DatabaseFactory(db *gorm.DB) *database {
 */
 // @return func(c *fiber.Ctx) error - The middleware function
 func (db *database) SavePublicSession(c *fiber.Ctx) error {
-	c.Locals(namespace.GeneralKey.DatabaseSession, db.Gorm)
+	tx, err := MakeSession(db.Gorm, c)
+	if err != nil {
+		return err
+	}
+	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
 	return c.Next()
 }
 
@@ -42,6 +46,10 @@ func (db *database) SaveTenantSession(c *fiber.Ctx) error {
 	tx, err := MakeSession(db.Gorm, c)
 	if err != nil {
 		return err
+	}
+
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var SchemaName string
