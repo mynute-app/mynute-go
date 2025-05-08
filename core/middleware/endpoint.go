@@ -27,7 +27,7 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 	auth := Auth(ep.DB)
 	database := DatabaseFactory(db)
 	r.Use(auth.WhoAreYou)
-	company := r.Group("/" + namespace.RouteParamsKey.CompanyID)
+	company := r.Group("/company/" + namespace.RouteParamsKey.CompanyID)
 	for _, EndPoint := range EndPoints {
 		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
