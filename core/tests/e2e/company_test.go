@@ -600,6 +600,7 @@ func (c *Company) Create(t *testing.T, status int) {
 	owner := c.created.Employees[0]
 	owner.Password = ownerPswd
 	c.owner = &Employee{
+		company: c,
 		created: owner,
 	}
 }

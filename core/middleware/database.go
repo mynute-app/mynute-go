@@ -24,7 +24,7 @@ func DatabaseFactory(db *gorm.DB) *database {
 // @return func(c *fiber.Ctx) error - The middleware function
 func (db *database) SavePublicSession(c *fiber.Ctx) error {
 	c.Locals(namespace.GeneralKey.DatabaseSession, db.Gorm)
-	return nil
+	return c.Next()
 }
 
 /*
@@ -33,7 +33,7 @@ func (db *database) SavePublicSession(c *fiber.Ctx) error {
 */
 // @return func(c *fiber.Ctx) error - The middleware function
 func (db *database) SaveTenantSession(c *fiber.Ctx) error {
-	companyID := c.Get(namespace.HeadersKey.Company)
+	companyID := c.Params(namespace.RouteParamsKey.CompanyID)
 	if companyID == "" {
 		return lib.Error.Auth.CompanyHeaderMissing
 	}

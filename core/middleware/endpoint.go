@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"log"
 	"reflect"
@@ -25,6 +26,8 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 	}
 	auth := Auth(ep.DB)
 	database := DatabaseFactory(db)
+	r.Use(auth.WhoAreYou)
+	company := r.Group("/" + namespace.RouteParamsKey.CompanyID)
 	for _, EndPoint := range EndPoints {
 		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
@@ -35,11 +38,15 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 		} else {
 			funcs = append(funcs, database.SavePublicSession)
 		}
-		if !EndPoint.IsPublic {
+		if EndPoint.DenyUnauthorized {
 			funcs = append(funcs, auth.DenyUnauthorized)
 		}
 		funcs = append(funcs, dbRouteHandler)
-		r.Add(method, EndPoint.Path, funcs...)
+		if EndPoint.NeedsCompanyId {
+			company.Add(method, EndPoint.Path, funcs...)
+		} else {
+			r.Add(method, EndPoint.Path, funcs...)
+		}
 	}
 	log.Println("Routes build finished!")
 	return nil

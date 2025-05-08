@@ -53,19 +53,33 @@ func Seed(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	endpoints, deferEndpoint := model.EndPoints(&model.EndpointCfg{AllowCreation: true})
-	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
-	defer deferEndpoint()
-	defer deferPolicies()
+
 	Database := &database.Database{Gorm: tx}
+	
 	if err := Database.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "id = ?", []string{"ID"}).
+		Error; err != nil {
+		return err
+	}
+
+	endpoints, deferEndpoint := model.EndPoints(&model.EndpointCfg{AllowCreation: true})
+	defer deferEndpoint()
+
+	if err := Database.
 		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
+		Error; err != nil {
+		return err
+	}
+
+	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
+	defer deferPolicies()
+	if err := Database.
 		Seed("Policies", policies, "name = ?", []string{"Name"}).
 		Error; err != nil {
 		return err
 	}
+
 	return nil
 }
 

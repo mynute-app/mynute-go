@@ -48,4 +48,5 @@ var GeneralModels = []any{
 	&PolicyRule{},
 	&Resource{},
 	&Property{},
+	&Subdomain{},
 }

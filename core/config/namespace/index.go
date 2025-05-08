@@ -43,6 +43,14 @@ type QueryStruct struct {
 	CompanyId string
 }
 
+type RouteParams struct {
+	CompanyID string
+}
+
+var RouteParamsKey = RouteParams{
+	CompanyID: "company_id",
+}
+
 var QueryKey = QueryStruct{
 	Id:        "id",
 	CompanyId: "companyId",

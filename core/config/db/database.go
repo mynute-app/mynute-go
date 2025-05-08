@@ -161,8 +161,7 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 		return db
 	}
 
-	tx := db.Gorm.Begin()
-	defer Defer(tx)
+	tx := db.Gorm
 
 	// Iterate over the slice of models
 	for i := range modelsLen { // Correct loop condition

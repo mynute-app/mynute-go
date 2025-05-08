@@ -144,7 +144,7 @@ func (e *Employee) Login(t *testing.T, s int) {
 	http.Method("POST")
 	http.URL("/employee/login")
 	http.ExpectStatus(s)
-	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
+	http.Header(namespace.HeadersKey.Company, e.created.CompanyID.String())
 	http.Send(model.Employee{
 		Email:    e.created.Email,
 		Password: e.created.Password,
