@@ -33,7 +33,7 @@ func (db *database) SavePublicSession(c *fiber.Ctx) error {
 */
 // @return func(c *fiber.Ctx) error - The middleware function
 func (db *database) SaveTenantSession(c *fiber.Ctx) error {
-	companyID := c.Params(namespace.RouteParamsKey.CompanyID)
+	companyID := c.Get(namespace.HeadersKey.Company)
 	if companyID == "" {
 		return lib.Error.Auth.CompanyHeaderMissing
 	}
