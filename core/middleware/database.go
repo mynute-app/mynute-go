@@ -34,26 +34,34 @@ func (db *database) SavePublicSession(c *fiber.Ctx) error {
 // @return func(c *fiber.Ctx) error - The middleware function
 func (db *database) SaveTenantSession(c *fiber.Ctx) error {
 	companyID := c.Get(namespace.HeadersKey.Company)
+
 	if companyID == "" {
 		return lib.Error.Auth.CompanyHeaderMissing
 	}
+
 	tx, err := MakeSession(db.Gorm, c)
 	if err != nil {
 		return err
 	}
-	var Company model.Company
-	if err := tx.Where("id = ?", companyID).First(&Company).Error; err != nil {
+
+	var SchemaName string
+
+	if err := tx.Model(&model.Company{}).
+		Where("id = ?", companyID).
+		Pluck("schema_name", &SchemaName).
+		Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Company.NotFound
 		}
 		return lib.Error.General.AuthError.WithError(err)
 	}
-	if err := lib.ChangeToTenantSchema(tx, Company.SchemaName); err != nil {
+
+	if err := lib.ChangeToTenantSchema(tx, SchemaName); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
 	c.Locals(namespace.GeneralKey.DatabaseSession, tx)
-	c.Locals(namespace.GeneralKey.Company, &Company)
-	return nil
+	return c.Next()
 }
 
 /*
