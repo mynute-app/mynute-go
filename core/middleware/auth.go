@@ -201,12 +201,12 @@ forLoop: // Label is optional but can improve readability
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
 		}
 		if schema == "public" {
-			if err := ChangeToPublicSchema(c); err != nil {
-				return err
+			if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+				return lib.Error.General.InternalError.WithError(err)
 			}
 		} else if schema == "company" {
-			if err := ChangeToCompanySchema(c); err != nil {
-				return err
+			if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+				return lib.Error.General.InternalError.WithError(err)
 			}
 		} else {
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
@@ -216,6 +216,8 @@ forLoop: // Label is optional but can improve readability
 		if err := tx.Raw("SELECT current_schema()").Scan(&currentSchemaName).Error; err != nil {
 			log.Printf("Error getting current schema name: %v", err)
 		}
+
+		log.Printf("DenyUnauthorized Current schema: %s", currentSchemaName)
 
 		// Fetch the resource from tx
 		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
