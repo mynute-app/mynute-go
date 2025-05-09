@@ -7,8 +7,11 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"fmt"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // CreateCompany creates a company
@@ -78,12 +81,28 @@ func CreateCompany(c *fiber.Ctx) error {
 //	@Router			/company/{id} [get]
 func GetCompanyById(c *fiber.Ctx) error {
 	var company model.Company
-	if err := GetOneBy("id", c, &company); err != nil {
+
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	id := c.Params("id")
+
+	if id == "" {
+		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'id' not found on route parameters"))
+	}
+
+	if err := tx.Where("id = ?", id).First(&company).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	if full_c, err := company.GetFullCompany(tx); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	} else {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	return nil
@@ -102,12 +121,32 @@ func GetCompanyById(c *fiber.Ctx) error {
 func GetCompanyByName(c *fiber.Ctx) error {
 	var company model.Company
 
-	if err := GetOneBy("name", c, &company); err != nil {
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
+	name := c.Params("name")
+
+	if name == "" {
+		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'name' not found on route parameters"))
+	}
+
+	clearName, err := url.QueryUnescape(name)
+	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Where("name = ?", clearName).First(&company).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	if full_c, err := company.GetFullCompany(tx); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	} else {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	return nil
@@ -126,16 +165,30 @@ func GetCompanyByName(c *fiber.Ctx) error {
 func GetCompanyByTaxId(c *fiber.Ctx) error {
 	var company model.Company
 
-	if err := GetOneBy("tax_id", c, &company); err != nil {
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	tax_id := c.Params("tax_id")
+
+	if tax_id == "" {
+		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
+	}
+
+	if err := tx.Where("tax_id = ?", tax_id).First(&company).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	if full_c, err := company.GetFullCompany(tx); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	} else {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	return nil
-
 }
 
 // UpdateCompanyById updates a company by ID
@@ -155,12 +208,22 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Router			/company/{id} [patch]
 func UpdateCompanyById(c *fiber.Ctx) error {
 	var company model.Company
+
 	if err := UpdateOneById(c, &company); err != nil {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	if full_c, err := company.GetFullCompany(tx); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	} else {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	return nil
@@ -180,7 +243,28 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [delete]
 func DeleteCompanyById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.Company{})
+	var company model.Company
+
+	company_id := c.Params("id")
+
+	company_uuid, err := uuid.Parse(company_id)
+	if err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	company.ID = company_uuid
+
+	if err := company.Delete(tx); err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	return nil
 }
 
 // Constructor for company_controller

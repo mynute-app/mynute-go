@@ -10,6 +10,7 @@ type GeneralStruct struct {
 	Associations    string
 	DatabaseSession string
 	Company         string
+	CompanySchema   string
 }
 
 type RequestStruct struct {
@@ -35,6 +36,7 @@ var GeneralKey = GeneralStruct{
 	DtoArr:          "dtoArr_key",
 	Associations:    "associations_key",
 	DatabaseSession: "db_session_key",
+	CompanySchema:   "company_schema_key",
 	Company:         "company_key",
 }
 
@@ -63,7 +65,7 @@ type HeadersStruct struct {
 
 var HeadersKey = HeadersStruct{
 	Company: "X-Company-ID",
-	Auth: "X-Auth-Token",
+	Auth:    "X-Auth-Token",
 }
 
 type TypeStruct struct {

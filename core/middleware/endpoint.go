@@ -3,6 +3,7 @@ package middleware
 import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
+	"fmt"
 	"log"
 	"reflect"
 	"runtime"
@@ -11,40 +12,69 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var EndpointHandlers = make(map[string]fiber.Handler)
+var EndpointControllers = make(map[string]fiber.Handler)
 
 type Endpoint struct {
 	DB *handler.Gorm
 }
 
 func (ep *Endpoint) Build(r fiber.Router) error {
-	var EndPoints []*model.EndPoint
 	db := ep.DB.DB
-	if err := db.Find(&EndPoints).Error; err != nil {
+
+	var edps []*model.EndPoint
+	if err := db.Find(&edps).Error; err != nil {
 		return err
 	}
+
 	r.Use(WhoAreYou)
-	for _, EndPoint := range EndPoints {
-		dbRouteHandler := getHandler(EndPoint.Handler)
-		method := strings.ToUpper(EndPoint.Method)
-		funcs := []fiber.Handler{}
-		if EndPoint.NeedsCompanyId {
-			funcs = append(funcs, SaveCompanySession(db))
+
+	for _, e := range edps {
+		handlers := []fiber.Handler{}
+
+		// Sessão
+		if e.NeedsCompanyId {
+			handlers = append(handlers, SaveCompanySession(db))
 		} else {
-			funcs = append(funcs, SavePublicSession(db))
+			handlers = append(handlers, SavePublicSession(db))
 		}
-		if EndPoint.DenyUnauthorized {
-			funcs = append(funcs, DenyUnauthorized)
+
+		// Autorização
+		if e.DenyUnauthorized {
+			handlers = append(handlers, DenyUnauthorized)
 		}
-		funcs = append(funcs, dbRouteHandler)
-		r.Add(method, EndPoint.Path, funcs...)
+
+		// Schema
+		if e.NeedsCompanyId {
+			handlers = append(handlers, ChangeToCompanySchema)
+		} else {
+			handlers = append(handlers, ChangeToPublicSchema)
+		}
+
+		controller, err := ep.GetControllerFnc(e.ControllerName)
+		if err != nil {
+			panic(err)
+		}
+
+		// Handler final
+		handlers = append(handlers, controller)
+
+		method := strings.ToUpper(e.Method)
+		r.Add(method, e.Path, handlers...)
 	}
+
 	log.Println("Routes build finished!")
 	return nil
 }
 
-func getHandler(handlerName string) fiber.Handler {
-	return EndpointHandlers[handlerName]
+func (ep *Endpoint) GetControllerFnc(ctrlName string) (fiber.Handler, error) {
+	if ctrlName == "" {
+		return nil, fmt.Errorf("controller name is empty")
+	}
+	if controller, ok := EndpointControllers[ctrlName]; !ok {
+		return nil, fmt.Errorf("controller '%s' not found", ctrlName)
+	} else {
+		return controller, nil
+	}
 }
 
 func (ep *Endpoint) BulkRegisterHandler(handlers []fiber.Handler) {
@@ -54,14 +84,14 @@ func (ep *Endpoint) BulkRegisterHandler(handlers []fiber.Handler) {
 }
 
 func (ep *Endpoint) RegisterHandler(handler fiber.Handler) {
-	handlerName := getHandlerName(handler)
+	handlerName := getEndpointControllerName(handler)
 	if handlerName == "" {
 		panic("Couldn't get handler name")
 	}
-	EndpointHandlers[handlerName] = handler
+	EndpointControllers[handlerName] = handler
 }
 
-func getHandlerName(fn fiber.Handler) string {
+func getEndpointControllerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 	// Example: "agenda-kaki-go/core/controller.(*appointment_controller).CreateAppointment-fm"
 	parts := strings.Split(fullName, ".")

@@ -59,10 +59,9 @@ func SaveCompanySession(db *gorm.DB) fiber.Handler {
 			return lib.Error.General.AuthError.WithError(err)
 		}
 
-		if err := lib.ChangeToTenantSchema(tx, SchemaName); err != nil {
+		if err := lib.ChangeToCompanySchema(tx, SchemaName); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
-
 		c.Locals(namespace.GeneralKey.DatabaseSession, tx)
 		return c.Next()
 	}
@@ -79,4 +78,18 @@ func MakeSession(db *gorm.DB, c *fiber.Ctx) (*gorm.DB, error) {
 		return nil, tx.Error
 	}
 	return tx, nil
+}
+
+func ChangeToPublicSchema(c *fiber.Ctx) error {
+	if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return c.Next()
+}
+
+func ChangeToCompanySchema(c *fiber.Ctx) error {
+	if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return c.Next()
 }

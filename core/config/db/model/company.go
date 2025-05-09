@@ -45,7 +45,7 @@ func (c *Company) MigrateSchema(tx *gorm.DB) error {
 	}
 
 	// Set the search path to the new schema
-	if err := lib.ChangeToTenantSchema(tx, c.SchemaName); err != nil {
+	if err := lib.ChangeToCompanySchema(tx, c.SchemaName); err != nil {
 		return err
 	}
 
@@ -85,6 +85,22 @@ func (c *Company) Create(tx *gorm.DB) error {
 	return nil
 }
 
+func (c *Company) Delete(tx *gorm.DB) error {
+	if err := c.Refresh(tx); err != nil {
+		return err
+	}
+
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Delete(c).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Company) CreateSchema(tx *gorm.DB) error {
 	if err := lib.ChangeToPublicSchema(tx); err != nil {
 		return err
@@ -102,7 +118,7 @@ func (c *Company) CreateSchema(tx *gorm.DB) error {
 }
 
 func (c *Company) CreateOwner(tx *gorm.DB, owner *Employee) error {
-	if err := lib.ChangeToTenantSchema(tx, c.SchemaName); err != nil {
+	if err := lib.ChangeToCompanySchema(tx, c.SchemaName); err != nil {
 		return err
 	}
 
@@ -126,7 +142,7 @@ func (c *Company) CreateOwner(tx *gorm.DB, owner *Employee) error {
 		return err
 	}
 
-	if err := lib.ChangeToTenantSchema(tx, c.SchemaName); err != nil {
+	if err := lib.ChangeToCompanySchema(tx, c.SchemaName); err != nil {
 		return err
 	}
 
@@ -163,7 +179,7 @@ func (c *Company) GetFullCompany(tx *gorm.DB) (*CompanyMerged, error) {
 		return nil, err
 	}
 
-	if err := lib.ChangeToTenantSchema(tx, c.SchemaName); err != nil {
+	if err := lib.ChangeToCompanySchema(tx, c.SchemaName); err != nil {
 		return nil, err
 	}
 

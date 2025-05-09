@@ -11,7 +11,7 @@ var AllowEndpointCreation = false
 
 type EndPoint struct {
 	BaseModel
-	Handler          string     `json:"handler"`
+	ControllerName   string     `json:"controller_name"`
 	Description      string     `json:"description"`
 	Method           string     `gorm:"type:varchar(10)" json:"method"`
 	Path             string     `json:"path"`
@@ -43,7 +43,7 @@ func (r *EndPoint) BeforeCreate(tx *gorm.DB) error {
 var CreateAppointment = &EndPoint{
 	Path:             "/appointment",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateAppointment",
+	ControllerName:   "CreateAppointment",
 	Description:      "Create an appointment",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -52,7 +52,7 @@ var CreateAppointment = &EndPoint{
 var GetAppointmentByID = &EndPoint{
 	Path:             "/appointment/:id",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetAppointmentByID",
+	ControllerName:   "GetAppointmentByID",
 	Description:      "View appointment by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -61,7 +61,7 @@ var GetAppointmentByID = &EndPoint{
 var UpdateAppointmentByID = &EndPoint{
 	Path:             "/appointment/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateAppointmentByID",
+	ControllerName:   "UpdateAppointmentByID",
 	Description:      "Update appointment by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -70,7 +70,7 @@ var UpdateAppointmentByID = &EndPoint{
 var CancelAppointmentByID = &EndPoint{
 	Path:             "/appointment/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "CancelAppointmentByID",
+	ControllerName:   "CancelAppointmentByID",
 	Description:      "This wil cancel appointment by ID. Deleting appointments is forbidden.",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -80,28 +80,28 @@ var CancelAppointmentByID = &EndPoint{
 // --- Auth Endpoints --- //
 
 var VerifyExistingAccount = &EndPoint{
-	Path:        "/auth/verify-existing-account",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "VerifyExistingAccount",
-	Description: "Verify if an account exists",
+	Path:           "/auth/verify-existing-account",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "VerifyExistingAccount",
+	Description:    "Verify if an account exists",
 }
 var BeginAuthProviderCallback = &EndPoint{
-	Path:        "/auth/oauth/:provider",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "BeginAuthProviderCallback",
-	Description: "Begin auth provider callback",
+	Path:           "/auth/oauth/:provider",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "BeginAuthProviderCallback",
+	Description:    "Begin auth provider callback",
 }
 var GetAuthCallbackFunction = &EndPoint{
-	Path:        "/auth/oauth/:provider/callback",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetAuthCallbackFunction",
-	Description: "View auth callback function",
+	Path:           "/auth/oauth/:provider/callback",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetAuthCallbackFunction",
+	Description:    "View auth callback function",
 }
 var LogoutProvider = &EndPoint{
-	Path:        "/auth/oauth/logout",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "LogoutProvider",
-	Description: "Logout provider",
+	Path:           "/auth/oauth/logout",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "LogoutProvider",
+	Description:    "Logout provider",
 }
 
 // --- Branch Endpoints --- //
@@ -109,7 +109,7 @@ var LogoutProvider = &EndPoint{
 var CreateBranch = &EndPoint{
 	Path:             "/branch",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateBranch",
+	ControllerName:   "CreateBranch",
 	Description:      "Create a branch",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -118,7 +118,7 @@ var CreateBranch = &EndPoint{
 var GetBranchById = &EndPoint{
 	Path:             "/branch/:id",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetBranchById",
+	ControllerName:   "GetBranchById",
 	Description:      "View branch by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -127,7 +127,7 @@ var GetBranchById = &EndPoint{
 var GetBranchByName = &EndPoint{
 	Path:             "/branch/name/:name",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetBranchByName",
+	ControllerName:   "GetBranchByName",
 	Description:      "View branch by name",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -136,7 +136,7 @@ var GetBranchByName = &EndPoint{
 var UpdateBranchById = &EndPoint{
 	Path:             "/branch/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateBranchById",
+	ControllerName:   "UpdateBranchById",
 	Description:      "Update branch by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -145,7 +145,7 @@ var UpdateBranchById = &EndPoint{
 var DeleteBranchById = &EndPoint{
 	Path:             "/branch/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteBranchById",
+	ControllerName:   "DeleteBranchById",
 	Description:      "Delete branch by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -154,7 +154,7 @@ var DeleteBranchById = &EndPoint{
 var GetEmployeeServicesByBranchId = &EndPoint{
 	Path:             "/branch/:branch_id/employee/:employee_id/services",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetEmployeeServicesByBranchId",
+	ControllerName:   "GetEmployeeServicesByBranchId",
 	Description:      "View employee offered services at the branch by branch ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -163,7 +163,7 @@ var GetEmployeeServicesByBranchId = &EndPoint{
 var AddServiceToBranch = &EndPoint{
 	Path:             "/branch/:branch_id/service/:service_id",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "AddServiceToBranch",
+	ControllerName:   "AddServiceToBranch",
 	Description:      "Add service to branch",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -172,7 +172,7 @@ var AddServiceToBranch = &EndPoint{
 var RemoveServiceFromBranch = &EndPoint{
 	Path:             "/branch/:branch_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "RemoveServiceFromBranch",
+	ControllerName:   "RemoveServiceFromBranch",
 	Description:      "Remove service from branch",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -182,27 +182,27 @@ var RemoveServiceFromBranch = &EndPoint{
 // --- Client Endpoints --- //
 
 var CreateClient = &EndPoint{
-	Path:        "/client",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "CreateClient",
-	Description: "Create client",
+	Path:           "/client",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "CreateClient",
+	Description:    "Create client",
 }
 var LoginClient = &EndPoint{
-	Path:        "/client/login",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "LoginClient",
-	Description: "Login client",
+	Path:           "/client/login",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "LoginClient",
+	Description:    "Login client",
 }
 var VerifyClientEmail = &EndPoint{
-	Path:        "/client/verify-email/:email/:code",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "VerifyClientEmail",
-	Description: "Verify client email",
+	Path:           "/client/verify-email/:email/:code",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "VerifyClientEmail",
+	Description:    "Verify client email",
 }
 var GetClientByEmail = &EndPoint{
 	Path:             "/client/email/:email",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetClientByEmail",
+	ControllerName:   "GetClientByEmail",
 	Description:      "View client by email",
 	DenyUnauthorized: true,
 	Resource:         ClientResource,
@@ -210,7 +210,7 @@ var GetClientByEmail = &EndPoint{
 var UpdateClientById = &EndPoint{
 	Path:             "/client/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateClientById",
+	ControllerName:   "UpdateClientById",
 	Description:      "Update client by ID",
 	DenyUnauthorized: true,
 	Resource:         ClientResource,
@@ -218,7 +218,7 @@ var UpdateClientById = &EndPoint{
 var DeleteClientById = &EndPoint{
 	Path:             "/client/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteClientById",
+	ControllerName:   "DeleteClientById",
 	Description:      "Delete client by ID",
 	DenyUnauthorized: true,
 	Resource:         ClientResource,
@@ -227,34 +227,34 @@ var DeleteClientById = &EndPoint{
 // --- Company Endpoints --- //
 
 var CreateCompany = &EndPoint{
-	Path:        "/company",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "CreateCompany",
-	Description: "Create a company",
+	Path:           "/company",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "CreateCompany",
+	Description:    "Create a company",
 }
 var GetCompanyById = &EndPoint{
-	Path:        "/company/:id",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetCompanyById",
-	Description: "View company by ID",
-	Resource:    CompanyResource,
+	Path:           "/company/:id",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetCompanyById",
+	Description:    "View company by ID",
+	Resource:       CompanyResource,
 }
 var GetCompanyByName = &EndPoint{
-	Path:        "/company/name/:name",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetCompanyByName",
-	Description: "View company by name",
+	Path:           "/company/name/:name",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetCompanyByName",
+	Description:    "View company by name",
 }
 var GetCompanyByTaxId = &EndPoint{
-	Path:        "/company/tax_id/:tax_id",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetCompanyByTaxId",
-	Description: "View company by tax ID",
+	Path:           "/company/tax_id/:tax_id",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetCompanyByTaxId",
+	Description:    "View company by tax ID",
 }
 var UpdateCompanyById = &EndPoint{
 	Path:             "/company/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateCompanyById",
+	ControllerName:   "UpdateCompanyById",
 	Description:      "Update company by ID",
 	DenyUnauthorized: true,
 	Resource:         CompanyResource,
@@ -262,7 +262,7 @@ var UpdateCompanyById = &EndPoint{
 var DeleteCompanyById = &EndPoint{
 	Path:             "/company/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteCompanyById",
+	ControllerName:   "DeleteCompanyById",
 	Description:      "Delete company by ID",
 	DenyUnauthorized: true,
 	Resource:         CompanyResource,
@@ -273,7 +273,7 @@ var DeleteCompanyById = &EndPoint{
 var CreateEmployee = &EndPoint{
 	Path:             "/employee",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateEmployee",
+	ControllerName:   "CreateEmployee",
 	Description:      "Create employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -282,21 +282,21 @@ var CreateEmployee = &EndPoint{
 var LoginEmployee = &EndPoint{
 	Path:           "/employee/login",
 	Method:         namespace.CreateActionMethod,
-	Handler:        "LoginEmployee",
+	ControllerName: "LoginEmployee",
 	Description:    "Login employee",
 	NeedsCompanyId: true,
 }
 var VerifyEmployeeEmail = &EndPoint{
-	Path:        "/employee/verify-email/:email/:code",
-	Method:      namespace.CreateActionMethod,
-	Handler:     "VerifyEmployeeEmail",
-	Description: "Verify employee email",
+	Path:           "/employee/verify-email/:email/:code",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "VerifyEmployeeEmail",
+	Description:    "Verify employee email",
 	NeedsCompanyId: true,
 }
 var GetEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetEmployeeById",
+	ControllerName:   "GetEmployeeById",
 	Description:      "View employee by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -305,7 +305,7 @@ var GetEmployeeById = &EndPoint{
 var GetEmployeeByEmail = &EndPoint{
 	Path:             "/employee/email/:email",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetEmployeeByEmail",
+	ControllerName:   "GetEmployeeByEmail",
 	Description:      "View employee by email",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -314,7 +314,7 @@ var GetEmployeeByEmail = &EndPoint{
 var UpdateEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateEmployeeById",
+	ControllerName:   "UpdateEmployeeById",
 	Description:      "Update employee by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -323,7 +323,7 @@ var UpdateEmployeeById = &EndPoint{
 var DeleteEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteEmployeeById",
+	ControllerName:   "DeleteEmployeeById",
 	Description:      "Delete employee by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -332,7 +332,7 @@ var DeleteEmployeeById = &EndPoint{
 var AddServiceToEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/service/:service_id",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "AddServiceToEmployee",
+	ControllerName:   "AddServiceToEmployee",
 	Description:      "Add service to employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -341,7 +341,7 @@ var AddServiceToEmployee = &EndPoint{
 var RemoveServiceFromEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "RemoveServiceFromEmployee",
+	ControllerName:   "RemoveServiceFromEmployee",
 	Description:      "Remove service from employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -350,7 +350,7 @@ var RemoveServiceFromEmployee = &EndPoint{
 var AddBranchToEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/branch/:branch_id",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "AddBranchToEmployee",
+	ControllerName:   "AddBranchToEmployee",
 	Description:      "Add employee to branch",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -359,7 +359,7 @@ var AddBranchToEmployee = &EndPoint{
 var RemoveBranchFromEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/branch/:branch_id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "RemoveBranchFromEmployee",
+	ControllerName:   "RemoveBranchFromEmployee",
 	Description:      "Remove employee from branch",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -368,7 +368,7 @@ var RemoveBranchFromEmployee = &EndPoint{
 var AddRoleToEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/role/:role_id",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "AddRoleToEmployee",
+	ControllerName:   "AddRoleToEmployee",
 	Description:      "Add role to employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -377,7 +377,7 @@ var AddRoleToEmployee = &EndPoint{
 var RemoveRoleFromEmployee = &EndPoint{
 	Path:             "/employee/:employee_id/role/:role_id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "RemoveRoleFromEmployee",
+	ControllerName:   "RemoveRoleFromEmployee",
 	Description:      "Remove role from employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -389,7 +389,7 @@ var RemoveRoleFromEmployee = &EndPoint{
 var CreateHoliday = &EndPoint{
 	Path:             "/holiday",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateHoliday",
+	ControllerName:   "CreateHoliday",
 	Description:      "Create a holiday",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -398,7 +398,7 @@ var CreateHoliday = &EndPoint{
 var GetHolidayById = &EndPoint{
 	Path:             "/holiday/:id",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetHolidayById",
+	ControllerName:   "GetHolidayById",
 	Description:      "View holiday by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -407,14 +407,14 @@ var GetHolidayById = &EndPoint{
 var GetHolidayByName = &EndPoint{
 	Path:           "/holiday/name/:name",
 	Method:         namespace.ViewActionMethod,
-	Handler:        "GetHolidayByName",
+	ControllerName: "GetHolidayByName",
 	Description:    "View holiday by name",
 	NeedsCompanyId: true,
 }
 var UpdateHolidayById = &EndPoint{
 	Path:             "/holiday/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateHolidayById",
+	ControllerName:   "UpdateHolidayById",
 	Description:      "Update holiday by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -423,7 +423,7 @@ var UpdateHolidayById = &EndPoint{
 var DeleteHolidayById = &EndPoint{
 	Path:             "/holiday/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteHolidayById",
+	ControllerName:   "DeleteHolidayById",
 	Description:      "Delete holiday by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -435,27 +435,27 @@ var DeleteHolidayById = &EndPoint{
 var CreateSector = &EndPoint{
 	Path:             "/sector",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateSector",
+	ControllerName:   "CreateSector",
 	Description:      "Creates a company sector",
 	DenyUnauthorized: true,
 	Resource:         CompanyResource,
 }
 var GetSectorById = &EndPoint{
-	Path:        "/sector/:id",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetSectorById",
-	Description: "Retrieves a company sector by ID",
+	Path:           "/sector/:id",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetSectorById",
+	Description:    "Retrieves a company sector by ID",
 }
 var GetSectorByName = &EndPoint{
-	Path:        "/sector/name/:name",
-	Method:      namespace.ViewActionMethod,
-	Handler:     "GetSectorByName",
-	Description: "Retrieves a company sector by name",
+	Path:           "/sector/name/:name",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetSectorByName",
+	Description:    "Retrieves a company sector by name",
 }
 var UpdateSectorById = &EndPoint{
 	Path:             "/sector/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateSectorById",
+	ControllerName:   "UpdateSectorById",
 	Description:      "Updates a company sector by ID",
 	DenyUnauthorized: true,
 	Resource:         SectorResource,
@@ -463,7 +463,7 @@ var UpdateSectorById = &EndPoint{
 var DeleteSectorById = &EndPoint{
 	Path:             "/sector/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteSectorById",
+	ControllerName:   "DeleteSectorById",
 	Description:      "Deletes a company sector by ID",
 	DenyUnauthorized: true,
 	Resource:         SectorResource,
@@ -474,7 +474,7 @@ var DeleteSectorById = &EndPoint{
 var CreateService = &EndPoint{
 	Path:             "/service",
 	Method:           namespace.CreateActionMethod,
-	Handler:          "CreateService",
+	ControllerName:   "CreateService",
 	Description:      "Create a service",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -483,7 +483,7 @@ var CreateService = &EndPoint{
 var GetServiceById = &EndPoint{
 	Path:             "/service/:id",
 	Method:           namespace.ViewActionMethod,
-	Handler:          "GetServiceById",
+	ControllerName:   "GetServiceById",
 	Description:      "View service by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -492,14 +492,14 @@ var GetServiceById = &EndPoint{
 var GetServiceByName = &EndPoint{
 	Path:           "/service/name/:name",
 	Method:         namespace.ViewActionMethod,
-	Handler:        "GetServiceByName",
+	ControllerName: "GetServiceByName",
 	Description:    "View service by name",
 	NeedsCompanyId: true,
 }
 var UpdateServiceById = &EndPoint{
 	Path:             "/service/:id",
 	Method:           namespace.UpdateActionMethod,
-	Handler:          "UpdateServiceById",
+	ControllerName:   "UpdateServiceById",
 	Description:      "Update service by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -508,7 +508,7 @@ var UpdateServiceById = &EndPoint{
 var DeleteServiceById = &EndPoint{
 	Path:             "/service/:id",
 	Method:           namespace.DeleteActionMethod,
-	Handler:          "DeleteServiceById",
+	ControllerName:   "DeleteServiceById",
 	Description:      "Delete service by ID",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,

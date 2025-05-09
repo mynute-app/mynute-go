@@ -112,6 +112,7 @@ func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 func (e *Employee) GetById(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
@@ -122,6 +123,7 @@ func (e *Employee) GetById(t *testing.T, s int) {
 func (e *Employee) GetByEmail(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.URL(fmt.Sprintf("/employee/email/%s", e.created.Email))
 	http.ExpectStatus(s)
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
@@ -132,6 +134,7 @@ func (e *Employee) GetByEmail(t *testing.T, s int) {
 func (e *Employee) Delete(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
