@@ -62,6 +62,7 @@ func SaveCompanySession(db *gorm.DB) fiber.Handler {
 		if err := lib.ChangeToCompanySchema(tx, SchemaName); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
+		c.Locals(namespace.GeneralKey.CompanySchema, SchemaName)
 		c.Locals(namespace.GeneralKey.DatabaseSession, tx)
 		return c.Next()
 	}

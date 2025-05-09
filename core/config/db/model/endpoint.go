@@ -79,12 +79,6 @@ var CancelAppointmentByID = &EndPoint{
 
 // --- Auth Endpoints --- //
 
-var VerifyExistingAccount = &EndPoint{
-	Path:           "/auth/verify-existing-account",
-	Method:         namespace.CreateActionMethod,
-	ControllerName: "VerifyExistingAccount",
-	Description:    "Verify if an account exists",
-}
 var BeginAuthProviderCallback = &EndPoint{
 	Path:           "/auth/oauth/:provider",
 	Method:         namespace.ViewActionMethod,
@@ -523,7 +517,6 @@ var endpoints = []*EndPoint{
 	UpdateAppointmentByID,
 	CancelAppointmentByID,
 	// Auth
-	VerifyExistingAccount,
 	BeginAuthProviderCallback,
 	GetAuthCallbackFunction,
 	LogoutProvider,

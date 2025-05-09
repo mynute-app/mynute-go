@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,6 +17,11 @@ func Factory(c *fiber.Ctx) *service {
 		err:     err,
 		MyGorm:  handler.MyGormWrapper(tx),
 	}
+	var SchemaName string
+	if err := tx.Raw(`SELECT current_schema()`).Scan(&SchemaName); err != nil {
+		log.Printf("Error getting schema name: %v", err)
+	}
+	log.Printf("Current schema: %s", SchemaName)
 	return service
 }
 

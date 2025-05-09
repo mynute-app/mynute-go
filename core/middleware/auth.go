@@ -161,34 +161,55 @@ forLoop: // Label is optional but can improve readability
 		}
 
 		var resource any
+		var schema string
 		switch EndPoint.Resource.Table { // Determine model struct based on table name
 		case "appointments":
 			resource = &model.Appointment{}
+			schema = "company"
 		case "branches":
 			resource = &model.Branch{}
+			schema = "company"
 		case "clients":
 			resource = &model.Client{}
+			schema = "public"
 		case "companies":
 			resource = &model.Company{}
+			schema = "public"
 		case "employees":
 			resource = &model.Employee{}
+			schema = "company"
 		case "holidays":
 			resource = &model.Holiday{}
+			schema = "public"
 		case "policy_rules":
-			resource = &model.PolicyRule{} // Corrected table name likely
+			resource = &model.PolicyRule{}
+			schema = "public"
 		case "roles":
 			resource = &model.Role{}
+			schema = "public"
 		case "sectors":
 			resource = &model.Sector{}
+			schema = "public"
 		case "services":
 			resource = &model.Service{}
+			schema = "company"
+		case "subdomains":
+			resource = &model.Subdomain{}
+			schema = "public"
 		default:
 			log.Printf("Error: Invalid resource table '%s'", EndPoint.Resource.Table)
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
 		}
-
-		if err := lib.ChangeToPublicSchema(tx); err != nil {
-			return err
+		if schema == "public" {
+			if err := ChangeToPublicSchema(c); err != nil {
+				return err
+			}
+		} else if schema == "company" {
+			if err := ChangeToCompanySchema(c); err != nil {
+				return err
+			}
+		} else {
+			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
 		}
 
 		// Fetch the resource from tx
