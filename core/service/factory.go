@@ -17,11 +17,11 @@ func Factory(c *fiber.Ctx) *service {
 		err:     err,
 		MyGorm:  handler.MyGormWrapper(tx),
 	}
-	var SchemaName string
-	if err := tx.Raw(`SELECT current_schema()`).Scan(&SchemaName); err != nil {
-		log.Printf("Error getting schema name: %v", err)
+	var currentSchemaName string
+	if err := tx.Raw("SELECT current_schema()").Scan(&currentSchemaName).Error; err != nil {
+		log.Printf("Error getting current schema name: %v", err)
 	}
-	log.Printf("Current schema: %s", SchemaName)
+	log.Printf("Current schema: %s", currentSchemaName)
 	return service
 }
 

@@ -13,6 +13,13 @@ func ChangeToPublicSchema(db *gorm.DB) error {
 	if err := db.Exec("SET search_path TO public").Error; err != nil {
 		return Error.General.InternalError.WithError(err)
 	}
+	var currentSchemaName string
+	if err := db.Raw("SELECT current_schema()").Scan(&currentSchemaName).Error; err != nil {
+		return Error.General.InternalError.WithError(err)
+	}
+	if currentSchemaName != "public" {
+		return Error.General.InternalError.WithError(fmt.Errorf("failed to change schema to public"))
+	}
 	return nil
 }
 
@@ -24,6 +31,13 @@ func ChangeToCompanySchema(db *gorm.DB, schemaName string) error {
 	changePath := fmt.Sprintf(`SET search_path TO "%s"`, schemaName)
 	if err := db.Exec(changePath).Error; err != nil {
 		return Error.General.InternalError.WithError(err)
+	}
+	var currentSchemaName string
+	if err := db.Raw("SELECT current_schema()").Scan(&currentSchemaName).Error; err != nil {
+		return Error.General.InternalError.WithError(err)
+	}
+	if currentSchemaName != schemaName {
+		return Error.General.InternalError.WithError(fmt.Errorf("failed to change schema to %s", schemaName))
 	}
 	return nil
 }
