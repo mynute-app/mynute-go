@@ -55,7 +55,7 @@ func GetSectorByName(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &sector, &DTO.Sector{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -79,7 +79,7 @@ func GetSectorById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &sector, &DTO.Sector{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -109,7 +109,7 @@ func UpdateSectorById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, sector, &DTO.Sector{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &sector, &DTO.Sector{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

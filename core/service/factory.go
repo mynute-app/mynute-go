@@ -1,7 +1,6 @@
 package service
 
 import (
-	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 )
 
 func Factory(c *fiber.Ctx) *service {
-	tx, err := database.Session(c)
+	tx, err := lib.Session(c)
 	service := &service{
 		Context: c,
 		err:     err,

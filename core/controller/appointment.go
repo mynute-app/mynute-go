@@ -52,7 +52,7 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 	if err := GetOneBy("id", c, &appointment); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, appointment, &DTO.Appointment{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -116,7 +116,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 
 	res := &lib.SendResponseStruct{Ctx: c}
 
-	if err := res.SendDTO(200, appointment, &DTO.Appointment{}); err != nil {
+	if err := res.SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 

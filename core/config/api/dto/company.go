@@ -22,8 +22,7 @@ type Company struct {
 	Employees []*EmployeePopulated `json:"employees"`
 	Branches  []*BranchPopulated   `json:"branches"`
 	Services  []*ServicePopulated  `json:"services"`
-	SectorID  *uuid.UUID           `json:"sector_id"`
-	Sector    *Sector              `json:"sector"`
+	Sectors   []*Sector            `json:"sectors"`
 }
 
 // @description	Company DTO Populated

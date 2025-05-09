@@ -140,7 +140,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 	if err := GetOneBy("email", c, &client); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, client, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil

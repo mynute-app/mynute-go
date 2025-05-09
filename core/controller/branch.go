@@ -53,7 +53,7 @@ func GetBranchById(c *fiber.Ctx) error {
 	if err := GetOneBy("id", c, &branch); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -74,7 +74,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 	if err := GetOneBy("name", c, &branch); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -102,7 +102,7 @@ func UpdateBranchById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -142,7 +142,7 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	branchID := c.Params("branch_id")
 	employeeID := c.Params("employee_id")
 
-	tx, err := database.Session(c)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -206,7 +206,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 	if err := branch.AddService(tx, &service); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -253,7 +253,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	if err := branch.RemoveService(tx, &service); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil

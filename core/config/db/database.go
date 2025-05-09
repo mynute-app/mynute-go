@@ -1,7 +1,6 @@
 package database
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
@@ -76,7 +75,7 @@ func Connect() *Database {
 		log.Fatal("Failed to get database connection pool: ", err)
 	}
 
-	sqlDB.SetMaxIdleConns(5)                   // Max number of idle connections in the pool
+	sqlDB.SetMaxIdleConns(20)                  // Max number of idle connections in the pool
 	sqlDB.SetMaxOpenConns(100)                 // Max number of open connections to the database
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
 	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
@@ -293,21 +292,6 @@ func DeferCallback(tx *gorm.DB) func() {
 	}
 }
 
-/*
- * Gets the database session from the fiber context.
- Recomended when you need to perform a single database operation.
- * @return *gorm.DB - The database session
- * @return error - The error if any
-*/
-// @param c *fiber.Ctx - The fiber context
-func Session(c *fiber.Ctx) (*gorm.DB, error) {
-	tx, ok := c.Locals(namespace.GeneralKey.DatabaseSession).(*gorm.DB)
-	if !ok {
-		return nil, lib.Error.General.SessionNotFound
-	}
-	return tx, nil
-}
-
 func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
 	tx := db.Begin()
 	if tx.Error != nil {
@@ -331,7 +315,7 @@ func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
 //	}
 //	// Then use the transaction session (tx) for your database operations
 func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
-	session, err := Session(c)
+	session, err := lib.Session(c)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -54,7 +54,7 @@ func GetServiceById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, service, &DTO.Service{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &service, &DTO.Service{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -78,7 +78,7 @@ func GetServiceByName(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, service, &DTO.Service{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &service, &DTO.Service{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

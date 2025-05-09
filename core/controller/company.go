@@ -82,7 +82,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.Company{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -106,7 +106,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.Company{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -130,7 +130,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.Company{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

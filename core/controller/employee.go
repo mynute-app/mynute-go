@@ -59,7 +59,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
-	tx, err := database.Session(c)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}

@@ -23,20 +23,18 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 	if err := db.Find(&EndPoints).Error; err != nil {
 		return err
 	}
-	auth := Auth(ep.DB)
-	database := DatabaseFactory(db)
-	r.Use(auth.WhoAreYou)
+	r.Use(WhoAreYou)
 	for _, EndPoint := range EndPoints {
 		dbRouteHandler := getHandler(EndPoint.Handler)
 		method := strings.ToUpper(EndPoint.Method)
 		funcs := []fiber.Handler{}
 		if EndPoint.NeedsCompanyId {
-			funcs = append(funcs, database.SaveTenantSession)
+			funcs = append(funcs, SaveCompanySession(db))
 		} else {
-			funcs = append(funcs, database.SavePublicSession)
+			funcs = append(funcs, SavePublicSession(db))
 		}
 		if EndPoint.DenyUnauthorized {
-			funcs = append(funcs, auth.DenyUnauthorized)
+			funcs = append(funcs, DenyUnauthorized)
 		}
 		funcs = append(funcs, dbRouteHandler)
 		r.Add(method, EndPoint.Path, funcs...)
@@ -62,23 +60,6 @@ func (ep *Endpoint) RegisterHandler(handler fiber.Handler) {
 	}
 	EndpointHandlers[handlerName] = handler
 }
-
-// func (r *Route) Register(endpoint *EndPoint) *ResourceToRegister {
-// 	endpoint.Method = strings.ToUpper(endpoint.Method)
-// 	if endpoint.Access != "public" && endpoint.Access != "private" {
-// 		panic("EndPoint Route access must be either public or private")
-// 	}
-// 	key := makeRegistryKey(endpoint.Path, endpoint.Method)
-// 	EndpointRegistry[key] = endpoint
-// 	return &ResourceToRegister{
-// 		Path:        endpoint.Path,
-// 		Method:      endpoint.Method,
-// 		Handler:     endpoint.Handler,
-// 		Description: endpoint.Description,
-// 		Access:      endpoint.Access,
-// 		DB:          r.DB,
-// 	}
-// }
 
 func getHandlerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()

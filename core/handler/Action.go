@@ -1,7 +1,6 @@
 package handler
 
 import (
-	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"net/url"
@@ -16,7 +15,7 @@ type actions struct {
 }
 
 func Actions(c *fiber.Ctx) *actions {
-	tx, err := database.Session(c)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return nil
 	}

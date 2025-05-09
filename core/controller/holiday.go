@@ -55,7 +55,7 @@ func GetHolidayById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, holiday, &DTO.Holidays{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &holiday, &DTO.Holidays{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -79,7 +79,7 @@ func GetHolidayByName(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, holiday, &DTO.Holidays{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &holiday, &DTO.Holidays{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

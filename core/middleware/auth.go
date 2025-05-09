@@ -18,22 +18,17 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type auth_middleware struct {
-	Gorm         *handler.Gorm
-	PolicyEngine *handler.Policy
-}
-
-func Auth(Gorm *handler.Gorm) *auth_middleware {
-	return &auth_middleware{Gorm: Gorm, PolicyEngine: handler.NewPolicyEngine(Gorm.DB)}
-}
-
-func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
-	db := am.Gorm.DB
+func DenyUnauthorized(c *fiber.Ctx) error {
+	// --- Get Database Session ---
+	tx, err := lib.Session(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
 	method := c.Method()
 	routePath := c.Route().Path // Use routePath for consistency
 
 	var EndPoint model.EndPoint
-	if err := db.Where("method = ? AND path = ?", method, routePath).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
+	if err := tx.Where("method = ? AND path = ?", method, routePath).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("endpoint not found: %s %s", method, routePath))
 	}
 
@@ -46,10 +41,10 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 
 	var policies []*model.PolicyRule
 	PoliciesWhereClause := "end_point_id = ?"
-	if err := db.Where(PoliciesWhereClause, EndPoint.ID).Find(&policies).Error; err != nil {
+	if err := tx.Where(PoliciesWhereClause, EndPoint.ID).Find(&policies).Error; err != nil {
 		// Note: gorm.ErrRecordNotFound is handled by the len(policies) == 0 check later
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Printf("DB Error fetching policies: %v", err)
+			log.Printf("tx Error fetching policies: %v", err)
 			return lib.Error.General.AuthError.WithError(err)
 		}
 	}
@@ -69,11 +64,11 @@ func (am *auth_middleware) DenyUnauthorized(c *fiber.Ctx) error {
 		user = &model.Employee{}
 	}
 	subject_data := make(map[string]any)
-	if err := db.Model(user).Preload(clause.Associations).Where("id = ?", claim.ID).Take(user).Error; err != nil {
+	if err := tx.Model(user).Preload(clause.Associations).Where("id = ?", claim.ID).Take(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.Auth.Unauthorized
 		}
-		log.Printf("DB Error fetching subject %s: %v", claim.ID, err)
+		log.Printf("tx Error fetching subject %s: %v", claim.ID, err)
 		return lib.Error.General.AuthError.WithError(err)
 	}
 	jsonDataSub, errSub := json.Marshal(user)
@@ -192,8 +187,12 @@ forLoop: // Label is optional but can improve readability
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
 		}
 
-		// Fetch the resource from DB
-		resourceFetchError = db.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
+		if err := lib.ChangeToPublicSchema(tx); err != nil {
+			return err
+		}
+
+		// Fetch the resource from tx
+		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
 
 		if resourceFetchError == nil {
 			// Convert fetched resource struct to map
@@ -207,8 +206,8 @@ forLoop: // Label is optional but can improve readability
 				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal resource error: %w", errRes))
 			}
 		} else if !errors.Is(resourceFetchError, gorm.ErrRecordNotFound) {
-			// Handle unexpected DB errors
-			log.Printf("DB Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
+			// Handle unexpected tx errors
+			log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
 			return lib.Error.General.AuthError.WithError(resourceFetchError)
 		}
 	}
@@ -236,9 +235,12 @@ forLoop: // Label is optional but can improve readability
 	}
 
 	// --- Evaluate Policies ---
+
+	PolicyEngine := handler.NewPolicyEngine(tx)
+
 	for _, policy := range policies {
 		log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
-		decision := am.PolicyEngine.CanAccess(
+		decision := PolicyEngine.CanAccess(
 			subject_data,  // The subject (user) data
 			resource_data, // The data fetched (or empty map)
 			path_data,     // Path parameters
@@ -273,7 +275,7 @@ forLoop: // Label is optional but can improve readability
 	return c.Next()
 }
 
-func (am *auth_middleware) WhoAreYou(c *fiber.Ctx) error {
+func WhoAreYou(c *fiber.Ctx) error {
 	authorization := c.Get(namespace.HeadersKey.Auth)
 	if authorization == "" {
 		return c.Next()
