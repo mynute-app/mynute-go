@@ -212,13 +212,6 @@ forLoop: // Label is optional but can improve readability
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
 		}
 
-		var currentSchemaName string
-		if err := tx.Raw("SELECT current_schema()").Scan(&currentSchemaName).Error; err != nil {
-			log.Printf("Error getting current schema name: %v", err)
-		}
-
-		log.Printf("DenyUnauthorized Current schema: %s", currentSchemaName)
-
 		// Fetch the resource from tx
 		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
 

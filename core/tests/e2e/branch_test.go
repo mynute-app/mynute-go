@@ -50,7 +50,9 @@ func (b *Branch) Create(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("POST")
 	http.URL("/branch")
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(DTO.CreateBranch{
 		Name:         lib.GenerateRandomName("Branch Name"),
@@ -72,6 +74,7 @@ func (b *Branch) Update(t *testing.T, status int, changes map[string]any) {
 	http.Method("PATCH")
 	http.URL("/branch/" + fmt.Sprintf("%v", b.created.ID.String()))
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(changes)
 	http.ParseResponse(&b.created)
@@ -82,6 +85,7 @@ func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/branch/name/%s", b.created.Name))
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
@@ -93,6 +97,7 @@ func (b *Branch) GetById(t *testing.T, status int) map[string]any {
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&b.created)
@@ -104,6 +109,7 @@ func (b *Branch) Delete(t *testing.T, status int) {
 	http.Method("DELETE")
 	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	http.Send(nil)
 }
@@ -118,6 +124,7 @@ func (b *Branch) AddService(t *testing.T, status int, service *Service, token *s
 	} else {
 		http.Header(namespace.HeadersKey.Auth, b.auth_token)
 	}
+	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
 	http.Send(nil)
 	http.ParseResponse(&b.created)
 	service.branches = append(service.branches, b)

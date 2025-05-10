@@ -68,6 +68,7 @@ func (e *Employee) Create(t *testing.T, s int) {
 	http.Method("POST")
 	http.URL("/employee")
 	http.ExpectStatus(s)
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	pswd := "1SecurePswd!"
 	CreateEmployeeBody := &DTO.CreateEmployee{
@@ -102,6 +103,7 @@ func (e *Employee) CreateService(t *testing.T, s int) {
 func (e *Employee) Update(t *testing.T, s int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
@@ -137,9 +139,9 @@ func (e *Employee) Delete(t *testing.T, s int) {
 	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.URL(fmt.Sprintf("/employee/%s", e.created.ID.String()))
 	http.ExpectStatus(s)
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, e.company.auth_token)
 	http.Send(nil)
-	http.ParseResponse(&e.created)
 }
 
 func (e *Employee) Login(t *testing.T, s int) {
@@ -178,6 +180,7 @@ func (e *Employee) AddBranch(t *testing.T, s int, branch *Branch, token *string)
 	} else {
 		http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	}
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.Send(nil)
 	http.ParseResponse(&e.created)
 	branch.GetById(t, 200)
@@ -190,6 +193,7 @@ func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	http.Method("POST")
 	http.URL(fmt.Sprintf("/employee/%s/service/%s", e.created.ID.String(), service.created.ID.String()))
 	http.ExpectStatus(s)
+	http.Header(namespace.HeadersKey.Company, e.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)

@@ -51,6 +51,7 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 	http.Method("POST")
 	http.URL("/service")
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(DTO.CreateService{
 		Name:        lib.GenerateRandomName("Service"),
@@ -66,6 +67,7 @@ func (s *Service) Create(t *testing.T, status int) map[string]any {
 func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("PATCH")
+	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
@@ -76,6 +78,7 @@ func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 func (s *Service) GetById(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
+	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
@@ -87,6 +90,7 @@ func (s *Service) GetById(t *testing.T, status int) map[string]any {
 func (s *Service) GetByName(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
+	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.URL("/service/name/" + s.created.Name)
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
@@ -98,6 +102,7 @@ func (s *Service) GetByName(t *testing.T, status int) map[string]any {
 func (s *Service) Delete(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("DELETE")
+	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
