@@ -53,17 +53,24 @@ type Appointment struct {
 	AppointmentJson
 }
 
-func (Appointment) TableName() string { return "appointments" }
+var AppointmentTableName = "appointments"
+
+func (Appointment) TableName() string { return AppointmentTableName }
 
 func (Appointment) Indexes() map[string]string {
+	return AppointmentIndexes(AppointmentTableName)
+}
+
+func AppointmentIndexes(table string) map[string]string {
 	return map[string]string{
-		"idx_employee_time_active": "CREATE INDEX IF NOT EXISTS idx_employee_time_active ON appointments (employee_id, start_time, end_time, is_cancelled)",
-		"idx_client_time_active":   "CREATE INDEX IF NOT EXISTS idx_client_time_active ON appointments (client_id, start_time, end_time, is_cancelled)",
-		"idx_branch_time_active":   "CREATE INDEX IF NOT EXISTS idx_branch_time_active ON appointments (branch_id, start_time, end_time, is_cancelled)",
-		"idx_company_time_active":  "CREATE INDEX IF NOT EXISTS idx_company_time_active ON appointments (company_id, start_time, end_time, is_cancelled)",
-		"idx_start_time_active":    "CREATE INDEX IF NOT EXISTS idx_start_time_active ON appointments (start_time, is_cancelled)",
+		"idx_employee_time_active": fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_employee_time_active ON %s (employee_id, start_time, end_time, is_cancelled)", table),
+		"idx_client_time_active":   fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_client_time_active ON %s (client_id, start_time, end_time, is_cancelled)", table),
+		"idx_branch_time_active":   fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_branch_time_active ON %s (branch_id, start_time, end_time, is_cancelled)", table),
+		"idx_company_time_active":  fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_company_time_active ON %s (company_id, start_time, end_time, is_cancelled)", table),
+		"idx_start_time_active":    fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_start_time_active ON %s (start_time, is_cancelled)", table),
 	}
 }
+
 
 // --- Appointment Hooks ---
 
