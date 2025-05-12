@@ -26,10 +26,9 @@ func Test_Service(t *testing.T) {
 	client.VerifyEmail(t, 200)
 	client.Login(t, 200)
 	company := &Company{}
-	company.auth_token = client.auth_token
 	company.Create(t, 200)
 	service := &Service{}
-	service.auth_token = client.auth_token
+	service.auth_token = company.owner.auth_token
 	service.company = company
 	service.Create(t, 200)
 	service.Update(t, 200, map[string]any{
@@ -38,7 +37,7 @@ func Test_Service(t *testing.T) {
 	service.GetById(t, 200)
 	service.GetByName(t, 200)
 	branch := &Branch{}
-	branch.auth_token = client.auth_token
+	branch.auth_token = company.owner.auth_token
 	branch.company = company
 	branch.Create(t, 200)
 	branch.AddService(t, 200, service, nil)

@@ -14,25 +14,34 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID         uuid.UUID                `gorm:"type:uuid;not null;index" json:"service_id"`
-	Service           *Service                 `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Service type
-	EmployeeID        uuid.UUID                `gorm:"type:uuid;not null;index" json:"employee_id"`
-	Employee          *Employee                `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	ClientID          uuid.UUID                `gorm:"type:uuid;not null;index" json:"client_id"`
-	Client            *Client                  `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Client type
-	BranchID          uuid.UUID                `gorm:"type:uuid;not null;index" json:"branch_id"`
-	Branch            *Branch                  `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Branch type
-	PaymentID         uuid.UUID                `gorm:"type:uuid;index" json:"payment_id"`
-	Payment           *Payment                 `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Payment type
-	CompanyID         uuid.UUID                `gorm:"type:uuid;not null;index" json:"company_id"`
-	StartTime         time.Time                `gorm:"not null;index" json:"start_time"`
-	EndTime           time.Time                `gorm:"not null;index" json:"end_time"`
-	Cancelled         bool                     `gorm:"index;default:false" json:"cancelled"`
-	CancelledAt       time.Time                `gorm:"index" json:"cancelled_at"`
-	ConfirmedByClient bool                     `gorm:"index;default:false" json:"confirmed_by_client"`
-	Fulfilled         bool                     `gorm:"index;default:false" json:"fulfilled"`
-	History           mJSON.AppointmentHistory `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
-	Comments          mJSON.Comments           `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
+	ServiceID             uuid.UUID `gorm:"type:uuid;not null" json:"service_id"`
+	EmployeeID            uuid.UUID `gorm:"type:uuid;not null" json:"employee_id"`
+	ClientID              uuid.UUID `gorm:"type:uuid;not null;index" json:"client_id"`
+	BranchID              uuid.UUID `gorm:"type:uuid;not null" json:"branch_id"`
+	PaymentID             uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
+	CompanyID             uuid.UUID `gorm:"type:uuid;not null;index" json:"company_id"`
+	CancelledEmployeeID   uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
+	StartTime             time.Time `gorm:"not null;index" json:"start_time"`
+	EndTime               time.Time `gorm:"not null;index" json:"end_time"`
+	CancelTime            time.Time `gorm:"index" json:"cancel_time"`
+	IsFulfilled           bool      `gorm:"default:false" json:"is_fulfilled"`
+	IsCancelled           bool      `gorm:"default:false" json:"is_cancelled"`
+	IsCancelledByClient   bool      `gorm:"default:false" json:"is_cancelled_by_client"`
+	IsCancelledByEmployee bool      `gorm:"default:false" json:"is_cancelled_by_employee"`
+	IsConfirmedByClient   bool      `gorm:"default:false" json:"is_confirmed_by_client"`
+}
+
+// This is the foreign key struct for the Appointment model at company schema level.
+type AppointmentFK struct {
+	Service  *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`  // Using your Service type
+	Employee *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
+	Branch   *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`   // Using your Branch type
+	Payment  *Payment  `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"`  // Using your Payment type
+}
+
+type AppointmentJson struct {
+	History  mJSON.AppointmentHistory `gorm:"type:jsonb" json:"history"`  // JSONB field for history changes
+	Comments mJSON.Comments           `gorm:"type:jsonb" json:"comments"` // JSONB field for comments
 }
 
 // --- Main Appointment Model ---
@@ -40,17 +49,19 @@ type AppointmentBase struct {
 type Appointment struct {
 	BaseModel
 	AppointmentBase
+	AppointmentFK
+	AppointmentJson
 }
 
 func (Appointment) TableName() string { return "appointments" }
 
 func (Appointment) Indexes() map[string]string {
 	return map[string]string{
-		"idx_employee_time_active": "CREATE INDEX IF NOT EXISTS idx_employee_time_active ON appointments (employee_id, start_time, end_time, cancelled)",
-		"idx_client_time_active":   "CREATE INDEX IF NOT EXISTS idx_client_time_active ON appointments (client_id, start_time, end_time, cancelled)",
-		"idx_branch_time_active":   "CREATE INDEX IF NOT EXISTS idx_branch_time_active ON appointments (branch_id, start_time, end_time, cancelled)",
-		"idx_company_active":       "CREATE INDEX IF NOT EXISTS idx_company_active ON appointments (company_id, cancelled)",
-		"idx_start_time_active":    "CREATE INDEX IF NOT EXISTS idx_start_time_active ON appointments (start_time, cancelled)",
+		"idx_employee_time_active": "CREATE INDEX IF NOT EXISTS idx_employee_time_active ON appointments (employee_id, start_time, end_time, is_cancelled)",
+		"idx_client_time_active":   "CREATE INDEX IF NOT EXISTS idx_client_time_active ON appointments (client_id, start_time, end_time, is_cancelled)",
+		"idx_branch_time_active":   "CREATE INDEX IF NOT EXISTS idx_branch_time_active ON appointments (branch_id, start_time, end_time, is_cancelled)",
+		"idx_company_time_active":  "CREATE INDEX IF NOT EXISTS idx_company_time_active ON appointments (company_id, start_time, end_time, is_cancelled)",
+		"idx_start_time_active":    "CREATE INDEX IF NOT EXISTS idx_start_time_active ON appointments (start_time, is_cancelled)",
 	}
 }
 
@@ -183,7 +194,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	// --- If being cancelled, validation stops here ---
-	if a.Cancelled {
+	if a.IsCancelled {
 		return nil
 	}
 
@@ -376,15 +387,15 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
 	}
-	if a.Cancelled {
+	if a.IsCancelled {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already cancelled"))
-	} else if a.Fulfilled {
+	} else if a.IsFulfilled {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is already fulfilled"))
 	} else if time.Now().After(a.StartTime) {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("cannot cancel appointment as it already happened"))
 	}
-	a.Cancelled = true
-	a.CancelledAt = time.Now()
+	a.IsCancelled = true
+	a.CancelTime = time.Now()
 	err := tx.Save(a).Error
 	if err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling appointment: %w", err))

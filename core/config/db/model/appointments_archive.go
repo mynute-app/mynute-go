@@ -10,6 +10,7 @@ import (
 type AppointmentArchive struct {
 	BaseModel
 	AppointmentBase
+	AppointmentJson
 }
 
 func (AppointmentArchive) TableName() string { return "appointments_archive" }

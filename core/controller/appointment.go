@@ -87,7 +87,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return err
 	}
 
-	if appointment.Cancelled {
+	if appointment.IsCancelled {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment is cancelled"))
 	}
 
