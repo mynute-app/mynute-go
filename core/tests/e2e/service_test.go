@@ -22,11 +22,9 @@ func Test_Service(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
 	client := &Client{}
-	client.Create(t, 200)
-	client.VerifyEmail(t, 200)
-	client.Login(t, 200)
+	client.Set(t)
 	company := &Company{}
-	company.Create(t, 200)
+	company.Set(t)
 	service := &Service{}
 	service.auth_token = company.owner.auth_token
 	service.company = company

@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -72,7 +73,16 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	s.GetById(t, 200)
 	cy.GetById(t, 200)
 	ct.GetByEmail(t, 200)
-	ct.created.Appointments = append(ct.created.Appointments, a.created)
+	var ClientAppointment model.ClientAppointment
+	aCreatedByte, err := json.Marshal(a.created)
+	if err != nil {
+		t.Fatalf("Failed to marshal appointment: %v", err)
+	}
+	err = json.Unmarshal(aCreatedByte, &ClientAppointment)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal appointment: %v", err)
+	}
+	ct.created.Appointments = append(ct.created.Appointments, ClientAppointment)
 	e.created.Appointments = append(e.created.Appointments, a.created)
 	b.created.Appointments = append(b.created.Appointments, a.created)
 }

@@ -10,6 +10,7 @@ import (
 type ClientAppointment struct {
 	BaseModel
 	AppointmentBase
+	Client *Client `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE;" json:"client"`
 }
 
 var ClientAppointmentTableName = "public.client_appointments"

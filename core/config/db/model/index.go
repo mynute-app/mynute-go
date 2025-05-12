@@ -43,6 +43,8 @@ var GeneralModels = []any{
 	&Company{},
 	&Holiday{},
 	&Client{},
+	&ClientAppointment{},
+	&ClientAppointmentArchive{},
 	&EndPoint{},
 	&Role{},
 	&PolicyRule{},

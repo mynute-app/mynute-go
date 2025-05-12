@@ -17,17 +17,17 @@ type TimeRange struct {
 // Updated Client model
 type Client struct {
 	BaseModel
-	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
-	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
-	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
-	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
-	Tags             []string      `gorm:"type:json" json:"tags"`
-	Password         string        `gorm:"type:varchar(255);not null" json:"password" validate:"required,myPasswordValidation"`
-	ChangePassword   bool          `gorm:"default:false;not null" json:"change_password"`
-	VerificationCode string        `gorm:"type:varchar(100)" json:"verification_code"`
-	Verified         bool          `gorm:"default:false;not null" json:"verified"`
-	AvailableSlots   []TimeRange   `gorm:"type:json" json:"available_slots"`
-	Appointments     []Appointment `gorm:"foreignKey:ClientID;constraint:OnDelete:CASCADE;" json:"appointments"`
+	Name             string              `gorm:"type:varchar(100);not null" json:"name"`
+	Surname          string              `gorm:"type:varchar(100)" json:"surname"`
+	Email            string              `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
+	Phone            string              `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
+	Tags             []string            `gorm:"type:json" json:"tags"`
+	Password         string              `gorm:"type:varchar(255);not null" json:"password" validate:"required,myPasswordValidation"`
+	ChangePassword   bool                `gorm:"default:false;not null" json:"change_password"`
+	VerificationCode string              `gorm:"type:varchar(100)" json:"verification_code"`
+	Verified         bool                `gorm:"default:false;not null" json:"verified"`
+	AvailableSlots   []TimeRange         `gorm:"type:json" json:"available_slots"`
+	Appointments     []ClientAppointment `gorm:"foreignKey:ClientID;constraint:OnDelete:CASCADE;" json:"appointments"`
 }
 
 func (Client) TableName() string {
