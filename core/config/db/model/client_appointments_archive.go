@@ -1,6 +1,7 @@
 package model
 
 type ClientAppointmentArchive struct {
+	BaseModel
 	AppointmentBase
 }
 
