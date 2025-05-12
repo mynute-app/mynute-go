@@ -53,6 +53,7 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	http.Method("POST")
 	http.URL("/appointment")
 	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, cy.created.ID.String())
 	http.Header(namespace.HeadersKey.Auth, auth_token)
 	if startTime == nil {
 		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)

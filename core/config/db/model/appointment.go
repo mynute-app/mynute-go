@@ -318,7 +318,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	// 5. Overlap Checks (for active, non-self appointments)
 	overlapCondition := `start_time < ? AND end_time > ?`
 	baseOverlapQuery := tx.Model(&Appointment{}).
-		Where("cancelled = ?", false).
+		Where("is_cancelled = ?", false).
 		Where("id != ?", a.ID).
 		Where(overlapCondition, a.EndTime, a.StartTime)
 
