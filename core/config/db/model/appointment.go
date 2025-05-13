@@ -14,21 +14,21 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID             uuid.UUID `gorm:"type:uuid;not null" json:"service_id"`
-	EmployeeID            uuid.UUID `gorm:"type:uuid;not null" json:"employee_id"`
-	ClientID              uuid.UUID `gorm:"type:uuid;not null;index" json:"client_id"`
-	BranchID              uuid.UUID `gorm:"type:uuid;not null" json:"branch_id"`
-	PaymentID             uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
-	CompanyID             uuid.UUID `gorm:"type:uuid;not null;index" json:"company_id"`
-	CancelledEmployeeID   uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
-	StartTime             time.Time `gorm:"not null;index" json:"start_time"`
-	EndTime               time.Time `gorm:"not null;index" json:"end_time"`
-	CancelTime            time.Time `gorm:"index" json:"cancel_time"`
-	IsFulfilled           bool      `gorm:"default:false" json:"is_fulfilled"`
-	IsCancelled           bool      `gorm:"default:false" json:"is_cancelled"`
-	IsCancelledByClient   bool      `gorm:"default:false" json:"is_cancelled_by_client"`
-	IsCancelledByEmployee bool      `gorm:"default:false" json:"is_cancelled_by_employee"`
-	IsConfirmedByClient   bool      `gorm:"default:false" json:"is_confirmed_by_client"`
+	ServiceID             uuid.UUID  `gorm:"type:uuid;not null" json:"service_id"`
+	EmployeeID            uuid.UUID  `gorm:"type:uuid;not null" json:"employee_id"`
+	ClientID              uuid.UUID  `gorm:"type:uuid;not null;index" json:"client_id"`
+	BranchID              uuid.UUID  `gorm:"type:uuid;not null" json:"branch_id"`
+	PaymentID             *uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
+	CompanyID             uuid.UUID  `gorm:"type:uuid;not null;index" json:"company_id"`
+	CancelledEmployeeID   uuid.UUID  `gorm:"type:uuid" json:"cancelled_employee_id"`
+	StartTime             time.Time  `gorm:"not null;index" json:"start_time"`
+	EndTime               time.Time  `gorm:"not null;index" json:"end_time"`
+	CancelTime            time.Time  `gorm:"index" json:"cancel_time"`
+	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
+	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`
+	IsCancelledByClient   bool       `gorm:"default:false" json:"is_cancelled_by_client"`
+	IsCancelledByEmployee bool       `gorm:"default:false" json:"is_cancelled_by_employee"`
+	IsConfirmedByClient   bool       `gorm:"default:false" json:"is_confirmed_by_client"`
 }
 
 // This is the foreign key struct for the Appointment model at company schema level.
@@ -70,7 +70,6 @@ func AppointmentIndexes(table string) map[string]string {
 		"idx_start_time_active":    fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_start_time_active ON %s (start_time, is_cancelled)", table),
 	}
 }
-
 
 // --- Appointment Hooks ---
 
