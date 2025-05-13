@@ -20,10 +20,10 @@ type AppointmentBase struct {
 	BranchID              uuid.UUID  `gorm:"type:uuid;not null" json:"branch_id"`
 	PaymentID             *uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
 	CompanyID             uuid.UUID  `gorm:"type:uuid;not null;index" json:"company_id"`
-	CancelledEmployeeID   uuid.UUID  `gorm:"type:uuid" json:"cancelled_employee_id"`
-	StartTime             time.Time  `gorm:"not null;index" json:"start_time"`
-	EndTime               time.Time  `gorm:"not null;index" json:"end_time"`
-	CancelTime            time.Time  `gorm:"index" json:"cancel_time"`
+	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
+	StartTime             time.Time  `gorm:"not null" json:"start_time"`
+	EndTime               time.Time  `gorm:"not null" json:"end_time"`
+	CancelTime            time.Time  `json:"cancel_time"`
 	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
 	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`
 	IsCancelledByClient   bool       `gorm:"default:false" json:"is_cancelled_by_client"`
