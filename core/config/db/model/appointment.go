@@ -23,6 +23,8 @@ type AppointmentBase struct {
 	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
 	StartTime             time.Time  `gorm:"not null" json:"start_time"`
 	EndTime               time.Time  `gorm:"not null" json:"end_time"`
+	ActualStartTime       time.Time  `json:"actual_start_time"`
+	ActualEndTime         time.Time  `json:"actual_end_time"`
 	CancelTime            time.Time  `json:"cancel_time"`
 	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
 	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`

@@ -21,14 +21,14 @@ type UpdateAppointment struct {
 }
 
 type Appointment struct {
-	ID                    string                   `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	ServiceID             string                   `json:"service_id" example:"00000000-0000-0000-0000-000000000000"`
-	EmployeeID            string                   `json:"employee_id" example:"00000000-0000-0000-0000-000000000000"`
-	ClientID              string                   `json:"client_id" example:"00000000-0000-0000-0000-000000000000"`
-	BranchID              string                   `json:"branch_id" example:"00000000-0000-0000-0000-000000000000"`
-	CompanyID             string                   `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	PaymentID             string                   `json:"payment_id" example:"00000000-0000-0000-0000-000000000000"`
-	CancelledEmployeeID   string                   `json:"cancelled_employee_id" example:"00000000-0000-0000-0000-000000000000"`
+	ID                    uuid.UUID                `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	ServiceID             uuid.UUID                `json:"service_id" example:"00000000-0000-0000-0000-000000000000"`
+	EmployeeID            uuid.UUID                `json:"employee_id" example:"00000000-0000-0000-0000-000000000000"`
+	ClientID              uuid.UUID                `json:"client_id" example:"00000000-0000-0000-0000-000000000000"`
+	BranchID              uuid.UUID                `json:"branch_id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID             uuid.UUID                `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
+	PaymentID             uuid.UUID                `json:"payment_id" example:"00000000-0000-0000-0000-000000000000"`
+	CancelledEmployeeID   uuid.UUID                `json:"cancelled_employee_id" example:"00000000-0000-0000-0000-000000000000"`
 	StartTime             string                   `json:"start_time" example:"2021-01-01T09:00:00Z"`
 	EndTime               string                   `json:"end_time" example:"2021-01-01T10:00:00Z"`
 	Rescheduled           bool                     `json:"rescheduled" example:"false"`
