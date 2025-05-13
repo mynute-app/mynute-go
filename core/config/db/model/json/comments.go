@@ -27,17 +27,17 @@ type Comment struct {
 
 type CommentVersions []CommentVersion
 
+type CommentVersion struct {
+	CreatedAt time.Time `json:"created_at"`
+	Comment   string    `json:"comment"`
+	CreatedBy uuid.UUID `gorm:"type:uuid;not null;index" json:"created_by"`
+}
+
 func (cv *CommentVersions) IsEmpty() bool {
 	if cv == nil {
 		return true
 	}
 	return len(*cv) == 0
-}
-
-type CommentVersion struct {
-	CreatedAt time.Time `json:"created_at"`
-	Comment   string    `json:"comment"`
-	CreatedBy uuid.UUID `gorm:"type:uuid;not null;index" json:"created_by"`
 }
 
 func (c *Comment) IsEmpty() bool {
