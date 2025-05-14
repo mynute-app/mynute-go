@@ -13,6 +13,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CreateClient creates an client
@@ -27,8 +28,17 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var client model.ClientMeta
-	if err := Create(c, &client); err != nil {
+	var client model.ClientFull
+	if err := c.BodyParser(&client); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+	client.Appointments = mJSON.ClientAppointments{}
+	if err := tx.Model(&model.ClientFull{}).Create(&client).Error; err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
@@ -61,7 +71,7 @@ func LoginClient(c *fiber.Ctx) error {
 	}
 
 	var client model.ClientMeta
-	if err := tx.Where("email = ?", body.Email).First(&client).Error; err != nil {
+	if err := tx.Model(&model.ClientFull{}).Where("email = ?", body.Email).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
@@ -108,9 +118,9 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-
+	var clientFull model.ClientFull
 	var exists string
-	if err := tx.Model(&model.ClientFull{}).
+	if err := tx.Model(&clientFull).
 		Where("email = ?", email).
 		Pluck("email", &exists).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -120,9 +130,9 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 		return lib.Error.Client.NotFound
 	}
 
-	if err := tx.Model(&model.ClientFull{}).
-		Where("email = ?", email).
-		Update("verified", true).Error; err != nil {
+	sqlQuery := fmt.Sprintf("UPDATE %s SET verified = true WHERE email = ?", clientFull.TableName())
+
+	if err := tx.Exec(sqlQuery, email).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -143,11 +153,25 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var client model.ClientMeta
-	if err := GetOneBy("email", c, &client); err != nil {
+	email := c.Params("email")
+
+	if email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Branch{}); err != nil {
+
+	var client model.ClientMeta
+	if err := tx.Model(&model.ClientFull{}).Where("email = ?", email).First(&client).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -208,13 +232,34 @@ func GetClientAppointments(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var client model.ClientMeta
+	id := c.Params("id")
 
-	if err := UpdateOneById(c, &client); err != nil {
+	if id == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'id' at params"))
+	}
+
+	changes := make(map[string]any)
+	if err := c.BodyParser(&changes); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+	var cFull model.ClientFull
+
+	if err := tx.
+		Model(&cFull).
+		Where("id = ?", id).
+		Omit(clause.Associations).
+		Updates(changes).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &cFull, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
