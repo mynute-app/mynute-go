@@ -12,7 +12,7 @@ import (
 )
 
 type Client struct {
-	created    model.Client
+	created    model.ClientFull
 	auth_token string
 }
 

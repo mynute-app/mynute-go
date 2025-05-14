@@ -59,7 +59,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 
 	var user any
 	if claim.CompanyID == uuid.Nil {
-		user = &model.Client{}
+		user = &model.ClientFull{}
 	} else {
 		user = &model.Employee{}
 	}
@@ -170,7 +170,7 @@ forLoop: // Label is optional but can improve readability
 			resource = &model.Branch{}
 			schema = "company"
 		case "clients":
-			resource = &model.Client{}
+			resource = &model.ClientFull{}
 			schema = "public"
 		case "companies":
 			resource = &model.Company{}

@@ -162,7 +162,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Param			Authorization	header	string	true	"X-Auth-Token"
 //	@Param			id				path	string	true	"Client ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.ClientAppointmentsOnly
+//	@Success		200	{object}	dJSON.ClientAppointments
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/appointments [get]
 func GetClientAppointments(c *fiber.Ctx) error {
@@ -191,7 +191,6 @@ func GetClientAppointments(c *fiber.Ctx) error {
 		"appointments": appointments,
 	})
 }
-
 
 // UpdateClientById updates an client by ID
 //
@@ -246,6 +245,7 @@ func Client(Gorm *handler.Gorm) {
 		LoginClient,
 		VerifyClientEmail,
 		GetClientByEmail,
+		GetClientAppointments,
 		UpdateClientById,
 		DeleteClientById,
 	})

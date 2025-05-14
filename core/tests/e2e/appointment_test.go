@@ -74,7 +74,7 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	s.GetById(t, 200)
 	cy.GetById(t, 200)
 	ct.GetByEmail(t, 200)
-	var ClientAppointment model.ClientAppointment
+	var ClientAppointment mJSON.ClientAppointment
 	aCreatedByte, err := json.Marshal(a.created)
 	if err != nil {
 		t.Fatalf("Failed to marshal appointment: %v", err)
@@ -83,7 +83,7 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	if err != nil {
 		t.Fatalf("Failed to unmarshal appointment: %v", err)
 	}
-	ct.created.Appointments = append(ct.created.Appointments, ClientAppointment)
+	ct.created.Appointments.Add(&ClientAppointment)
 	e.created.Appointments = append(e.created.Appointments, a.created)
 	b.created.Appointments = append(b.created.Appointments, a.created)
 }
