@@ -589,7 +589,8 @@ func (c *Company) Create(t *testing.T, status int) {
 	ownerEmail := lib.GenerateRandomEmail("owner")
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
-		Name:          lib.GenerateRandomName("Company Name"),
+		LegalName:     lib.GenerateRandomName("Company Legal Name"),
+		TradeName:     lib.GenerateRandomName("Company Trade Name"),
 		TaxID:         lib.GenerateRandomStrNumber(14),
 		OwnerName:     lib.GenerateRandomName("Owner Name"),
 		OwnerSurname:  lib.GenerateRandomName("Owner Surname"),
@@ -609,7 +610,7 @@ func (c *Company) Create(t *testing.T, status int) {
 func (c *Company) GetByName(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
-	http.URL(fmt.Sprintf("/company/name/%s", c.created.Name))
+	http.URL(fmt.Sprintf("/company/name/%s", c.created.LegalName))
 	http.ExpectStatus(status)
 	http.Send(nil)
 	http.ParseResponse(&c.created)

@@ -3,7 +3,8 @@ package DTO
 import "github.com/google/uuid"
 
 type CreateCompany struct {
-	Name          string `json:"name" example:"Your Company Name"`
+	LegalName     string `json:"name" example:"Your Company Legal Name"`
+	TradeName     string `json:"trading_name" example:"Your Company Trading Name"`
 	TaxID         string `json:"tax_id" example:"00000000000000"`
 	OwnerName     string `json:"owner_name" example:"John"`
 	OwnerSurname  string `json:"owner_surname" example:"Clark"`

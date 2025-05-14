@@ -38,7 +38,8 @@ func CreateCompany(c *fiber.Ctx) error {
 
 	var company model.Company
 
-	company.Name = body.Name
+	company.LegalName = body.LegalName
+	company.TradeName = body.TradeName
 	company.TaxID = body.TaxID
 
 	if err := company.Create(tx); err != nil {
