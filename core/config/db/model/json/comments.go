@@ -101,7 +101,8 @@ func (ac *Comments) Scan(value any) error {
 
 // Optional: Add helper methods directly to the type
 func (ac *Comments) Add(c Comment) {
-	if ac != nil {
-		*ac = append(*ac, c)
+	if ac == nil {
+		ac = &Comments{}
 	}
+	*ac = append(*ac, c)
 }

@@ -14,24 +14,23 @@ import (
 
 type Employee struct {
 	BaseModel
-	Name             string        `gorm:"type:varchar(100);not null" json:"name"`
-	Surname          string        `gorm:"type:varchar(100)" json:"surname"`
-	Email            string        `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
-	Phone            string        `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
-	Tags             []string      `gorm:"type:json" json:"tags"`
-	Password         string        `gorm:"type:varchar(255);not null" json:"password" validate:"required,myPasswordValidation"`
-	ChangePassword   bool          `gorm:"default:false;not null" json:"change_password"`
-	VerificationCode string        `gorm:"type:varchar(100)" json:"verification_code"`
-	Verified         bool          `gorm:"default:false;not null" json:"verified"`
-	SlotTimeDiff     uint          `gorm:"default:30;not null" json:"slot_time_diff"`
-	WorkSchedule     mJSON.WorkSchedule  `gorm:"type:jsonb" json:"work_schedule"`
-	Appointments     []Appointment `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
-	CompanyID        uuid.UUID     `gorm:"not null;index" json:"company_id"`
-	Branches         []*Branch     `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
-	Services         []*Service    `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
-	Roles            []*Role       `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+	Name             string             `gorm:"type:varchar(100);not null" json:"name"`
+	Surname          string             `gorm:"type:varchar(100)" json:"surname"`
+	Email            string             `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
+	Phone            string             `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
+	Tags             []string           `gorm:"type:json" json:"tags"`
+	Password         string             `gorm:"type:varchar(255);not null" json:"password" validate:"required,myPasswordValidation"`
+	ChangePassword   bool               `gorm:"default:false;not null" json:"change_password"`
+	VerificationCode string             `gorm:"type:varchar(100)" json:"verification_code"`
+	Verified         bool               `gorm:"default:false;not null" json:"verified"`
+	SlotTimeDiff     uint               `gorm:"default:30;not null" json:"slot_time_diff"`
+	WorkSchedule     mJSON.WorkSchedule `gorm:"type:jsonb" json:"work_schedule"`
+	Appointments     []Appointment      `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
+	CompanyID        uuid.UUID          `gorm:"not null;index" json:"company_id"`
+	Branches         []*Branch          `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
+	Services         []*Service         `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
+	Roles            []*Role            `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 }
-
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 	e.WorkSchedule = mJSON.WorkSchedule{} // Do not ever let someone create an employee with WorkSchedule set.

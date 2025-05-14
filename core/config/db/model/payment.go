@@ -1,10 +1,8 @@
 package model
 
 import (
-	"time"
-
-	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
+	"time"
 )
 
 type PaymentStatus string
@@ -18,7 +16,7 @@ const (
 
 type Payment struct {
 	BaseModel
-	Amount decimal.Decimal `gorm:"type:numeric(12,2);not null"`
+	Amount uint `gorm:"type:numeric(12,2);not null"`
 	// ISO 4217 currency code (e.g., "USD", "EUR")
 	Currency string `gorm:"type:varchar(3);not null;index"`
 

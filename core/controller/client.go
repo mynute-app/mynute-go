@@ -4,10 +4,12 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -25,7 +27,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var client model.Client
+	var client model.ClientMeta
 	if err := Create(c, &client); err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ func LoginClient(c *fiber.Ctx) error {
 		return err
 	}
 
-	var client model.Client
+	var client model.ClientMeta
 	if err := tx.Where("email = ?", body.Email).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
@@ -94,7 +96,7 @@ func LoginClient(c *fiber.Ctx) error {
 func VerifyClientEmail(c *fiber.Ctx) error {
 	res := &lib.SendResponseStruct{Ctx: c}
 	email := c.Params("email")
-	var client model.Client
+	var client model.ClientMeta
 	client.Email = email
 
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
@@ -107,16 +109,21 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := tx.Where("email = ?", client.Email).First(&client).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
-		}
+	var exists string
+	if err := tx.Model(&model.ClientFull{}).
+		Where("email = ?", email).
+		Pluck("email", &exists).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	client.Verified = true
-	if err := tx.Save(&client).Error; err != nil {
-		return err
+	if exists == "" {
+		return lib.Error.Client.NotFound
+	}
+
+	if err := tx.Model(&model.ClientFull{}).
+		Where("email = ?", email).
+		Update("verified", true).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	return nil
@@ -136,7 +143,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var client model.Client
+	var client model.ClientMeta
 	if err := GetOneBy("email", c, &client); err != nil {
 		return err
 	}
@@ -145,6 +152,46 @@ func GetClientByEmail(c *fiber.Ctx) error {
 	}
 	return nil
 }
+
+// GetClientAppointments returns only the appointments of a client
+//
+//	@Summary		Get client appointments
+//	@Description	Get only the appointments field from a client
+//	@Tags			Client
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Client ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.ClientAppointmentsOnly
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/client/{id}/appointments [get]
+func GetClientAppointments(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing ID on params route"))
+	}
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var appointments mJSON.ClientAppointments
+	if err := tx.Model(&model.ClientFull{}).
+		Where("id = ?", id).
+		Pluck("appointments", &appointments).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).Send(200, fiber.Map{
+		"appointments": appointments,
+	})
+}
+
 
 // UpdateClientById updates an client by ID
 //
@@ -162,7 +209,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var client model.Client
+	var client model.ClientMeta
 
 	if err := UpdateOneById(c, &client); err != nil {
 		return err
@@ -189,7 +236,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	nil
 //	@Router			/client/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.Client{})
+	return DeleteOneById(c, &model.ClientFull{})
 }
 
 func Client(Gorm *handler.Gorm) {

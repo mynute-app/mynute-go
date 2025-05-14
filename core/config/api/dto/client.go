@@ -1,6 +1,10 @@
 package DTO
 
-import "github.com/google/uuid"
+import (
+	dJSON "agenda-kaki-go/core/config/api/dto/json"
+
+	"github.com/google/uuid"
+)
 
 type LoginClient struct {
 	Email    string `json:"email" example:"john.doe@example.com"`
@@ -16,14 +20,13 @@ type CreateClient struct {
 }
 
 type Client struct {
-	ID             uuid.UUID      `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	Name           string         `json:"name" example:"John"`
-	Surname        string         `json:"surname" example:"Doe"`
-	Email          string         `json:"email" example:"john.doe@example.com"`
-	Phone          string         `json:"phone" example:"+15555555555"`
-	Verified       bool           `json:"verified" example:"false"`
-	AvailableSlots []TimeRange    `json:"available_slots"`
-	Appointments   []*Appointment `json:"appointments"`
+	ID             uuid.UUID                `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	Name           string                   `json:"name" example:"John"`
+	Surname        string                   `json:"surname" example:"Doe"`
+	Email          string                   `json:"email" example:"john.doe@example.com"`
+	Phone          string                   `json:"phone" example:"+15555555555"`
+	Verified       bool                     `json:"verified" example:"false"`
+	Appointments   dJSON.ClientAppointments `json:"appointments"`
 }
 
 type ClientPopulated struct {
