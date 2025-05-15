@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -35,7 +36,18 @@ type Employee struct {
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 	e.WorkSchedule = mJSON.WorkSchedule{} // Do not ever let someone create an employee with WorkSchedule set.
 	if err := lib.ValidatorV10.Struct(e); err != nil {
-		return err
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			BadReq := lib.Error.General.BadRequest
+			for _, fieldErr := range validationErrors {
+				// You can customize the message
+				BadReq.WithError(
+					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
+				)
+			}
+			return BadReq
+		} else {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 	if err := e.HashPassword(); err != nil {
 		return err
@@ -49,7 +61,18 @@ func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
 		tx.First(db_e, e.ID)
 		if e.Password != db_e.Password && !e.MatchPassword(db_e.Password) {
 			if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
-				return err
+				if validationErrors, ok := err.(validator.ValidationErrors); ok {
+					BadReq := lib.Error.General.BadRequest
+					for _, fieldErr := range validationErrors {
+						// You can customize the message
+						BadReq.WithError(
+							fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
+						)
+					}
+					return BadReq
+				} else {
+					return lib.Error.General.InternalError.WithError(err)
+				}
 			}
 			if err := e.HashPassword(); err != nil {
 				return err

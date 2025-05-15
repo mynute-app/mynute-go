@@ -11,6 +11,7 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"fmt"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -104,13 +105,23 @@ func LoginClient(c *fiber.Ctx) error {
 //	@Failure		404		{object}	nil
 //	@Router			/client/verify-email/{email}/{code} [post]
 func VerifyClientEmail(c *fiber.Ctx) error {
-	res := &lib.SendResponseStruct{Ctx: c}
 	email := c.Params("email")
 	var client model.ClientMeta
 	client.Email = email
 
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
-		return res.Send(400, err)
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			BadReq := lib.Error.General.BadRequest
+			for _, fieldErr := range validationErrors {
+				// You can customize the message
+				BadReq.WithError(
+					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
+				)
+			}
+			return BadReq
+		} else {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	tx, end, err := database.ContextTransaction(c)

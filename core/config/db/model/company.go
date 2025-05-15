@@ -220,6 +220,19 @@ func (c *Company) AddSubdomain(tx *gorm.DB, subdomain *Subdomain) error {
 		return err
 	}
 
+	var subdomainCount int64
+	if err := tx.
+		Model(&Subdomain{}).
+		Where("name = ?", subdomain.Name).
+		Count(&subdomainCount).
+		Error; err != nil {
+		return err
+	}
+
+	if subdomainCount > 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("subdomain %s already exists", subdomain.Name))
+	}
+
 	if err := tx.Create(subdomain).Error; err != nil {
 		return err
 	}

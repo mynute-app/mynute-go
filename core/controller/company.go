@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -36,8 +37,20 @@ func CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
-	if body.StartSubdomain == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start_domain is required"))
+	// Must contain only lowercase letters, numbers, and hyphens
+	if err := lib.ValidatorV10.Var(body.StartSubdomain, "mySubdomainValidation"); err != nil {
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			BadReq := lib.Error.General.BadRequest
+			for _, fieldErr := range validationErrors {
+				// You can customize the message
+				BadReq.WithError(
+					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
+				)
+			}
+			return BadReq
+		} else {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	var company model.Company
@@ -150,7 +163,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := tx.Where("name = ?", clearName).First(&company).Error; err != nil {
+	if err := tx.Where("legal_name = ? OR trade_name = ?", clearName, clearName).First(&company).Error; err != nil {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
@@ -192,6 +205,56 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 	if err := tx.Where("tax_id = ?", tax_id).First(&company).Error; err != nil {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
+
+	if full_c, err := company.GetFullCompany(tx); err != nil {
+		return lib.Error.General.UpdatedError.WithError(err)
+	} else {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	return nil
+}
+
+// GetCompanyBySubdomain retrieves a company by subdomain
+//
+//	@Summary		Get company by subdomain
+//	@Description	Retrieve a company by its subdomain
+//	@Tags			Company
+//	@Param			subdomain_name	path	string	true	"Subdomain Name"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Company
+//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Router			/company/subdomain/{subdomain_name} [get]
+func GetCompanyBySubdomain(c *fiber.Ctx) error {
+	var company model.Company
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	subdomain_name := c.Params("subdomain_name")
+
+	if subdomain_name == "" {
+		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'subdomain_name' not found on route parameters"))
+	}
+
+	var subdomain model.Subdomain
+
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.
+		Where("name = ?", subdomain_name).
+		First(&subdomain).
+		Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	company.ID = subdomain.CompanyID
 
 	if full_c, err := company.GetFullCompany(tx); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)

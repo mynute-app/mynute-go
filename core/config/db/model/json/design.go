@@ -9,9 +9,17 @@ import (
 type DesignConfig struct {
 	Colors    Colors `json:"colors"`
 	Images    Images `json:"images"`
-	Font      string `json:"font"`
+	Fonts     Fonts  `json:"fonts"`
 	DarkMode  bool   `json:"dark_mode"`
 	CustomCSS string `json:"custom_css"`
+}
+
+type Fonts []Font
+type Font struct {
+	Family string `json:"family"`
+	Size   string `json:"size"`
+	Weight string `json:"weight"`
+	Color  string `json:"color"`
 }
 
 type Colors struct {
@@ -28,17 +36,16 @@ type Images struct {
 	FaviconURL    string `json:"favicon_url"`
 }
 
-
-func (DesignConfig) Value() (driver.Value, error) {
-	return json.Marshal(DesignConfig{})
+func (d DesignConfig) Value() (driver.Value, error) {
+	return json.Marshal(d)
 }
 
-func (DesignConfig) Scan(value any) error {
+func (d *DesignConfig) Scan(value any) error {
 	bytes, ok := value.([]byte)
 	if !ok {
 		return errors.New("failed to scan DesignConfig: expected []byte")
 	}
-	return json.Unmarshal(bytes, &DesignConfig{})
+	return json.Unmarshal(bytes, d)
 }
 
 func (i *Images) GetLogoURL() string {

@@ -32,7 +32,33 @@ func Test_Company(t *testing.T) {
 	company.owner.VerifyEmail(t, 200)
 	company.owner.Login(t, 200)
 	company.auth_token = company.owner.auth_token
-	company.Update(t, 200, map[string]any{"name": "Updated Company Name"})
+	company.Update(t, 200, map[string]any{"design": mJSON.DesignConfig{
+		Colors: mJSON.Colors{
+			Primary:   "#FF5733",
+			Secondary: "#33FF57",
+			Tertiary:  "#3357FF",
+		},
+		Fonts: mJSON.Fonts{
+			{
+				Family: "Arial",
+				Size:   "16",
+				Weight: "normal",
+				Color:  "#000000",
+			},
+			{
+				Family: "Helvetica",
+				Size:   "14",
+				Weight: "bold",
+				Color:  "#FFFFFF",
+			},
+			{
+				Family: "Times New Roman",
+				Size:   "12",
+				Weight: "italic",
+				Color:  "#FF5733",
+			},
+		},
+	}})
 	company.GetById(t, 200)
 	company.GetByName(t, 200)
 	company.Delete(t, 200)
@@ -585,8 +611,6 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.Method("POST")
 	http.URL("/company")
 	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Auth, c.auth_token)
-	ownerEmail := lib.GenerateRandomEmail("owner")
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
 		LegalName:     lib.GenerateRandomName("Company Legal Name"),
@@ -594,9 +618,10 @@ func (c *Company) Create(t *testing.T, status int) {
 		TaxID:         lib.GenerateRandomStrNumber(14),
 		OwnerName:     lib.GenerateRandomName("Owner Name"),
 		OwnerSurname:  lib.GenerateRandomName("Owner Surname"),
-		OwnerEmail:    ownerEmail,
+		OwnerEmail:    lib.GenerateRandomEmail("owner"),
 		OwnerPhone:    lib.GenerateRandomPhoneNumber(),
 		OwnerPassword: ownerPswd,
+		StartSubdomain: lib.GenerateRandomString(8),
 	})
 	http.ParseResponse(&c.created)
 	owner := c.created.Employees[0]

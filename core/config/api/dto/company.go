@@ -1,6 +1,8 @@
 package DTO
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type CreateCompany struct {
 	LegalName      string `json:"name" example:"Your Company Legal Name"`
@@ -18,13 +20,15 @@ type CreateCompany struct {
 // @name			CompanyFullDTO
 // @tag.name		company.full.dto
 type Company struct {
-	ID        uuid.UUID            `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
-	Name      string               `json:"name" example:"Your Company Name"`
-	TaxID     string               `json:"tax_id" example:"00000000000000"`
-	Employees []*EmployeePopulated `json:"employees"`
-	Branches  []*BranchPopulated   `json:"branches"`
-	Services  []*ServicePopulated  `json:"services"`
-	Sectors   []*Sector            `json:"sectors"`
+	ID         uuid.UUID            `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
+	LegalName  string               `json:"legal_name" example:"Your Company Legal Name"`
+	TradeName  string               `json:"trading_name" example:"Your Company Trading Name"`
+	TaxID      string               `json:"tax_id" example:"00000000000000"`
+	Employees  []*EmployeePopulated `json:"employees"`
+	Branches   []*BranchPopulated   `json:"branches"`
+	Services   []*ServicePopulated  `json:"services"`
+	Sectors    []*Sector            `json:"sectors"`
+	Subdomains []*Subdomain         `json:"subdomains"`
 }
 
 // @description	Company DTO Populated
