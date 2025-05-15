@@ -33,6 +33,9 @@ type Employee struct {
 	Roles            []*Role            `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 }
 
+func (Employee) TableName() string { return "employees" }
+func (Employee) SchemaType() string { return "company" }
+
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 	e.WorkSchedule = mJSON.WorkSchedule{} // Do not ever let someone create an employee with WorkSchedule set.
 	if err := lib.ValidatorV10.Struct(e); err != nil {

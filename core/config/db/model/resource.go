@@ -15,9 +15,8 @@ type Resource struct {
 	References  ResourceReferences `gorm:"type:jsonb" json:"references"`
 }
 
-func (Resource) TableName() string {
-	return "public.resources"
-}
+func (Resource) TableName() string { return "public.resources" }
+func (Resource) SchemaType() string { return "public" }
 
 // --- Define ResourceReference first ---
 type ResourceReference struct {
@@ -110,7 +109,7 @@ var SingleIdQueryRef = ResourceReference{
 var AppointmentResource = &Resource{
 	Name:        "appointment",
 	Description: "Appointment resource",
-	Table:       "appointments",
+	Table:       (&Appointment{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -124,7 +123,7 @@ var AppointmentResource = &Resource{
 var BranchResource = &Resource{
 	Name:        "branch",
 	Description: "Branch resource",
-	Table:       "branches",
+	Table:       (&Branch{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -138,7 +137,7 @@ var BranchResource = &Resource{
 var ClientResource = &Resource{
 	Name:        "client",
 	Description: "Client resource",
-	Table:       "clients",
+	Table:       (&ClientFull{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -152,7 +151,7 @@ var ClientResource = &Resource{
 var CompanyResource = &Resource{
 	Name:        "company",
 	Description: "Company resource",
-	Table:       "companies",
+	Table:       (&Company{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -165,7 +164,7 @@ var CompanyResource = &Resource{
 var EmployeeResource = &Resource{
 	Name:        "employee",
 	Description: "Employee resource",
-	Table:       "employees",
+	Table:       (&Employee{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -179,7 +178,7 @@ var EmployeeResource = &Resource{
 var HolidayResource = &Resource{
 	Name:        "holiday",
 	Description: "Holiday resource",
-	Table:       "holidays",
+	Table:       (&Holiday{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -192,7 +191,7 @@ var HolidayResource = &Resource{
 var RoleResource = &Resource{
 	Name:        "role",
 	Description: "Role resource",
-	Table:       "roles",
+	Table:       (&Role{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -205,7 +204,7 @@ var RoleResource = &Resource{
 var SectorResource = &Resource{
 	Name:        "sector",
 	Description: "Sector resource",
-	Table:       "sectors",
+	Table:       (&Sector{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
@@ -218,7 +217,7 @@ var SectorResource = &Resource{
 var ServiceResource = &Resource{
 	Name:        "service",
 	Description: "Service resource",
-	Table:       "services",
+	Table:       (&Service{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),

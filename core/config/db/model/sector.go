@@ -6,6 +6,5 @@ type Sector struct {
 	Description string `json:"description"`
 }
 
-func (Sector) TableName() string {
-	return "public.sectors"
-}
+func (Sector) TableName() string { return "public.sectors" }
+func (Sector) SchemaType() string { return "public" }

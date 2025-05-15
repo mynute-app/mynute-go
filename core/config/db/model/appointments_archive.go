@@ -17,6 +17,8 @@ var AppointmentArchiveTableName = "appointments_archive"
 
 func (AppointmentArchive) TableName() string { return AppointmentArchiveTableName }
 
+func (AppointmentArchive) SchemaType() string { return "company" }
+
 func (AppointmentArchive) Indexes() map[string]string {
 	return AppointmentIndexes(AppointmentArchiveTableName)
 }

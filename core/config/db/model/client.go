@@ -36,9 +36,8 @@ type ClientFull struct {
 	Appointments mJSON.ClientAppointments `gorm:"type:jsonb" json:"appointments"`
 }
 
-func (ClientFull) TableName() string {
-	return "public.clients"
-}
+func (ClientFull) TableName() string { return "public.clients" }
+func (ClientFull) SchemaType() string { return "public" }
 
 func (c *ClientFull) BeforeCreate(tx *gorm.DB) (err error) {
 	if err := lib.ValidatorV10.Struct(c); err != nil {

@@ -11,6 +11,5 @@ type Subdomain struct {
 	Company   *Company  `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`
 }
 
-func (Subdomain) TableName() string {
-	return "public.subdomains"
-}
+func (Subdomain) TableName() string { return "public.subdomains" }
+func (Subdomain) SchemaType() string { return "public" }

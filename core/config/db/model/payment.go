@@ -44,3 +44,6 @@ type Payment struct {
 	CompletedAt *time.Time // When the payment transitioned to COMPLETED
 	FailedAt    *time.Time // When the payment transitioned to FAILED
 }
+
+func (Payment) TableName() string { return "payments" }
+func (Payment) SchemaType() string { return "company" }

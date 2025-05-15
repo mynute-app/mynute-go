@@ -57,13 +57,35 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("no policies found for endpoint: %s %s and company: %s", method, routePath, companyIDStr))
 	}
 
+	change_schema := func(schema string) error {
+		if schema == "public" {
+			if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+				return lib.Error.General.InternalError.WithError(err)
+			}
+		} else if schema == "company" {
+			if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+				return lib.Error.General.InternalError.WithError(err)
+			}
+		} else {
+			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
+		}
+		return nil
+	}
+
 	var user any
+	var schema string
 	if claim.CompanyID == uuid.Nil {
 		user = &model.ClientFull{}
+		schema = "public"
 	} else {
 		user = &model.Employee{}
+		schema = "company"
 	}
+
 	subject_data := make(map[string]any)
+	if err := change_schema(schema); err != nil {
+		return err
+	}
 	if err := tx.Model(user).Preload(clause.Associations).Where("id = ?", claim.ID).Take(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.Auth.Unauthorized
@@ -149,10 +171,10 @@ forLoop: // Label is optional but can improve readability
 	}
 
 	// --- Fetch Actual Resource (based on reference found) ---
-	resource_data := make(map[string]any) // Initialize as empty map
+	resource_data := make(map[string]any)
 	var resourceFetchError error
 
-	if resourceRefFound { // Only attempt fetch if we have the reference value
+	if resourceRefFound {
 		var errUnescape error
 		RequestVal, errUnescape = url.QueryUnescape(RequestVal) // Unescape value (e.g., from path/query)
 		if errUnescape != nil {
@@ -160,61 +182,17 @@ forLoop: // Label is optional but can improve readability
 			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("invalid resource identifier format"))
 		}
 
-		var resource any
-		var schema string
-		switch EndPoint.Resource.Table { // Determine model struct based on table name
-		case "appointments":
-			resource = &model.Appointment{}
-			schema = "company"
-		case "branches":
-			resource = &model.Branch{}
-			schema = "company"
-		case "clients":
-			resource = &model.ClientFull{}
-			schema = "public"
-		case "companies":
-			resource = &model.Company{}
-			schema = "public"
-		case "employees":
-			resource = &model.Employee{}
-			schema = "company"
-		case "holidays":
-			resource = &model.Holiday{}
-			schema = "public"
-		case "policy_rules":
-			resource = &model.PolicyRule{}
-			schema = "public"
-		case "roles":
-			resource = &model.Role{}
-			schema = "public"
-		case "sectors":
-			resource = &model.Sector{}
-			schema = "public"
-		case "services":
-			resource = &model.Service{}
-			schema = "company"
-		case "subdomains":
-			resource = &model.Subdomain{}
-			schema = "public"
-		default:
-			log.Printf("Error: Invalid resource table '%s'", EndPoint.Resource.Table)
-			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid resource table: %s", EndPoint.Resource.Table))
+		resource, schema, err := model.GetModelFromTableName(EndPoint.Resource.Table)
+		if err != nil {
+			return err
 		}
-		if schema == "public" {
-			if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
-				return lib.Error.General.InternalError.WithError(err)
-			}
-		} else if schema == "company" {
-			if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
-				return lib.Error.General.InternalError.WithError(err)
-			}
-		} else {
-			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
+
+		if err := change_schema(schema); err != nil {
+			return err
 		}
 
 		// Fetch the resource from tx
 		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
-
 		if resourceFetchError == nil {
 			// Convert fetched resource struct to map
 			jsonDataRes, errRes := json.Marshal(resource)

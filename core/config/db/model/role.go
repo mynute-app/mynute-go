@@ -20,9 +20,8 @@ type Role struct {
 	IsSystemRole bool       `gorm:"not null;default:false" json:"is_system_role"`
 }
 
-func (Role) TableName() string {
-	return "public.roles"
-}
+func (Role) TableName() string { return "public.roles" }
+func (Role) SchemaType() string { return "public" }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {
 	if err := r.isRoleNameReserved(tx); err != nil {

@@ -59,6 +59,8 @@ var AppointmentTableName = "appointments"
 
 func (Appointment) TableName() string { return AppointmentTableName }
 
+func (Appointment) SchemaType() string { return "company" }
+
 func (Appointment) Indexes() map[string]string {
 	return AppointmentIndexes(AppointmentTableName)
 }

@@ -31,6 +31,10 @@ type Branch struct {
 	Design         mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
+func (Branch) TableName() string { return "branches" }
+
+func (Branch) SchemaType() string { return "company" }
+
 type ServiceDensity struct {
 	ServiceID           uuid.UUID `json:"service_id"`
 	MaxSchedulesOverlap uint      `json:"max_schedules_overlap"`

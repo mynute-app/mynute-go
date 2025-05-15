@@ -217,9 +217,9 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetCompanyBySubdomain retrieves a company by subdomain
+// GetCompanyIdBySubdomain retrieves a company by subdomain
 //
-//	@Summary		Get company by subdomain
+//	@Summary		Get company ID by subdomain
 //	@Description	Retrieve a company by its subdomain
 //	@Tags			Company
 //	@Param			subdomain_name	path	string	true	"Subdomain Name"
@@ -227,9 +227,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Company
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company/subdomain/{subdomain_name} [get]
-func GetCompanyBySubdomain(c *fiber.Ctx) error {
-	var company model.Company
-
+func GetCompanyIdBySubdomain(c *fiber.Ctx) error {
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
@@ -254,14 +252,8 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	company.ID = subdomain.CompanyID
-
-	if full_c, err := company.GetFullCompany(tx); err != nil {
-		return lib.Error.General.UpdatedError.WithError(err)
-	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
-			return lib.Error.General.InternalError.WithError(err)
-		}
+	if err := lib.ResponseFactory(c).Send(200, subdomain.CompanyID.String()); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	return nil
@@ -351,6 +343,7 @@ func Company(Gorm *handler.Gorm) {
 		GetCompanyById,
 		GetCompanyByName,
 		GetCompanyByTaxId,
+		GetCompanyIdBySubdomain,
 		UpdateCompanyById,
 		DeleteCompanyById,
 	})

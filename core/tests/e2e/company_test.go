@@ -61,6 +61,7 @@ func Test_Company(t *testing.T) {
 	}})
 	company.GetById(t, 200)
 	company.GetByName(t, 200)
+	company.GetBySubdomain(t, 200)
 	company.Delete(t, 200)
 }
 
@@ -636,6 +637,15 @@ func (c *Company) GetByName(t *testing.T, status int) {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
 	http.URL(fmt.Sprintf("/company/name/%s", c.created.LegalName))
+	http.ExpectStatus(status)
+	http.Send(nil)
+	http.ParseResponse(&c.created)
+}
+
+func (c *Company) GetBySubdomain(t *testing.T, status int) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(fmt.Sprintf("/company/subdomain/%s", c.created.Subdomains[0].Name))
 	http.ExpectStatus(status)
 	http.Send(nil)
 	http.ParseResponse(&c.created)

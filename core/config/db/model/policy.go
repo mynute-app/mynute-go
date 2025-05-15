@@ -25,9 +25,8 @@ type PolicyRule struct {
 	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
-func (PolicyRule) TableName() string {
-	return "public.policy_rules"
-}
+func (PolicyRule) TableName() string { return "public.policy_rules" }
+func (PolicyRule) SchemaType() string { return "public" }
 
 func (PolicyRule) Indexes() map[string]string {
 	return map[string]string{

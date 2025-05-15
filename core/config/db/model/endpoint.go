@@ -21,9 +21,8 @@ type EndPoint struct {
 	Resource         *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
-func (EndPoint) TableName() string {
-	return "public.endpoints"
-}
+func (EndPoint) TableName() string { return "public.endpoints" }
+func (EndPoint) SchemaType() string { return "public" }
 
 func (EndPoint) Indexes() map[string]string {
 	return map[string]string{
@@ -244,6 +243,12 @@ var GetCompanyByTaxId = &EndPoint{
 	Method:         namespace.ViewActionMethod,
 	ControllerName: "GetCompanyByTaxId",
 	Description:    "View company by tax ID",
+}
+var GetCompanyIdBySubdomain = &EndPoint{
+	Path:           "/company/subdomain/:subdomain_name",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetCompanyIdBySubdomain",
+	Description:    "View company by subdomain",
 }
 var UpdateCompanyById = &EndPoint{
 	Path:             "/company/:id",
@@ -541,6 +546,7 @@ var endpoints = []*EndPoint{
 	GetCompanyById,
 	GetCompanyByName,
 	GetCompanyByTaxId,
+	GetCompanyIdBySubdomain,
 	UpdateCompanyById,
 	DeleteCompanyById,
 	// Employee

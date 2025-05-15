@@ -50,3 +50,29 @@ var GeneralModels = []any{
 	&Property{},
 	&Subdomain{},
 }
+
+func GetModelFromTableName(tableName string) (any, string, error) {
+	type has_TableName_fnc interface {
+		TableName() string
+		SchemaType() string
+	}
+	for _, rawModel := range TenantModels {
+		if model, ok := rawModel.(has_TableName_fnc); ok {
+			if model.TableName() == tableName {
+				return model, model.SchemaType(), nil
+			}
+		} else {
+			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName()", rawModel))
+		}
+	}
+	for _, rawModel := range GeneralModels {
+		if model, ok := rawModel.(has_TableName_fnc); ok {
+			if model.TableName() == tableName {
+				return model, model.SchemaType(), nil
+			}
+		} else {
+			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName()", rawModel))
+		}
+	}
+	return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model not found for table name: %s", tableName))
+}
