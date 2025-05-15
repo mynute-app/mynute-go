@@ -12,8 +12,9 @@ import (
 
 type Company struct {
 	BaseModel
-	Name       string             `gorm:"not null;unique" json:"name"`
-	TaxID      string             `gorm:"not null;unique" json:"tax_id"`
+	LegalName  string             `gorm:"not null;unique" json:"legal_name"` // Razão Social
+	TradeName  string             `gorm:"not null" json:"trade_name"`        // Nome Fantasia
+	TaxID      string             `gorm:"not null;uniqueIndex" json:"tax_id"`
 	SchemaName string             `gorm:"type:varchar(100);not null;uniqueIndex" json:"schema_name"`
 	Subdomains []*Subdomain       `gorm:"constraint:OnDelete:CASCADE;" json:"subdomains"`                        // One-to-many relationship with Subdomain
 	Sectors    []*Sector          `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE;" json:"sectors"` // Many-to-many relationship with Sector
@@ -212,6 +213,18 @@ func (c *Company) GetFullCompany(tx *gorm.DB) (*CompanyMerged, error) {
 	fullCompany.Services = services
 
 	return fullCompany, nil
+}
+
+func (c *Company) AddSubdomain(tx *gorm.DB, subdomain *Subdomain) error {
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Create(subdomain).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type CompanyMerged struct {

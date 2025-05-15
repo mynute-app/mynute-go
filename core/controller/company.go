@@ -36,12 +36,25 @@ func CreateCompany(c *fiber.Ctx) error {
 		return err
 	}
 
+	if body.StartSubdomain == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start_domain is required"))
+	}
+
 	var company model.Company
 
-	company.Name = body.Name
+	company.LegalName = body.LegalName
+	company.TradeName = body.TradeName
 	company.TaxID = body.TaxID
 
 	if err := company.Create(tx); err != nil {
+		return err
+	}
+
+	var domain model.Subdomain
+	domain.Name = body.StartSubdomain
+	domain.CompanyID = company.ID
+
+	if err := company.AddSubdomain(tx, &domain); err != nil {
 		return err
 	}
 
