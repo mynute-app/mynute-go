@@ -215,6 +215,18 @@ func (c *Company) GetFullCompany(tx *gorm.DB) (*CompanyMerged, error) {
 	return fullCompany, nil
 }
 
+func (c *Company) AddSubdomain(tx *gorm.DB, subdomain *Subdomain) error {
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Create(subdomain).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type CompanyMerged struct {
 	Company
 	Branches  []Branch   `json:"branches"`
