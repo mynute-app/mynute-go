@@ -270,7 +270,7 @@ func GetCompanyIdBySubdomain(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Company ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			company	body		DTO.Company	true	"Company"
+//	@Param			company	body		DTO.CreateCompany	true	"Company"
 //	@Success		201		{object}	DTO.Company
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [patch]
