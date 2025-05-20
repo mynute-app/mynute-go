@@ -252,9 +252,21 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	if err := lib.ResponseFactory(c).Send(200, subdomain.CompanyID.String()); err != nil {
+	var company model.Company
+
+	company.ID = subdomain.CompanyID
+
+	if err := company.Refresh(tx); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.Company{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// if err := lib.ResponseFactory(c).Send(200, subdomain.CompanyID.String()); err != nil {
+	// 	return lib.Error.General.InternalError.WithError(err)
+	// }
 
 	return nil
 }

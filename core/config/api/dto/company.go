@@ -1,6 +1,8 @@
 package DTO
 
 import (
+	mJSON "agenda-kaki-go/core/config/db/model/json"
+
 	"github.com/google/uuid"
 )
 
@@ -29,6 +31,7 @@ type Company struct {
 	Services   []*ServicePopulated  `json:"services"`
 	Sectors    []*Sector            `json:"sectors"`
 	Subdomains []*Subdomain         `json:"subdomains"`
+	Design     mJSON.DesignConfig   `json:"design"`
 }
 
 // @description	Company DTO Populated
