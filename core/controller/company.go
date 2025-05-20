@@ -217,7 +217,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetCompanyIdBySubdomain retrieves a company by subdomain
+// GetCompanyBySubdomain retrieves a company by subdomain
 //
 //	@Summary		Get company ID by subdomain
 //	@Description	Retrieve a company by its subdomain
@@ -227,7 +227,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.Company
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company/subdomain/{subdomain_name} [get]
-func GetCompanyIdBySubdomain(c *fiber.Ctx) error {
+func GetCompanyBySubdomain(c *fiber.Ctx) error {
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
@@ -347,7 +347,7 @@ func Company(Gorm *handler.Gorm) {
 		GetCompanyById,
 		GetCompanyByName,
 		GetCompanyByTaxId,
-		GetCompanyIdBySubdomain,
+		GetCompanyBySubdomain,
 		UpdateCompanyById,
 		DeleteCompanyById,
 	})

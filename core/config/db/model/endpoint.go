@@ -244,10 +244,10 @@ var GetCompanyByTaxId = &EndPoint{
 	ControllerName: "GetCompanyByTaxId",
 	Description:    "View company by tax ID",
 }
-var GetCompanyIdBySubdomain = &EndPoint{
+var GetCompanyBySubdomain = &EndPoint{
 	Path:           "/company/subdomain/:subdomain_name",
 	Method:         namespace.ViewActionMethod,
-	ControllerName: "GetCompanyIdBySubdomain",
+	ControllerName: "GetCompanyBySubdomain",
 	Description:    "View company by subdomain",
 }
 var UpdateCompanyById = &EndPoint{
@@ -548,7 +548,7 @@ var endpoints = []*EndPoint{
 	GetCompanyById,
 	GetCompanyByName,
 	GetCompanyByTaxId,
-	GetCompanyIdBySubdomain,
+	GetCompanyBySubdomain,
 	UpdateCompanyById,
 	DeleteCompanyById,
 	// Employee
