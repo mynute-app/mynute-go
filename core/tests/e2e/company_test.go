@@ -666,6 +666,7 @@ func (c *Company) Update(t *testing.T, status int, changes map[string]any) {
 	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
 	http.Send(changes)
 }
 
@@ -675,5 +676,6 @@ func (c *Company) Delete(t *testing.T, status int) {
 	http.URL(fmt.Sprintf("/company/%s", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
 	http.Send(nil)
 }

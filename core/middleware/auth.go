@@ -192,23 +192,37 @@ forLoop: // Label is optional but can improve readability
 		}
 
 		// Fetch the resource from tx
-		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(resource).Error
-		if resourceFetchError == nil {
-			// Convert fetched resource struct to map
-			jsonDataRes, errRes := json.Marshal(resource)
-			if errRes != nil {
-				log.Printf("Error marshaling resource: %v", errRes)
-				return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal resource error: %w", errRes))
+		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(&resource_data).Error
+		if resourceFetchError != nil {
+			if resourceFetchError == gorm.ErrRecordNotFound {
+				return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
+			} else {
+				log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
+				return lib.Error.General.AuthError.WithError(resourceFetchError).WithError(fmt.Errorf("resource fetch error for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
 			}
-			if errRes = json.Unmarshal(jsonDataRes, &resource_data); errRes != nil {
-				log.Printf("Error unmarshaling resource: %v", errRes)
-				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal resource error: %w", errRes))
-			}
-		} else if !errors.Is(resourceFetchError, gorm.ErrRecordNotFound) {
-			// Handle unexpected tx errors
-			log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
-			return lib.Error.General.AuthError.WithError(resourceFetchError)
 		}
+		// if resourceFetchError == nil {
+		// 	// Convert fetched resource struct to map
+		// 	jsonDataRes, errRes := json.Marshal(resource)
+		// 	if errRes != nil {
+		// 		log.Printf("Error marshaling resource: %v", errRes)
+		// 		return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal resource error: %w", errRes))
+		// 	}
+		// 	if errRes = json.Unmarshal(jsonDataRes, &resource_data); errRes != nil {
+		// 		log.Printf("Error unmarshaling resource: %v", errRes)
+		// 		return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal resource error: %w", errRes))
+		// 	}
+		// } else {
+		// 	if !errors.Is(resourceFetchError, gorm.ErrRecordNotFound) {
+		// 		// Handle unexpected tx errors
+		// 		log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
+		// 		return lib.Error.General.AuthError.WithError(resourceFetchError)
+		// 	} else {
+		// 		// Handle case where resource is not found
+		// 		log.Printf("Resource %s=%s not found in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table)
+		// 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found: %s=%s, in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
+		// 	}
+		// }
 	}
 
 	// --- Collect Path, Query, Header data ---

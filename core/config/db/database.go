@@ -36,9 +36,13 @@ func Connect() *Database {
 	app_env := os.Getenv("APP_ENV")
 	sslmode := "disable" // You can modify this based on your setup
 	timeZone := "UTC"    // Default timezone
+	LogLevel := logger.Warn
 
 	if app_env == "test" {
 		dbName = os.Getenv("POSTGRES_DB_TEST")
+		LogLevel = logger.Info
+	} else if app_env == "dev" {
+		LogLevel = logger.Info
 	} else if app_env != "production" && app_env != "dev" {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
@@ -53,7 +57,7 @@ func Connect() *Database {
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second,
-			LogLevel:                  logger.Warn,
+			LogLevel:                  LogLevel,
 			Colorful:                  true,
 			IgnoreRecordNotFoundError: true,
 		},
@@ -97,7 +101,7 @@ func (db *Database) Migrate(models any) *Database {
 		db.Error = fmt.Errorf("models must be a slice of pointers to structs at Migrate function")
 		return db
 	}
-	for i := 0; i < reflect.ValueOf(models).Len(); i++ {
+	for i := range reflect.ValueOf(models).Len() {
 		newModel := reflect.ValueOf(models).Index(i).Interface()
 		if newModel == nil {
 			db.Error = fmt.Errorf("model at index %d is nil at Migrate function", i)

@@ -256,6 +256,7 @@ var UpdateCompanyById = &EndPoint{
 	ControllerName:   "UpdateCompanyById",
 	Description:      "Update company by ID",
 	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
 	Resource:         CompanyResource,
 }
 var DeleteCompanyById = &EndPoint{
@@ -264,6 +265,7 @@ var DeleteCompanyById = &EndPoint{
 	ControllerName:   "DeleteCompanyById",
 	Description:      "Delete company by ID",
 	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
 	Resource:         CompanyResource,
 }
 

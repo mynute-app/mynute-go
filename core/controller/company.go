@@ -277,6 +277,10 @@ func GetCompanyIdBySubdomain(c *fiber.Ctx) error {
 func UpdateCompanyById(c *fiber.Ctx) error {
 	var company model.Company
 
+	if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+		return err
+	}
+
 	if err := UpdateOneById(c, &company); err != nil {
 		return err
 	}
