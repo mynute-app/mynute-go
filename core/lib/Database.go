@@ -67,8 +67,8 @@ func ChangeToCompanySchemaByContext(c *fiber.Ctx) error {
  Recomended when you need to perform a single database operation.
  * @return *gorm.DB - The database session
  * @return error - The error if any
+ // @param c *fiber.Ctx - The fiber context
 */
-// @param c *fiber.Ctx - The fiber context
 func Session(c *fiber.Ctx) (*gorm.DB, error) {
 	tx, ok := c.Locals(namespace.GeneralKey.DatabaseSession).(*gorm.DB)
 	if !ok {

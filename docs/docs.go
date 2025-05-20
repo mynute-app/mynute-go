@@ -155,7 +155,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.UpdateAppointment"
+                            "$ref": "#/definitions/DTO.CreateAppointment"
                         }
                     }
                 ],
@@ -168,54 +168,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/verify-existing-account/": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Log in an client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login",
-                "parameters": [
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.LoginClient"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -244,8 +196,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -303,63 +255,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.Branch"
                         }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/branch/{branch_id}/employee/{employee_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove an employee from a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Remove employee from branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Branch"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",
@@ -430,8 +325,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -485,8 +380,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -575,8 +470,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -626,8 +521,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -725,8 +620,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -851,8 +746,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -896,8 +791,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -933,6 +828,56 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/client/{id}/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get only the appointments field from a client",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Get client appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dJSON.ClientAppointment"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -992,6 +937,41 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Company Name",
                         "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Company"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/company/subdomain/{subdomain_name}": {
+            "get": {
+                "description": "Retrieve a company by its subdomain",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Get company ID by subdomain",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subdomain Name",
+                        "name": "subdomain_name",
                         "in": "path",
                         "required": true
                     }
@@ -1098,8 +1078,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1149,8 +1129,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1167,7 +1147,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Company"
+                            "$ref": "#/definitions/DTO.CreateCompany"
                         }
                     }
                 ],
@@ -1211,8 +1191,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1263,8 +1243,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1389,8 +1369,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1444,8 +1424,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1504,8 +1484,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1559,8 +1539,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1616,8 +1596,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1664,8 +1644,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1715,8 +1695,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1777,8 +1757,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1897,8 +1877,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1948,8 +1928,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -1996,7 +1976,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a company type",
+                "description": "Create a sector",
                 "consumes": [
                     "application/json"
                 ],
@@ -2006,17 +1986,17 @@ const docTemplate = `{
                 "tags": [
                     "Sector"
                 ],
-                "summary": "Create company type",
+                "summary": "Create sector",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "Company Type",
+                        "description": "sector",
                         "name": "sector",
                         "in": "body",
                         "required": true,
@@ -2046,18 +2026,18 @@ const docTemplate = `{
         },
         "/sector/name/{name}": {
             "get": {
-                "description": "Retrieve a company type by its ID",
+                "description": "Retrieve a sector by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Sector"
                 ],
-                "summary": "Get company type by ID",
+                "summary": "Get sector by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "sector ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2081,18 +2061,18 @@ const docTemplate = `{
         },
         "/sector/{id}": {
             "get": {
-                "description": "Retrieve a company type by its ID",
+                "description": "Retrieve a sector by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Sector"
                 ],
-                "summary": "Get company type by ID",
+                "summary": "Get sector by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "sector ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2119,25 +2099,25 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a company type by its ID",
+                "description": "Delete a sector by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Sector"
                 ],
-                "summary": "Delete company type by ID",
+                "summary": "Delete sector by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "sector ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2167,7 +2147,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a company type by its ID",
+                "description": "Update a sector by its ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -2177,24 +2157,24 @@ const docTemplate = `{
                 "tags": [
                     "Sector"
                 ],
-                "summary": "Update company type by ID",
+                "summary": "Update sector by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Company Type ID",
+                        "description": "sector ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Company Type",
+                        "description": "sector",
                         "name": "sector",
                         "in": "body",
                         "required": true,
@@ -2243,8 +2223,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -2363,8 +2343,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -2408,8 +2388,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": namespace.HeadersKey.Auth,
-                        "name": namespace.HeadersKey.Auth,
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -2452,48 +2432,81 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branch_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "cancel_time": {
+                    "type": "string",
+                    "example": "2021-01-01T08:00:00Z"
                 },
                 "cancelled": {
                     "type": "boolean",
                     "example": false
                 },
+                "cancelled_employee_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
                 "client_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dJSON.Comment"
+                    }
                 },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "employee_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "end_time": {
                     "type": "string",
                     "example": "2021-01-01T10:00:00Z"
                 },
+                "history": {
+                    "$ref": "#/definitions/dJSON.AppointmentHistory"
+                },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "is_cancelled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_cancelled_by_client": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_cancelled_by_employee": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_confirmed_by_client": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_fulfilled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "payment_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "rescheduled": {
                     "type": "boolean",
                     "example": false
                 },
-                "rescheduled_from_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "rescheduled_to_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "service_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "start_time": {
                     "type": "string",
@@ -2517,12 +2530,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "New York"
                 },
-                "company": {
-                    "$ref": "#/definitions/DTO.CompanyPopulated"
-                },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "complement": {
                     "type": "string",
@@ -2539,8 +2549,8 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -2599,8 +2609,8 @@ const docTemplate = `{
                     "example": "USA"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -2637,25 +2647,13 @@ const docTemplate = `{
         "DTO.Client": {
             "type": "object",
             "properties": {
-                "appointments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
-                    }
-                },
-                "available_slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.TimeRange"
-                    }
-                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -2693,17 +2691,18 @@ const docTemplate = `{
                 },
                 "id": {
                     "description": "Primary key",
-                    "type": "integer"
-                },
-                "name": {
                     "type": "string",
-                    "example": "Your Company Name"
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "sector": {
-                    "$ref": "#/definitions/DTO.Sector"
+                "legal_name": {
+                    "type": "string",
+                    "example": "Your Company Legal Name"
                 },
-                "sector_id": {
-                    "type": "integer"
+                "sectors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Sector"
+                    }
                 },
                 "services": {
                     "type": "array",
@@ -2711,9 +2710,19 @@ const docTemplate = `{
                         "$ref": "#/definitions/DTO.ServicePopulated"
                     }
                 },
+                "subdomains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Subdomain"
+                    }
+                },
                 "tax_id": {
                     "type": "string",
                     "example": "00000000000000"
+                },
+                "trading_name": {
+                    "type": "string",
+                    "example": "Your Company Trading Name"
                 }
             }
         },
@@ -2722,7 +2731,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string"
@@ -2736,24 +2746,24 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branch_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "client_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "employee_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "service_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "start_time": {
                     "type": "string",
@@ -2769,8 +2779,8 @@ const docTemplate = `{
                     "example": "New York"
                 },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "complement": {
                     "type": "string",
@@ -2836,7 +2846,7 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string",
-                    "example": "Your Company Name"
+                    "example": "Your Company Legal Name"
                 },
                 "owner_email": {
                     "type": "string",
@@ -2858,9 +2868,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Clark"
                 },
+                "start_subdomain": {
+                    "type": "string",
+                    "example": "agenda-yourcompany"
+                },
                 "tax_id": {
                     "type": "string",
                     "example": "00000000000000"
+                },
+                "trading_name": {
+                    "type": "string",
+                    "example": "Your Company Trading Name"
                 }
             }
         },
@@ -2868,7 +2886,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "email": {
                     "type": "string",
@@ -2903,8 +2921,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "description": {
                     "type": "string",
@@ -2943,16 +2961,16 @@ const docTemplate = `{
                     "$ref": "#/definitions/DTO.CompanyPopulated"
                 },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -2962,9 +2980,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "+15555555555"
                 },
-                "role": {
-                    "type": "string",
-                    "example": "client"
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.RolePopulated"
+                    }
                 },
                 "services": {
                     "type": "array",
@@ -2998,13 +3018,17 @@ const docTemplate = `{
         "DTO.EmployeePopulated": {
             "type": "object",
             "properties": {
+                "company_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -3059,6 +3083,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Celebration of the first day of the new year"
                 },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
                 "name": {
                     "type": "string",
                     "example": "New Year's Day"
@@ -3099,6 +3127,30 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.RolePopulated": {
+            "type": "object",
+            "properties": {
+                "company_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Administrator role"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "is_system_role": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
         "DTO.Sector": {
             "type": "object",
             "properties": {
@@ -3107,8 +3159,8 @@ const docTemplate = `{
                     "example": "The Company Sector Description"
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -3126,8 +3178,8 @@ const docTemplate = `{
                     }
                 },
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "description": {
                     "type": "string",
@@ -3144,8 +3196,8 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -3161,10 +3213,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "max_schedules_overlap": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 5
                 },
                 "service_id": {
-                    "type": "integer"
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 }
             }
         },
@@ -3180,8 +3234,8 @@ const docTemplate = `{
                     "example": 60
                 },
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -3193,29 +3247,23 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.TimeRange": {
+        "DTO.Subdomain": {
             "type": "object",
             "properties": {
-                "end": {
+                "company_id": {
+                    "description": "Foreign key to Company",
                     "type": "string",
-                    "example": "17:00"
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "start": {
-                    "type": "string",
-                    "example": "09:00"
-                }
-            }
-        },
-        "DTO.UpdateAppointment": {
-            "type": "object",
-            "properties": {
                 "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "start_time": {
+                    "description": "Primary key",
                     "type": "string",
-                    "example": "2028-01-01T09:00:00Z"
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "name": {
+                    "description": "Subdomain name",
+                    "type": "string",
+                    "example": "agenda-yourcompany"
                 }
             }
         },
@@ -3223,8 +3271,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "company_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
                 "name": {
                     "type": "string",
@@ -3253,7 +3301,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branch_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "end": {
                     "description": "Store as \"18:00:00\"",
@@ -3311,13 +3359,139 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "dJSON.AppointmentHistory": {
+            "type": "object",
+            "properties": {
+                "field_changes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dJSON.FieldChange"
+                    }
+                }
+            }
+        },
+        "dJSON.ClientAppointment": {
+            "type": "object",
+            "properties": {
+                "branch_address": {
+                    "type": "string",
+                    "example": "76, Example street, My city, My country, 09090790"
+                },
+                "company_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "company_name": {
+                    "type": "string",
+                    "example": "Company name example"
+                },
+                "service_name": {
+                    "type": "string",
+                    "example": "Service name example"
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                }
+            }
+        },
+        "dJSON.Comment": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "example": "Some comment example text"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "created_by": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "from_client": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "from_employee": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_updated_by": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "old_versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dJSON.CommentVersion"
+                    }
+                },
+                "type": {
+                    "description": "\"internal\" or \"external\"",
+                    "type": "string",
+                    "example": "internal"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                }
+            }
+        },
+        "dJSON.CommentVersion": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "example": "Some different version comment text"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "created_by": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                }
+            }
+        },
+        "dJSON.FieldChange": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "field": {
+                    "type": "string",
+                    "example": "field_name"
+                },
+                "new_value": {
+                    "type": "string",
+                    "example": "new_value"
+                },
+                "old_value": {
+                    "type": "string",
+                    "example": "old_value"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Some reason."
+                }
+            }
         }
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
             "description": "Enter the token in the format: \u003ctoken\u003e",
             "type": "apiKey",
-            "name": namespace.HeadersKey.Auth,
+            "name": "Authorization",
             "in": "header"
         }
     }

@@ -2,38 +2,62 @@ definitions:
   DTO.Appointment:
     properties:
       branch_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      cancel_time:
+        example: "2021-01-01T08:00:00Z"
+        type: string
       cancelled:
         example: false
         type: boolean
+      cancelled_employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       client_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      comments:
+        items:
+          $ref: '#/definitions/dJSON.Comment'
+        type: array
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       employee_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       end_time:
         example: "2021-01-01T10:00:00Z"
         type: string
+      history:
+        $ref: '#/definitions/dJSON.AppointmentHistory'
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_cancelled:
+        example: true
+        type: boolean
+      is_cancelled_by_client:
+        example: false
+        type: boolean
+      is_cancelled_by_employee:
+        example: true
+        type: boolean
+      is_confirmed_by_client:
+        example: true
+        type: boolean
+      is_fulfilled:
+        example: false
+        type: boolean
+      payment_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       rescheduled:
         example: false
         type: boolean
-      rescheduled_from_id:
-        example: 1
-        type: integer
-      rescheduled_to_id:
-        example: 1
-        type: integer
       service_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       start_time:
         example: "2021-01-01T09:00:00Z"
         type: string
@@ -49,11 +73,9 @@ definitions:
       city:
         example: New York
         type: string
-      company:
-        $ref: '#/definitions/DTO.CompanyPopulated'
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       complement:
         example: Suite 100
         type: string
@@ -65,8 +87,8 @@ definitions:
           $ref: '#/definitions/DTO.EmployeePopulated'
         type: array
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Main Branch
         type: string
@@ -108,8 +130,8 @@ definitions:
         example: USA
         type: string
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Main Branch
         type: string
@@ -135,20 +157,12 @@ definitions:
     type: object
   DTO.Client:
     properties:
-      appointments:
-        items:
-          $ref: '#/definitions/DTO.Appointment'
-        type: array
-      available_slots:
-        items:
-          $ref: '#/definitions/DTO.TimeRange'
-        type: array
       email:
         example: john.doe@example.com
         type: string
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: John
         type: string
@@ -175,27 +189,36 @@ definitions:
         type: array
       id:
         description: Primary key
-        type: integer
-      name:
-        example: Your Company Name
+        example: 00000000-0000-0000-0000-000000000000
         type: string
-      sector:
-        $ref: '#/definitions/DTO.Sector'
-      sector_id:
-        type: integer
+      legal_name:
+        example: Your Company Legal Name
+        type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
       services:
         items:
           $ref: '#/definitions/DTO.ServicePopulated'
         type: array
+      subdomains:
+        items:
+          $ref: '#/definitions/DTO.Subdomain'
+        type: array
       tax_id:
         example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
         type: string
     type: object
   DTO.CompanyPopulated:
     description: Company DTO Populated
     properties:
       id:
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         type: string
       tax_id:
@@ -204,20 +227,20 @@ definitions:
   DTO.CreateAppointment:
     properties:
       branch_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       client_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       employee_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       service_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       start_time:
         example: "2028-01-01T09:00:00Z"
         type: string
@@ -228,8 +251,8 @@ definitions:
         example: New York
         type: string
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       complement:
         example: Suite 100
         type: string
@@ -276,7 +299,7 @@ definitions:
   DTO.CreateCompany:
     properties:
       name:
-        example: Your Company Name
+        example: Your Company Legal Name
         type: string
       owner_email:
         example: john.clark@gmail.com
@@ -293,14 +316,20 @@ definitions:
       owner_surname:
         example: Clark
         type: string
+      start_subdomain:
+        example: agenda-yourcompany
+        type: string
       tax_id:
         example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
         type: string
     type: object
   DTO.CreateEmployee:
     properties:
       company_id:
-        type: integer
+        type: string
       email:
         example: joseph.doe@example.com
         type: string
@@ -325,8 +354,8 @@ definitions:
   DTO.CreateService:
     properties:
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       description:
         example: A 60-minute in-depth business consultation
         type: string
@@ -353,23 +382,24 @@ definitions:
       company:
         $ref: '#/definitions/DTO.CompanyPopulated'
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       email:
         example: john.doe@example.com
         type: string
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: John
         type: string
       phone:
         example: "+15555555555"
         type: string
-      role:
-        example: client
-        type: string
+      roles:
+        items:
+          $ref: '#/definitions/DTO.RolePopulated'
+        type: array
       services:
         items:
           $ref: '#/definitions/DTO.ServicePopulated'
@@ -392,12 +422,15 @@ definitions:
     type: object
   DTO.EmployeePopulated:
     properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       email:
         example: john.doe@example.com
         type: string
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: John
         type: string
@@ -436,6 +469,9 @@ definitions:
       description:
         example: Celebration of the first day of the new year
         type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: New Year's Day
         type: string
@@ -464,14 +500,31 @@ definitions:
         example: 1SecurePswd!
         type: string
     type: object
+  DTO.RolePopulated:
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      description:
+        example: Administrator role
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_system_role:
+        type: boolean
+      name:
+        example: admin
+        type: string
+    type: object
   DTO.Sector:
     properties:
       description:
         example: The Company Sector Description
         type: string
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Your Company Sector Name
         type: string
@@ -483,8 +536,8 @@ definitions:
           $ref: '#/definitions/DTO.BranchPopulated'
         type: array
       company_id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       description:
         example: A 60-minute in-depth business consultation
         type: string
@@ -496,8 +549,8 @@ definitions:
           $ref: '#/definitions/DTO.EmployeePopulated'
         type: array
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Premium Consultation
         type: string
@@ -508,9 +561,11 @@ definitions:
   DTO.ServiceDensity:
     properties:
       max_schedules_overlap:
+        example: 5
         type: integer
       service_id:
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
     type: object
   DTO.ServicePopulated:
     properties:
@@ -521,8 +576,8 @@ definitions:
         example: 60
         type: integer
       id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Premium Consultation
         type: string
@@ -530,29 +585,26 @@ definitions:
         example: 150
         type: integer
     type: object
-  DTO.TimeRange:
+  DTO.Subdomain:
     properties:
-      end:
-        example: "17:00"
+      company_id:
+        description: Foreign key to Company
+        example: 00000000-0000-0000-0000-000000000000
         type: string
-      start:
-        example: "09:00"
-        type: string
-    type: object
-  DTO.UpdateAppointment:
-    properties:
       id:
-        example: 1
-        type: integer
-      start_time:
-        example: "2028-01-01T09:00:00Z"
+        description: Primary key
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        description: Subdomain name
+        example: agenda-yourcompany
         type: string
     type: object
   DTO.UpdateBranch:
     properties:
       company_id:
-        example: 1
-        type: integer
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
       name:
         example: Main Branch Updated
         type: string
@@ -572,7 +624,7 @@ definitions:
   DTO.WorkRange:
     properties:
       branch_id:
-        type: integer
+        type: string
       end:
         description: Store as "18:00:00"
         type: string
@@ -610,6 +662,96 @@ definitions:
         items:
           $ref: '#/definitions/DTO.WorkRange'
         type: array
+    type: object
+  dJSON.AppointmentHistory:
+    properties:
+      field_changes:
+        items:
+          $ref: '#/definitions/dJSON.FieldChange'
+        type: array
+    type: object
+  dJSON.ClientAppointment:
+    properties:
+      branch_address:
+        example: 76, Example street, My city, My country, 09090790
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      company_name:
+        example: Company name example
+        type: string
+      service_name:
+        example: Service name example
+        type: string
+      start_time:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+    type: object
+  dJSON.Comment:
+    properties:
+      comment:
+        example: Some comment example text
+        type: string
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      created_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      deleted_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      from_client:
+        example: true
+        type: boolean
+      from_employee:
+        example: false
+        type: boolean
+      last_updated_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      old_versions:
+        items:
+          $ref: '#/definitions/dJSON.CommentVersion'
+        type: array
+      type:
+        description: '"internal" or "external"'
+        example: internal
+        type: string
+      updated_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+    type: object
+  dJSON.CommentVersion:
+    properties:
+      comment:
+        example: Some different version comment text
+        type: string
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      created_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+    type: object
+  dJSON.FieldChange:
+    properties:
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      field:
+        example: field_name
+        type: string
+      new_value:
+        example: new_value
+        type: string
+      old_value:
+        example: old_value
+        type: string
+      reason:
+        example: Some reason.
+        type: string
     type: object
 info:
   contact: {}
@@ -708,7 +850,7 @@ paths:
         name: appointment
         required: true
         schema:
-          $ref: '#/definitions/DTO.UpdateAppointment'
+          $ref: '#/definitions/DTO.CreateAppointment'
       produces:
       - application/json
       responses:
@@ -723,43 +865,13 @@ paths:
       summary: Update appointment
       tags:
       - Appointment
-  /auth/verify-existing-account/:
-    post:
-      consumes:
-      - application/json
-      description: Log in an client
-      parameters:
-      - description: Client
-        in: body
-        name: client
-        required: true
-        schema:
-          $ref: '#/definitions/DTO.LoginClient'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Login
-      tags:
-      - Auth
   /branch:
     post:
       consumes:
       - application/json
       description: Create a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -786,43 +898,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create branch
-      tags:
-      - Branch
-  /branch/{branch_id}/employee/{employee_id}:
-    delete:
-      description: Remove an employee from a branch
-      parameters:
-      - description: Authorization
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Branch ID
-        in: path
-        name: branch_id
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: employee_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.Branch'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Remove employee from branch
       tags:
       - Branch
   /branch/{branch_id}/employee/{employee_id}/services:
@@ -857,7 +932,7 @@ paths:
     delete:
       description: Remove a service from a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -893,7 +968,7 @@ paths:
     post:
       description: Add a service to a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -930,7 +1005,7 @@ paths:
     delete:
       description: Delete a branch by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -985,7 +1060,7 @@ paths:
       - application/json
       description: Update a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1072,7 +1147,7 @@ paths:
     delete:
       description: Delete an client
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1101,7 +1176,7 @@ paths:
       - application/json
       description: Update an client
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1135,11 +1210,43 @@ paths:
       summary: Update client
       tags:
       - Client
+  /client/{id}/appointments:
+    get:
+      description: Get only the appointments field from a client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dJSON.ClientAppointment'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get client appointments
+      tags:
+      - Client
   /client/email/{email}:
     get:
       description: Retrieve an client by its email
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1247,7 +1354,7 @@ paths:
     delete:
       description: Delete a company by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1302,7 +1409,7 @@ paths:
       - application/json
       description: Update a company by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1317,7 +1424,7 @@ paths:
         name: company
         required: true
         schema:
-          $ref: '#/definitions/DTO.Company'
+          $ref: '#/definitions/DTO.CreateCompany'
       produces:
       - application/json
       responses:
@@ -1359,6 +1466,29 @@ paths:
       summary: Get company by name
       tags:
       - Company
+  /company/subdomain/{subdomain_name}:
+    get:
+      description: Retrieve a company by its subdomain
+      parameters:
+      - description: Subdomain Name
+        in: path
+        name: subdomain_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Company'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get company ID by subdomain
+      tags:
+      - Company
   /company/tax_id/{tax_id}:
     get:
       description: Retrieve a company by its tax identification number
@@ -1388,7 +1518,7 @@ paths:
       - application/json
       description: Create an employee
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1421,7 +1551,7 @@ paths:
     delete:
       description: Remove an employee from a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1457,7 +1587,7 @@ paths:
     post:
       description: Add an employee to a branch
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1494,7 +1624,7 @@ paths:
     delete:
       description: Remove a service from an employee
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1532,7 +1662,7 @@ paths:
       - application/json
       description: Add a service to an employee
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1569,7 +1699,7 @@ paths:
     delete:
       description: Delete an employee by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1600,7 +1730,7 @@ paths:
     get:
       description: Retrieve an employee by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1633,7 +1763,7 @@ paths:
       - application/json
       description: Update an employee
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1671,7 +1801,7 @@ paths:
     get:
       description: Retrieve an employee by its email
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1755,7 +1885,7 @@ paths:
       - application/json
       description: Create a holiday
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1788,7 +1918,7 @@ paths:
     delete:
       description: Delete a holiday by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1843,7 +1973,7 @@ paths:
       - application/json
       description: Update a holiday
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -1904,14 +2034,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a company type
+      description: Create a sector
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
         type: string
-      - description: Company Type
+      - description: sector
         in: body
         name: sector
         required: true
@@ -1932,19 +2062,19 @@ paths:
           description: Unauthorized
       security:
       - ApiKeyAuth: []
-      summary: Create company type
+      summary: Create sector
       tags:
       - Sector
   /sector/{id}:
     delete:
-      description: Delete a company type by its ID
+      description: Delete a sector by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
         type: string
-      - description: Company Type ID
+      - description: sector ID
         in: path
         name: id
         required: true
@@ -1964,13 +2094,13 @@ paths:
             $ref: '#/definitions/DTO.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Delete company type by ID
+      summary: Delete sector by ID
       tags:
       - Sector
     get:
-      description: Retrieve a company type by its ID
+      description: Retrieve a sector by its ID
       parameters:
-      - description: Company Type ID
+      - description: sector ID
         in: path
         name: id
         required: true
@@ -1986,25 +2116,25 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Get company type by ID
+      summary: Get sector by ID
       tags:
       - Sector
     patch:
       consumes:
       - application/json
-      description: Update a company type by its ID
+      description: Update a sector by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
         type: string
-      - description: Company Type ID
+      - description: sector ID
         in: path
         name: id
         required: true
         type: string
-      - description: Company Type
+      - description: sector
         in: body
         name: sector
         required: true
@@ -2025,14 +2155,14 @@ paths:
             $ref: '#/definitions/DTO.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Update company type by ID
+      summary: Update sector by ID
       tags:
       - Sector
   /sector/name/{name}:
     get:
-      description: Retrieve a company type by its ID
+      description: Retrieve a sector by its ID
       parameters:
-      - description: Company Type ID
+      - description: sector ID
         in: path
         name: id
         required: true
@@ -2048,7 +2178,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Get company type by ID
+      summary: Get sector by ID
       tags:
       - Sector
   /service:
@@ -2057,7 +2187,7 @@ paths:
       - application/json
       description: Create a service
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -2090,7 +2220,7 @@ paths:
     delete:
       description: Delete a service by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
@@ -2141,7 +2271,7 @@ paths:
       - application/json
       description: Update a service by its ID
       parameters:
-      - description: Authorization
+      - description: X-Auth-Token
         in: header
         name: Authorization
         required: true
