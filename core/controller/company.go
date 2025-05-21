@@ -2,6 +2,7 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	dJSON "agenda-kaki-go/core/config/api/dto/json"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
@@ -359,7 +360,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Param banner formData file false "Banner image"
 // @Param favicon formData file false "Favicon image"
 // @Param background formData file false "Background image"
-// @Success 200 {object} DTO.Company
+// @Success 200 {object} dJSON.Design
 // @Failure 400 {object} DTO.ErrorResponse
 // @Router /company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
@@ -423,7 +424,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{})
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
 }
 
 // @Summary Delete a specific company design image
@@ -433,7 +434,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Param Authorization header string true "X-Auth-Token"
 // @Param id path string true "Company ID"
 // @Param image_type path string true "Type of image to delete (logo, banner, favicon, background)"
-// @Success 200 {object} DTO.Company
+// @Success 200 {object} dJSON.Design
 // @Failure 400 {object} DTO.ErrorResponse
 // @Router /company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
@@ -472,7 +473,7 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 		return err
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{})
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
 }
 
 // Constructor for company_controller
