@@ -21,7 +21,7 @@ type EndPoint struct {
 	Resource         *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 
-func (EndPoint) TableName() string { return "public.endpoints" }
+func (EndPoint) TableName() string  { return "public.endpoints" }
 func (EndPoint) SchemaType() string { return "public" }
 
 func (EndPoint) Indexes() map[string]string {
@@ -271,7 +271,7 @@ var UpdateCompanyImages = &EndPoint{
 var DeleteCompanyImage = &EndPoint{
 	Path:             "/company/:id/design/images/:image_type",
 	Method:           namespace.DeleteActionMethod,
-	ControllerName:   "DeleteCompanyImages",
+	ControllerName:   "DeleteCompanyImage",
 	Description:      "Delete company design images",
 	DenyUnauthorized: true,
 	NeedsCompanyId:   true,
@@ -569,6 +569,8 @@ var endpoints = []*EndPoint{
 	GetCompanyBySubdomain,
 	UpdateCompanyById,
 	DeleteCompanyById,
+	UpdateCompanyImages,
+	DeleteCompanyImage,
 	// Employee
 	CreateEmployee,
 	LoginEmployee,

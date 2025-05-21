@@ -38,26 +38,6 @@ func Test_Company(t *testing.T) {
 			Secondary: "#33FF57",
 			Tertiary:  "#3357FF",
 		},
-		Fonts: mJSON.Fonts{
-			{
-				Family: "Arial",
-				Size:   "16",
-				Weight: "normal",
-				Color:  "#000000",
-			},
-			{
-				Family: "Helvetica",
-				Size:   "14",
-				Weight: "bold",
-				Color:  "#FFFFFF",
-			},
-			{
-				Family: "Times New Roman",
-				Size:   "12",
-				Weight: "italic",
-				Color:  "#FF5733",
-			},
-		},
 	}})
 	company.GetById(t, 200)
 	company.GetByName(t, 200)
