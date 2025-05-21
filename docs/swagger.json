@@ -1162,6 +1162,129 @@
                 }
             }
         },
+        "/company/{id}/design/images": {
+            "patch": {
+                "description": "Upload and update design images (logo, banner, etc.)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Update company design images",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo image",
+                        "name": "logo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Banner image",
+                        "name": "banner",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Favicon image",
+                        "name": "favicon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Background image",
+                        "name": "background",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dJSON.Design"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/company/{id}/design/images/{image_type}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete logo, banner, favicon or background",
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Delete a specific company design image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Type of image to delete (logo, banner, favicon, background)",
+                        "name": "image_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dJSON.Design"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employee": {
             "post": {
                 "security": [
@@ -3410,6 +3533,27 @@
                 }
             }
         },
+        "dJSON.Colors": {
+            "type": "object",
+            "properties": {
+                "primary": {
+                    "type": "string",
+                    "example": "#FF5733"
+                },
+                "quaternary": {
+                    "type": "string",
+                    "example": "#FF33A1"
+                },
+                "secondary": {
+                    "type": "string",
+                    "example": "#33FF57"
+                },
+                "tertiary": {
+                    "type": "string",
+                    "example": "#3357FF"
+                }
+            }
+        },
         "dJSON.Comment": {
             "type": "object",
             "properties": {
@@ -3475,6 +3619,17 @@
                 }
             }
         },
+        "dJSON.Design": {
+            "type": "object",
+            "properties": {
+                "colors": {
+                    "$ref": "#/definitions/dJSON.Colors"
+                },
+                "images": {
+                    "$ref": "#/definitions/dJSON.Images"
+                }
+            }
+        },
         "dJSON.FieldChange": {
             "type": "object",
             "properties": {
@@ -3497,6 +3652,27 @@
                 "reason": {
                     "type": "string",
                     "example": "Some reason."
+                }
+            }
+        },
+        "dJSON.Images": {
+            "type": "object",
+            "properties": {
+                "background_url": {
+                    "type": "string",
+                    "example": "https://example.com/background.png"
+                },
+                "banner_url": {
+                    "type": "string",
+                    "example": "https://example.com/banner.png"
+                },
+                "favicon_url": {
+                    "type": "string",
+                    "example": "https://example.com/favicon.png"
+                },
+                "logo_url": {
+                    "type": "string",
+                    "example": "https://example.com/logo.png"
                 }
             }
         },
@@ -3523,37 +3699,8 @@
                 "colors": {
                     "$ref": "#/definitions/mJSON.Colors"
                 },
-                "custom_css": {
-                    "type": "string"
-                },
-                "dark_mode": {
-                    "type": "boolean"
-                },
-                "fonts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mJSON.Font"
-                    }
-                },
                 "images": {
                     "$ref": "#/definitions/mJSON.Images"
-                }
-            }
-        },
-        "mJSON.Font": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "family": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "string"
-                },
-                "weight": {
-                    "type": "string"
                 }
             }
         },

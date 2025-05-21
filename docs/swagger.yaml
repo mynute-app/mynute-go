@@ -704,6 +704,21 @@ definitions:
         example: "2021-01-01T09:00:00Z"
         type: string
     type: object
+  dJSON.Colors:
+    properties:
+      primary:
+        example: '#FF5733'
+        type: string
+      quaternary:
+        example: '#FF33A1'
+        type: string
+      secondary:
+        example: '#33FF57'
+        type: string
+      tertiary:
+        example: '#3357FF'
+        type: string
+    type: object
   dJSON.Comment:
     properties:
       comment:
@@ -751,6 +766,13 @@ definitions:
         example: 00000000-0000-0000-0000-000000000000
         type: string
     type: object
+  dJSON.Design:
+    properties:
+      colors:
+        $ref: '#/definitions/dJSON.Colors'
+      images:
+        $ref: '#/definitions/dJSON.Images'
+    type: object
   dJSON.FieldChange:
     properties:
       created_at:
@@ -769,6 +791,21 @@ definitions:
         example: Some reason.
         type: string
     type: object
+  dJSON.Images:
+    properties:
+      background_url:
+        example: https://example.com/background.png
+        type: string
+      banner_url:
+        example: https://example.com/banner.png
+        type: string
+      favicon_url:
+        example: https://example.com/favicon.png
+        type: string
+      logo_url:
+        example: https://example.com/logo.png
+        type: string
+    type: object
   mJSON.Colors:
     properties:
       primary:
@@ -784,27 +821,8 @@ definitions:
     properties:
       colors:
         $ref: '#/definitions/mJSON.Colors'
-      custom_css:
-        type: string
-      dark_mode:
-        type: boolean
-      fonts:
-        items:
-          $ref: '#/definitions/mJSON.Font'
-        type: array
       images:
         $ref: '#/definitions/mJSON.Images'
-    type: object
-  mJSON.Font:
-    properties:
-      color:
-        type: string
-      family:
-        type: string
-      size:
-        type: string
-      weight:
-        type: string
     type: object
   mJSON.Images:
     properties:
@@ -1505,6 +1523,87 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update company by ID
+      tags:
+      - Company
+  /company/{id}/design/images:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Upload and update design images (logo, banner, etc.)
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Logo image
+        in: formData
+        name: logo
+        type: file
+      - description: Banner image
+        in: formData
+        name: banner
+        type: file
+      - description: Favicon image
+        in: formData
+        name: favicon
+        type: file
+      - description: Background image
+        in: formData
+        name: background
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Design'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      summary: Update company design images
+      tags:
+      - Company
+  /company/{id}/design/images/{image_type}:
+    delete:
+      description: Delete logo, banner, favicon or background
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Type of image to delete (logo, banner, favicon, background)
+        in: path
+        name: image_type
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Design'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a specific company design image
       tags:
       - Company
   /company/name/{name}:

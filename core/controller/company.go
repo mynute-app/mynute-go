@@ -348,21 +348,21 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 	return nil
 }
 
-// @Summary Update company design images
-// @Description Upload and update design images (logo, banner, etc.)
-// @Tags Company
-// @Accept multipart/form-data
-// @Produce json
-// @Param Authorization header string true "X-Auth-Token"
-// @Failure 401 {object} nil
-// @Param id path string true "Company ID"
-// @Param logo formData file false "Logo image"
-// @Param banner formData file false "Banner image"
-// @Param favicon formData file false "Favicon image"
-// @Param background formData file false "Background image"
-// @Success 200 {object} dJSON.Design
-// @Failure 400 {object} DTO.ErrorResponse
-// @Router /company/{id}/design/images [patch]
+//	@Summary		Update company design images
+//	@Description	Upload and update design images (logo, banner, etc.)
+//	@Tags			Company
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Company ID"
+//	@Param			logo			formData	file	false	"Logo image"
+//	@Param			banner			formData	file	false	"Banner image"
+//	@Param			favicon			formData	file	false	"Favicon image"
+//	@Param			background		formData	file	false	"Background image"
+//	@Success		200				{object}	dJSON.Design
+//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
 	tx, end, err := database.ContextTransaction(c)
 	defer end()
@@ -427,16 +427,16 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
 }
 
-// @Summary Delete a specific company design image
-// @Description Delete logo, banner, favicon or background
-// @Tags Company
-// @Security ApiKeyAuth
-// @Param Authorization header string true "X-Auth-Token"
-// @Param id path string true "Company ID"
-// @Param image_type path string true "Type of image to delete (logo, banner, favicon, background)"
-// @Success 200 {object} dJSON.Design
-// @Failure 400 {object} DTO.ErrorResponse
-// @Router /company/{id}/design/images/{image_type} [delete]
+//	@Summary		Delete a specific company design image
+//	@Description	Delete logo, banner, favicon or background
+//	@Tags			Company
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			id				path		string	true	"Company ID"
+//	@Param			image_type		path		string	true	"Type of image to delete (logo, banner, favicon, background)"
+//	@Success		200				{object}	dJSON.Design
+//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Router			/company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
 	tx, end, err := database.ContextTransaction(c)
 	defer end()
