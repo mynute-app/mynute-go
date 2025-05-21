@@ -260,7 +260,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.CompanyPublic{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.CompanyPublic{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
