@@ -95,7 +95,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetOneById retrieves a company by ID
+// GetCompanyById retrieves a company by ID
 //
 //	@Summary		Get company by ID
 //	@Description	Retrieve a company by its ID
@@ -134,7 +134,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetOneByName retrieves a company by name
+// GetCompanyByName retrieves a company by name
 //
 //	@Summary		Get company by name
 //	@Description	Retrieve a company by its name
@@ -178,7 +178,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetOneByTaxId retrieves a company by tax ID
+// GetCompanyByTaxId retrieves a company by tax ID
 //
 //	@Summary		Get company by tax ID
 //	@Description	Retrieve a company by its tax identification number
@@ -224,7 +224,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Param			subdomain_name	path	string	true	"Subdomain Name"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Company
+//	@Success		200	{object}	DTO.CompanyPublic
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/company/subdomain/{subdomain_name} [get]
 func GetCompanyBySubdomain(c *fiber.Ctx) error {
@@ -260,13 +260,9 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.Company{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, company, &DTO.CompanyPublic{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-
-	// if err := lib.ResponseFactory(c).Send(200, subdomain.CompanyID.String()); err != nil {
-	// 	return lib.Error.General.InternalError.WithError(err)
-	// }
 
 	return nil
 }

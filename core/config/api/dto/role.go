@@ -7,7 +7,6 @@ type Role struct {
 	Name         string    `json:"name" example:"admin"`
 	Description  string    `json:"description" example:"Administrator role"`
 	CompanyID    uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Company      CompanyPopulated
 	IsSystemRole bool `json:"is_system_role"`
 }
 

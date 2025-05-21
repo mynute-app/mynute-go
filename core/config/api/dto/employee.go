@@ -55,7 +55,6 @@ type Employee struct {
 	WorkSchedule WorkSchedule       `json:"work_schedule"`
 	Appointments []Appointment      `json:"appointments"`
 	CompanyID    uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Company      CompanyPopulated   `json:"company"`
 	Branches     []BranchPopulated  `json:"branches"`
 	Services     []ServicePopulated `json:"services"`
 	Roles        []RolePopulated    `json:"roles"`
