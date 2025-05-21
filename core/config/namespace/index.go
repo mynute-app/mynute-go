@@ -123,3 +123,6 @@ var (
 	UpdateActionMethod = "PATCH"
 	DeleteActionMethod = "DELETE"
 )
+
+var UploadsFolder = "my_files"
+var StaticServerFolder = "static"

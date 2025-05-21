@@ -10,17 +10,6 @@ import (
 type DesignConfig struct {
 	Colors    Colors `json:"colors"`
 	Images    Images `json:"images"`
-	Fonts     Fonts  `json:"fonts"`
-	DarkMode  bool   `json:"dark_mode"`
-	CustomCSS string `json:"custom_css"`
-}
-
-type Fonts []Font
-type Font struct {
-	Family string `json:"family"`
-	Size   string `json:"size"`
-	Weight string `json:"weight"`
-	Color  string `json:"color"`
 }
 
 type Colors struct {
@@ -37,12 +26,20 @@ type Images struct {
 	FaviconURL    string `json:"favicon_url"`
 }
 
-func SaveDesignImage(oldURL string, newFile []byte, originalFilename string) (string, error) {
-	up, err := uploader.FileUploader()
+func (d DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilename string, newFile []byte) (string, error) {
+	up, err := uploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return "", err
 	}
 	return up.Replace("image", oldURL, newFile, originalFilename)
+}
+
+func (d DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error {
+	up, err := uploader.FileUploader(caller_entity, caller_id)
+	if err != nil {
+		return err
+	}
+	return up.Delete(oldURL)
 }
 
 

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/api/routes"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -38,6 +39,9 @@ func NewServer() *Server {
 	app_env := os.Getenv("APP_ENV")
 	if app_env == "test" {
 		db.Test().Clear()
+	}
+	if app_env == "dev" || app_env == "test" {
+		app.Static(namespace.StaticServerFolder, namespace.UploadsFolder)
 	}
 	db.Migrate(model.GeneralModels)
 	if err := Seed(db.Gorm); err != nil {

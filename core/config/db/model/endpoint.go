@@ -259,6 +259,24 @@ var UpdateCompanyById = &EndPoint{
 	NeedsCompanyId:   true,
 	Resource:         CompanyResource,
 }
+var UpdateCompanyImages = &EndPoint{
+	Path:             "/company/:id/design/images",
+	Method:           namespace.UpdateActionMethod,
+	ControllerName:   "UpdateCompanyImages",
+	Description:      "Update company design images",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         CompanyResource,
+}
+var DeleteCompanyImage = &EndPoint{
+	Path:             "/company/:id/design/images/:image_type",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteCompanyImages",
+	Description:      "Delete company design images",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         CompanyResource,
+}
 var DeleteCompanyById = &EndPoint{
 	Path:             "/company/:id",
 	Method:           namespace.DeleteActionMethod,

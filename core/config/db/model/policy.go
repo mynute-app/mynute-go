@@ -25,7 +25,7 @@ type PolicyRule struct {
 	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
-func (PolicyRule) TableName() string { return "public.policy_rules" }
+func (PolicyRule) TableName() string  { return "public.policy_rules" }
 func (PolicyRule) SchemaType() string { return "public" }
 
 func (PolicyRule) Indexes() map[string]string {
@@ -927,6 +927,22 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 	}
 
+	var AllowUpdateCompanyImages = &PolicyRule{
+		Name:        "SDP: CanUpdateCompanyImages",
+		Description: "Allows company Owner or General Manager to update company images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateCompanyImages.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+	}
+
+	var AllowDeleteCompanyImage = &PolicyRule{
+		Name:        "SDP: CanDeleteCompanyImage",
+		Description: "Allows company Owner or General Manager to delete company images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteCompanyImage.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+	}
+
 	var AllowAddServiceToEmployee = &PolicyRule{
 		Name:        "SDP: CanAddServiceToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
@@ -1081,6 +1097,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetCompanyById,
 		AllowUpdateCompanyById,
 		AllowDeleteCompanyById,
+		AllowUpdateCompanyImages,
+		AllowDeleteCompanyImage,
 
 		// Employees
 		AllowCreateEmployee,
@@ -1115,8 +1133,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 }
 
 type PolicyCfg struct {
-	AllowNilCompanyID  bool // Allow policies to be created without company_id
-	AllowNilCreatedBy  bool // Allow policies to be created without created_by
+	AllowNilCompanyID bool // Allow policies to be created without company_id
+	AllowNilCreatedBy bool // Allow policies to be created without created_by
 }
 
 func Policies(cfg *PolicyCfg) ([]*PolicyRule, func()) {

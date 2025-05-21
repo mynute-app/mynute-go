@@ -3,7 +3,9 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
+	uploader "agenda-kaki-go/core/lib/Uploader"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -27,6 +29,51 @@ func (Company) SchemaType() string { return "public" }
 func (c *Company) GenerateSchemaName() string {
 	return "company" + "_" + c.ID.String()
 }
+
+func (c *Company) BeforeUpdate(tx *gorm.DB) error {
+	return c.CheckDesignImageOwnershipBeforeUpdate(tx)
+}
+
+func (c *Company) CheckDesignImageOwnershipBeforeUpdate(tx *gorm.DB) error {
+	// carregar a versão antiga no banco
+	var old Company
+	if err := tx.Unscoped().Model(&Company{}).Where("id = ?", c.ID).First(&old).Error; err != nil {
+		return err
+	}
+
+	oldImgs := old.Design.Images
+	newImgs := c.Design.Images
+
+	// map[string]string{nomeCampo: url}
+	imagePairs := map[string][2]string{
+		"logo":      {oldImgs.LogoURL, newImgs.LogoURL},
+		"banner":    {oldImgs.BannerURL, newImgs.BannerURL},
+		"favicon":   {oldImgs.FaviconURL, newImgs.FaviconURL},
+		"background": {oldImgs.BackgroundURL, newImgs.BackgroundURL},
+	}
+
+	for key, pair := range imagePairs {
+		oldURL := pair[0]
+		newURL := pair[1]
+
+		if oldURL != newURL && newURL != "" {
+			if !imageBelongsToCompany(c.ID, newURL) {
+				return lib.Error.General.BadRequest.WithError(
+					fmt.Errorf("image in field '%s' does not belong to this company", key),
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+func imageBelongsToCompany(companyID uuid.UUID, imageURL string) bool {
+	filename := uploader.ExtractFilenameFromURL(imageURL)
+	return strings.Contains(filename, companyID.String())
+}
+
+
 
 func (c *Company) MigrateSchema(tx *gorm.DB) error {
 	c.SchemaName = c.GenerateSchemaName()

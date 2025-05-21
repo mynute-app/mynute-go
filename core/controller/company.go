@@ -4,7 +4,6 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -378,16 +377,26 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 
 	// Upload e atualização dos campos
 	files := map[string]*string{
-		"logo":      &company.Design.Images.LogoURL,
-		"banner":    &company.Design.Images.BannerURL,
-		"favicon":   &company.Design.Images.FaviconURL,
+		"logo":       &company.Design.Images.LogoURL,
+		"banner":     &company.Design.Images.BannerURL,
+		"favicon":    &company.Design.Images.FaviconURL,
 		"background": &company.Design.Images.BackgroundURL,
 	}
+
+	var uploadedFilesURL []string
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			for _, url := range uploadedFilesURL {
+				_ = company.Design.DeleteImage("company", company.ID.String(), url)
+			}
+		}
+	}()
 
 	for fieldName, target := range files {
 		file, err := c.FormFile(fieldName)
 		if err != nil {
-			continue // Campo não enviado
+			continue
 		}
 		f, err := file.Open()
 		if err != nil {
@@ -395,18 +404,69 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		}
 		defer f.Close()
 
-		buf := make([]byte, file.Size)
-		if _, err := f.Read(buf); err != nil {
-			return err
+		newFile := make([]byte, file.Size)
+		if _, err := f.Read(newFile); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
 		}
 
-		url, err := mJSON.SaveDesignImage(*target, buf, file.Filename)
+		url, err := company.Design.SaveImage(company.TableName(), company.ID.String(), *target, file.Filename, newFile)
 		if err != nil {
-			return err
+			return lib.Error.General.InternalError.WithError(err)
 		}
+
+		uploadedFilesURL = append(uploadedFilesURL, url)
 
 		*target = url
 	}
+
+	if err := tx.Save(&company).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{})
+}
+
+// @Summary Delete a specific company design image
+// @Description Delete logo, banner, favicon or background
+// @Tags Company
+// @Security ApiKeyAuth
+// @Param Authorization header string true "X-Auth-Token"
+// @Param id path string true "Company ID"
+// @Param image_type path string true "Type of image to delete (logo, banner, favicon, background)"
+// @Success 200 {object} DTO.Company
+// @Failure 400 {object} DTO.ErrorResponse
+// @Router /company/{id}/design/images/{image_type} [delete]
+func DeleteCompanyImage(c *fiber.Ctx) error {
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var company model.Company
+	id := c.Params("id")
+	if err := tx.First(&company, "id = ?", id).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	imageType := c.Params("image_type")
+	ptrMap := map[string]*string{
+		"logo":       &company.Design.Images.LogoURL,
+		"banner":     &company.Design.Images.BannerURL,
+		"favicon":    &company.Design.Images.FaviconURL,
+		"background": &company.Design.Images.BackgroundURL,
+	}
+
+	target, ok := ptrMap[imageType]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("unsupported image_type: %s", imageType))
+	}
+
+	if err := company.Design.DeleteImage(company.TableName(), id, *target); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	*target = ""
 
 	if err := tx.Save(&company).Error; err != nil {
 		return err
@@ -414,7 +474,6 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 
 	return lib.ResponseFactory(c).SendDTO(200, &company, &DTO.Company{})
 }
-
 
 // Constructor for company_controller
 func Company(Gorm *handler.Gorm) {
@@ -425,6 +484,8 @@ func Company(Gorm *handler.Gorm) {
 		GetCompanyByName,
 		GetCompanyByTaxId,
 		GetCompanyBySubdomain,
+		UpdateCompanyImages,
+		DeleteCompanyImage,
 		UpdateCompanyById,
 		DeleteCompanyById,
 	})

@@ -1,6 +1,7 @@
 package uploader
 
 import (
+	"agenda-kaki-go/core/lib"
 	"errors"
 	"os"
 )
@@ -11,21 +12,16 @@ type Uploader interface {
 	Replace(fileType string, oldFilename string, newFile []byte, newFilename string) (string, error)
 }
 
-func Save(fileType string, file []byte, filename string) (string, error) {
-	uploader, err := FileUploader()
-	if err != nil {
-		return "", err
-	}
-	return uploader.Save(fileType, file, filename)
-}
-
-func FileUploader() (Uploader, error) {
+func FileUploader(caller_entity string, caller_id string) (Uploader, error) {
 	switch os.Getenv("APP_ENV") {
 	case "prod":
-		return &S3Uploader{}, nil
-	case "test", "dev", "":
-		return &LocalUploader{}, nil
+		return NewS3Uploader(caller_entity, caller_id)
+	case "test", "dev":
+		return &LocalUploader{
+			Entity:   caller_entity,
+			EntityID: caller_id,
+		}, nil
 	default:
-		return nil, errors.New("unknown APP_ENV")
+		return nil, lib.Error.General.InternalError.WithError(errors.New("unknown APP_ENV"))
 	}
 }
