@@ -1,6 +1,7 @@
 package mJSON
 
 import (
+	uploader "agenda-kaki-go/core/lib/Uploader"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -35,6 +36,15 @@ type Images struct {
 	BackgroundURL string `json:"background_url"`
 	FaviconURL    string `json:"favicon_url"`
 }
+
+func SaveDesignImage(oldURL string, newFile []byte, originalFilename string) (string, error) {
+	up, err := uploader.FileUploader()
+	if err != nil {
+		return "", err
+	}
+	return up.Replace("image", oldURL, newFile, originalFilename)
+}
+
 
 func (d DesignConfig) Value() (driver.Value, error) {
 	return json.Marshal(d)
