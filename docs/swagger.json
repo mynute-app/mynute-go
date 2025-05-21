@@ -972,7 +972,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Company"
+                            "$ref": "#/definitions/DTO.CompanyPublic"
                         }
                     },
                     "404": {
@@ -2675,6 +2675,9 @@
                         "$ref": "#/definitions/DTO.BranchPopulated"
                     }
                 },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
+                },
                 "employees": {
                     "type": "array",
                     "items": {
@@ -2718,19 +2721,41 @@
                 }
             }
         },
-        "DTO.CompanyPopulated": {
+        "DTO.CompanyPublic": {
             "description": "Company DTO Populated",
             "type": "object",
             "properties": {
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
+                },
                 "id": {
+                    "description": "Primary key",
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "name": {
-                    "type": "string"
+                "legal_name": {
+                    "type": "string",
+                    "example": "Your Company Legal Name"
+                },
+                "sectors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Sector"
+                    }
+                },
+                "subdomains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Subdomain"
+                    }
                 },
                 "tax_id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "00000000000000"
+                },
+                "trading_name": {
+                    "type": "string",
+                    "example": "Your Company Trading Name"
                 }
             }
         },
@@ -2948,9 +2973,6 @@
                     "items": {
                         "$ref": "#/definitions/DTO.BranchPopulated"
                     }
-                },
-                "company": {
-                    "$ref": "#/definitions/DTO.CompanyPopulated"
                 },
                 "company_id": {
                     "type": "string",
@@ -3475,6 +3497,80 @@
                 "reason": {
                     "type": "string",
                     "example": "Some reason."
+                }
+            }
+        },
+        "mJSON.Colors": {
+            "type": "object",
+            "properties": {
+                "primary": {
+                    "type": "string"
+                },
+                "quaternary": {
+                    "type": "string"
+                },
+                "secondary": {
+                    "type": "string"
+                },
+                "tertiary": {
+                    "type": "string"
+                }
+            }
+        },
+        "mJSON.DesignConfig": {
+            "type": "object",
+            "properties": {
+                "colors": {
+                    "$ref": "#/definitions/mJSON.Colors"
+                },
+                "custom_css": {
+                    "type": "string"
+                },
+                "dark_mode": {
+                    "type": "boolean"
+                },
+                "fonts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mJSON.Font"
+                    }
+                },
+                "images": {
+                    "$ref": "#/definitions/mJSON.Images"
+                }
+            }
+        },
+        "mJSON.Font": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "family": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "string"
+                }
+            }
+        },
+        "mJSON.Images": {
+            "type": "object",
+            "properties": {
+                "background_url": {
+                    "type": "string"
+                },
+                "banner_url": {
+                    "type": "string"
+                },
+                "favicon_url": {
+                    "type": "string"
+                },
+                "logo_url": {
+                    "type": "string"
                 }
             }
         }

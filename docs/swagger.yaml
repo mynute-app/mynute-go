@@ -183,6 +183,8 @@ definitions:
         items:
           $ref: '#/definitions/DTO.BranchPopulated'
         type: array
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       employees:
         items:
           $ref: '#/definitions/DTO.EmployeePopulated'
@@ -213,15 +215,31 @@ definitions:
         example: Your Company Trading Name
         type: string
     type: object
-  DTO.CompanyPopulated:
+  DTO.CompanyPublic:
     description: Company DTO Populated
     properties:
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       id:
+        description: Primary key
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      name:
+      legal_name:
+        example: Your Company Legal Name
         type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
+      subdomains:
+        items:
+          $ref: '#/definitions/DTO.Subdomain'
+        type: array
       tax_id:
+        example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
         type: string
     type: object
   DTO.CreateAppointment:
@@ -379,8 +397,6 @@ definitions:
         items:
           $ref: '#/definitions/DTO.BranchPopulated'
         type: array
-      company:
-        $ref: '#/definitions/DTO.CompanyPopulated'
       company_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
@@ -751,6 +767,54 @@ definitions:
         type: string
       reason:
         example: Some reason.
+        type: string
+    type: object
+  mJSON.Colors:
+    properties:
+      primary:
+        type: string
+      quaternary:
+        type: string
+      secondary:
+        type: string
+      tertiary:
+        type: string
+    type: object
+  mJSON.DesignConfig:
+    properties:
+      colors:
+        $ref: '#/definitions/mJSON.Colors'
+      custom_css:
+        type: string
+      dark_mode:
+        type: boolean
+      fonts:
+        items:
+          $ref: '#/definitions/mJSON.Font'
+        type: array
+      images:
+        $ref: '#/definitions/mJSON.Images'
+    type: object
+  mJSON.Font:
+    properties:
+      color:
+        type: string
+      family:
+        type: string
+      size:
+        type: string
+      weight:
+        type: string
+    type: object
+  mJSON.Images:
+    properties:
+      background_url:
+        type: string
+      banner_url:
+        type: string
+      favicon_url:
+        type: string
+      logo_url:
         type: string
     type: object
 info:
@@ -1481,7 +1545,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyPublic'
         "404":
           description: Not Found
           schema:
