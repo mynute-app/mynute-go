@@ -5,7 +5,7 @@ import (
 	_ "agenda-kaki-go/docs"
 )
 
-//	@title						Fiber Example API
+//	@title						GO-Fiber API
 //	@version					1.0
 //	@description				Swagger API for testing and debugging
 //	@termsOfService				http://swagger.io/terms/
