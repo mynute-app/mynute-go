@@ -30,22 +30,96 @@ func Test_Appointment(t *testing.T) {
 	ct.Update(t, 200, map[string]any{"name": "Updated client Name"})
 	ct.GetByEmail(t, 200)
 	cy := &Company{}
-	cy.Set(t)
-	b := cy.branches[0]
-	e := cy.employees[0]
-	s := cy.services[0]
+	cy.Set(t) // This sets up company, employees (with schedules), branches, services.
+
+	// We will primarily use one employee for these tests.
+	// The findValidAppointmentSlot function will determine suitable branch and service.
+	if len(cy.employees) == 0 {
+		t.Fatalf("Test setup failed: No employees created by cy.Set(t)")
+	}
+	baseEmployee := cy.employees[0]
+
 	a := []*Appointment{}
+
+	// --- Test Case 0: Successful creation by client ---
 	a = append(a, &Appointment{})
-	a[0].Create(t, 200, ct.auth_token, nil, b, e, s, cy, ct)
+	// Find a valid slot for the base employee. Using time.Local for preferred location.
+	slot0, found0 := findValidAppointmentSlot(t, baseEmployee, cy, time.Local)
+	if !found0 {
+		t.Fatalf("Test setup failed: Could not find any valid appointment slot for employee %s for test case a[0]", baseEmployee.created.ID)
+	}
+	// Retrieve the actual Branch and Service objects based on IDs from slot0
+	branchForSlot0 := getBranchByID(t, cy, slot0.BranchID)
+	serviceForSlot0 := getServiceByID(t, cy, slot0.ServiceID)
+	a[0].Create(t, 200, ct.auth_token, &slot0.StartTimeRFC3339, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
+
+	// --- Test Case 1: Another successful creation by client ---
+	// The employee's appointments list (baseEmployee.created.Appointments) should have been updated by a[0].Create(),
+	// so findValidAppointmentSlot should now find the *next* available slot.
 	a = append(a, &Appointment{})
-	a1StartTime := lib.GenerateDateRFC3339(2027, 10, 28)
-	a[1].Create(t, 200, ct.auth_token, &a1StartTime, b, e, s, cy, ct)
+	slot1, found1 := findValidAppointmentSlot(t, baseEmployee, cy, time.Local)
+	if !found1 {
+		t.Fatalf("Test setup failed: Could not find a second valid appointment slot for employee %s for test case a[1]", baseEmployee.created.ID)
+	}
+	branchForSlot1 := getBranchByID(t, cy, slot1.BranchID)
+	serviceForSlot1 := getServiceByID(t, cy, slot1.ServiceID)
+	a[1].Create(t, 200, ct.auth_token, &slot1.StartTimeRFC3339, branchForSlot1, baseEmployee, serviceForSlot1, cy, ct)
+
+	// --- Test Case 2: Successful creation by company owner ---
 	a = append(a, &Appointment{})
-	a2StartTime := lib.GenerateDateRFC3339(2027, 10, 27)
-	a[2].Create(t, 200, cy.owner.auth_token, &a2StartTime, b, e, s, cy, ct)
-	startTimeStr := ct.created.Appointments[0].StartTime.Format(time.RFC3339)
+	slot2, found2 := findValidAppointmentSlot(t, baseEmployee, cy, time.Local)
+	if !found2 {
+		t.Fatalf("Test setup failed: Could not find a third valid appointment slot for employee %s for test case a[2]", baseEmployee.created.ID)
+	}
+	branchForSlot2 := getBranchByID(t, cy, slot2.BranchID)
+	serviceForSlot2 := getServiceByID(t, cy, slot2.ServiceID)
+	a[2].Create(t, 200, cy.owner.auth_token, &slot2.StartTimeRFC3339, branchForSlot2, baseEmployee, serviceForSlot2, cy, ct)
+
+	// --- Test Case 3: Attempt to create conflicting appointment (expects 400) ---
+	// This test uses the details of the first successfully created appointment (a[0]) to force a conflict.
+	if a[0].created.ID == uuid.Nil {
+		t.Fatalf("Prerequisite failed for Test Case 3: a[0].created appointment is nil. Cannot test conflict.")
+	}
+	// The start time for the conflict is the same as a[0]'s start time.
+	startTimeForConflict := a[0].created.StartTime.Format(time.RFC3339)
+	// The branch, employee, service must be the same as a[0] to ensure a direct conflict.
+	// branchForSlot0, baseEmployee, serviceForSlot0 are already the correct objects.
 	a = append(a, &Appointment{})
-	a[3].Create(t, 400, ct.auth_token, &startTimeStr, b, e, s, cy, ct)
+	a[3].Create(t, 400, ct.auth_token, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
+}
+
+// Helper functions to retrieve Branch and Service objects from Company test setup data
+func getBranchByID(t *testing.T, company *Company, branchIDStr string) *Branch {
+	t.Helper()
+	branchUUID, err := uuid.Parse(branchIDStr)
+	if err != nil {
+		t.Fatalf("Invalid Branch ID string from slot finder: %s, error: %v", branchIDStr, err)
+	}
+	for _, br := range company.branches {
+		if br.created.ID == branchUUID {
+			return br
+		}
+	}
+	t.Fatalf("Test setup error: Branch with ID %s (found by slot finder) not in company.branches", branchIDStr)
+	return nil
+}
+
+func getServiceByID(t *testing.T, company *Company, serviceIDStr string) *Service {
+	t.Helper()
+	serviceUUID, err := uuid.Parse(serviceIDStr)
+	if err != nil {
+		t.Fatalf("Invalid Service ID string from slot finder: %s, error: %v", serviceIDStr, err)
+	}
+	for _, serv := range company.services { // Assuming company.services holds all services
+		if serv.created.ID == serviceUUID {
+			return serv
+		}
+	}
+	// It's possible findValidAppointmentSlot finds services associated directly with employee/branch,
+	// ensure company.services is comprehensive or adjust where to look for the service object.
+	// For now, assuming company.services is the master list for the test.
+	t.Fatalf("Test setup error: Service with ID %s (found by slot finder) not in company.services", serviceIDStr)
+	return nil
 }
 
 func (a *Appointment) Create(t *testing.T, status int, auth_token string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) {
