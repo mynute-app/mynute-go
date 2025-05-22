@@ -4054,7 +4054,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Fiber Example API",
+	Title:            "GO-Fiber API",
 	Description:      "Swagger API for testing and debugging",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

@@ -839,7 +839,7 @@ info:
   contact: {}
   description: Swagger API for testing and debugging
   termsOfService: http://swagger.io/terms/
-  title: Fiber Example API
+  title: GO-Fiber API
   version: "1.0"
 paths:
   /appointment:
