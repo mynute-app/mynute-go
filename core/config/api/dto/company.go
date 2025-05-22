@@ -15,7 +15,7 @@ type CreateCompany struct {
 	OwnerEmail     string `json:"owner_email" example:"john.clark@gmail.com"`
 	OwnerPhone     string `json:"owner_phone" example:"+15555555555"`
 	OwnerPassword  string `json:"owner_password" example:"1SecurePswd!"`
-	StartSubdomain string `json:"start_subdomain" example:"agenda-yourcompany"`
+	StartSubdomain string `json:"start_subdomain" example:"your-company-subdomain"`
 }
 
 // @description	Company Full DTO

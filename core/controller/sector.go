@@ -46,7 +46,7 @@ func CreateSector(c *fiber.Ctx) error {
 //	@Param			id	path	string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/sector/name/{name} [get]
 func GetSectorByName(c *fiber.Ctx) error {
 	var sector model.Sector
@@ -70,7 +70,7 @@ func GetSectorByName(c *fiber.Ctx) error {
 //	@Param			id	path	string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [get]
 func GetSectorById(c *fiber.Ctx) error {
 	var sector model.Sector
@@ -127,7 +127,7 @@ func UpdateSectorById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"sector ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Sector
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/sector/{id} [delete]
 func DeleteSectorById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Sector{})

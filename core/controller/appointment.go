@@ -21,9 +21,12 @@ import (
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			appointment	body		DTO.CreateAppointment	true	"Appointment"
-//	@Success		200			{object}	DTO.Appointment
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string					true	"X-Company-ID"
+//	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
+//	@Success		200				{object}	DTO.Appointment
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment [post]
 func CreateAppointment(c *fiber.Ctx) error {
 	var appointment model.Appointment
@@ -43,9 +46,12 @@ func CreateAppointment(c *fiber.Ctx) error {
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"ID"
-//	@Success		200	{object}	DTO.Appointment
-//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"ID"
+//	@Success		200				{object}	DTO.Appointment
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [get]
 func GetAppointmentByID(c *fiber.Ctx) error {
 	var appointment model.Appointment
@@ -65,10 +71,14 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id			path		string					true	"ID"
-//	@Param			appointment	body		DTO.CreateAppointment	true	"Appointment"
-//	@Success		200			{object}	DTO.Appointment
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string					true	"X-Company-ID"
+//	@Param			id				path		string					true	"ID"
+//	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
+//	@Success		200				{object}	DTO.Appointment
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [patch]
 func UpdateAppointmentByID(c *fiber.Ctx) error {
 	appointment_id := c.Params("id")
@@ -130,9 +140,12 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"ID"
-//	@Success		200	{object}	DTO.Appointment
-//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"ID"
+//	@Success		200				{object}	DTO.Appointment
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
 func CancelAppointmentByID(c *fiber.Ctx) error {
 	appointment_id := c.Params("id")

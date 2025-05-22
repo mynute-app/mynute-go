@@ -46,7 +46,7 @@ func CreateHoliday(c *fiber.Ctx) error {
 //	@Param			id	path	string	true	"Holiday ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Holidays
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/holidays/{id} [get]
 func GetHolidayById(c *fiber.Ctx) error {
 	var holiday model.Holiday
@@ -70,7 +70,7 @@ func GetHolidayById(c *fiber.Ctx) error {
 //	@Param			name	path	string	true	"Holiday Name"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Holidays
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/holidays/name/{name} [get]
 func GetHolidayByName(c *fiber.Ctx) error {
 	var holiday model.Holiday
@@ -126,7 +126,7 @@ func UpdateHolidayById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Holiday ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Holidays
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/holidays/{id} [delete]
 func DeleteHolidayById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Holiday{})

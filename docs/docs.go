@@ -31,6 +31,20 @@ const docTemplate = `{
                 "summary": "Create appointment",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Appointment",
                         "name": "appointment",
                         "in": "body",
@@ -52,6 +66,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -72,40 +89,18 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Appointment"
-                        }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete an appointment by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Appointment"
-                ],
-                "summary": "Delete appointment",
-                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ID",
@@ -126,10 +121,71 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an appointment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointment"
+                ],
+                "summary": "Delete appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Appointment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update an appointment by ID",
                 "consumes": [
                     "application/json"
@@ -142,6 +198,20 @@ const docTemplate = `{
                 ],
                 "summary": "Update appointment",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "ID",
@@ -171,6 +241,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -198,6 +271,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -232,6 +312,11 @@ const docTemplate = `{
         },
         "/branch/name/{name}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve a branch by its name",
                 "produces": [
                     "application/json"
@@ -241,6 +326,20 @@ const docTemplate = `{
                 ],
                 "summary": "Get branch by name",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Branch Name",
@@ -256,17 +355,25 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/branch/{branch_id}/employee/{employee_id}/services": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve all services of an employee included in the branch ID",
                 "produces": [
                     "application/json"
@@ -276,6 +383,20 @@ const docTemplate = `{
                 ],
                 "summary": "Get employee services included in the branch ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Branch ID",
@@ -298,11 +419,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Service"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -332,6 +456,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Branch ID",
                         "name": "branch_id",
                         "in": "path",
@@ -352,14 +483,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -387,6 +518,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Branch ID",
                         "name": "branch_id",
                         "in": "path",
@@ -407,20 +545,25 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/branch/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve a branch by its ID",
                 "produces": [
                     "application/json"
@@ -430,6 +573,20 @@ const docTemplate = `{
                 ],
                 "summary": "Get branch by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Branch ID",
@@ -445,11 +602,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -477,9 +637,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -490,14 +650,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Branch"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -523,6 +683,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -640,14 +807,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Client"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -680,8 +847,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -873,8 +1040,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -948,8 +1115,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Company"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -983,8 +1150,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.CompanyPublic"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1018,8 +1185,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Company"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1053,8 +1220,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Company"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1085,6 +1252,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Company ID",
                         "name": "id",
                         "in": "path",
@@ -1098,14 +1272,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Company"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -1131,6 +1305,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -1172,6 +1353,11 @@ const docTemplate = `{
         },
         "/company/{id}/design/images": {
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Upload and update design images (logo, banner, etc.)",
                 "consumes": [
                     "multipart/form-data"
@@ -1188,6 +1374,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -1264,6 +1457,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Company ID",
                         "name": "id",
                         "in": "path",
@@ -1289,6 +1489,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1316,6 +1519,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -1373,6 +1583,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee Email",
                         "name": "email",
                         "in": "path",
@@ -1386,14 +1603,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1413,6 +1630,13 @@ const docTemplate = `{
                 "summary": "Login",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Employee",
                         "name": "client",
                         "in": "body",
@@ -1426,8 +1650,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1449,6 +1673,13 @@ const docTemplate = `{
                 ],
                 "summary": "Verify email",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Employee Email",
@@ -1499,6 +1730,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Branch ID",
                         "name": "branch_id",
                         "in": "path",
@@ -1519,14 +1757,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -1554,6 +1792,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Branch ID",
                         "name": "branch_id",
                         "in": "path",
@@ -1574,14 +1819,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1609,6 +1854,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -1669,6 +1921,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee ID",
                         "name": "employee_id",
                         "in": "path",
@@ -1689,14 +1948,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1726,6 +1985,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee ID",
                         "name": "id",
                         "in": "path",
@@ -1739,14 +2005,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -1774,6 +2040,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee ID",
                         "name": "id",
                         "in": "path",
@@ -1787,14 +2060,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Employee"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -1820,6 +2093,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -1940,8 +2220,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Holidays"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -1975,8 +2255,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Holidays"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -2020,14 +2300,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Holidays"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -2173,8 +2453,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Sector"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -2208,8 +2488,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Sector"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -2253,14 +2533,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Sector"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
@@ -2352,6 +2632,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Service",
                         "name": "service",
                         "in": "body",
@@ -2406,8 +2693,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Service"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -2441,8 +2728,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Service"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -2468,6 +2755,20 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -2513,6 +2814,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "CompanyID",
                         "in": "header",
                         "required": true
                     },
@@ -3018,7 +3326,7 @@ const docTemplate = `{
                 },
                 "start_subdomain": {
                     "type": "string",
-                    "example": "agenda-yourcompany"
+                    "example": "your-company-subdomain"
                 },
                 "tax_id": {
                     "type": "string",

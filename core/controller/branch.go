@@ -21,6 +21,7 @@ import (
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			branch	body		DTO.CreateBranch	true	"Branch"
@@ -43,10 +44,14 @@ func CreateBranch(c *fiber.Ctx) error {
 //	@Summary		Get branch by ID
 //	@Description	Retrieve a branch by its ID
 //	@Tags			Branch
-//	@Param			id	path	string	true	"Branch ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [get]
 func GetBranchById(c *fiber.Ctx) error {
 	var branch model.Branch
@@ -64,10 +69,14 @@ func GetBranchById(c *fiber.Ctx) error {
 //	@Summary		Get branch by name
 //	@Description	Retrieve a branch by its name
 //	@Tags			Branch
-//	@Param			name	path	string	true	"Branch Name"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			name			path		string	true	"Branch Name"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/name/{name} [get]
 func GetBranchByName(c *fiber.Ctx) error {
 	var branch model.Branch
@@ -88,6 +97,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string				true	"Branch ID"
@@ -117,10 +127,10 @@ func UpdateBranchById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Branch ID"
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
 func DeleteBranchById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Branch{})
@@ -131,11 +141,15 @@ func DeleteBranchById(c *fiber.Ctx) error {
 //	@Summary		Get employee services included in the branch ID
 //	@Description	Retrieve all services of an employee included in the branch ID
 //	@Tags			Branch
-//	@Param			branch_id	path	string	true	"Branch ID"
-//	@Param			employee_id	path	string	true	"Employee ID"
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			branch_id		path		string	true	"Branch ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Service
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/employee/{employee_id}/services [get]
 func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	var employee model.Employee
@@ -173,11 +187,12 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [post]
 func AddServiceToBranch(c *fiber.Ctx) error {
 	var branch model.Branch
@@ -220,11 +235,12 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Branch
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [delete]
 func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	var branch model.Branch

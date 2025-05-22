@@ -335,7 +335,7 @@ definitions:
         example: Clark
         type: string
       start_subdomain:
-        example: agenda-yourcompany
+        example: your-company-subdomain
         type: string
       tax_id:
         example: "00000000000000"
@@ -848,6 +848,16 @@ paths:
       - application/json
       description: Create an appointment
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Appointment
         in: body
         name: appointment
@@ -865,6 +875,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       summary: Create appointment
       tags:
       - Appointment
@@ -874,6 +886,16 @@ paths:
       - application/json
       description: Delete an appointment by ID
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: ID
         in: path
         name: id
@@ -890,6 +912,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       summary: Delete appointment
       tags:
       - Appointment
@@ -898,6 +922,16 @@ paths:
       - application/json
       description: Get an appointment by ID
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: ID
         in: path
         name: id
@@ -914,6 +948,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       summary: Get appointment
       tags:
       - Appointment
@@ -922,6 +958,16 @@ paths:
       - application/json
       description: Update an appointment by ID
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: ID
         in: path
         name: id
@@ -944,6 +990,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Update appointment
       tags:
       - Appointment
@@ -956,6 +1006,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Branch
@@ -986,6 +1041,16 @@ paths:
     get:
       description: Retrieve all services of an employee included in the branch ID
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch ID
         in: path
         name: branch_id
@@ -1003,10 +1068,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Service'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Get employee services included in the branch ID
       tags:
       - Branch
@@ -1017,6 +1086,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Branch ID
@@ -1036,12 +1110,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Branch'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Remove service from branch
@@ -1055,6 +1129,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch ID
         in: path
         name: branch_id
@@ -1072,12 +1151,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Branch'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Add service to branch
@@ -1092,9 +1171,9 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Branch ID
-        in: path
-        name: id
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       produces:
@@ -1104,12 +1183,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Branch'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete branch by ID
@@ -1118,6 +1197,16 @@ paths:
     get:
       description: Retrieve a branch by its ID
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch ID
         in: path
         name: id
@@ -1130,10 +1219,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Branch'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Get branch by ID
       tags:
       - Branch
@@ -1145,6 +1238,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Branch ID
@@ -1180,6 +1278,16 @@ paths:
     get:
       description: Retrieve a branch by its name
       parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch Name
         in: path
         name: name
@@ -1192,10 +1300,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Branch'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Get branch by name
       tags:
       - Branch
@@ -1315,8 +1427,8 @@ paths:
             items:
               $ref: '#/definitions/dJSON.ClientAppointment'
             type: array
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       security:
@@ -1345,12 +1457,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Client'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Get client by email
@@ -1373,8 +1485,8 @@ paths:
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Login
@@ -1441,6 +1553,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Company ID
         in: path
         name: id
@@ -1453,12 +1570,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Company'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete company by ID
@@ -1479,8 +1596,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Company'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company by ID
@@ -1494,6 +1611,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Company ID
@@ -1536,6 +1658,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Company ID
         in: path
         name: id
@@ -1570,6 +1697,8 @@ paths:
             $ref: '#/definitions/DTO.ErrorResponse'
         "401":
           description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Update company design images
       tags:
       - Company
@@ -1580,6 +1709,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Company ID
@@ -1601,6 +1735,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete a specific company design image
@@ -1622,8 +1758,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Company'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company by name
@@ -1645,8 +1781,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.CompanyPublic'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company ID by subdomain
@@ -1668,8 +1804,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Company'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company by tax ID
@@ -1684,6 +1820,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Employee
@@ -1719,6 +1860,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch ID
         in: path
         name: branch_id
@@ -1736,12 +1882,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Remove employee from branch
@@ -1755,6 +1901,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Branch ID
         in: path
         name: branch_id
@@ -1772,12 +1923,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Add employee to branch
@@ -1790,6 +1941,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Employee ID
@@ -1809,12 +1965,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Remove service from employee
@@ -1828,6 +1984,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Employee ID
@@ -1867,6 +2028,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Employee ID
         in: path
         name: id
@@ -1879,12 +2045,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete employee by ID
@@ -1898,6 +2064,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Employee ID
         in: path
         name: id
@@ -1910,12 +2081,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Get employee by ID
@@ -1929,6 +2100,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Employee ID
@@ -1969,6 +2145,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Employee Email
         in: path
         name: email
@@ -1981,12 +2162,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Employee'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Get employee by email
@@ -1998,6 +2179,11 @@ paths:
       - application/json
       description: Log in an client
       parameters:
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Employee
         in: body
         name: client
@@ -2009,8 +2195,8 @@ paths:
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Login
@@ -2022,6 +2208,11 @@ paths:
       - application/json
       description: Verify an employee's email
       parameters:
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
       - description: Employee Email
         in: path
         name: email
@@ -2098,12 +2289,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Holidays'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete holiday by ID
@@ -2124,8 +2315,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Holidays'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get holiday by ID
@@ -2186,8 +2377,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Holidays'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get holiday by name
@@ -2249,12 +2440,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Sector'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Delete sector by ID
@@ -2275,8 +2466,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Sector'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get sector by ID
@@ -2337,8 +2528,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Sector'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get sector by ID
@@ -2353,6 +2544,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Service
@@ -2386,6 +2582,16 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Service ID
@@ -2422,8 +2628,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Service'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get service by ID
@@ -2437,6 +2643,11 @@ paths:
       - description: X-Auth-Token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: CompanyID
         required: true
         type: string
       - description: Service ID
@@ -2482,8 +2693,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/DTO.Service'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get service by name

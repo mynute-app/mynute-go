@@ -57,7 +57,7 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			client	body	DTO.LoginClient	true	"Client"
 //	@Success		200
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/login [post]
 func LoginClient(c *fiber.Ctx) error {
 	var body DTO.LoginClient
@@ -161,7 +161,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Param			email			path		string	true	"Client Email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
@@ -198,7 +198,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.ClientAppointments
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/appointments [get]
 func GetClientAppointments(c *fiber.Ctx) error {
 	id := c.Params("id")

@@ -104,7 +104,7 @@ func CreateCompany(c *fiber.Ctx) error {
 //	@Param			id	path	string	true	"Company ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Company
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [get]
 func GetCompanyById(c *fiber.Ctx) error {
 	var company model.Company
@@ -143,7 +143,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 //	@Param			name	path	string	true	"Company Name"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Company
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/name/{name} [get]
 func GetCompanyByName(c *fiber.Ctx) error {
 	var company model.Company
@@ -187,7 +187,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 //	@Param			tax_id	path	string	true	"Company Tax ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Company
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/tax_id/{tax_id} [get]
 func GetCompanyByTaxId(c *fiber.Ctx) error {
 	var company model.Company
@@ -226,7 +226,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Param			subdomain_name	path	string	true	"Subdomain Name"
 //	@Produce		json
 //	@Success		200	{object}	DTO.CompanyPublic
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/subdomain/{subdomain_name} [get]
 func GetCompanyBySubdomain(c *fiber.Ctx) error {
 	tx, err := lib.Session(c)
@@ -276,6 +276,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
 //	@Accept			json
 //	@Produce		json
@@ -318,10 +319,11 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Company
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [delete]
 func DeleteCompanyById(c *fiber.Ctx) error {
 	var company model.Company
@@ -353,8 +355,10 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Accept			multipart/form-data
 //	@Produce		json
+//	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
 //	@Param			logo			formData	file	false	"Logo image"
 //	@Param			banner			formData	file	false	"Banner image"
@@ -432,6 +436,8 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			CompanyID		header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
 //	@Param			image_type		path		string	true	"Type of image to delete (logo, banner, favicon, background)"
 //	@Success		200				{object}	dJSON.Design
