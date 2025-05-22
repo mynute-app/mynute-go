@@ -26,7 +26,7 @@ type Server struct {
 func NewServer() *Server {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	fiberConfig := fiber.Config{
-		ErrorHandler:          handler.Error(logger),
+		ErrorHandler:          middleware.Error(logger),
 		BodyLimit:             2 * 1024 * 1024, // 2 MB
 		DisableStartupMessage: true,
 	}

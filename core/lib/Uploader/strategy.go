@@ -1,4 +1,4 @@
-package uploader
+package myUploader
 
 import (
 	"errors"

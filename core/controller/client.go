@@ -79,10 +79,10 @@ func LoginClient(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	if !client.Verified {
-		return lib.Error.Client.NotVerified.SendToClient(c)
+		return lib.Error.Client.NotVerified
 	}
 	if !handler.ComparePassword(client.Password, body.Password) {
-		return lib.Error.Auth.InvalidLogin.SendToClient(c)
+		return lib.Error.Auth.InvalidLogin
 	}
 	token, err := handler.JWT(c).Encode(client)
 	if err != nil {

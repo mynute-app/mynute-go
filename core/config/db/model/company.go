@@ -3,7 +3,7 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
-	uploader "agenda-kaki-go/core/lib/Uploader"
+	"agenda-kaki-go/core/lib/Uploader"
 	"fmt"
 	"strings"
 
@@ -69,7 +69,7 @@ func (c *Company) CheckDesignImageOwnershipBeforeUpdate(tx *gorm.DB) error {
 }
 
 func imageBelongsToCompany(companyID uuid.UUID, imageURL string) bool {
-	filename := uploader.ExtractFilenameFromURL(imageURL)
+	filename := myUploader.ExtractFilenameFromURL(imageURL)
 	return strings.Contains(filename, companyID.String())
 }
 

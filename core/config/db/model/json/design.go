@@ -1,7 +1,7 @@
 package mJSON
 
 import (
-	uploader "agenda-kaki-go/core/lib/Uploader"
+	"agenda-kaki-go/core/lib/Uploader"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -27,7 +27,7 @@ type Images struct {
 }
 
 func (d DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilename string, newFile []byte) (string, error) {
-	up, err := uploader.FileUploader(caller_entity, caller_id)
+	up, err := myUploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +35,7 @@ func (d DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilena
 }
 
 func (d DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error {
-	up, err := uploader.FileUploader(caller_entity, caller_id)
+	up, err := myUploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return err
 	}

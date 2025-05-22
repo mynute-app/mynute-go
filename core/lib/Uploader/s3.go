@@ -1,5 +1,5 @@
 // File: uploader/s3.go
-package uploader
+package myUploader
 
 import (
 	"agenda-kaki-go/core/lib"

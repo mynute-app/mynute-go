@@ -1,5 +1,5 @@
 // File: uploader/local.go
-package uploader
+package myUploader
 
 import (
 	"agenda-kaki-go/core/config/namespace"

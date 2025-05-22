@@ -1,4 +1,4 @@
-package uploader
+package myUploader
 
 import (
 	"fmt"
@@ -15,17 +15,17 @@ import (
 // The resulting filename includes a UUID for uniqueness.
 //
 // Example:
-//   entity     = "client"
-//   entityID   = 123e4567-e89b-12d3-a456-426614174000
-//   filename   = "photo.png"
 //
-//   Output:
-//     "client/123e4567-e89b-12d3-a456-426614174000/photo_dccf28b1-0ff2-44c9-bcfd-ccf05e6f6a61.png"
+//	entity     = "client"
+//	entityID   = 123e4567-e89b-12d3-a456-426614174000
+//	filename   = "photo.png"
 //
+//	Output:
+//	  "client/123e4567-e89b-12d3-a456-426614174000/photo_dccf28b1-0ff2-44c9-bcfd-ccf05e6f6a61.png"
 func GenerateUniqueFilename(entity string, entityID string, originalFilename string) string {
-	ext := filepath.Ext(originalFilename) // .png
+	ext := filepath.Ext(originalFilename)                            // .png
 	name := strings.TrimSuffix(filepath.Base(originalFilename), ext) // photo
-	unique := uuid.New().String() // e.g., dccf28b1-0ff2-44c9-bcfd-ccf05e6f6a61
+	unique := uuid.New().String()                                    // e.g., dccf28b1-0ff2-44c9-bcfd-ccf05e6f6a61
 	return fmt.Sprintf("%s/%s/%s_%s%s", entity, entityID, name, unique, ext)
 }
 
