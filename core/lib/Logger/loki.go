@@ -63,7 +63,7 @@ func sendToLoki(url string, data []byte) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("loki responded with %d: %s", resp.StatusCode, string(body))
 	}

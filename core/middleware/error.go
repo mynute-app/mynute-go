@@ -10,11 +10,10 @@ import (
 )
 
 func Error(logger *slog.Logger) fiber.ErrorHandler {
+	loki := &myLogger.Loki{}
 	return func(c *fiber.Ctx, err error) error {
 		if e, ok := err.(lib.ErrorStruct); ok {
 			if err := e.SendToClient(c); err != nil {
-				loki := myLogger.New("loki")
-				// TODO: Precisa refazer aqui
 				ResMsg := myLogger.GetResMessage(c)
 				labels := myLogger.Labels{
 					App:    "main-api",

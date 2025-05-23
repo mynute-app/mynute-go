@@ -10,6 +10,7 @@ import (
 )
 
 func Log(logger *slog.Logger) fiber.Handler {
+	loki := &myLogger.Loki{}
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 		method := c.Method()
@@ -31,8 +32,6 @@ func Log(logger *slog.Logger) fiber.Handler {
 
 		// Mensagem rica vai fora dos labels
 		labelMsg := ReqLabels["title"] + ReqMsg
-
-		loki := myLogger.New("loki")
 
 		if err := loki.Log(labelMsg, ReqLabels); err != nil {
 			logger.Error("Failed to send log to Loki", slog.String("error", err.Error()))
