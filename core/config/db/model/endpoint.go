@@ -200,6 +200,14 @@ var GetClientByEmail = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         ClientResource,
 }
+var GetClientById = &EndPoint{
+	Path:             "/client/:id",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetClientById",
+	Description:      "View client by ID",
+	DenyUnauthorized: true,
+	Resource:         ClientResource,
+}
 var UpdateClientById = &EndPoint{
 	Path:             "/client/:id",
 	Method:           namespace.UpdateActionMethod,
@@ -559,6 +567,7 @@ var endpoints = []*EndPoint{
 	LoginClient,
 	VerifyClientEmail,
 	GetClientByEmail,
+	GetClientById,
 	UpdateClientById,
 	DeleteClientById,
 	// Company

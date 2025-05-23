@@ -45,7 +45,7 @@ func (c *ClientFull) BeforeCreate(tx *gorm.DB) (err error) {
 			BadReq := lib.Error.General.BadRequest
 			for _, fieldErr := range validationErrors {
 				// You can customize the message
-				BadReq.WithError(
+				BadReq = BadReq.WithError(
 					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
 				)
 			}

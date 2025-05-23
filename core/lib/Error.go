@@ -22,9 +22,10 @@ func (e ErrorStruct) WithError(err error) ErrorStruct {
 	if e.InnerError == nil {
 		e.InnerError = make(map[int]string)
 	}
-	index := len(e.InnerError) + 1
-	e.InnerError[index] = err.Error()
-	return e
+	newE := e // cópia
+	index := len(newE.InnerError) + 1
+	newE.InnerError[index] = err.Error()
+	return newE
 }
 
 // Optional: If you want a printable version

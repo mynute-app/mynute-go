@@ -220,6 +220,11 @@ func findValidAppointmentSlot(t *testing.T, employee *Employee, company *Company
 				t.Logf("Warning: Branch object with ID %s (from schedule) not found in company setup data. Skipping this work range.", wr.BranchID)
 				continue // Skip this work range if branch data is inconsistent
 			}
+
+			if !employeeIsAssignedToBranch(employee, wr.BranchID) {
+				t.Logf("Employee %s is not assigned to branch %s. Skipping.", employee.created.ID, wr.BranchID)
+				continue
+			}
 			t.Logf("Found Branch Object: %s", targetBranch.created.Name)
 
 			// 4. Determine Valid Service IDs (Employee + Branch intersection)
@@ -522,4 +527,13 @@ func findNextAvailableSlotRFC3339(t *testing.T, employee *Employee, currentStart
 
 	t.Logf("Warning: Could not find next available slot after %s for employee %s. Returning original time.", currentStartTimeRFC3339, employee.created.ID)
 	return currentStartTimeRFC3339 // Fallback
+}
+
+func employeeIsAssignedToBranch(e *Employee, branchID uuid.UUID) bool {
+	for _, b := range e.branches {
+		if b.created.ID == branchID {
+			return true
+		}
+	}
+	return false
 }

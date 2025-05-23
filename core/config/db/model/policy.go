@@ -829,6 +829,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		}),
 	}
 
+	var AllowGetClientById = &PolicyRule{
+		Name:        "SDP: CanViewClientById",
+		Description: "Allows a client to view their own profile.",
+		Effect:      "Allow",
+		EndPointID:  GetClientById.ID,
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can view self (checks subject.id == resource.id)
+	}
+
 	var AllowUpdateClientById = &PolicyRule{
 		Name:        "SDP: CanUpdateClient",
 		Description: "Allows a client to update their own profile.",
@@ -1092,6 +1100,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetClientByEmail,
 		AllowUpdateClientById,
 		AllowDeleteClientById,
+		AllowGetClientById,
 
 		// Company
 		AllowGetCompanyById,
