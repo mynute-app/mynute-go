@@ -23,7 +23,7 @@ import (
 //	@Produce		json
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string					true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
@@ -48,7 +48,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"ID"
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
@@ -74,7 +74,7 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string					true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			id				path		string					true	"ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
 //	@Success		200				{object}	DTO.Appointment
@@ -142,7 +142,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"ID"
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse

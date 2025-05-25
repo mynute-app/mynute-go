@@ -40,7 +40,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -97,7 +97,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -150,7 +150,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -208,7 +208,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -277,7 +277,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -336,7 +336,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -393,7 +393,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -457,7 +457,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -519,7 +519,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -583,7 +583,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -638,7 +638,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     }
@@ -689,7 +689,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1253,7 +1253,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1311,7 +1311,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1380,7 +1380,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1458,7 +1458,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1525,7 +1525,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1584,7 +1584,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1632,7 +1632,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1655,6 +1655,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1676,7 +1679,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1731,7 +1734,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1793,7 +1796,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1860,7 +1863,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1922,7 +1925,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -1986,7 +1989,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -2041,7 +2044,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -2099,7 +2102,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -2634,7 +2637,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -2761,14 +2764,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -2820,7 +2823,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Company-ID",
-                        "name": "CompanyID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -3299,6 +3302,12 @@ const docTemplate = `{
         },
         "DTO.CreateCompany": {
             "type": "object",
+            "required": [
+                "owner_email",
+                "owner_password",
+                "owner_phone",
+                "start_subdomain"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
@@ -3572,7 +3581,7 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "joseph.doe@example.com"
+                    "example": "john.clark@gmail.com"
                 },
                 "password": {
                     "type": "string",

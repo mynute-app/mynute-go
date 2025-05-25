@@ -12,10 +12,10 @@ type CreateCompany struct {
 	TaxID          string `json:"tax_id" example:"00000000000000"`
 	OwnerName      string `json:"owner_name" example:"John"`
 	OwnerSurname   string `json:"owner_surname" example:"Clark"`
-	OwnerEmail     string `json:"owner_email" example:"john.clark@gmail.com"`
-	OwnerPhone     string `json:"owner_phone" example:"+15555555555"`
-	OwnerPassword  string `json:"owner_password" example:"1SecurePswd!"`
-	StartSubdomain string `json:"start_subdomain" example:"your-company-subdomain"`
+	OwnerEmail     string `json:"owner_email" example:"john.clark@gmail.com" validate:"required,email"`
+	OwnerPhone     string `json:"owner_phone" example:"+15555555555" validate:"required,e164"`
+	OwnerPassword  string `json:"owner_password" example:"1SecurePswd!" validate:"required,myPasswordValidation"`
+	StartSubdomain string `json:"start_subdomain" example:"your-company-subdomain" validate:"required,mySubdomainValidation"`
 }
 
 // @description	Company Full DTO

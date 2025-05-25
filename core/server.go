@@ -59,7 +59,7 @@ func Seed(db *gorm.DB) error {
 	}
 
 	Database := &database.Database{Gorm: tx}
-	
+
 	if err := Database.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "id = ?", []string{"ID"}).
@@ -67,7 +67,10 @@ func Seed(db *gorm.DB) error {
 		return err
 	}
 
-	endpoints, deferEndpoint := model.EndPoints(&model.EndpointCfg{AllowCreation: true})
+	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)
+	if err != nil {
+		return err
+	}
 	defer deferEndpoint()
 
 	if err := Database.

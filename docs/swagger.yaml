@@ -343,6 +343,11 @@ definitions:
       trading_name:
         example: Your Company Trading Name
         type: string
+    required:
+    - owner_email
+    - owner_password
+    - owner_phone
+    - start_subdomain
     type: object
   DTO.CreateEmployee:
     properties:
@@ -510,7 +515,7 @@ definitions:
   DTO.LoginEmployee:
     properties:
       email:
-        example: joseph.doe@example.com
+        example: john.clark@gmail.com
         type: string
       password:
         example: 1SecurePswd!
@@ -855,7 +860,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Appointment
@@ -893,7 +898,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -929,7 +934,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -965,7 +970,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -1010,7 +1015,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch
@@ -1048,7 +1053,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1090,7 +1095,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1131,7 +1136,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1173,7 +1178,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       produces:
@@ -1204,7 +1209,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1242,7 +1247,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1285,7 +1290,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch Name
@@ -1555,7 +1560,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1615,7 +1620,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1660,7 +1665,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1713,7 +1718,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1824,7 +1829,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee
@@ -1862,7 +1867,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1903,7 +1908,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1945,7 +1950,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -1988,7 +1993,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2030,7 +2035,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2066,7 +2071,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2104,7 +2109,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2147,7 +2152,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee Email
@@ -2181,7 +2186,7 @@ paths:
       parameters:
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee
@@ -2199,6 +2204,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       summary: Login
       tags:
       - Employee
@@ -2210,7 +2217,7 @@ paths:
       parameters:
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee Email
@@ -2548,7 +2555,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service
@@ -2586,12 +2593,12 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service ID
@@ -2647,7 +2654,7 @@ paths:
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service ID

@@ -10,7 +10,9 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,7 +26,7 @@ import (
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
@@ -49,12 +51,13 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Summary		Login
 //	@Description	Log in an client
 //	@Tags			Employee
-//	@Param			CompanyID	header	string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			client	body	DTO.LoginEmployee	true	"Employee"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		401	{object}	nil
 //	@Router			/employee/login [post]
 func LoginEmployee(c *fiber.Ctx) error {
 	var body DTO.LoginEmployee
@@ -106,7 +109,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 //	@Summary		Verify email
 //	@Description	Verify an employee's email
 //	@Tags			Employee
-//	@Param			CompanyID	header	string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			email	path		string	true	"Employee Email"
@@ -117,9 +120,18 @@ func LoginEmployee(c *fiber.Ctx) error {
 func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var employee model.Employee
+	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
+	email, err := url.QueryUnescape(email)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
 	employee.Email = email
 	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
-		return lib.Error.General.BadRequest.WithError(err)
+		if _, ok := err.(validator.ValidationErrors); ok {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
+		} else {
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 	tx, end, err := database.ContextTransaction(c)
 	defer end()
@@ -150,7 +162,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Employee
@@ -177,7 +189,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Employee
@@ -202,7 +214,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
@@ -229,7 +241,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Employee
@@ -247,7 +259,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -295,7 +307,7 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
@@ -341,7 +353,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
@@ -387,7 +399,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
