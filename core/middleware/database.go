@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -57,6 +58,20 @@ func SaveCompanySession(db *gorm.DB) fiber.Handler {
 				return lib.Error.Company.NotFound
 			}
 			return lib.Error.General.AuthError.WithError(err)
+		}
+
+		if SchemaName == "" {
+			// Check if the company exists
+			var qttyOfCompaniesFound int64
+			if err := tx.Model(&model.Company{}).
+				Where("id = ?", companyID).
+				Count(&qttyOfCompaniesFound).Error; err != nil {
+				return lib.Error.Company.NotFound.WithError(fmt.Errorf("error while trying to find company with ID %s: %w", companyID, err))
+			}
+			if qttyOfCompaniesFound == 0 {
+				return lib.Error.Company.NotFound.WithError(fmt.Errorf("company with ID %s not found", companyID))
+			}
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("company with ID %s does not have a schema name", companyID))
 		}
 
 		if err := lib.ChangeToCompanySchema(tx, SchemaName); err != nil {

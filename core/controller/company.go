@@ -272,7 +272,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 //	@Description	Update a company by its ID
 //	@Tags			Company
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
@@ -315,7 +315,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Description	Delete a company by its ID
 //	@Tags			Company
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
@@ -354,7 +354,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Accept			multipart/form-data
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Param			Authorization	header		string	true	"X-Auth-Token"
+// @Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 // @Failure		401				{object}	nil
 // @Param			X-Company-ID	header		string	true	"X-Company-ID"
 // @Param			id				path		string	true	"Company ID"
@@ -433,7 +433,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Description	Delete logo, banner, favicon or background
 // @Tags			Company
 // @Security		ApiKeyAuth
-// @Param			Authorization	header		string	true	"X-Auth-Token"
+// @Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 // @Failure		401				{object}	nil
 // @Param			X-Company-ID	header		string	true	"X-Company-ID"
 // @Param			id				path		string	true	"Company ID"

@@ -16,7 +16,7 @@ import (
 //	@Description	Create a sector
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -93,7 +93,7 @@ func GetSectorById(c *fiber.Ctx) error {
 //	@Description	Update a sector by its ID
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"sector ID"
 //	@Accept			json
@@ -122,7 +122,7 @@ func UpdateSectorById(c *fiber.Ctx) error {
 //	@Description	Delete a sector by its ID
 //	@Tags			Sector
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"sector ID"
 //	@Produce		json

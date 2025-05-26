@@ -24,7 +24,7 @@ import (
 //	@Description	Create an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
@@ -160,7 +160,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an employee by its ID
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Employee ID"
@@ -187,7 +187,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Description	Retrieve an employee by its email
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			email			path		string	true	"Employee Email"
@@ -212,7 +212,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Description	Update an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
@@ -239,7 +239,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Description	Delete an employee by its ID
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Employee ID"
@@ -257,7 +257,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Description	Add a service to an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Failure		401				{object}	nil
@@ -305,7 +305,7 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Description	Remove a service from an employee
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
@@ -351,7 +351,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Description	Add an employee to a branch
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"
@@ -397,7 +397,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Description	Remove an employee from a branch
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			branch_id		path		string	true	"Branch ID"

@@ -638,32 +638,3 @@ func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 
 	return endpoints, deferFnc, nil
 }
-
-
-// func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
-// 	AllowEndpointCreation = true
-// 	tx := db.Begin()
-// 	defer func() {
-// 		AllowEndpointCreation = false
-// 		if r := recover(); r != nil {
-// 			tx.Rollback()
-// 			log.Printf("Panic occurred during policy seeding: %v", r)
-// 		}
-// 		if err := tx.Commit().Error; err != nil {
-// 			log.Printf("Failed to commit transaction: %v", err)
-// 		}
-// 		log.Print("System Endpoints seeded successfully")
-// 	}()
-// 	LoadEndpoints()
-// 	for _, edp := range Endpoints {
-// 		err := tx.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
-// 		if err == gorm.ErrRecordNotFound {
-// 			if err := tx.Create(edp).Error; err != nil {
-// 				return nil, err
-// 			}
-// 		} else if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return Endpoints, nil
-// }

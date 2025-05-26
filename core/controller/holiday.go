@@ -16,7 +16,7 @@ import (
 //	@Description	Create a holiday
 //	@Tags			Holidays
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -92,7 +92,7 @@ func GetHolidayByName(c *fiber.Ctx) error {
 //	@Description	Update a holiday
 //	@Tags			Holidays
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -121,7 +121,7 @@ func UpdateHolidayById(c *fiber.Ctx) error {
 //	@Description	Delete a holiday by its ID
 //	@Tags			Holidays
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Holiday ID"
 //	@Produce		json

@@ -33,7 +33,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -90,7 +90,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -143,7 +143,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -201,7 +201,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -270,7 +270,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -329,7 +329,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -386,7 +386,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -450,7 +450,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -512,7 +512,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -576,7 +576,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -631,7 +631,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -682,7 +682,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -788,7 +788,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -914,7 +914,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -959,7 +959,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1018,7 +1018,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1246,7 +1246,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1304,7 +1304,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1373,7 +1373,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1451,7 +1451,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1518,7 +1518,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1577,7 +1577,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1727,7 +1727,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1789,7 +1789,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1856,7 +1856,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1918,7 +1918,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -1982,7 +1982,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2037,7 +2037,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2095,7 +2095,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2164,7 +2164,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2284,7 +2284,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2335,7 +2335,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2397,7 +2397,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2517,7 +2517,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2568,7 +2568,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2630,7 +2630,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2757,7 +2757,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -2816,7 +2816,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
@@ -4051,7 +4051,7 @@ const docTemplate = `{
         "ApiKeyAuth": {
             "description": "Enter the token in the format: \u003ctoken\u003e",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "X-Auth-Token",
             "in": "header"
         }
     }

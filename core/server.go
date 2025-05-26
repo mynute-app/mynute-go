@@ -62,9 +62,13 @@ func Seed(db *gorm.DB) error {
 
 	if err := Database.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
-		Seed("Roles", model.Roles, "id = ?", []string{"ID"}).
+		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
 		Error; err != nil {
 		return err
+	}
+
+	if err := model.LoadSystemRoleIDs(tx); err != nil {
+		return fmt.Errorf("failed to load system role IDs: %w", err)
 	}
 
 	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)

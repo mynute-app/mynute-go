@@ -154,7 +154,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an client by its email
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
 //	@Produce		json
@@ -192,7 +192,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Description	Get only the appointments field from a client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header	string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			id				path	string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.ClientAppointments
@@ -231,7 +231,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 //	@Description	Update an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -281,7 +281,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Description	Delete an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Client ID"
 //	@Produce		json
