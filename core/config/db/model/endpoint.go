@@ -2,6 +2,7 @@ package model
 
 import (
 	"agenda-kaki-go/core/config/namespace"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -607,19 +608,37 @@ type EndpointCfg struct {
 	AllowCreation bool // Allow creation of endpoints
 }
 
-func EndPoints(cfg *EndpointCfg) ([]*EndPoint, func()) {
+func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 	AllowEndpointCreation = cfg.AllowCreation
+
+	// Recuperar os recursos corretos do banco
+	resourceMap := map[string]uuid.UUID{}
+	var resources []Resource
+	if err := db.Find(&resources).Error; err != nil {
+		return nil, nil, err
+	}
+	for _, r := range resources {
+		resourceMap[r.Table] = r.ID
+	}
+
 	for _, edp := range endpoints {
 		if edp.Resource != nil {
-			edp.ResourceID = &edp.Resource.ID
-			edp.Resource = nil // Avoid circular reference
+			if id, ok := resourceMap[edp.Resource.Table]; ok {
+				edp.ResourceID = &id
+			} else {
+				return nil, nil, fmt.Errorf("resource not found for table: %s", edp.Resource.Table)
+			}
+			edp.Resource = nil
 		}
 	}
+
 	deferFnc := func() {
 		AllowEndpointCreation = false
 	}
-	return endpoints, deferFnc
+
+	return endpoints, deferFnc, nil
 }
+
 
 // func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
 // 	AllowEndpointCreation = true

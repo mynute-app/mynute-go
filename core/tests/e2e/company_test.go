@@ -10,6 +10,7 @@ import (
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -602,7 +603,7 @@ func (c *Company) Create(t *testing.T, status int) {
 		OwnerEmail:    lib.GenerateRandomEmail("owner"),
 		OwnerPhone:    lib.GenerateRandomPhoneNumber(),
 		OwnerPassword: ownerPswd,
-		StartSubdomain: lib.GenerateRandomString(8),
+		StartSubdomain: strings.ToLower(lib.GenerateRandomString(12)),
 	})
 	http.ParseResponse(&c.created)
 	owner := c.created.Employees[0]

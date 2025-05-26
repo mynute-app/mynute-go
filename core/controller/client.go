@@ -10,6 +10,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
 	"fmt"
+	"net/url"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -107,18 +108,15 @@ func LoginClient(c *fiber.Ctx) error {
 func VerifyClientEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var client model.ClientMeta
+	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
+	email, err := url.QueryUnescape(email)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
 	client.Email = email
-
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			BadReq := lib.Error.General.BadRequest
-			for _, fieldErr := range validationErrors {
-				// You can customize the message
-				BadReq.WithError(
-					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-				)
-			}
-			return BadReq
+		if _, ok := err.(validator.ValidationErrors); ok {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
 		} else {
 			return lib.Error.General.InternalError.WithError(err)
 		}
