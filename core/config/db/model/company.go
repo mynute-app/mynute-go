@@ -31,7 +31,7 @@ func (c *Company) GenerateSchemaName() string {
 }
 
 func (c *Company) BeforeUpdate(tx *gorm.DB) error {
-	return c.CheckDesignImageOwnershipBeforeUpdate(tx)
+	return nil
 }
 
 func (c *Company) CheckDesignImageOwnershipBeforeUpdate(tx *gorm.DB) error {

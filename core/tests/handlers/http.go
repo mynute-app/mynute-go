@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"reflect"
@@ -31,6 +32,36 @@ func (c *HttpClient) SetTest(t *testing.T) *httpActions {
 	h.test = t
 	h.expectedStatus = 0
 	return h
+}
+
+type MyFile struct {
+	Name    string
+	Content []byte
+}
+
+type Files map[string]MyFile
+
+func (h *httpActions) parseFiles(files Files) []byte {
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+
+	for field, f := range files {
+		part, err := writer.CreateFormFile(field, f.Name)
+		if err != nil {
+			h.test.Fatalf("failed to create form file for field %s: %v", field, err)
+		}
+		if _, err := part.Write(f.Content); err != nil {
+			h.test.Fatalf("failed to write content for field %s: %v", field, err)
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		h.test.Fatalf("failed to close multipart writer: %v", err)
+	}
+
+	h.headers = http.Header{}
+	h.headers.Set("Content-Type", writer.FormDataContentType())
+	return b.Bytes()
 }
 
 func (h *httpActions) Method(method string) *httpActions {
@@ -90,6 +121,14 @@ func (h *httpActions) ParseResponse(to any) {
 // The response body is stored in ResBody, and the status code is stored in Status.
 // It will defer res.Body.Close() to ensure the response body is closed.
 func (h *httpActions) Send(body any) *httpActions {
+	if b, ok := body.(Files); ok {
+		bb := h.parseFiles(b)
+		if len(bb) == 0 {
+			h.test.Fatalf("no files provided for multipart request")
+			return nil
+		}
+		body = bb
+	}
 	h.Error = ""
 	h.test.Logf(">>>>>>>>>> Sending %s request to %s", h.method, h.url)
 	h.test.Logf("request body: %+v", body)

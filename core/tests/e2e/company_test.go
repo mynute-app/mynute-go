@@ -7,6 +7,7 @@ import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	"agenda-kaki-go/core/lib/FileBytes"
 	handler "agenda-kaki-go/core/tests/handlers"
 	"fmt"
 	"math/rand"
@@ -102,7 +103,15 @@ func (c *Company) Set(t *testing.T) {
 			Sunday: []mJSON.WorkRange{},
 		},
 	}})
-
+	c.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_1,
+	})
+	c.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_2,
+	})
+	c.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_1,
+	})
 }
 
 // --- Randomized Company Setup Method ---
@@ -595,14 +604,14 @@ func (c *Company) Create(t *testing.T, status int) {
 	http.ExpectStatus(status)
 	ownerPswd := "1SecurePswd!"
 	http.Send(DTO.CreateCompany{
-		LegalName:     lib.GenerateRandomName("Company Legal Name"),
-		TradeName:     lib.GenerateRandomName("Company Trade Name"),
-		TaxID:         lib.GenerateRandomStrNumber(14),
-		OwnerName:     lib.GenerateRandomName("Owner Name"),
-		OwnerSurname:  lib.GenerateRandomName("Owner Surname"),
-		OwnerEmail:    lib.GenerateRandomEmail("owner"),
-		OwnerPhone:    lib.GenerateRandomPhoneNumber(),
-		OwnerPassword: ownerPswd,
+		LegalName:      lib.GenerateRandomName("Company Legal Name"),
+		TradeName:      lib.GenerateRandomName("Company Trade Name"),
+		TaxID:          lib.GenerateRandomStrNumber(14),
+		OwnerName:      lib.GenerateRandomName("Owner Name"),
+		OwnerSurname:   lib.GenerateRandomName("Owner Surname"),
+		OwnerEmail:     lib.GenerateRandomEmail("owner"),
+		OwnerPhone:     lib.GenerateRandomPhoneNumber(),
+		OwnerPassword:  ownerPswd,
 		StartSubdomain: strings.ToLower(lib.GenerateRandomString(12)),
 	})
 	http.ParseResponse(&c.created)
@@ -659,4 +668,22 @@ func (c *Company) Delete(t *testing.T, status int) {
 	http.Header(namespace.HeadersKey.Auth, c.auth_token)
 	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
 	http.Send(nil)
+}
+
+func (c *Company) UploadImages(t *testing.T, status int, files map[string][]byte) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL(fmt.Sprintf("/company/%s/image", c.created.ID.String()))
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
+	var fileMap = make(handler.Files)
+	for field, content := range files {
+		fileMap[field] = handler.MyFile{
+			Name:    field + "_" + lib.GenerateRandomString(6) + ".png",
+			Content: content,
+		}
+	}
+	http.Send(fileMap)
+	http.ParseResponse(&c.created)
 }
