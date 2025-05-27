@@ -50,15 +50,12 @@ func Test_Company(t *testing.T) {
 	})
 	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_1)
 	company.UploadImages(t, 200, map[string][]byte{
-		"logo": FileBytes.PNG_FILE_2,
-	})
-	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_2)
-	company.UploadImages(t, 200, map[string][]byte{
-		"logo":       FileBytes.PNG_FILE_1,
 		"banner":     FileBytes.PNG_FILE_2,
 		"favicon":    FileBytes.PNG_FILE_3,
 		"background": FileBytes.PNG_FILE_4,
 	})
+	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_1)
+	company.GetImage(t, 200, company.created.Design.Images.BannerURL, &FileBytes.PNG_FILE_2)
 	company.GetImage(t, 200, company.created.Design.Images.FaviconURL, &FileBytes.PNG_FILE_3)
 	company.GetImage(t, 200, company.created.Design.Images.BackgroundURL, &FileBytes.PNG_FILE_4)
 	company.UploadImages(t, 200, map[string][]byte{
