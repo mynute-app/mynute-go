@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -105,14 +106,29 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 
 	// --- Parse Body ONCE ---
 	body_data := make(map[string]any)
-	body_bytes := c.Request().Body()
-	if len(body_bytes) > 0 {
-		if err := json.Unmarshal(body_bytes, &body_data); err != nil {
-			log.Printf("Error unmarshaling request body: %v", err)
-			return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal body error: %w", err))
+	contentType := c.Get("Content-Type")
+
+	if strings.HasPrefix(contentType, "application/json") {
+		body_bytes := c.Request().Body()
+		if len(body_bytes) > 0 {
+			if err := json.Unmarshal(body_bytes, &body_data); err != nil {
+				log.Printf("Error unmarshaling request body: %v", err)
+				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal body error: %w", err))
+			}
+		} else {
+			log.Println("No request body found")
 		}
+	} else if strings.HasPrefix(contentType, "multipart/form-data") {
+		log.Println("Multipart form data not supported in this context, skipping body parsing")
+		// Note: If you need to handle multipart/form-data, you would need to parse it differently.
+		// Fiber provides methods for handling multipart forms, but this is not implemented here.
+		// You might want to return an error or handle it as needed.
+	} else if contentType == "" {
+		log.Println("No Content-Type header found, assuming no body data")
+		// No body data to parse, continue with an empty body_data map
 	} else {
-		log.Println("No request body found")
+		log.Printf("Unsupported Content-Type: %s", contentType)
+		return lib.Error.General.AuthError.WithError(fmt.Errorf("unsupported content type: %s", contentType))
 	}
 
 	// --- Find Resource Reference Key/Value ---

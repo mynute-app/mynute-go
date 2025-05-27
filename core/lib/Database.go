@@ -59,6 +59,9 @@ func ChangeToCompanySchemaByContext(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	if schemaName == "" {
+		return Error.General.InternalError.WithError(fmt.Errorf("company schema name is empty"))
+	}
 	return ChangeToCompanySchema(tx, schemaName)
 }
 

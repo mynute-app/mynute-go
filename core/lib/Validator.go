@@ -36,36 +36,37 @@ func isValidSubdomain(fl validator.FieldLevel) bool {
 	subdomain := fl.Field().String()
 
 	// Subdomain requirements:
-	// - 8 to 20 characters
-	// - Must have at least one letter
-	// - Must not contain special characters
-	// - Must not contain spaces
-	// - Must not contain consecutive hyphens
-	// - Must not start or end with a hyphen
-	// - Must not contain dots
-	// - Must not contain underscores
-	// - Must not contain uppercase letters
+	// - 8 to 30 characters
+	// - Only lowercase letters, numbers, and hyphens
+	// - Cannot contain special characters
+	// - Cannot contain spaces
+	// - Cannot contain dots
+	// - Cannot contain underscores
+	// - Cannot contain uppercase letters
+	// - Cannot contain consecutive hyphens
+	// - Cannot start or end with a hyphen
 
-	hasEnoughChars := len(subdomain) >= 8 && len(subdomain) <= 20
+	if len(subdomain) < 8 || len(subdomain) > 30 {
+		return false
+	}
+
 	hasLetter := regexp.MustCompile(`[a-z]`).MatchString
 	hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+=<>?{}|~]`).MatchString
 	hasSpace := regexp.MustCompile(`\s`).MatchString
 	hasConsecutiveHyphens := regexp.MustCompile(`--`).MatchString
-	startsWithHyphen := subdomain[0] == '-'
-	endsWithHyphen := subdomain[len(subdomain)-1] == '-'
 	hasDot := regexp.MustCompile(`\.`).MatchString
 	hasUnderscore := regexp.MustCompile(`_`).MatchString
 	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString
-	shouldntHaveThese := !(hasLetter(subdomain) &&
-		hasSpecial(subdomain) &&
-		hasSpace(subdomain) &&
-		hasConsecutiveHyphens(subdomain) &&
-		startsWithHyphen &&
-		endsWithHyphen &&
-		hasDot(subdomain) &&
-		hasUnderscore(subdomain) &&
-		hasUpper(subdomain))
-	return hasEnoughChars && shouldntHaveThese
+
+	return hasLetter(subdomain) &&
+		!hasSpecial(subdomain) &&
+		!hasSpace(subdomain) &&
+		!hasDot(subdomain) &&
+		!hasUnderscore(subdomain) &&
+		!hasUpper(subdomain) &&
+		!hasConsecutiveHyphens(subdomain) &&
+		subdomain[0] != '-' &&
+		subdomain[len(subdomain)-1] != '-'
 }
 
 // init function to initialize and register the validator

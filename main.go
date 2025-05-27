@@ -11,7 +11,7 @@ import (
 //	@termsOfService				http://swagger.io/terms/
 //	@securityDefinitions.apikey	ApiKeyAuth
 //	@in							header
-//	@name						Authorization
+//	@name						X-Auth-Token
 //	@description				Enter the token in the format: <token>
 //	@contact.name				API Support
 //	@contact.email				fiber@swagger.io

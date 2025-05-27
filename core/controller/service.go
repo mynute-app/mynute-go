@@ -16,9 +16,9 @@ import (
 //	@Description	Create a service
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.CreateService	true	"Service"
@@ -92,9 +92,9 @@ func GetServiceByName(c *fiber.Ctx) error {
 //	@Description	Update a service by its ID
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Accept			json
 //	@Produce		json
@@ -122,10 +122,10 @@ func UpdateServiceById(c *fiber.Ctx) error {
 //	@Description	Delete a service by its ID
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
-//	@Param			CompanyID		header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	nil

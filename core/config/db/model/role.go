@@ -17,15 +17,16 @@ type Role struct {
 	Description  string     `json:"description"`
 	CompanyID    *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
 	Company      *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
-	IsSystemRole bool       `gorm:"not null;default:false" json:"is_system_role"`
 }
 
-func (Role) TableName() string { return "public.roles" }
+func (Role) TableName() string  { return "public.roles" }
 func (Role) SchemaType() string { return "public" }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {
-	if err := r.isRoleNameReserved(tx); err != nil {
+	if is, err := r.isRoleNameReserved(tx); err != nil {
 		return err
+	} else if is {
+		return lib.Error.Role.NameReserved
 	}
 	if r.ID == uuid.Nil && !AllowSystemRoleCreation && r.CompanyID == nil {
 		return lib.Error.Role.NilCompanyID
@@ -34,27 +35,23 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (r *Role) BeforeUpdate(tx *gorm.DB) error {
-	if err := r.isRoleNameReserved(tx); err != nil {
+	if nameIsReserved, err := r.isRoleNameReserved(tx); err != nil {
 		return err
-	}
-	if !AllowSystemRoleCreation && r.CompanyID == nil {
-		return lib.Error.Company.NotSame
+	} else if nameIsReserved && tx.Statement.Changed("name") {
+		return lib.Error.Role.NameReserved
 	}
 	return nil
 }
 
-func (r *Role) isRoleNameReserved(tx *gorm.DB) error {
-	if r.CompanyID != nil {
-		var count int64
-		if err := tx.
-			Model(&Role{}).
-			Where("name = ?", r.Name).
-			Count(&count).Error; err != nil {
-			return err
-		}
-		return lib.Error.Role.NameReserved
+func (r *Role) isRoleNameReserved(tx *gorm.DB) (bool, error) {
+	var count int64
+	if err := tx.
+		Model(&Role{}).
+		Where("name = ? AND company_id IS NULL", r.Name).
+		Count(&count).Error; err != nil {
+		return false, err
 	}
-	return nil
+	return count > 0, nil
 }
 
 var SystemRoleOwner = &Role{
@@ -85,41 +82,15 @@ var Roles = []*Role{
 	SystemRoleBranchSupervisor,
 }
 
-// func SeedRoles(db *gorm.DB) ([]*Role, error) {
-// 	AllowSystemRoleCreation = true
-// 	tx := db.Begin()
-// 	seededCount := 0
-// 	updatedCount := 0
-// 	defer func() {
-// 		AllowSystemRoleCreation = false
-// 		if r := recover(); r != nil {
-// 			tx.Rollback()
-// 			log.Printf("Panic occurred during policy seeding: %v", r)
-// 		}
-// 		if err := tx.Commit().Error; err != nil {
-// 			log.Printf("Failed to commit transaction: %v", err)
-// 		}
-// 		log.Printf("System Roles seeded successfully. New: %d, Existing/Updated: %d", seededCount, updatedCount)
-// 	}()
-// 	for _, newRole := range Roles {
-// 		if newRole == nil {
-// 			panic("Encountered nil role in Roles slice")
-// 		}
-// 		var oldRole Role
-// 		err := tx.Where("name = ?", newRole.Name).First(oldRole).Error
-// 		if err == gorm.ErrRecordNotFound {
-// 			if err := tx.Create(newRole).Error; err != nil {
-// 				return nil, fmt.Errorf("failed to create role %s: %w", newRole.Name, err)
-// 			}
-// 			seededCount++
-// 		} else if err != nil {
-// 			return nil, fmt.Errorf("failed to check if role %s exists: %w", newRole.Name, err)
-// 		} else {
-// 			if err := tx.Model(newRole).Where("id = ?", ).Updates(newRole).Error; err != nil {
-// 				return nil, fmt.Errorf("failed to update role %s: %w", newRole.Name, err)
-// 			}
-// 			updatedCount++
-// 		}
-// 	}
-// 	return Roles, nil
-// }
+func LoadSystemRoleIDs(db *gorm.DB) error {
+	for _, r := range Roles {
+		var existing Role
+		if err := db.
+			Where("name = ? AND company_id IS NULL", r.Name).
+			First(&existing).Error; err != nil {
+			return err
+		}
+		r.ID = existing.ID
+	}
+	return nil
+}

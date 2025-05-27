@@ -4,4 +4,5 @@ tmp
 __debug
 .exe
 *uploads*
+*local_uploads*
 *my_files*

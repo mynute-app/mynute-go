@@ -8,7 +8,7 @@ type TimeRange struct {
 }
 
 type LoginEmployee struct {
-	Email    string `json:"email" example:"joseph.doe@example.com"`
+	Email    string `json:"email" example:"john.clark@gmail.com"`
 	Password string `json:"password" example:"1SecurePswd!"`
 }
 

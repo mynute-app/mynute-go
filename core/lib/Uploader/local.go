@@ -76,7 +76,5 @@ func (l *LocalUploader) save(file []byte, scopedPath string) (string, error) {
 		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to write file %s: %w", fullPath, err))
 	}
 
-	// Ensure forward slashes for URL compatibility
-	urlPath := filepath.ToSlash(filepath.Join(namespace.UploadsFolder, scopedPath))
-	return "/static/" + urlPath, nil
+	return "/static/" + filepath.ToSlash(scopedPath), nil
 }

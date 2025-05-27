@@ -42,8 +42,9 @@ func Connect() *Database {
 		dbName = os.Getenv("POSTGRES_DB_TEST")
 		LogLevel = logger.Info
 	} else if app_env == "dev" {
+		dbName = os.Getenv("POSTGRES_DB_DEV")
 		LogLevel = logger.Info
-	} else if app_env != "production" && app_env != "dev" {
+	} else if app_env != "prod" {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
 

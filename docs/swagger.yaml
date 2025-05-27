@@ -343,6 +343,11 @@ definitions:
       trading_name:
         example: Your Company Trading Name
         type: string
+    required:
+    - owner_email
+    - owner_password
+    - owner_phone
+    - start_subdomain
     type: object
   DTO.CreateEmployee:
     properties:
@@ -510,7 +515,7 @@ definitions:
   DTO.LoginEmployee:
     properties:
       email:
-        example: joseph.doe@example.com
+        example: john.clark@gmail.com
         type: string
       password:
         example: 1SecurePswd!
@@ -850,12 +855,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Appointment
@@ -888,12 +893,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -924,12 +929,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -960,12 +965,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: ID
@@ -1005,12 +1010,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch
@@ -1043,12 +1048,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1085,12 +1090,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1126,12 +1131,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1168,12 +1173,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       produces:
@@ -1199,12 +1204,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1237,12 +1242,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1280,12 +1285,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch Name
@@ -1343,7 +1348,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client ID
@@ -1372,7 +1377,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client ID
@@ -1410,7 +1415,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client ID
@@ -1442,7 +1447,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client Email
@@ -1550,12 +1555,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1610,12 +1615,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1655,12 +1660,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1708,12 +1713,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Company ID
@@ -1819,12 +1824,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee
@@ -1857,12 +1862,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1898,12 +1903,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Branch ID
@@ -1940,12 +1945,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -1983,12 +1988,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2025,12 +2030,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2061,12 +2066,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2099,12 +2104,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee ID
@@ -2142,12 +2147,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee Email
@@ -2181,7 +2186,7 @@ paths:
       parameters:
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee
@@ -2199,6 +2204,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       summary: Login
       tags:
       - Employee
@@ -2210,7 +2217,7 @@ paths:
       parameters:
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Employee Email
@@ -2241,7 +2248,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Holiday
@@ -2274,7 +2281,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Holiday ID
@@ -2329,7 +2336,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Holiday ID
@@ -2392,7 +2399,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: sector
@@ -2425,7 +2432,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: sector ID
@@ -2480,7 +2487,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: sector ID
@@ -2543,12 +2550,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service
@@ -2581,17 +2588,17 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service ID
@@ -2642,12 +2649,12 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: X-Company-ID
         in: header
-        name: CompanyID
+        name: X-Company-ID
         required: true
         type: string
       - description: Service ID
@@ -2704,6 +2711,6 @@ securityDefinitions:
   ApiKeyAuth:
     description: 'Enter the token in the format: <token>'
     in: header
-    name: Authorization
+    name: X-Auth-Token
     type: apiKey
 swagger: "2.0"

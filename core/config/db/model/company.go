@@ -31,7 +31,7 @@ func (c *Company) GenerateSchemaName() string {
 }
 
 func (c *Company) BeforeUpdate(tx *gorm.DB) error {
-	return c.CheckDesignImageOwnershipBeforeUpdate(tx)
+	return nil
 }
 
 func (c *Company) CheckDesignImageOwnershipBeforeUpdate(tx *gorm.DB) error {
@@ -193,6 +193,7 @@ func (c *Company) CreateOwner(tx *gorm.DB, owner *Employee) error {
 		return err
 	}
 
+	// TODO: Check why this employee_roles implementation is not working.
 	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.ID).Error; err != nil {
 		return err
 	}

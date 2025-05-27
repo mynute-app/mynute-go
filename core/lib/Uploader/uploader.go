@@ -15,7 +15,7 @@ type Uploader interface {
 func FileUploader(caller_entity string, caller_id string) (Uploader, error) {
 	switch os.Getenv("APP_ENV") {
 	case "prod":
-		return NewS3Uploader(caller_entity, caller_id)
+		return NewCloudUploader(caller_entity, caller_id)
 	case "test", "dev":
 		return &LocalUploader{
 			Entity:   caller_entity,

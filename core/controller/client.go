@@ -10,6 +10,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
 	"fmt"
+	"net/url"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -107,18 +108,15 @@ func LoginClient(c *fiber.Ctx) error {
 func VerifyClientEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
 	var client model.ClientMeta
+	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
+	email, err := url.QueryUnescape(email)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
 	client.Email = email
-
 	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			BadReq := lib.Error.General.BadRequest
-			for _, fieldErr := range validationErrors {
-				// You can customize the message
-				BadReq.WithError(
-					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-				)
-			}
-			return BadReq
+		if _, ok := err.(validator.ValidationErrors); ok {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
 		} else {
 			return lib.Error.General.InternalError.WithError(err)
 		}
@@ -156,7 +154,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an client by its email
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
 //	@Produce		json
@@ -230,7 +228,7 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Description	Get only the appointments field from a client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header	string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			id				path	string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.ClientAppointments
@@ -269,7 +267,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 //	@Description	Update an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -319,7 +317,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Description	Delete an client
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Client ID"
 //	@Produce		json

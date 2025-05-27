@@ -64,15 +64,8 @@ func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
 		tx.First(db_e, e.ID)
 		if e.Password != db_e.Password && !e.MatchPassword(db_e.Password) {
 			if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
-				if validationErrors, ok := err.(validator.ValidationErrors); ok {
-					BadReq := lib.Error.General.BadRequest
-					for _, fieldErr := range validationErrors {
-						// You can customize the message
-						BadReq.WithError(
-							fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-						)
-					}
-					return BadReq
+				if _, ok := err.(validator.ValidationErrors); ok {
+					return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
 				} else {
 					return lib.Error.General.InternalError.WithError(err)
 				}

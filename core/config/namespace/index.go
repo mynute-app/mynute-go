@@ -124,5 +124,5 @@ var (
 	DeleteActionMethod = "DELETE"
 )
 
-var UploadsFolder = "my_files"
+var UploadsFolder = "local_uploads"
 var StaticServerFolder = "static"

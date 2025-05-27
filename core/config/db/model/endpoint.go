@@ -2,6 +2,7 @@ package model
 
 import (
 	"agenda-kaki-go/core/config/namespace"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -616,44 +617,33 @@ type EndpointCfg struct {
 	AllowCreation bool // Allow creation of endpoints
 }
 
-func EndPoints(cfg *EndpointCfg) ([]*EndPoint, func()) {
+func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 	AllowEndpointCreation = cfg.AllowCreation
+
+	// Recuperar os recursos corretos do banco
+	resourceMap := map[string]uuid.UUID{}
+	var resources []Resource
+	if err := db.Find(&resources).Error; err != nil {
+		return nil, nil, err
+	}
+	for _, r := range resources {
+		resourceMap[r.Table] = r.ID
+	}
+
 	for _, edp := range endpoints {
 		if edp.Resource != nil {
-			edp.ResourceID = &edp.Resource.ID
-			edp.Resource = nil // Avoid circular reference
+			if id, ok := resourceMap[edp.Resource.Table]; ok {
+				edp.ResourceID = &id
+			} else {
+				return nil, nil, fmt.Errorf("resource not found for table: %s", edp.Resource.Table)
+			}
+			edp.Resource = nil
 		}
 	}
+
 	deferFnc := func() {
 		AllowEndpointCreation = false
 	}
-	return endpoints, deferFnc
-}
 
-// func SeedEndpoints(db *gorm.DB) ([]*EndPoint, error) {
-// 	AllowEndpointCreation = true
-// 	tx := db.Begin()
-// 	defer func() {
-// 		AllowEndpointCreation = false
-// 		if r := recover(); r != nil {
-// 			tx.Rollback()
-// 			log.Printf("Panic occurred during policy seeding: %v", r)
-// 		}
-// 		if err := tx.Commit().Error; err != nil {
-// 			log.Printf("Failed to commit transaction: %v", err)
-// 		}
-// 		log.Print("System Endpoints seeded successfully")
-// 	}()
-// 	LoadEndpoints()
-// 	for _, edp := range Endpoints {
-// 		err := tx.Where("method = ? AND path = ?", edp.Method, edp.Path).First(edp).Error
-// 		if err == gorm.ErrRecordNotFound {
-// 			if err := tx.Create(edp).Error; err != nil {
-// 				return nil, err
-// 			}
-// 		} else if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return Endpoints, nil
-// }
+	return endpoints, deferFnc, nil
+}
