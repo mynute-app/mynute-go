@@ -405,10 +405,11 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		newFile := make([]byte, file.Size)
-		if _, err := f.Read(newFile); err != nil {
+		_, err = f.Read(newFile)
+		f.Close()
+		if err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 

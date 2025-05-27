@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type LocalUploader struct {
@@ -24,39 +25,43 @@ func (l *LocalUploader) Save(fileType string, file []byte, originalFilename stri
 }
 
 func (l *LocalUploader) Delete(fileURL string) error {
-	filename := ExtractFilenameFromURL(fileURL) // Extracts the base unique filename, e.g., "original_uuid.ext"
+	filename := ExtractFilenameFromURL(fileURL)
 	if filename == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid file URL: %s", fileURL)) // Changed to BadRequest
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid file URL: %s", fileURL))
 	}
 
 	root_path, err := lib.FindProjectRoot()
 	if err != nil {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to find project root for deletion: %w", err))
+		return fmt.Errorf("failed to find project root for deletion: %w", err) // remover o ErrorStruct aqui para facilitar o retry
 	}
 
-	// Construct the full path consistent with how `save` stores it.
-	// `scopedPath` in `save` is `entity/entityID/name_uuid.ext`.
-	// `filename` here is `name_uuid.ext`.
-	// So, we need to join `root_path, namespace.UploadsFolder, l.Entity, l.EntityID, filename`.
 	fullPath := filepath.Join(root_path, namespace.UploadsFolder, l.Entity, l.EntityID, filename)
 
 	err = os.Remove(fullPath)
 	if err != nil {
-		// Return a wrapped error, potentially checking os.IsNotExist if desired
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to remove file %s: %w", fullPath, err))
+		// Aqui não envolve o erro com ErrorStruct, só retorna direto pro Replace() poder inspecionar com os.IsPermission()
+		return fmt.Errorf("failed to remove file %s: %w", fullPath, err)
 	}
+
 	return nil
 }
 
 func (l *LocalUploader) Replace(fileType string, oldURL string, newFile []byte, originalFilename string) (string, error) {
 	if oldURL != "" {
-		if err := l.Delete(oldURL); err != nil {
-			// If Delete fails (e.g., file not found, or other FS error), wrap and return.
-			// Consider if os.IsNotExist(err) from Delete should be handled differently (e.g., ignored).
-			// For now, strict error propagation.
+		var err error
+		const maxAttempts = 12
+		for i := 1; i <= maxAttempts; i++ {
+			err = l.Delete(oldURL)
+			if err == nil {
+				break
+			}
+			time.Sleep(500 * time.Millisecond) // Espera antes da próxima tentativa, sempre
+		}
+		if err != nil {
 			return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to delete old file for replacement: %w", err))
 		}
 	}
+
 	return l.Save(fileType, newFile, originalFilename)
 }
 

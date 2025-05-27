@@ -13,5 +13,11 @@
       "mode": "auto",
       "program": "${workspaceFolder}"
     }
-  ]
+  ],
+  "files.watcherExclude": {
+    "**/local_uploads/**": true
+  },
+  "files.exclude": {
+    "**/local_uploads": true
+  }
 }

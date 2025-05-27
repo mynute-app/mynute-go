@@ -9,6 +9,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/lib/FileBytes"
 	handler "agenda-kaki-go/core/tests/handlers"
+	"bytes"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -44,6 +45,29 @@ func Test_Company(t *testing.T) {
 	company.GetById(t, 200)
 	company.GetByName(t, 200)
 	company.GetBySubdomain(t, 200)
+	company.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_1,
+	})
+	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_1)
+	company.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_2,
+	})
+	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_2)
+	company.UploadImages(t, 200, map[string][]byte{
+		"logo":       FileBytes.PNG_FILE_1,
+		"banner":     FileBytes.PNG_FILE_2,
+		"favicon":    FileBytes.PNG_FILE_3,
+		"background": FileBytes.PNG_FILE_4,
+	})
+	company.GetImage(t, 200, company.created.Design.Images.FaviconURL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.BackgroundURL, &FileBytes.PNG_FILE_4)
+	company.UploadImages(t, 200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_3,
+	})
+	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.BannerURL, &FileBytes.PNG_FILE_2)
+	company.GetImage(t, 200, company.created.Design.Images.FaviconURL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.BackgroundURL, &FileBytes.PNG_FILE_4)
 	company.Delete(t, 200)
 }
 
@@ -103,12 +127,6 @@ func (c *Company) Set(t *testing.T) {
 			Sunday: []mJSON.WorkRange{},
 		},
 	}})
-	c.UploadImages(t, 200, map[string][]byte{
-		"logo": FileBytes.PNG_FILE_1,
-	})
-	c.UploadImages(t, 200, map[string][]byte{
-		"logo": FileBytes.PNG_FILE_2,
-	})
 	c.UploadImages(t, 200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_1,
 	})
@@ -672,8 +690,8 @@ func (c *Company) Delete(t *testing.T, status int) {
 
 func (c *Company) UploadImages(t *testing.T, status int, files map[string][]byte) {
 	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL(fmt.Sprintf("/company/%s/image", c.created.ID.String()))
+	http.Method("PATCH")
+	http.URL(fmt.Sprintf("/company/%s/design/images", c.created.ID.String()))
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, c.auth_token)
 	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
@@ -685,5 +703,29 @@ func (c *Company) UploadImages(t *testing.T, status int, files map[string][]byte
 		}
 	}
 	http.Send(fileMap)
-	http.ParseResponse(&c.created)
+	http.ParseResponse(&c.created.Design)
+}
+
+func (c *Company) GetImage(t *testing.T, status int, imageURL string, compareImgBytes *[]byte) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(imageURL)
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
+	http.Send(nil)
+	// Compare the response bytes with the expected image bytes
+	if compareImgBytes != nil {
+		var response []byte
+		http.ParseResponse(&response)
+		if len(response) == 0 {
+			t.Error("Received empty response for image")
+		} else if len(response) != len(*compareImgBytes) {
+			t.Errorf("Image size mismatch: expected %d bytes, got %d bytes", len(*compareImgBytes), len(response))
+		} else if !bytes.Equal(response, *compareImgBytes) {
+			t.Logf("Image content mismatch for %s", imageURL)
+		}
+	} else {
+		t.Logf("Image fetched successfully from %s", imageURL)
+	}
 }

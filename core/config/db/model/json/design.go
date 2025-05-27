@@ -8,8 +8,8 @@ import (
 )
 
 type DesignConfig struct {
-	Colors    Colors `json:"colors"`
-	Images    Images `json:"images"`
+	Colors Colors `json:"colors"`
+	Images Images `json:"images"`
 }
 
 type Colors struct {
@@ -41,7 +41,6 @@ func (d DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error
 	}
 	return up.Delete(oldURL)
 }
-
 
 func (d DesignConfig) Value() (driver.Value, error) {
 	return json.Marshal(d)

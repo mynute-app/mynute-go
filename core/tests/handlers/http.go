@@ -15,16 +15,17 @@ import (
 type HttpClient struct{}
 
 type httpActions struct {
-	Error          string
-	Status         int
-	ResBody        map[string]any
-	ResHeaders     map[string][]string
-	url            string
-	method         string
-	expectedStatus int
-	test           *testing.T
-	httpRes        *http.Response
-	headers        http.Header // Store headers before sending the request
+	Error           string
+	Status          int
+	ResBody         map[string]any
+	ResHeaders      map[string][]string
+	url             string
+	method          string
+	expectedStatus  int
+	test            *testing.T
+	httpRes         *http.Response
+	headers         http.Header // Store headers before sending the request
+	rawResponseBody []byte      // Store the raw response body
 }
 
 func (c *HttpClient) SetTest(t *testing.T) *httpActions {
@@ -59,8 +60,7 @@ func (h *httpActions) parseFiles(files Files) []byte {
 		h.test.Fatalf("failed to close multipart writer: %v", err)
 	}
 
-	h.headers = http.Header{}
-	h.headers.Set("Content-Type", writer.FormDataContentType())
+	h.Header("Content-Type", writer.FormDataContentType())
 	return b.Bytes()
 }
 
@@ -100,17 +100,22 @@ func (h *httpActions) ParseResponse(to any) {
 	if reflect.TypeOf(to).Kind() != reflect.Ptr {
 		h.test.Fatalf("expected a pointer to a struct")
 	}
+
+	// Se for []byte, retorna o corpo bruto da resposta
+	if b, ok := to.(*[]byte); ok {
+		*b = h.rawResponseBody
+		return
+	}
+
 	if h.ResBody == nil {
 		h.test.Fatalf("response body is nil")
 	}
 
-	// Marshal the map into JSON bytes
 	resBodyBytes, err := json.Marshal(h.ResBody)
 	if err != nil {
 		h.test.Fatalf("failed to marshal response body: %v", err)
 	}
 
-	// Unmarshal JSON bytes directly into your struct
 	if err := json.Unmarshal(resBodyBytes, to); err != nil {
 		h.test.Fatalf("failed to unmarshal response body: %v", err)
 	}
@@ -121,54 +126,62 @@ func (h *httpActions) ParseResponse(to any) {
 // The response body is stored in ResBody, and the status code is stored in Status.
 // It will defer res.Body.Close() to ensure the response body is closed.
 func (h *httpActions) Send(body any) *httpActions {
-	if b, ok := body.(Files); ok {
-		bb := h.parseFiles(b)
-		if len(bb) == 0 {
-			h.test.Fatalf("no files provided for multipart request")
+	var bodyBytes []byte
+
+	switch b := body.(type) {
+	case Files:
+		bodyBytes = h.parseFiles(b) // Isso já cuida do header
+	case []byte:
+		bodyBytes = b
+	default:
+		var err error
+		bodyBytes, err = json.Marshal(body)
+		if err != nil {
+			h.test.Fatalf("failed to marshal payload: %v", err)
 			return nil
 		}
-		body = bb
 	}
-	h.Error = ""
+
 	h.test.Logf(">>>>>>>>>> Sending %s request to %s", h.method, h.url)
 	h.test.Logf("request body: %+v", body)
 	h.test.Logf("request headers: %+v", h.headers)
-	bodyBytes, err := json.Marshal(body)
-	if err != nil {
-		h.test.Fatalf("failed to marshal payload: %v", err)
-		return nil
-	}
+
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
+
 	req, err := http.NewRequest(h.method, h.url, bodyBuffer)
 	if err != nil {
 		h.test.Fatalf("failed to create request: %v", err)
 		return nil
 	}
-	req.Header.Set("Content-Type", "application/json")
+
+	if h.headers.Get("Content-Type") == "" {
+		h.Header("Content-Type", "application/json")
+	}
+
 	for key, values := range h.headers {
 		for _, value := range values {
 			req.Header.Add(key, value)
 		}
 	}
+
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
 		h.test.Fatalf("failed to send request: %v", err)
 		return nil
 	}
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
+	defer res.Body.Close()
+
 	h.ResHeaders = res.Header
+
 	if res.ContentLength != 0 && res.Body != nil {
 		bodyBytes, err := io.ReadAll(res.Body)
 		if err != nil {
 			h.test.Fatalf("failed to read response body: %v", err)
 		}
+		h.rawResponseBody = bodyBytes // <--- Aqui salva
 
 		if !json.Valid(bodyBytes) {
-			h.ResBody = map[string]any{"data": string(bodyBytes)} // or handle accordingly
-		} else if len(bodyBytes) > 0 && bodyBytes[0] == '"' && bodyBytes[len(bodyBytes)-1] == '"' {
 			h.ResBody = map[string]any{"data": string(bodyBytes)}
 		} else {
 			decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
@@ -178,6 +191,7 @@ func (h *httpActions) Send(body any) *httpActions {
 			}
 		}
 	}
+
 	h.test.Logf("response body: %+v", h.ResBody)
 	h.test.Logf("response headers: %+v", h.ResHeaders)
 
