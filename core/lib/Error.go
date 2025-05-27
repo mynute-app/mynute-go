@@ -22,9 +22,36 @@ func (e ErrorStruct) WithError(err error) ErrorStruct {
 	if e.InnerError == nil {
 		e.InnerError = make(map[int]string)
 	}
-	index := len(e.InnerError) + 1
-	e.InnerError[index] = err.Error()
-	return e
+
+	newErr := ErrorStruct{
+		InnerError:    make(map[int]string),
+		DescriptionEn: e.DescriptionEn,
+		DescriptionBr: e.DescriptionBr,
+		HTTPStatus:    e.HTTPStatus,
+	}
+
+	// Copia os erros existentes
+	i := 1
+	for _, msg := range e.InnerError {
+		newErr.InnerError[i] = msg
+		i++
+	}
+
+	// Adiciona os novos erros
+	if errStr, ok := err.(ErrorStruct); ok {
+		newErr.DescriptionBr = errStr.DescriptionBr
+		newErr.DescriptionEn = errStr.DescriptionEn
+		newErr.HTTPStatus = errStr.HTTPStatus
+
+		for _, msg := range errStr.InnerError {
+			newErr.InnerError[i] = msg
+			i++
+		}
+	} else if err != nil {
+		newErr.InnerError[i] = err.Error()
+	}
+
+	return newErr
 }
 
 // Optional: If you want a printable version
