@@ -44,8 +44,22 @@ services:
           psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
         fi;
 
+        echo \"Checking if dev database '$POSTGRES_DB_DEV' exists...\";
+        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_DEV'\" | grep -q 1; then
+          echo '✅   Dev database \"$POSTGRES_DB_DEV\" already exists.';
+        else
+          echo '🚀   Creating dev database: \"$POSTGRES_DB_DEV\"';
+          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_DEV\\\";\";
+        fi;
+
+        echo '🔧   Ensuring schema public exists on main database...'
+        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
+        
         echo '🔧   Ensuring schema public exists on test database...';
         psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
+
+        echo '🔧   Ensuring schema public exists on dev database...'
+        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_DEV\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
 
         echo '🎉   Database initialization complete!';
 
