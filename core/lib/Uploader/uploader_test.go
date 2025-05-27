@@ -49,15 +49,15 @@ func TestGenerateUniqueFilename(t *testing.T) {
 func TestExtractFilenameFromURL(t *testing.T) {
 	// This test seems fine as is, assuming namespace.UploadsFolder is correctly defined.
 	// For robustness, use actual value if namespace.UploadsFolder can change.
-	// Assuming namespace.UploadsFolder = "my_files" for this example URL construction.
-	url := fmt.Sprintf("https://cdn.site.com/assets/%s/client/some_uuid/logo_another_uuid.png", "my_files") // Example usage
+	// Assuming namespace.UploadsFolder = "local_uploads" for this example URL construction.
+	url := fmt.Sprintf("https://cdn.site.com/assets/%s/client/some_uuid/logo_another_uuid.png", "local_uploads") // Example usage
 	expected := "logo_another_uuid.png"
 	got := ExtractFilenameFromURL(url)
 	if got != expected {
 		t.Errorf("expected %s, got %s", expected, got)
 	}
 
-	urlLocal := fmt.Sprintf("/static/%s/client/some_uuid/doc_another_uuid.pdf", "my_files")
+	urlLocal := fmt.Sprintf("/static/%s/client/some_uuid/doc_another_uuid.pdf", "local_uploads")
 	expectedLocal := "doc_another_uuid.pdf"
 	gotLocal := ExtractFilenameFromURL(urlLocal)
 	if gotLocal != expectedLocal {
