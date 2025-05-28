@@ -6,9 +6,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"path"
 	"path/filepath"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
@@ -64,15 +66,18 @@ func (c *cloudUploader) Replace(fileType string, oldURL string, newFile []byte, 
 }
 
 func (c *cloudUploader) save(file []byte, scopedPath string) (string, error) {
+	contentType := http.DetectContentType(file)
 	_, err := c.Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: &c.Bucket,
-		Key:    &scopedPath,
-		Body:   bytes.NewReader(file),
-		ACL:    types.ObjectCannedACLPublicRead,
+		Bucket:             &c.Bucket,
+		Key:                &scopedPath,
+		Body:               bytes.NewReader(file),
+		ACL:                types.ObjectCannedACLPublicRead,
+		ContentDisposition: aws.String("inline"),
+		ContentType:        aws.String(contentType),
 	})
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
-	url := fmt.Sprintf("%s/%s", c.PublicURL, filepath.ToSlash(scopedPath))
+	url := fmt.Sprintf("%s/%s/%s", c.PublicURL, c.Bucket, filepath.ToSlash(scopedPath))
 	return url, nil
 }

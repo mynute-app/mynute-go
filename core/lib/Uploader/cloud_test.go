@@ -44,7 +44,7 @@ func TestCloudUploader_Save_And_Delete(t *testing.T) {
     if !mockClient.PutCalled {
         t.Error("expected PutObject to be called")
     }
-    if !strings.HasPrefix(url, "https://cdn.test.com/client/"+id) {
+    if !strings.HasPrefix(url, "https://cdn.test.com/my-bucket/client/"+id) {
         t.Errorf("expected URL to contain client/%s, got %s", id, url)
     }
 

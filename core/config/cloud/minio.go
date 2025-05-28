@@ -15,11 +15,11 @@ import (
 type MinIO struct{}
 
 func (m *MinIO) Client() (*s3.Client, error) {
-	endpoint := os.Getenv("MINIO_ENDPOINT")
+	public_url := os.Getenv("MINIO_PUBLIC_URL")
 	accessKey := os.Getenv("MINIO_ROOT_USER")
 	secretKey := os.Getenv("MINIO_ROOT_PASSWORD")
 
-	if endpoint == "" || accessKey == "" || secretKey == "" {
+	if public_url == "" || accessKey == "" || secretKey == "" {
 		return nil, lib.Error.General.InternalError.WithError(
 			fmt.Errorf("missing required env vars for MinIO"),
 		)
@@ -34,7 +34,7 @@ func (m *MinIO) Client() (*s3.Client, error) {
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String(endpoint)
+		o.BaseEndpoint = aws.String(public_url)
 		o.UsePathStyle = true
 	})
 

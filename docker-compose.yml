@@ -1,7 +1,5 @@
 # 
-# # RUN line below for test # #
-# docker-compose -p kaki-go --profile test -f docker-compose.yml up -d --force-recreate
-# # RUN line below for dev # #
+# # RUN line below for dev & test # #
 # docker-compose -p kaki-go --profile dev -f docker-compose.yml up -d --force-recreate
 # # RUN line below for prod # #
 # docker-compose -p kaki-go --profile prod -f docker-compose.yml up -d --force-recreate
@@ -161,8 +159,8 @@ services:
       - "9000:9000"   # API S3
       - "9001:9001"   # Console web
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"

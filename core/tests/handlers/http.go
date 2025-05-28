@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -80,6 +81,9 @@ func (h *httpActions) Header(key, value string) *httpActions {
 func (h *httpActions) URL(url string) *httpActions {
 	AppPort := os.Getenv("APP_PORT")
 	BaseUrl := fmt.Sprintf("http://localhost:%s", AppPort)
+	if strings.HasPrefix(url, "http://localhost:") || strings.HasPrefix(url, "https://localhost:") {
+		BaseUrl = ""
+	}
 	FullUrl := fmt.Sprintf(BaseUrl + url)
 	h.url = FullUrl
 	return h

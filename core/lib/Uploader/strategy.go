@@ -25,8 +25,6 @@ func makeImageStrategy(u Uploader) UploadStrategy {
 			return "", err
 		}
 		switch up := u.(type) {
-		case *localUploader:
-			return up.save(file, originalFilename)
 		case *cloudUploader:
 			return up.save(file, originalFilename)
 		default:
@@ -41,8 +39,6 @@ func makePDFStrategy(u Uploader) UploadStrategy {
 			return "", err
 		}
 		switch up := u.(type) {
-		case *localUploader:
-			return up.save(file, originalFilename)
 		case *cloudUploader:
 			return up.save(file, originalFilename)
 		default:
