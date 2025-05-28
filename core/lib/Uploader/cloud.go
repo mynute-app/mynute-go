@@ -16,12 +16,12 @@ import (
 type cloudUploader struct {
 	Entity    string
 	EntityID  string
-	Client    *s3.Client
+	Client    S3Uploader
 	Bucket    string
 	PublicURL string
 }
 
-func NewCloudUploader(entity, id string, client *s3.Client, bucket, publicURL string) *cloudUploader {
+func NewCloudUploader(entity, id string, client S3Uploader, bucket, publicURL string) *cloudUploader {
 	return &cloudUploader{
 		Entity:    entity,
 		EntityID:  id,

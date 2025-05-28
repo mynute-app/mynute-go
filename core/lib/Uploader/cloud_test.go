@@ -4,7 +4,6 @@ package myUploader
 import (
     "agenda-kaki-go/core/lib/FileBytes"
     "context"
-    "errors"
     "strings"
     "testing"
 
@@ -18,22 +17,16 @@ type mockS3Client struct {
     LastKey      string
 }
 
-func (m *mockS3Client) PutObject(ctx context.Context, input *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
-    if input == nil || input.Key == nil || input.Body == nil {
-        return nil, errors.New("invalid input")
-    }
-    m.PutCalled = true
-    m.LastKey = *input.Key
-    return &s3.PutObjectOutput{}, nil
+func (m *mockS3Client) PutObject(ctx context.Context, input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+	m.PutCalled = true
+	m.LastKey = *input.Key
+	return &s3.PutObjectOutput{}, nil
 }
 
-func (m *mockS3Client) DeleteObject(ctx context.Context, input *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
-    if input == nil || input.Key == nil {
-        return nil, errors.New("invalid delete input")
-    }
-    m.DeleteCalled = true
-    m.LastKey = *input.Key
-    return &s3.DeleteObjectOutput{}, nil
+func (m *mockS3Client) DeleteObject(ctx context.Context, input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+	m.DeleteCalled = true
+	m.LastKey = *input.Key
+	return &s3.DeleteObjectOutput{}, nil
 }
 
 func TestCloudUploader_Save_And_Delete(t *testing.T) {

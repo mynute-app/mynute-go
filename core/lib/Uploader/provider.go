@@ -5,8 +5,6 @@ import (
 	"agenda-kaki-go/core/config/cloud"
 	"fmt"
 	"os"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var factory func(entity, entityID string) (Uploader, error)
@@ -36,7 +34,7 @@ func StartProvider() error {
 	return nil
 }
 
-func get_s3_client() (*s3.Client, error) {
+func get_s3_client() (*RealS3Client, error) {
 	driver := os.Getenv("STORAGE_DRIVER")
 	if driver == "R2" {
 		cloudflare := &cloud.CloudFlare{}
@@ -44,7 +42,7 @@ func get_s3_client() (*s3.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to init R2 client: %w", err)
 		}
-		return client, nil
+		return &RealS3Client{Client: client}, nil
 	}
 	return nil, fmt.Errorf("unsupported storage driver: %s", driver)
 }
