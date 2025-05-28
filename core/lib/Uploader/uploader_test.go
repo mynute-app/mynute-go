@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var pdfData = []byte("%PDF-1.4")
 var invalidData = []byte("Hello, not an image")
 
 // Helper to get root_path for tests
@@ -122,7 +121,7 @@ func TestLocalUploader_SavePDF_Success(t *testing.T) {
 	})
 
 	originalFilename := "doc.pdf"
-	url, err := l.Save("pdf", pdfData, originalFilename)
+	url, err := l.Save("pdf", FileBytes.PDF_FILE_1, originalFilename)
 	if err != nil {
 		t.Fatalf("l.Save() error = %v, want nil", err)
 	}
