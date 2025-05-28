@@ -85,13 +85,13 @@ func TestLocalUploader_SaveImage_Success(t *testing.T) {
 		t.Errorf("expected URL to end with .png suffix, got %s", url)
 	}
 
-	// Verify file existence
-	urlPrefix := "/static/" + filepath.ToSlash(namespace.UploadsFolder) + "/"
+	urlPrefix := "/static/" + filepath.ToSlash(l.Entity) + "/" + l.EntityID + "/"
 	if !strings.HasPrefix(url, urlPrefix) {
 		t.Fatalf("URL '%s' does not have expected prefix '%s'", url, urlPrefix)
 	}
-	scopedPath := strings.TrimPrefix(url, urlPrefix)
-	fullSavedPath := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(scopedPath)) // Ensure OS-specific path for Stat
+
+	scopedPath := strings.TrimPrefix(url, "/static/")
+	fullSavedPath := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(scopedPath))
 
 	if _, statErr := os.Stat(fullSavedPath); os.IsNotExist(statErr) {
 		t.Fatalf("expected file to exist at %s, but it does not: %v", fullSavedPath, statErr)
@@ -129,11 +129,12 @@ func TestLocalUploader_SavePDF_Success(t *testing.T) {
 		t.Errorf("expected URL to end with .pdf suffix, got %s", url)
 	}
 
-	urlPrefix := "/static/" + filepath.ToSlash(namespace.UploadsFolder) + "/"
+	urlPrefix := "/static/" + filepath.ToSlash(l.Entity) + "/" + l.EntityID + "/"
 	if !strings.HasPrefix(url, urlPrefix) {
 		t.Fatalf("URL '%s' does not have expected prefix '%s'", url, urlPrefix)
 	}
-	scopedPath := strings.TrimPrefix(url, urlPrefix)
+
+	scopedPath := strings.TrimPrefix(url, "/static/")
 	fullSavedPath := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(scopedPath))
 
 	if _, statErr := os.Stat(fullSavedPath); os.IsNotExist(statErr) {
@@ -158,11 +159,13 @@ func TestLocalUploader_Delete_Success(t *testing.T) {
 		t.Fatalf("l.Save() failed: %v", err)
 	}
 
-	urlPrefix := "/static/" + filepath.ToSlash(namespace.UploadsFolder) + "/"
+	urlPrefix := "/static/" + filepath.ToSlash(l.Entity) + "/" + l.EntityID + "/"
 	if !strings.HasPrefix(url, urlPrefix) {
 		t.Fatalf("URL '%s' does not have expected prefix '%s'", url, urlPrefix)
 	}
-	scopedPath := strings.TrimPrefix(url, urlPrefix)
+
+	scopedPath := strings.TrimPrefix(url, "/static/")
+
 	filePathToVerify := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(scopedPath))
 
 	// Ensure file exists before delete attempt
@@ -200,11 +203,11 @@ func TestLocalUploader_Replace(t *testing.T) {
 		t.Fatalf("initial l.Save() for old file failed: %v", err)
 	}
 
-	urlPrefix := "/static/" + filepath.ToSlash(namespace.UploadsFolder) + "/"
+	urlPrefix := "/static/" + filepath.ToSlash(l.Entity) + "/" + l.EntityID + "/"
 	if !strings.HasPrefix(oldURL, urlPrefix) {
-		t.Fatalf("Old URL '%s' does not have expected prefix '%s'", oldURL, urlPrefix)
+		t.Fatalf("URL '%s' does not have expected prefix '%s'", oldURL, urlPrefix)
 	}
-	oldScopedPath := strings.TrimPrefix(oldURL, urlPrefix)
+	oldScopedPath := strings.TrimPrefix(oldURL, "/static/")
 	oldFilePath := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(oldScopedPath))
 
 	// Ensure old file exists
@@ -231,7 +234,7 @@ func TestLocalUploader_Replace(t *testing.T) {
 	if !strings.HasPrefix(newURL, urlPrefix) {
 		t.Fatalf("New URL '%s' does not have expected prefix '%s'", newURL, urlPrefix)
 	}
-	newScopedPath := strings.TrimPrefix(newURL, urlPrefix)
+	newScopedPath := strings.TrimPrefix(newURL, "/static/")
 	newFilePath := filepath.Join(rootPath, namespace.UploadsFolder, filepath.FromSlash(newScopedPath))
 
 	if _, statErr := os.Stat(newFilePath); os.IsNotExist(statErr) {
