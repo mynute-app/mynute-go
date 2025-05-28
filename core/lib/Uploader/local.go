@@ -10,12 +10,19 @@ import (
 	"time"
 )
 
-type LocalUploader struct {
+type localUploader struct {
 	Entity   string
 	EntityID string
 }
 
-func (l *LocalUploader) Save(fileType string, file []byte, originalFilename string) (string, error) {
+func NewLocalUploader(entity, entityID string) *localUploader {
+	return &localUploader{
+		Entity:   entity,
+		EntityID: entityID,
+	}
+}
+
+func (l *localUploader) Save(fileType string, file []byte, originalFilename string) (string, error) {
 	scopedPath := GenerateUniqueFilename(l.Entity, l.EntityID, originalFilename)
 	strategy, err := getStrategy(l, fileType)
 	if err != nil {
@@ -24,7 +31,7 @@ func (l *LocalUploader) Save(fileType string, file []byte, originalFilename stri
 	return strategy(file, scopedPath)
 }
 
-func (l *LocalUploader) Delete(fileURL string) error {
+func (l *localUploader) Delete(fileURL string) error {
 	filename := ExtractFilenameFromURL(fileURL)
 	if filename == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid file URL: %s", fileURL))
@@ -46,7 +53,7 @@ func (l *LocalUploader) Delete(fileURL string) error {
 	return nil
 }
 
-func (l *LocalUploader) Replace(fileType string, oldURL string, newFile []byte, originalFilename string) (string, error) {
+func (l *localUploader) Replace(fileType string, oldURL string, newFile []byte, originalFilename string) (string, error) {
 	if oldURL != "" {
 		var err error
 		const maxAttempts = 12
@@ -65,7 +72,7 @@ func (l *LocalUploader) Replace(fileType string, oldURL string, newFile []byte, 
 	return l.Save(fileType, newFile, originalFilename)
 }
 
-func (l *LocalUploader) save(file []byte, scopedPath string) (string, error) {
+func (l *localUploader) save(file []byte, scopedPath string) (string, error) {
 	root_path, err := lib.FindProjectRoot()
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)

@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	myUploader "agenda-kaki-go/core/lib/Uploader"
 	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"
@@ -48,6 +49,9 @@ func NewServer() *Server {
 		panic(err)
 	}
 	routes.Build(db.Gorm, app)
+	if err := myUploader.StartProvider(); err != nil {
+		panic(err)
+	}
 	return &Server{App: app, Db: db}
 }
 

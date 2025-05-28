@@ -25,9 +25,9 @@ func makeImageStrategy(u Uploader) UploadStrategy {
 			return "", err
 		}
 		switch up := u.(type) {
-		case *LocalUploader:
+		case *localUploader:
 			return up.save(file, originalFilename)
-		case *CloudUploader:
+		case *cloudUploader:
 			return up.save(file, originalFilename)
 		default:
 			return "", errors.New("unknown uploader type")
@@ -41,9 +41,9 @@ func makePDFStrategy(u Uploader) UploadStrategy {
 			return "", err
 		}
 		switch up := u.(type) {
-		case *LocalUploader:
+		case *localUploader:
 			return up.save(file, originalFilename)
-		case *CloudUploader:
+		case *cloudUploader:
 			return up.save(file, originalFilename)
 		default:
 			return "", errors.New("unknown uploader type")

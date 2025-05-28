@@ -68,7 +68,7 @@ func TestExtractFilenameFromURL(t *testing.T) {
 func TestLocalUploader_SaveImage_Success(t *testing.T) {
 	rootPath := getTestRootPath(t)
 	id := uuid.New()
-	l := &LocalUploader{Entity: "client", EntityID: id.String()}
+	l := &localUploader{Entity: "client", EntityID: id.String()}
 
 	t.Cleanup(func() {
 		cleanupDir := filepath.Join(rootPath, namespace.UploadsFolder, l.Entity, l.EntityID)
@@ -102,7 +102,7 @@ func TestLocalUploader_SaveImage_Success(t *testing.T) {
 func TestLocalUploader_SaveImage_Invalid(t *testing.T) {
 	// This test should already pass if the validation logic is correct.
 	// No changes needed based on the error messages.
-	l := &LocalUploader{Entity: "client", EntityID: uuid.New().String()}
+	l := &localUploader{Entity: "client", EntityID: uuid.New().String()}
 	_, err := l.Save("image", invalidData, "text.txt")
 	if err == nil {
 		t.Fatal("expected error for invalid image, got nil")
@@ -112,7 +112,7 @@ func TestLocalUploader_SaveImage_Invalid(t *testing.T) {
 func TestLocalUploader_SavePDF_Success(t *testing.T) {
 	rootPath := getTestRootPath(t)
 	id := uuid.New()
-	l := &LocalUploader{Entity: "client", EntityID: id.String()}
+	l := &localUploader{Entity: "client", EntityID: id.String()}
 
 	t.Cleanup(func() {
 		cleanupDir := filepath.Join(rootPath, namespace.UploadsFolder, l.Entity, l.EntityID)
@@ -145,7 +145,7 @@ func TestLocalUploader_SavePDF_Success(t *testing.T) {
 func TestLocalUploader_Delete_Success(t *testing.T) {
 	rootPath := getTestRootPath(t)
 	id := uuid.New()
-	l := &LocalUploader{Entity: "client", EntityID: id.String()}
+	l := &localUploader{Entity: "client", EntityID: id.String()}
 
 	t.Cleanup(func() {
 		cleanupDir := filepath.Join(rootPath, namespace.UploadsFolder, l.Entity, l.EntityID)
@@ -188,7 +188,7 @@ func TestLocalUploader_Delete_Success(t *testing.T) {
 func TestLocalUploader_Replace(t *testing.T) {
 	rootPath := getTestRootPath(t)
 	id := uuid.New()
-	l := &LocalUploader{Entity: "client", EntityID: id.String()}
+	l := &localUploader{Entity: "client", EntityID: id.String()}
 
 	t.Cleanup(func() {
 		cleanupDir := filepath.Join(rootPath, namespace.UploadsFolder, l.Entity, l.EntityID)
