@@ -5,6 +5,7 @@ import (
 	dJSON "agenda-kaki-go/core/config/api/dto/json"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
@@ -362,7 +363,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Param			banner			formData	file	false	"Banner image"
 // @Param			favicon			formData	file	false	"Favicon image"
 // @Param			background		formData	file	false	"Background image"
-// @Success		200				{object}	dJSON.Design
+// @Success		200				{object}	dJSON.Images
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
@@ -380,10 +381,10 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 
 	// Upload e atualização dos campos
 	files := map[string]*string{
-		"logo":       &company.Design.Images.LogoURL,
-		"banner":     &company.Design.Images.BannerURL,
-		"favicon":    &company.Design.Images.FaviconURL,
-		"background": &company.Design.Images.BackgroundURL,
+		"logo":       &company.Design.Images.Logo.URL,
+		"banner":     &company.Design.Images.Banner.URL,
+		"favicon":    &company.Design.Images.Favicon.URL,
+		"background": &company.Design.Images.Background.URL,
 	}
 
 	var uploadedFilesURL []string
@@ -405,10 +406,11 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		newFile := make([]byte, file.Size)
-		if _, err := f.Read(newFile); err != nil {
+		_, err = f.Read(newFile)
+		f.Close()
+		if err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 
@@ -426,7 +428,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
 }
 
 // @Summary		Delete a specific company design image
@@ -456,10 +458,10 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 
 	imageType := c.Params("image_type")
 	ptrMap := map[string]*string{
-		"logo":       &company.Design.Images.LogoURL,
-		"banner":     &company.Design.Images.BannerURL,
-		"favicon":    &company.Design.Images.FaviconURL,
-		"background": &company.Design.Images.BackgroundURL,
+		"logo":       &company.Design.Images.Logo.URL,
+		"banner":     &company.Design.Images.Banner.URL,
+		"favicon":    &company.Design.Images.Favicon.URL,
+		"background": &company.Design.Images.Background.URL,
 	}
 
 	target, ok := ptrMap[imageType]
@@ -480,6 +482,79 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
 }
 
+// UpdateCompanyColors updates the colors of a company
+//
+//	@Summary		Update company colors
+//	@Description	Update the primary, secondary, tertiary, and quaternary colors of a company
+//	@Tags			Company
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Company ID"
+//	@Accept			json
+//	@Produce		json
+//	@Param			colors	body		mJSON.Colors	true	"Colors"
+//	@Success		200		{object}	dJSON.Colors
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Router			/company/{id}/design/colors [put]
+func UpdateCompanyColors(c *fiber.Ctx) error {
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var company model.Company
+	id := c.Params("id")
+	if err := tx.First(&company, "id = ?", id).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	var colors mJSON.Colors
+	if err := c.BodyParser(&colors); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	ValidateHexColor := func(color string) error {
+		if color == "" {
+			return nil // Empty color is allowed
+		}
+		if len(color) != 7 || color[0] != '#' {
+			return fmt.Errorf("invalid hex color: %s", color)
+		}
+		for _, c := range color[1:] {
+			if (c < '0' || c > '9') && (c < 'A' || c > 'F') && (c < 'a' || c > 'f') {
+				return fmt.Errorf("invalid hex color: %s", color)
+			}
+		}
+		return nil
+	}
+
+	if err := ValidateHexColor(colors.Primary); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid primary color: %s", colors.Primary))
+	}
+	company.Design.Colors.Primary = colors.Primary
+	if err := ValidateHexColor(colors.Secondary); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid secondary color: %s", colors.Secondary))
+	}
+	company.Design.Colors.Secondary = colors.Secondary
+	if err := ValidateHexColor(colors.Tertiary); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tertiary color: %s", colors.Tertiary))
+	}
+	company.Design.Colors.Tertiary = colors.Tertiary
+	if err := ValidateHexColor(colors.Quaternary); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid quaternary color: %s", colors.Quaternary))
+	}
+	company.Design.Colors.Quaternary = colors.Quaternary
+
+	if err := tx.Save(&company).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Colors, &dJSON.Colors{})
+}
+
 // Constructor for company_controller
 func Company(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
@@ -490,6 +565,7 @@ func Company(Gorm *handler.Gorm) {
 		GetCompanyByTaxId,
 		GetCompanyBySubdomain,
 		UpdateCompanyImages,
+		UpdateCompanyColors,
 		DeleteCompanyImage,
 		UpdateCompanyById,
 		DeleteCompanyById,

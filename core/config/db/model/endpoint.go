@@ -60,7 +60,7 @@ var GetAppointmentByID = &EndPoint{
 }
 var UpdateAppointmentByID = &EndPoint{
 	Path:             "/appointment/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateAppointmentByID",
 	Description:      "Update appointment by ID",
 	NeedsCompanyId:   true,
@@ -129,7 +129,7 @@ var GetBranchByName = &EndPoint{
 }
 var UpdateBranchById = &EndPoint{
 	Path:             "/branch/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateBranchById",
 	Description:      "Update branch by ID",
 	NeedsCompanyId:   true,
@@ -211,7 +211,7 @@ var GetClientById = &EndPoint{
 }
 var UpdateClientById = &EndPoint{
 	Path:             "/client/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateClientById",
 	Description:      "Update client by ID",
 	DenyUnauthorized: true,
@@ -261,7 +261,7 @@ var GetCompanyBySubdomain = &EndPoint{
 }
 var UpdateCompanyById = &EndPoint{
 	Path:             "/company/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateCompanyById",
 	Description:      "Update company by ID",
 	DenyUnauthorized: true,
@@ -270,7 +270,7 @@ var UpdateCompanyById = &EndPoint{
 }
 var UpdateCompanyImages = &EndPoint{
 	Path:             "/company/:id/design/images",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateCompanyImages",
 	Description:      "Update company design images",
 	DenyUnauthorized: true,
@@ -282,6 +282,15 @@ var DeleteCompanyImage = &EndPoint{
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteCompanyImage",
 	Description:      "Delete company design images",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         CompanyResource,
+}
+var UpdateCompanyColors = &EndPoint{
+	Path:             "/company/:id/design/colors",
+	Method:           namespace.PutActionMethod,
+	ControllerName:   "UpdateCompanyColors",
+	Description:      "Update company design colors",
 	DenyUnauthorized: true,
 	NeedsCompanyId:   true,
 	Resource:         CompanyResource,
@@ -341,7 +350,7 @@ var GetEmployeeByEmail = &EndPoint{
 }
 var UpdateEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateEmployeeById",
 	Description:      "Update employee by ID",
 	NeedsCompanyId:   true,
@@ -441,7 +450,7 @@ var GetHolidayByName = &EndPoint{
 }
 var UpdateHolidayById = &EndPoint{
 	Path:             "/holiday/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateHolidayById",
 	Description:      "Update holiday by ID",
 	NeedsCompanyId:   true,
@@ -482,7 +491,7 @@ var GetSectorByName = &EndPoint{
 }
 var UpdateSectorById = &EndPoint{
 	Path:             "/sector/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateSectorById",
 	Description:      "Updates a company sector by ID",
 	DenyUnauthorized: true,
@@ -526,7 +535,7 @@ var GetServiceByName = &EndPoint{
 }
 var UpdateServiceById = &EndPoint{
 	Path:             "/service/:id",
-	Method:           namespace.UpdateActionMethod,
+	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateServiceById",
 	Description:      "Update service by ID",
 	NeedsCompanyId:   true,
@@ -581,6 +590,7 @@ var endpoints = []*EndPoint{
 	DeleteCompanyById,
 	UpdateCompanyImages,
 	DeleteCompanyImage,
+	UpdateCompanyColors,
 	// Employee
 	CreateEmployee,
 	LoginEmployee,

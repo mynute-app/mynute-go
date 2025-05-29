@@ -66,19 +66,19 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 
 	token, err := jwt.Parse(auth_token, parseCallback)
 	if err != nil {
-		return nil, err
+		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	} else if token == nil {
 		return nil, nil
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return nil, errors.New("invalid jwt.MapClaims passed")
+		return nil, lib.Error.Auth.InvalidToken.WithError(errors.New("invalid jwt.MapClaims passed"))
 	}
 
 	claim_data, ok := claims["data"].(map[string]any)
 	if !ok {
-		return nil, errors.New("invalid claim.data passed")
+		return nil, lib.Error.Auth.InvalidToken.WithError(errors.New("invalid claim.data passed"))
 	}
 
 	// Parse claim_data into model.Client{} struct
@@ -86,14 +86,14 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 	// Turn claim_data into bytes
 	claim_data_bytes, err := json.Marshal(claim_data)
 	if err != nil {
-		return nil, err
+		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
 	// Turn bytes into model.Client{} struct
 	var client DTO.Claims
 	err = json.Unmarshal(claim_data_bytes, &client)
 	if err != nil {
-		return nil, err
+		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
 	return &client, nil

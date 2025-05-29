@@ -3,7 +3,6 @@ package myUploader
 import (
 	"agenda-kaki-go/core/lib"
 	"errors"
-	"os"
 )
 
 type Uploader interface {
@@ -13,15 +12,8 @@ type Uploader interface {
 }
 
 func FileUploader(caller_entity string, caller_id string) (Uploader, error) {
-	switch os.Getenv("APP_ENV") {
-	case "prod":
-		return NewCloudUploader(caller_entity, caller_id)
-	case "test", "dev":
-		return &LocalUploader{
-			Entity:   caller_entity,
-			EntityID: caller_id,
-		}, nil
-	default:
-		return nil, lib.Error.General.InternalError.WithError(errors.New("unknown APP_ENV"))
+	if factory == nil {
+		return nil, lib.Error.General.InternalError.WithError(errors.New("uploader factory not initialized"))
 	}
+	return factory(caller_entity, caller_id)
 }

@@ -85,7 +85,7 @@ func Test_Appointment(t *testing.T) {
 	// The branch, employee, service must be the same as a[0] to ensure a direct conflict.
 	// branchForSlot0, baseEmployee, serviceForSlot0 are already the correct objects.
 	a = append(a, &Appointment{})
-	a[3].Create(t, 400, ct.auth_token, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
+	a[3].Create(t, 409, ct.auth_token, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
 }
 
 // Helper functions to retrieve Branch and Service objects from Company test setup data

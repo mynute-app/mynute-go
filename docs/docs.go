@@ -1351,6 +1351,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/company/{id}/design/colors": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the primary, secondary, tertiary, and quaternary colors of a company",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Company"
+                ],
+                "summary": "Update company colors",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Colors",
+                        "name": "colors",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/mJSON.Colors"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dJSON.Colors"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/company/{id}/design/images": {
             "patch": {
                 "security": [
@@ -1420,7 +1489,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dJSON.Design"
+                            "$ref": "#/definitions/dJSON.Images"
                         }
                     },
                     "400": {
@@ -3980,24 +4049,41 @@ const docTemplate = `{
                 }
             }
         },
+        "dJSON.Image": {
+            "type": "object",
+            "properties": {
+                "alt": {
+                    "type": "string",
+                    "example": "Image of something"
+                },
+                "caption": {
+                    "type": "string",
+                    "example": "This is the image we talk about"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Title of this image"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://example.com/image.png"
+                }
+            }
+        },
         "dJSON.Images": {
             "type": "object",
             "properties": {
-                "background_url": {
-                    "type": "string",
-                    "example": "https://example.com/background.png"
+                "background": {
+                    "$ref": "#/definitions/dJSON.Image"
                 },
-                "banner_url": {
-                    "type": "string",
-                    "example": "https://example.com/banner.png"
+                "banner": {
+                    "$ref": "#/definitions/dJSON.Image"
                 },
-                "favicon_url": {
-                    "type": "string",
-                    "example": "https://example.com/favicon.png"
+                "favicon": {
+                    "$ref": "#/definitions/dJSON.Image"
                 },
-                "logo_url": {
-                    "type": "string",
-                    "example": "https://example.com/logo.png"
+                "logo": {
+                    "$ref": "#/definitions/dJSON.Image"
                 }
             }
         },
@@ -4029,20 +4115,37 @@ const docTemplate = `{
                 }
             }
         },
+        "mJSON.Image": {
+            "type": "object",
+            "properties": {
+                "alt": {
+                    "type": "string"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "mJSON.Images": {
             "type": "object",
             "properties": {
-                "background_url": {
-                    "type": "string"
+                "background": {
+                    "$ref": "#/definitions/mJSON.Image"
                 },
-                "banner_url": {
-                    "type": "string"
+                "banner": {
+                    "$ref": "#/definitions/mJSON.Image"
                 },
-                "favicon_url": {
-                    "type": "string"
+                "favicon": {
+                    "$ref": "#/definitions/mJSON.Image"
                 },
-                "logo_url": {
-                    "type": "string"
+                "logo": {
+                    "$ref": "#/definitions/mJSON.Image"
                 }
             }
         }

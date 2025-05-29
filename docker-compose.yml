@@ -1,5 +1,9 @@
-# dev and test : docker-compose -p kaki-go -f docker-compose.yml up -d --force-recreate
-# production : docker-compose -p kaki-go -f docker-compose.yml --profile production up -d --force-recreate
+# 
+# # RUN line below for dev & test # #
+# docker-compose -p kaki-go --profile dev -f docker-compose.yml up -d --force-recreate
+# # RUN line below for prod # #
+# docker-compose -p kaki-go --profile prod -f docker-compose.yml up -d --force-recreate
+#
 
 services:
   postgres:
@@ -98,7 +102,7 @@ services:
     networks:
       - kaki-network
     profiles:
-      - production  # Runs only in production
+      - prod  # Runs only in production
 
   prometheus:
     container_name: prometheus-kaki
@@ -146,6 +150,26 @@ services:
       - loki-wal:/loki/wal
     networks:
       - kaki-network
+
+  minio:
+    container_name: minio-kaki
+    image: quay.io/minio/minio
+    restart: always
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - kaki-network
+    profiles:
+      - dev
+      - test
+
       
 networks:
   kaki-network:
@@ -159,3 +183,4 @@ volumes:
   loki-chunks:
   loki-compactor:
   loki-wal:
+  minio-data:

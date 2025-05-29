@@ -120,7 +120,8 @@ var Role = struct {
 var (
 	CreateActionMethod = "POST"
 	ViewActionMethod   = "GET"
-	UpdateActionMethod = "PATCH"
+	PatchActionMethod  = "PATCH"
+	PutActionMethod    = "PUT"
 	DeleteActionMethod = "DELETE"
 )
 
