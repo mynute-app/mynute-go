@@ -63,6 +63,8 @@ func Test_Permissions(t *testing.T) {
 		t.Fatal("Failed to get appointment id from response for client1")
 	}
 
+	employee0.GetById(t, 200)
+
 	t.Log("Client tries to get his appointment : GET /appointment/{id} => 200")
 	http.
 		Method("GET").
@@ -600,8 +602,8 @@ func Test_Permissions(t *testing.T) {
 		Header(namespace.HeadersKey.Auth, employee0AuthToken).
 		Send(nil)
 
-	t.Log("Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
 	if otherEmployeeAppointmentID != "" {
+		t.Log("Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
 		http.
 			Method("GET").
 			URL("/appointment/"+otherEmployeeAppointmentID).
