@@ -362,7 +362,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Param			banner			formData	file	false	"Banner image"
 // @Param			favicon			formData	file	false	"Favicon image"
 // @Param			background		formData	file	false	"Background image"
-// @Success		200				{object}	dJSON.Design
+// @Success		200				{object}	dJSON.Images
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
@@ -380,10 +380,10 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 
 	// Upload e atualização dos campos
 	files := map[string]*string{
-		"logo":       &company.Design.Images.LogoURL,
-		"banner":     &company.Design.Images.BannerURL,
-		"favicon":    &company.Design.Images.FaviconURL,
-		"background": &company.Design.Images.BackgroundURL,
+		"logo":       &company.Design.Images.Logo.URL,
+		"banner":     &company.Design.Images.Banner.URL,
+		"favicon":    &company.Design.Images.Favicon.URL,
+		"background": &company.Design.Images.Background.URL,
 	}
 
 	var uploadedFilesURL []string
@@ -427,7 +427,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
 }
 
 // @Summary		Delete a specific company design image
@@ -457,10 +457,10 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 
 	imageType := c.Params("image_type")
 	ptrMap := map[string]*string{
-		"logo":       &company.Design.Images.LogoURL,
-		"banner":     &company.Design.Images.BannerURL,
-		"favicon":    &company.Design.Images.FaviconURL,
-		"background": &company.Design.Images.BackgroundURL,
+		"logo":       &company.Design.Images.Logo.URL,
+		"banner":     &company.Design.Images.Banner.URL,
+		"favicon":    &company.Design.Images.Favicon.URL,
+		"background": &company.Design.Images.Background.URL,
 	}
 
 	target, ok := ptrMap[imageType]

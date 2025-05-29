@@ -20,13 +20,35 @@ type Colors struct {
 }
 
 type Images struct {
-	LogoURL       string `json:"logo_url"`
-	BannerURL     string `json:"banner_url"`
-	BackgroundURL string `json:"background_url"`
-	FaviconURL    string `json:"favicon_url"`
+	Logo       Image `json:"logo"`
+	Banner     Image `json:"banner"`
+	Background Image `json:"background"`
+	Favicon    Image `json:"favicon"`
 }
 
-func (d DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilename string, newFile []byte) (string, error) {
+type Image struct {
+	Alt     string `json:"alt"`
+	Title   string `json:"title"`
+	Caption string `json:"caption"`
+	URL     string `json:"url"`
+}
+
+func (i *Images) GetImageURL(imageType string) string {
+	switch imageType {
+	case "logo":
+		return i.Logo.URL
+	case "banner":
+		return i.Banner.URL
+	case "background":
+		return i.Background.URL
+	case "favicon":
+		return i.Favicon.URL
+	default:
+		return ""
+	}
+}
+
+func (d *DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilename string, newFile []byte) (string, error) {
 	up, err := myUploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return "", err
@@ -34,7 +56,7 @@ func (d DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilena
 	return up.Replace("image", oldURL, newFile, originalFilename)
 }
 
-func (d DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error {
+func (d *DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error {
 	up, err := myUploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return err
@@ -42,7 +64,7 @@ func (d DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error
 	return up.Delete(oldURL)
 }
 
-func (d DesignConfig) Value() (driver.Value, error) {
+func (d *DesignConfig) Value() (driver.Value, error) {
 	return json.Marshal(d)
 }
 
@@ -52,41 +74,4 @@ func (d *DesignConfig) Scan(value any) error {
 		return errors.New("failed to scan DesignConfig: expected []byte")
 	}
 	return json.Unmarshal(bytes, d)
-}
-
-func (i *Images) GetLogoURL() string {
-	if i.LogoURL == "" {
-		return "/assets/images/standard_logo.png"
-	}
-	return i.LogoURL
-}
-
-func (i *Images) GetBannerURL() string {
-	if i.BannerURL == "" {
-		return "/assets/images/standard_banner.png"
-	}
-	return i.BannerURL
-}
-
-func (i *Images) GetBackgroundURL() string {
-	if i.BackgroundURL == "" {
-		return "/assets/images/standard_background.png"
-	}
-	return i.BackgroundURL
-}
-
-func (i *Images) GetFaviconURL() string {
-	if i.FaviconURL == "" {
-		return "/assets/images/standard_favicon.png"
-	}
-	return i.FaviconURL
-}
-
-func (i *Images) GetURLs() Images {
-	return Images{
-		LogoURL:       i.GetLogoURL(),
-		BannerURL:     i.GetBannerURL(),
-		BackgroundURL: i.GetBackgroundURL(),
-		FaviconURL:    i.GetFaviconURL(),
-	}
 }

@@ -48,23 +48,29 @@ func Test_Company(t *testing.T) {
 	company.UploadImages(t, 200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_1,
 	})
-	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_1)
+	company.GetImage(t, 200, company.created.Design.Images.Logo.URL, &FileBytes.PNG_FILE_1)
 	company.UploadImages(t, 200, map[string][]byte{
 		"banner":     FileBytes.PNG_FILE_2,
 		"favicon":    FileBytes.PNG_FILE_3,
 		"background": FileBytes.PNG_FILE_4,
 	})
-	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_1)
-	company.GetImage(t, 200, company.created.Design.Images.BannerURL, &FileBytes.PNG_FILE_2)
-	company.GetImage(t, 200, company.created.Design.Images.FaviconURL, &FileBytes.PNG_FILE_3)
-	company.GetImage(t, 200, company.created.Design.Images.BackgroundURL, &FileBytes.PNG_FILE_4)
+	company.GetImage(t, 200, company.created.Design.Images.Logo.URL, &FileBytes.PNG_FILE_1)
+	company.GetImage(t, 200, company.created.Design.Images.Banner.URL, &FileBytes.PNG_FILE_2)
+	company.GetImage(t, 200, company.created.Design.Images.Favicon.URL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.Background.URL, &FileBytes.PNG_FILE_4)
 	company.UploadImages(t, 200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_3,
 	})
-	company.GetImage(t, 200, company.created.Design.Images.LogoURL, &FileBytes.PNG_FILE_3)
-	company.GetImage(t, 200, company.created.Design.Images.BannerURL, &FileBytes.PNG_FILE_2)
-	company.GetImage(t, 200, company.created.Design.Images.FaviconURL, &FileBytes.PNG_FILE_3)
-	company.GetImage(t, 200, company.created.Design.Images.BackgroundURL, &FileBytes.PNG_FILE_4)
+	company.GetImage(t, 200, company.created.Design.Images.Logo.URL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.Banner.URL, &FileBytes.PNG_FILE_2)
+	company.GetImage(t, 200, company.created.Design.Images.Favicon.URL, &FileBytes.PNG_FILE_3)
+	company.GetImage(t, 200, company.created.Design.Images.Background.URL, &FileBytes.PNG_FILE_4)
+	company.DeleteImages(t, 200, []string{
+		"logo",
+		"banner",
+		"favicon",
+		"background",
+	})
 	company.Delete(t, 200)
 }
 
@@ -700,7 +706,27 @@ func (c *Company) UploadImages(t *testing.T, status int, files map[string][]byte
 		}
 	}
 	http.Send(fileMap)
-	http.ParseResponse(&c.created.Design)
+	http.ParseResponse(&c.created.Design.Images)
+}
+
+func (c *Company) DeleteImages(t *testing.T, status int, images []string) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("DELETE")
+	base_url := fmt.Sprintf("/company/%s/design/images", c.created.ID.String())
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
+	for _, field := range images {
+		image_url := base_url + "/" + field
+		http.URL(image_url)
+		http.Send(nil)
+		http.ParseResponse(&c.created.Design)
+		if c.created.Design.Images.GetImageURL(field) != "" {
+			t.Errorf("Image %s was not deleted successfully. Expected empty URL, got %s", field, c.created.Design.Images.GetImageURL(field))
+		} else {
+			t.Logf("Image %s deleted successfully.", field)
+		}
+	}
 }
 
 func (c *Company) GetImage(t *testing.T, status int, imageURL string, compareImgBytes *[]byte) {

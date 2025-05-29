@@ -13,8 +13,15 @@ type Colors struct {
 }
 
 type Images struct {
-	LogoURL       string `json:"logo_url" example:"https://example.com/logo.png"`
-	BannerURL     string `json:"banner_url" example:"https://example.com/banner.png"`
-	BackgroundURL string `json:"background_url" example:"https://example.com/background.png"`
-	FaviconURL    string `json:"favicon_url" example:"https://example.com/favicon.png"`
+	Logo       Image `json:"logo"`
+	Banner     Image `json:"banner"`
+	Background Image `json:"background"`
+	Favicon    Image `json:"favicon"`
+}
+
+type Image struct {
+	Alt 	 string `json:"alt" example:"Image of something"`
+	Title    string `json:"title" example:"Title of this image"`
+	Caption  string `json:"caption" example:"This is the image we talk about"`
+	URL       string `json:"url" example:"https://example.com/image.png"`
 }
