@@ -65,12 +65,22 @@ func Test_Company(t *testing.T) {
 	company.GetImage(t, 200, company.created.Design.Images.Banner.URL, &FileBytes.PNG_FILE_2)
 	company.GetImage(t, 200, company.created.Design.Images.Favicon.URL, &FileBytes.PNG_FILE_3)
 	company.GetImage(t, 200, company.created.Design.Images.Background.URL, &FileBytes.PNG_FILE_4)
+	company.ChangeColors(t, 200, mJSON.Colors{
+		Primary:  "#123456",
+	})
+	company.ChangeColors(t, 200, mJSON.Colors{
+		Primary:   "#654321",
+		Secondary: "#abcdef",
+		Tertiary:  "#fedcba",
+		Quaternary: "#123abc",
+	})
 	company.DeleteImages(t, 200, []string{
 		"logo",
 		"banner",
 		"favicon",
 		"background",
 	})
+	company.ChangeColors(t, 200, mJSON.Colors{})
 	company.Delete(t, 200)
 }
 
@@ -726,6 +736,22 @@ func (c *Company) DeleteImages(t *testing.T, status int, images []string) {
 		} else {
 			t.Logf("Image %s deleted successfully.", field)
 		}
+	}
+}
+
+func (c *Company) ChangeColors(t *testing.T, status int, colors mJSON.Colors) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("PUT")
+	http.URL(fmt.Sprintf("/company/%s/design/colors", c.created.ID.String()))
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Auth, c.auth_token)
+	http.Header(namespace.HeadersKey.Company, c.created.ID.String())
+	http.Send(colors)
+	http.ParseResponse(&c.created.Design.Colors)
+	if c.created.Design.Colors != colors {
+		t.Errorf("Colors were not updated correctly. Expected %v, got %v", colors, c.created.Design.Colors)
+	} else {
+		t.Logf("Colors updated successfully to %v", colors)
 	}
 }
 

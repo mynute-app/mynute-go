@@ -943,6 +943,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 	}
 
+	var AllowUpdateCompanyColors = &PolicyRule{
+		Name:        "SDP: CanUpdateCompanyColors",
+		Description: "Allows company Owner or General Manager to update company colors.",
+		Effect:      "Allow",
+		EndPointID:  UpdateCompanyColors.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+	}
+
 	var AllowAddServiceToEmployee = &PolicyRule{
 		Name:        "SDP: CanAddServiceToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
@@ -1098,6 +1106,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowUpdateCompanyById,
 		AllowDeleteCompanyById,
 		AllowUpdateCompanyImages,
+		AllowUpdateCompanyColors,
 		AllowDeleteCompanyImage,
 
 		// Employees
