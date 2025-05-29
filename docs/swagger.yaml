@@ -796,20 +796,31 @@ definitions:
         example: Some reason.
         type: string
     type: object
+  dJSON.Image:
+    properties:
+      alt:
+        example: Image of something
+        type: string
+      caption:
+        example: This is the image we talk about
+        type: string
+      title:
+        example: Title of this image
+        type: string
+      url:
+        example: https://example.com/image.png
+        type: string
+    type: object
   dJSON.Images:
     properties:
-      background_url:
-        example: https://example.com/background.png
-        type: string
-      banner_url:
-        example: https://example.com/banner.png
-        type: string
-      favicon_url:
-        example: https://example.com/favicon.png
-        type: string
-      logo_url:
-        example: https://example.com/logo.png
-        type: string
+      background:
+        $ref: '#/definitions/dJSON.Image'
+      banner:
+        $ref: '#/definitions/dJSON.Image'
+      favicon:
+        $ref: '#/definitions/dJSON.Image'
+      logo:
+        $ref: '#/definitions/dJSON.Image'
     type: object
   mJSON.Colors:
     properties:
@@ -829,16 +840,27 @@ definitions:
       images:
         $ref: '#/definitions/mJSON.Images'
     type: object
+  mJSON.Image:
+    properties:
+      alt:
+        type: string
+      caption:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
   mJSON.Images:
     properties:
-      background_url:
-        type: string
-      banner_url:
-        type: string
-      favicon_url:
-        type: string
-      logo_url:
-        type: string
+      background:
+        $ref: '#/definitions/mJSON.Image'
+      banner:
+        $ref: '#/definitions/mJSON.Image'
+      favicon:
+        $ref: '#/definitions/mJSON.Image'
+      logo:
+        $ref: '#/definitions/mJSON.Image'
     type: object
 info:
   contact: {}
@@ -1652,6 +1674,52 @@ paths:
       summary: Update company by ID
       tags:
       - Company
+  /company/{id}/design/colors:
+    put:
+      consumes:
+      - application/json
+      description: Update the primary, secondary, tertiary, and quaternary colors
+        of a company
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Colors
+        in: body
+        name: colors
+        required: true
+        schema:
+          $ref: '#/definitions/mJSON.Colors'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Colors'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update company colors
+      tags:
+      - Company
   /company/{id}/design/images:
     patch:
       consumes:
@@ -1695,7 +1763,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dJSON.Design'
+            $ref: '#/definitions/dJSON.Images'
         "400":
           description: Bad Request
           schema:
