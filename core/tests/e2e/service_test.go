@@ -32,7 +32,7 @@ func Test_Service(t *testing.T) {
 	service.Update(t, 200, map[string]any{
 		"name": lib.GenerateRandomName("Updated Service"),
 	})
-	service.GetById(t, 200)
+	service.GetById(t, 200, nil)
 	service.GetByName(t, 200)
 	branch := &Branch{}
 	branch.auth_token = company.owner.auth_token
@@ -69,16 +69,20 @@ func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
 	http.ExpectStatus(status)
 	http.Header(namespace.HeadersKey.Auth, s.auth_token)
 	http.Send(changes)
-	s.GetById(t, 200)
+	s.GetById(t, 200, nil)
 }
 
-func (s *Service) GetById(t *testing.T, status int) map[string]any {
+func (s *Service) GetById(t *testing.T, status int, token *string) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
 	http.Method("GET")
 	http.Header(namespace.HeadersKey.Company, s.company.created.ID.String())
 	http.URL("/service/" + fmt.Sprintf("%v", s.created.ID.String()))
 	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Auth, s.auth_token)
+	if token != nil {
+		http.Header(namespace.HeadersKey.Auth, *token)
+	} else {
+		http.Header(namespace.HeadersKey.Auth, s.auth_token)
+	}
 	http.Send(nil)
 	http.ParseResponse(&s.created)
 	return http.ResBody

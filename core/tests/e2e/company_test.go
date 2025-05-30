@@ -66,12 +66,12 @@ func Test_Company(t *testing.T) {
 	company.GetImage(t, 200, company.created.Design.Images.Favicon.URL, &FileBytes.PNG_FILE_3)
 	company.GetImage(t, 200, company.created.Design.Images.Background.URL, &FileBytes.PNG_FILE_4)
 	company.ChangeColors(t, 200, mJSON.Colors{
-		Primary:  "#123456",
+		Primary: "#123456",
 	})
 	company.ChangeColors(t, 200, mJSON.Colors{
-		Primary:   "#654321",
-		Secondary: "#abcdef",
-		Tertiary:  "#fedcba",
+		Primary:    "#654321",
+		Secondary:  "#abcdef",
+		Tertiary:   "#fedcba",
 		Quaternary: "#123abc",
 	})
 	company.DeleteImages(t, 200, []string{
@@ -239,9 +239,11 @@ func (c *Company) GenerateEmployees(t *testing.T, n int) {
 		t.Log("Skipping employee generation: n <= 0 or Company ID is nil.")
 		return
 	}
+
 	initialEmployeeCount := len(c.employees)
 	createdCount := 0
-	for i := 0; i < n; i++ {
+
+	for i := range n {
 		employee := &Employee{company: c}
 		employee.Create(t, 200)
 
@@ -274,9 +276,11 @@ func (c *Company) GenerateBranches(t *testing.T, n int) {
 		t.Log("Skipping branch generation: Prerequisite missing (n>0, Company ID, Owner Auth Token).")
 		return
 	}
+
 	initialBranchCount := len(c.branches)
 	createdCount := 0
-	for i := 0; i < n; i++ {
+
+	for i := range n {
 		branch := &Branch{company: c, auth_token: c.auth_token}
 		branch.Create(t, 200)
 
@@ -302,9 +306,11 @@ func (c *Company) GenerateServices(t *testing.T, n int) {
 		t.Log("Skipping service generation: Prerequisite missing (n>0, Company ID, Owner Auth Token).")
 		return
 	}
+
 	initialServiceCount := len(c.services)
 	createdCount := 0
-	for i := 0; i < n; i++ {
+
+	for i := range n {
 		service := &Service{company: c, auth_token: c.auth_token}
 		service.Create(t, 200)
 
@@ -332,10 +338,9 @@ func (c *Company) RandomlyAssignEmployeesToBranches(t *testing.T) {
 		t.Log("No employees or branches to assign.")
 		return
 	}
-	maxBranchesPerEmployee := 3
-	if len(c.branches) < maxBranchesPerEmployee {
-		maxBranchesPerEmployee = len(c.branches)
-	}
+
+	// Limit the number of branches assigned to each employee
+	maxBranchesPerEmployee := min(len(c.branches), 10)
 
 	for i, employee := range c.employees {
 		if employee.created.ID == uuid.Nil {
@@ -384,10 +389,9 @@ func (c *Company) RandomlyAssignServicesToEmployees(t *testing.T) {
 		t.Log("No employees or services to assign.")
 		return
 	}
-	maxServicesPerEmployee := 5
-	if len(c.services) < maxServicesPerEmployee {
-		maxServicesPerEmployee = len(c.services)
-	}
+
+	// Limit the number of services assigned to each employee
+	maxServicesPerEmployee := min(len(c.services), 10)
 
 	for i, employee := range c.employees {
 		if employee.created.ID == uuid.Nil || employee.auth_token == "" {
@@ -404,7 +408,7 @@ func (c *Company) RandomlyAssignServicesToEmployees(t *testing.T) {
 
 		for k := 0; k < numServicesToAssign && assignedCount < len(c.services); k++ {
 			serviceIndex := -1
-			for attempts := 0; attempts < len(c.services)*2; attempts++ {
+			for range len(c.services) * 2 {
 				potentialIndex := rand.Intn(len(c.services))
 				if !assignedServiceIndices[potentialIndex] && c.services[potentialIndex].created.ID != uuid.Nil {
 					serviceIndex = potentialIndex
@@ -436,10 +440,8 @@ func (c *Company) RandomlyAssignServicesToBranches(t *testing.T) {
 		t.Log("No branches or services to assign.")
 		return
 	}
-	maxServicesPerBranch := 10
-	if len(c.services) < maxServicesPerBranch {
-		maxServicesPerBranch = len(c.services)
-	}
+	// Limit the number of services assigned to each branch
+	maxServicesPerBranch := min(len(c.services), 20)
 
 	for i, branch := range c.branches {
 		if branch.created.ID == uuid.Nil {
@@ -497,6 +499,7 @@ func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 			validBranches = append(validBranches, b)
 		}
 	}
+
 	if len(validBranches) == 0 {
 		t.Log("Skipping work schedule assignment: No valid branches found.")
 		return
@@ -508,7 +511,7 @@ func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 			continue
 		}
 
-		scheduleModel := GenerateRandomModelWorkSchedule(validBranches)
+		scheduleModel := GenerateRandomModelWorkSchedule(validBranches, employee)
 		t.Logf("Generated work schedule for employee %d (%s), referencing %d valid branch(es).", i, employee.created.Email, len(validBranches))
 
 		// Payload format for Employee.Update
@@ -526,34 +529,28 @@ func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 }
 
 // GenerateRandomModelWorkSchedule creates a *mJSON.WorkSchedule* struct
-func GenerateRandomModelWorkSchedule(validBranches []*Branch) mJSON.WorkSchedule {
+func GenerateRandomModelWorkSchedule(validBranches []*Branch, employee *Employee) mJSON.WorkSchedule {
 	schedule := mJSON.WorkSchedule{}
 
 	randomTimeStringHHMM := func(minHour, maxHour int) string {
-		hour := minHour + rand.Intn(maxHour-minHour+1)
-		if hour < 6 {
-			hour = 6
-		}
-		if hour > 21 {
-			hour = 21
-		}
+		hour := min(max(minHour+rand.Intn(maxHour-minHour+1), 6), 22) // Ensure hour is between 6 and 22
 		minute := rand.Intn(4) * 15
 		return fmt.Sprintf("%02d:%02d", hour, minute)
 	}
 
-	schedule.Monday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.9)
-	schedule.Tuesday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.9)
-	schedule.Wednesday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.9)
-	schedule.Thursday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.9)
-	schedule.Friday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.9)
-	schedule.Saturday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.4)
-	schedule.Sunday = generateRangesForDayModel(validBranches, randomTimeStringHHMM, 0.1)
+	schedule.Monday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+	schedule.Tuesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+	schedule.Wednesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+	schedule.Thursday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+	schedule.Friday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+	schedule.Saturday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.4)
+	schedule.Sunday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.1)
 
 	return schedule
 }
 
 // Helper for GenerateRandomModelWorkSchedule, returns []mJSON.WorkRange
-func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
+func generateRangesForDayModel(validBranches []*Branch, employee *Employee, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
 	// Use global rand.Float32() - auto-seeded
 	if rand.Float32() > workProbability || len(validBranches) == 0 {
 		return []mJSON.WorkRange{}
@@ -564,7 +561,7 @@ func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int
 
 	lastEndTimeStr := "00:00"
 
-	for r := 0; r < numRanges; r++ {
+	for r := range numRanges {
 		// Use global rand.Intn()
 		targetBranchHelper := validBranches[rand.Intn(len(validBranches))]
 
@@ -600,10 +597,7 @@ func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int
 
 		// Use global rand.Intn()
 		durationHours := 2 + rand.Intn(4)
-		endHour := startHour + durationHours
-		if endHour > 22 {
-			endHour = 22
-		}
+		endHour := min(startHour+durationHours, 22)
 		endTime := randomTime(endHour, endHour)
 
 		if endTime <= startTime {
@@ -618,11 +612,32 @@ func generateRangesForDayModel(validBranches []*Branch, randomTime func(int, int
 			}
 		}
 
+		employeeServices := []uuid.UUID{}
+		for _, svc := range employee.created.Services {
+			if svc.ID != uuid.Nil {
+				employeeServices = append(employeeServices, svc.ID)
+			}
+		}
+
+		branchServices := []uuid.UUID{}
+		for _, svc := range targetBranchHelper.services {
+			if svc.created.ID != uuid.Nil {
+				branchServices = append(branchServices, svc.created.ID)
+			}
+		}
+
+		commonServices := intersectUUIDs(employeeServices, branchServices)
+		if len(commonServices) == 0 {
+			continue // pula esse range se não houver serviços em comum
+		}
+
 		ranges = append(ranges, mJSON.WorkRange{
 			Start:    startTime,
 			End:      endTime,
-			BranchID: targetBranchHelper.created.ID, // Get UUID from the created model within the helper
+			BranchID: targetBranchHelper.created.ID,
+			Services: commonServices,
 		})
+
 		lastEndTimeStr = endTime
 	}
 	return ranges
@@ -777,4 +792,19 @@ func (c *Company) GetImage(t *testing.T, status int, imageURL string, compareImg
 	} else {
 		t.Logf("Image fetched successfully from %s", imageURL)
 	}
+}
+
+func intersectUUIDs(a, b []uuid.UUID) []uuid.UUID {
+	set := make(map[uuid.UUID]bool)
+	for _, id := range a {
+		set[id] = true
+	}
+
+	var intersection []uuid.UUID
+	for _, id := range b {
+		if set[id] {
+			intersection = append(intersection, id)
+		}
+	}
+	return intersection
 }

@@ -197,7 +197,7 @@ func (e *Employee) AddService(t *testing.T, s int, service *Service) {
 	http.Header(namespace.HeadersKey.Auth, e.auth_token)
 	http.Send(nil)
 	http.ParseResponse(&e.created)
-	service.GetById(t, 200)
+	service.GetById(t, 200, nil)
 	service.employees = append(service.employees, e)
 	e.services = append(e.services, service)
 }

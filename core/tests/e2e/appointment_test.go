@@ -145,7 +145,7 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	http.ParseResponse(&a.created)
 	b.GetById(t, 200)
 	e.GetById(t, 200)
-	s.GetById(t, 200)
+	s.GetById(t, 200, nil)
 	cy.GetById(t, 200)
 	ct.GetByEmail(t, 200)
 	var ClientAppointment mJSON.ClientAppointment
@@ -160,6 +160,20 @@ func (a *Appointment) Create(t *testing.T, status int, auth_token string, startT
 	ct.created.Appointments.Add(&ClientAppointment)
 	e.created.Appointments = append(e.created.Appointments, a.created)
 	b.created.Appointments = append(b.created.Appointments, a.created)
+}
+
+func (a *Appointment) GetById(t *testing.T, status int, token string) {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("GET")
+	http.URL(fmt.Sprintf("/appointment/%s", a.created.ID.String()))
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, a.created.CompanyID.String())
+	http.Header(namespace.HeadersKey.Auth, token)
+	http.Send(nil)
+	http.ParseResponse(&a.created)
+	if a.created.ID == uuid.Nil {
+		t.Fatalf("Appointment ID is nil after GetById, something went wrong.")
+	}
 }
 
 type FoundAppointmentSlot struct {
