@@ -6,8 +6,6 @@ import (
 	handler "agenda-kaki-go/core/tests/handlers"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type permissions_test struct {
@@ -42,12 +40,12 @@ func Test_Setup_Environment(t *testing.T) {
 	company_2_employee_number := 3
 	company_1_branch_number := 3
 	company_2_branch_number := 2
-	company_1_service_number := 36
-	company_2_service_number := 12
+	company_1_service_number := 22
+	company_2_service_number := 6
 	permissions_test_instance.company1 = &Company{}
-	permissions_test_instance.company1.SetupRandomized(t, company_1_employee_number, company_1_branch_number, company_1_service_number) // owner, 4 employees, 3 branches, 36 services
+	permissions_test_instance.company1.SetupRandomized(t, company_1_employee_number, company_1_branch_number, company_1_service_number) // owner, 4 employees, 3 branches, 22 services
 	permissions_test_instance.company2 = &Company{}
-	permissions_test_instance.company2.SetupRandomized(t, company_2_employee_number, company_2_branch_number, company_2_service_number) // owner, 3 employees, 2 branches, 12 services
+	permissions_test_instance.company2.SetupRandomized(t, company_2_employee_number, company_2_branch_number, company_2_service_number) // owner, 3 employees, 2 branches, 6 services
 	permissions_test_instance.client1 = &Client{}
 	permissions_test_instance.client1.Set(t)
 	permissions_test_instance.client2 = &Client{}
@@ -151,7 +149,7 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	t.Log("---------------------- x ----------------------")
 
 	t.Log("---> Company1 Owner trying to reschedule an appointment of Employee 1 from Company 2 : PATCH /appointment/{id} => HTTP 403")
-	permissions_test_instance.RescheduleAppointment(t, 403, company2_employee1, company1, company2_employee1.created.Appointments[0].ID.String(), company1_owner.auth_token)
+	permissions_test_instance.RescheduleAppointment(t, 403, company1_employee1, company1, company2_employee1.created.Appointments[0].ID.String(), company1_owner.auth_token)
 	t.Log("---------------------- x ----------------------")
 }
 
@@ -188,13 +186,6 @@ func (permissions_test) CreateAppointment(t *testing.T, s int, company *Company,
 }
 
 func (permissions_test) RescheduleAppointment(t *testing.T, s int, employee *Employee, company *Company, appointment_id, token string) {
-	var A Appointment
-	appointment_uuid, err := uuid.Parse(appointment_id)
-	if err != nil {
-		t.Fatalf("Error trying to parse appointment ID format: %v", err)
-	}
-	A.created.ID = appointment_uuid
-	A.GetById(t, 200, company.owner.auth_token)
 	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
 	appointmentSlot, found := findValidAppointmentSlot(t, employee, company, preferredLocation)
 	if !found {
@@ -214,6 +205,8 @@ func (permissions_test) RescheduleAppointment(t *testing.T, s int, employee *Emp
 			"service_id": appointmentSlot.ServiceID,
 			"start_time": appointmentSlot.StartTimeRFC3339,
 		})
+	employee.GetById(t, 200)
+	company.GetById(t, 200)
 }
 
 func (permissions_test) GetAppointment(t *testing.T, s int, appointment_id, company_id, token string) {
