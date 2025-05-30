@@ -151,6 +151,14 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	t.Log("---> Company1 Owner trying to reschedule an appointment of Employee 1 from Company 2 : PATCH /appointment/{id} => HTTP 403")
 	permissions_test_instance.RescheduleAppointment(t, 403, company1_employee1, company1, company2_employee1.created.Appointments[0].ID.String(), company1_owner.auth_token)
 	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company1 Owner trying to cancel an appointment of Employee 1 from Company 1 : DELETE /appointment/{id} => HTTP 200")
+	permissions_test_instance.CancelAppointment(t, 200, company1_employee1.created.Appointments[0].ID.String(), company1.created.ID.String(), company1_owner.auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company1 Owner trying to cancel an appointment of Employee 1 from Company 2 : DELETE /appointment/{id} => HTTP 403")
+	permissions_test_instance.CancelAppointment(t, 403, company2_employee1.created.Appointments[0].ID.String(), company1.created.ID.String(), company1_owner.auth_token)
+	t.Log("---------------------- x ----------------------")
 }
 
 func (permissions_test) CreateAppointment(t *testing.T, s int, company *Company, client *Client, employee *Employee, token, company_id string) {
@@ -213,6 +221,17 @@ func (permissions_test) GetAppointment(t *testing.T, s int, appointment_id, comp
 	http := handler.NewHttpClient(t)
 	http.
 		Method("GET").
+		URL("/appointment/"+appointment_id).
+		ExpectStatus(s).
+		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, company_id).
+		Send(nil)
+}
+
+func (permissions_test) CancelAppointment(t *testing.T, s int, appointment_id, company_id, token string) {
+	http := handler.NewHttpClient(t)
+	http.
+		Method("DELETE").
 		URL("/appointment/"+appointment_id).
 		ExpectStatus(s).
 		Header(namespace.HeadersKey.Auth, token).

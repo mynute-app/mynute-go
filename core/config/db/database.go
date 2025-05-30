@@ -1,6 +1,7 @@
 package database
 
 import (
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
@@ -85,7 +86,55 @@ func Connect() *Database {
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
 	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
 
-	return &Database{Gorm: db}
+	dbWrapper := &Database{
+		Gorm:  db,
+		Error: nil,
+	}
+
+	if app_env == "test" {
+		dbWrapper.Test().Clear()
+	}
+
+	return dbWrapper
+}
+// Seed the database with initial data
+func (db *Database) InitialSeed() {
+	tx, end, err := Transaction(db.Gorm)
+	defer end()
+	if err != nil {
+		panic(err)
+	}
+
+	if err := db.
+		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
+		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
+		Error; err != nil {
+		panic(err)
+	}
+
+	if err := model.LoadSystemRoleIDs(tx); err != nil {
+		panic(fmt.Errorf("failed to load system role IDs: %w", err))
+	}
+
+	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)
+	if err != nil {
+		panic(err)
+	}
+	defer deferEndpoint()
+
+	if err := db.
+		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
+		Error; err != nil {
+		panic(err)
+	}
+
+	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
+	defer deferPolicies()
+	if err := db.
+		Seed("Policies", policies, "name = ?", []string{"Name"}).
+		Error; err != nil {
+		panic(err)
+	}
 }
 
 // Migrate the database schema

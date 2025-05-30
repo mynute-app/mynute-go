@@ -511,6 +511,8 @@ func (c *Company) RandomlyAssignWorkSchedules(t *testing.T) {
 			continue
 		}
 
+		fmt.Println("👀 Employee services:", employee.created.Services)
+
 		scheduleModel := GenerateRandomModelWorkSchedule(validBranches, employee)
 		t.Logf("Generated work schedule for employee %d (%s), referencing %d valid branch(es).", i, employee.created.Email, len(validBranches))
 
@@ -564,6 +566,8 @@ func generateRangesForDayModel(validBranches []*Branch, employee *Employee, rand
 	for r := range numRanges {
 		// Use global rand.Intn()
 		targetBranchHelper := validBranches[rand.Intn(len(validBranches))]
+
+		fmt.Println("🏢 Branch services:", targetBranchHelper.services)
 
 		startHourLower := 7
 		if r > 0 {
@@ -627,6 +631,9 @@ func generateRangesForDayModel(validBranches []*Branch, employee *Employee, rand
 		}
 
 		commonServices := intersectUUIDs(employeeServices, branchServices)
+
+		fmt.Println("🔀 Intersected services:", commonServices)
+
 		if len(commonServices) == 0 {
 			continue // pula esse range se não houver serviços em comum
 		}
