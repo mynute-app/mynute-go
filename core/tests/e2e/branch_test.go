@@ -2,131 +2,35 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/tests/handlers"
-	"fmt"
+	models_test "agenda-kaki-go/core/tests/models"
+
 	"testing"
 )
-
-type Branch struct {
-	created    model.Branch
-	auth_token string
-	company    *Company
-	services   []*Service
-	employees  []*Employee
-}
 
 func Test_Branch(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	company := &Company{}
+	company := &models_test.Company{}
 	company.Create(t, 200)
-	company.owner.VerifyEmail(t, 200)
-	company.owner.Login(t, 200)
-	company.auth_token = company.owner.auth_token
-	branch := &Branch{}
-	branch.auth_token = company.auth_token
-	branch.company = company
+	company.Owner.VerifyEmail(t, 200)
+	company.Owner.Login(t, 200)
+	company.Auth_token = company.Owner.Auth_token
+	branch := &models_test.Branch{}
+	branch.Auth_token = company.Auth_token
+	branch.Company = company
 	branch.Create(t, 200)
 	branch.Update(t, 200, map[string]any{
-		"name": branch.created.Name,
+		"name": branch.Created.Name,
 	})
 	branch.GetById(t, 200)
 	branch.GetByName(t, 200)
-	service := &Service{}
-	service.auth_token = company.auth_token
-	service.company = company
+	service := &models_test.Service{}
+	service.Auth_token = company.Auth_token
+	service.Company = company
 	service.Create(t, 200)
 	branch.AddService(t, 200, service, nil)
-	company.owner.AddBranch(t, 200, branch, nil)
+	company.Owner.AddBranch(t, 200, branch, nil)
 	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
 
-func (b *Branch) Create(t *testing.T, status int) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL("/branch")
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	http.Send(DTO.CreateBranch{
-		Name:         lib.GenerateRandomName("Branch Name"),
-		CompanyID:    b.company.created.ID,
-		Street:       lib.GenerateRandomName("Street"),
-		Number:       lib.GenerateRandomStrNumber(3),
-		Neighborhood: lib.GenerateRandomName("Neighborhood"),
-		ZipCode:      lib.GenerateRandomStrNumber(5),
-		City:         lib.GenerateRandomName("City"),
-		State:        lib.GenerateRandomName("State"),
-		Country:      lib.GenerateRandomName("Country"),
-	})
-	http.ParseResponse(&b.created)
-	return http.ResBody
-}
-
-func (b *Branch) Update(t *testing.T, status int, changes map[string]any) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("PATCH")
-	http.URL("/branch/" + fmt.Sprintf("%v", b.created.ID.String()))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	http.Send(changes)
-	http.ParseResponse(&b.created)
-}
-
-func (b *Branch) GetByName(t *testing.T, status int) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("GET")
-	http.URL(fmt.Sprintf("/branch/name/%s", b.created.Name))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	http.Send(nil)
-	http.ParseResponse(&b.created)
-	return http.ResBody
-}
-
-func (b *Branch) GetById(t *testing.T, status int) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("GET")
-	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	http.Send(nil)
-	http.ParseResponse(&b.created)
-	return http.ResBody
-}
-
-func (b *Branch) Delete(t *testing.T, status int) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("DELETE")
-	http.URL(fmt.Sprintf("/branch/%s", b.created.ID.String()))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	http.Send(nil)
-}
-
-func (b *Branch) AddService(t *testing.T, status int, service *Service, token *string) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL(fmt.Sprintf("/branch/%s/service/%s", b.created.ID.String(), service.created.ID.String()))
-	http.ExpectStatus(status)
-	if token != nil {
-		http.Header(namespace.HeadersKey.Auth, *token)
-	} else {
-		http.Header(namespace.HeadersKey.Auth, b.auth_token)
-	}
-	http.Header(namespace.HeadersKey.Company, b.company.created.ID.String())
-	http.Send(nil)
-	http.ParseResponse(&b.created)
-	service.branches = append(service.branches, b)
-	b.services = append(b.services, service)
-}
