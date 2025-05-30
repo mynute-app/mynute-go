@@ -63,6 +63,15 @@ func (e ErrorStruct) Error() string {
 	return string(e_byte)
 }
 
+// Optional: If you want a byte array version
+func (e ErrorStruct) Byte() []byte {
+	e_byte, err := json.Marshal(e)
+	if err != nil {
+		return []byte(fmt.Sprintf("ErrorStruct: %s", err.Error()))
+	}
+	return e_byte
+}
+
 // ToJSON converts the ErrorStruct to a JSON string.
 func (e ErrorStruct) ToJSON() string {
 	jsonData, err := json.Marshal(e)
@@ -70,11 +79,6 @@ func (e ErrorStruct) ToJSON() string {
 		return `{"error": "failed to convert to JSON"}`
 	}
 	return string(jsonData)
-}
-
-// SendToClient sends the error response to the client.
-func (e ErrorStruct) SendToClient(c *fiber.Ctx) error {
-	return c.Status(e.HTTPStatus).JSON(e)
 }
 
 // Unwrap allows error comparison via `errors.Is(...)`

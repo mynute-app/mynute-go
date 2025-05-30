@@ -186,6 +186,42 @@ func GetClientByEmail(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetClientById retrieves an client by ID
+//
+//	@Summary		Get client by ID
+//	@Description	Retrieve an client by its ID
+//	@Tags			Client
+// 	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string	true	"X-Auth-Token"
+//	@Param			id				path		string	true	"Client ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Client
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/{id} [get]
+func GetClientById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'id' at params route"))
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var client model.ClientMeta
+	if err := tx.Model(&model.ClientFull{}).Where("id = ?", id).First(&client).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
+}
+
 // GetClientAppointments returns only the appointments of a client
 //
 //	@Summary		Get client appointments
@@ -299,6 +335,7 @@ func Client(Gorm *handler.Gorm) {
 		LoginClient,
 		VerifyClientEmail,
 		GetClientByEmail,
+		GetClientById,
 		GetClientAppointments,
 		UpdateClientById,
 		DeleteClientById,

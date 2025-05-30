@@ -3,6 +3,7 @@ package middleware
 import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/lib/Logger"
+	"encoding/json"
 	"log/slog"
 	"time"
 
@@ -11,41 +12,47 @@ import (
 
 func Error(logger *slog.Logger) fiber.ErrorHandler {
 	loki := &myLogger.Loki{}
+
 	return func(c *fiber.Ctx, err error) error {
-		if e, ok := err.(lib.ErrorStruct); ok {
-			if err := e.SendToClient(c); err != nil {
-				ResMsg := myLogger.GetResMessage(c)
-				labels := myLogger.Labels{
-					App:    "main-api",
-					Method: c.Method(),
-					Path:   c.Path(),
-					IP:     c.IP(),
-					Host:   string(c.Request().Host()),
-				}
-				ResLabels := labels.GetResLabels(time.Now(), e.HTTPStatus)
-				ResLabels["level"] = "critical"
-				ResMsg += "Failed to send error response to client!" + ResMsg + "\n\n" + e.WithError(err).Error()
-				if err := loki.Log(ResMsg, ResLabels); err != nil {
-					logger.Error("Failed to even send error response log to Loki", slog.String("error", err.Error()))
-					return nil
-				}
-				return nil
+		status := fiber.StatusInternalServerError
+		var responseBody []byte
+
+		switch e := err.(type) {
+		case *fiber.Error:
+			status = e.Code
+			responseBody = []byte(e.Message)
+
+		case lib.ErrorStruct:
+			status = e.HTTPStatus
+			var marshalErr error
+			responseBody, marshalErr = json.Marshal(e)
+			if marshalErr != nil {
+				responseBody = []byte(`{"error":"failed to marshal custom error"}`)
 			}
-			return nil
+
+		default:
+			responseBody = []byte(err.Error())
 		}
 
-		MyErr := lib.ErrorStruct{
-			DescriptionEn: "Internal Server Error",
-			DescriptionBr: "Erro interno do servidor",
-			HTTPStatus:    500,
-			InnerError: map[int]string{
-				1: err.Error(),
-			},
+		if sendErr := c.Status(status).Send(responseBody); sendErr != nil {
+			labels := myLogger.Labels{
+				App:    "main-api",
+				Method: c.Method(),
+				Path:   c.Path(),
+				IP:     c.IP(),
+				Host:   string(c.Request().Host()),
+			}
+			ResLabels := labels.GetResLabels(time.Now(), status)
+			ResLabels["level"] = "critical"
+
+			ResMsg := myLogger.GetResMessage(c)
+			ResMsg += "\nFailed to send error to client:\n" + err.Error() + "\n\n" + string(responseBody)
+
+			if err := loki.Log(ResMsg, ResLabels); err != nil {
+				logger.Error("Failed to log error to Loki", slog.String("error", err.Error()))
+			}
 		}
 
-		MyErrJson := MyErr.ToJSON()
-
-		// fallback for unknown errors
-		return c.Status(500).Send([]byte(MyErrJson))
+		return nil
 	}
 }

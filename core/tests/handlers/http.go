@@ -145,7 +145,9 @@ func (h *httpActions) Send(body any) *httpActions {
 			return nil
 		}
 	}
-
+	h.Error = ""
+	h.ResBody = nil
+	h.ResHeaders = nil
 	h.test.Logf(">>>>>>>>>> Sending %s request to %s", h.method, h.url)
 	h.test.Logf("request body: %+v", body)
 	h.test.Logf("request headers: %+v", h.headers)

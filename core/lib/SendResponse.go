@@ -125,12 +125,18 @@ func (sr *SendResponseStruct) send(s int, data any) error {
 
 func (sr *SendResponseStruct) sendError(s int, err error) error {
 	sr.saveError(err)
-	if resErr := sr.Ctx.Status(s).JSON(map[string]any{"Error": err.Error()}); resErr != nil {
-		sr.saveError(resErr)
-		return resErr
+
+	// Se for ErrorStruct, retorna direto
+	if errStruct, ok := err.(ErrorStruct); ok {
+		return sr.Ctx.Status(s).JSON(errStruct)
 	}
-	return nil
+
+	// Fallback para erro genérico
+	return sr.Ctx.Status(s).JSON(map[string]any{
+		"error": err.Error(),
+	})
 }
+
 
 func (sr *SendResponseStruct) sendStatus(s int) error {
 	if err := sr.Ctx.SendStatus(s); err != nil {
