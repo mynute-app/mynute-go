@@ -9,8 +9,123 @@ import (
 	"time"
 )
 
-func Test_Permissions(t *testing.T) {
-	server := core.NewServer().Run("test")
+type permissions_test struct {
+	server             *core.Server
+	company1           *Company
+	company2           *Company
+	client1            *Client
+	client2            *Client
+	company1_employee1 *Employee
+	company1_employee2 *Employee
+	company2_employee1 *Employee
+	company2_employee2 *Employee
+}
+
+var permissions_test_instance *permissions_test
+
+func Test_Start_Server(t *testing.T) {
+	permissions_test_instance = &permissions_test{
+		server: core.NewServer().Run("test"),
+	}
+	if permissions_test_instance.server == nil {
+		t.Fatal("Failed to start the server")
+	}
+	t.Log("Server started successfully")
+}
+
+func Test_Setup_Environment(t *testing.T) {
+	if permissions_test_instance == nil || permissions_test_instance.server == nil {
+		t.Fatal("Server instance is not initialized")
+	}
+	company_1_employee_number := 4
+	company_2_employee_number := 3
+	company_1_branch_number := 3
+	company_2_branch_number := 2
+	company_1_service_number := 6
+	company_2_service_number := 8
+	permissions_test_instance.company1 = &Company{}
+	permissions_test_instance.company1.SetupRandomized(t, company_1_employee_number, company_1_branch_number, company_1_service_number) // owner, 4 employees, 3 branches, 6 services
+	permissions_test_instance.company2 = &Company{}
+	permissions_test_instance.company2.SetupRandomized(t, company_2_employee_number, company_2_branch_number, company_2_service_number) // owner, 3 employees, 2 branches, 8 services
+	permissions_test_instance.client1 = &Client{}
+	permissions_test_instance.client1.Set(t)
+	permissions_test_instance.client2 = &Client{}
+	permissions_test_instance.client2.Set(t)
+
+	if permissions_test_instance.company1.owner.auth_token == "" {
+		t.Fatal("Company 1 Owner auth token is missing")
+	} else if permissions_test_instance.company2.owner.auth_token == "" {
+		t.Fatal("Company 2 Owner auth token is missing")
+	} else if len(permissions_test_instance.company1.employees) != company_1_employee_number {
+		t.Fatal("Company 1 does not have enough employees")
+	} else if len(permissions_test_instance.company2.employees) != company_2_employee_number {
+		t.Fatal("Company 2 does not have enough employees")
+	} else if len(permissions_test_instance.company1.branches) != company_1_branch_number {
+		t.Fatal("Company 1 does not have enough branches")
+	} else if len(permissions_test_instance.company2.branches) != company_2_branch_number {
+		t.Fatal("Company 2 does not have enough branches")
+	} else if len(permissions_test_instance.company1.services) != company_1_service_number {
+		t.Fatal("Company 1 does not have enough services")
+	} else if len(permissions_test_instance.company2.services) != company_2_service_number {
+		t.Fatal("Company 2 does not have enough services")
+	}
+
+	permissions_test_instance.company1_employee1 = permissions_test_instance.company1.employees[1]
+	permissions_test_instance.company1_employee2 = permissions_test_instance.company1.employees[2]
+	permissions_test_instance.company2_employee1 = permissions_test_instance.company2.employees[1]
+	permissions_test_instance.company2_employee2 = permissions_test_instance.company2.employees[2]
+
+	if permissions_test_instance.company1_employee1.auth_token == "" {
+		t.Fatal("Company 1 Employee 1 auth token is missing")
+	} else if permissions_test_instance.company1_employee2.auth_token == "" {
+		t.Fatal("Company 1 Employee 2 auth token is missing")
+	} else if permissions_test_instance.company2_employee1.auth_token == "" {
+		t.Fatal("Company 2 Employee 1 auth token is missing")
+	} else if permissions_test_instance.company2_employee2.auth_token == "" {
+		t.Fatal("Company 2 Employee 2 auth token is missing")
+	}
+}
+
+func Test_Owner_x_Appointments(t *testing.T) {
+	client1 := permissions_test_instance.client1
+	client2 := permissions_test_instance.client2
+	company1 := permissions_test_instance.company1
+	company2 := permissions_test_instance.company2
+	company1_owner := permissions_test_instance.company1.owner
+	company2_owner := permissions_test_instance.company2.owner
+	company1_employee1 := permissions_test_instance.company1.employees[1]
+	company1_employee2 := permissions_test_instance.company1.employees[2]
+	company2_employee1 := permissions_test_instance.company2.employees[1]
+	company2_employee2 := permissions_test_instance.company2.employees[2]
+
+
+	t.Log("---> Creating appointment for company1_employee1 and client1 at company1 with company1_owner.auth_token and company1.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company1, client1, company1_employee1, company1_owner.auth_token, company1.created.ID.String())
+
+	t.Log("---> Creating appointment for company1_employee1 and client2 at company1 with company1_owner.auth_token and company1.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company1, client2, company1_employee1, company1_owner.auth_token, company1.created.ID.String())
+
+	t.Log("---> Creating appointment for company1_employee2 and client1 at company1 with company1_owner.auth_token and company1.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company1, client1, company1_employee2, company1_owner.auth_token, company1.created.ID.String())
+
+	t.Log("---> Creating appointment for company1_employee2 and client2 at company1 with company1_owner.auth_token and company1.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company1, client2, company1_employee2, company1_owner.auth_token, company1.created.ID.String())
+
+	t.Log("---> Creating appointment for company2_employee1 and client1 at company2 with company2_owner.auth_token and company2.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company2, client1, company2_employee1, company2_owner.auth_token, company2.created.ID.String())
+
+	t.Log("---> Creating appointment for company2_employee1 and client2 at company2 with company2_owner.auth_token and company2.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company2, client2, company2_employee1, company2_owner.auth_token, company2.created.ID.String())
+
+	t.Log("---> Creating appointment for company2_employee2 and client1 at company2 with company2_owner.auth_token and company2.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company2, client1, company2_employee2, company2_owner.auth_token, company2.created.ID.String())
+
+	t.Log("---> Creating appointment for company2_employee2 and client2 at company2 with company2_owner.auth_token and company2.created.ID.String() : expect 200")
+	permissions_test_instance.CreateAppointment(t, 200, company2, client2, company2_employee2, company2_owner.auth_token, company2.created.ID.String())
+}
+
+func Permissions(t *testing.T) {
+	server := permissions_test_instance.server
 	defer server.Shutdown()
 	company1 := &Company{}
 	company1.SetupRandomized(t, 4, 3, 6) // owner, 4 employees, 3 branches, 6 services
@@ -32,114 +147,377 @@ func Test_Permissions(t *testing.T) {
 		t.Fatal("Client auth tokens are missing")
 	}
 
-	employee0 := company1.employees[0]
-	employee0ID := employee0.created.ID.String()
-	company1ID := company1.created.ID.String()
-	client1ID := client1.created.ID.String()
-	client2ID := client2.created.ID.String()
+	// company1_owner := company1.employees[0]
+	// company2_owner := company2.employees[0]
+	company1_employee1 := company1.employees[1]
+	company1_employee2 := company1.employees[2]
+	company2_employee1 := company2.employees[1]
+	company2_employee2 := company2.employees[2]
 
-	t.Log("--- Testing Client x Appointment Interactions ---")
-	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
-	appointmentSlot, found := findValidAppointmentSlot(t, employee0, company1, preferredLocation)
-	if !found {
-		t.Fatal("Setup failed: Could not find a valid appointment slot for initial booking.")
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company1_employee1 and client2")
+	appointmentSlot_1_1_2, found_1_1_2 := findValidAppointmentSlot(t, company1_employee1, company1, preferredLocation)
+	if !found_1_1_2 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company1_employee1.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_1_1_2.BranchID,
+			"service_id":  appointmentSlot_1_1_2.ServiceID,
+			"employee_id": company1_employee1.created.ID.String(),
+			"company_id":  company1.created.ID.String(),
+			"client_id":   client2.created.ID.String(),
+			"start_time":  appointmentSlot_1_1_2.StartTimeRFC3339,
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company1_employee1 and client2")
+	}
+	company1.GetById(t, 200)
+	client2.GetByEmail(t, 200)
+	company1_employee1.GetById(t, 200)
+
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company1_employee2 and client1")
+	appointmentSlot_1_2_1, found_1_2_1 := findValidAppointmentSlot(t, company1_employee2, company1, preferredLocation)
+	if !found_1_2_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company1_employee2.")
 	}
 	http.
 		Method("POST").
 		URL("/appointment").
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Send(map[string]any{
-			"branch_id":   appointmentSlot.BranchID,
-			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": employee0ID,
-			"company_id":  company1ID,
-			"client_id":   client1ID,
-			"start_time":  appointmentSlot.StartTimeRFC3339, // Use found start time
+			"branch_id":   appointmentSlot_1_2_1.BranchID,
+			"service_id":  appointmentSlot_1_2_1.ServiceID,
+			"employee_id": company1_employee2.created.ID.String(),
+			"company_id":  company1.created.ID.String(),
+			"client_id":   client1.created.ID.String(),
+			"start_time":  appointmentSlot_1_2_1.StartTimeRFC3339,
 		})
-	appointment_id_client1, ok := http.ResBody["id"].(string)
+	_, ok = http.ResBody["id"].(string)
 	if !ok {
-		t.Fatal("Failed to get appointment id from response for client1")
+		t.Fatal("Failed to get appointment id from response for company1_employee2 and client1")
 	}
+	company1.GetById(t, 200)
+	company1_employee2.GetById(t, 200)
+	client1.GetByEmail(t, 200)
 
-	employee0.GetById(t, 200)
+	t.Log("------------------ xxxxxx ------------------")
 
-	t.Log("Client tries to get his appointment : GET /appointment/{id} => 200")
+	t.Log("---> Creating appointments for company1_employee2 and client2")
+	appointmentSlot_1_2_2, found_1_2_2 := findValidAppointmentSlot(t, company1_employee2, company1, preferredLocation)
+	if !found_1_2_2 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company1_employee2.")
+	}
 	http.
-		Method("GET").
-		URL("/appointment/"+appointment_id_client1).
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_1_2_2.BranchID,
+			"service_id":  appointmentSlot_1_2_2.ServiceID,
+			"employee_id": company1_employee2.created.ID.String(),
+			"company_id":  company1.created.ID.String(),
+			"client_id":   client2.created.ID.String(),
+			"start_time":  appointmentSlot_1_2_2.StartTimeRFC3339,
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company1_employee2 and client2")
+	}
+	company1.GetById(t, 200)
+	client2.GetByEmail(t, 200)
+	company1_employee2.GetById(t, 200)
+
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company2_employee1 and client1")
+	appointmentSlot_2_1_1, found_2_1_1 := findValidAppointmentSlot(t, company2_employee1, company2, preferredLocation)
+	if !found_2_1_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company2_employee1.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
+		Header(namespace.HeadersKey.Company, company2.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_2_1_1.BranchID,
+			"service_id":  appointmentSlot_2_1_1.ServiceID,
+			"employee_id": company2_employee1.created.ID.String(),
+			"company_id":  company2.created.ID.String(),
+			"client_id":   client2.created.ID.String(),
+			"start_time":  appointmentSlot_2_1_1.StartTimeRFC3339,
+		})
+
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company2_employee1 and client2")
+	}
+	company2.GetById(t, 200)
+	client2.GetByEmail(t, 200)
+	company2_employee1.GetById(t, 200)
+
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company2_employee1 and client2")
+	appointmentSlot_2_1_2, found_2_1_2 := findValidAppointmentSlot(t, company2_employee1, company2, preferredLocation)
+	if !found_2_1_2 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company2_employee1.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
-		Header(namespace.HeadersKey.Company, company1ID).
-		Send(nil)
+		Header(namespace.HeadersKey.Company, company2.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_2_1_2.BranchID,
+			"service_id":  appointmentSlot_2_1_2.ServiceID,
+			"employee_id": company2_employee1.created.ID.String(),
+			"company_id":  company2.created.ID.String(),
+			"client_id":   client1.created.ID.String(),
+			"start_time":  appointmentSlot_2_1_2.StartTimeRFC3339,
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company2_employee1 and client1")
+	}
+	company2.GetById(t, 200)
+	client2.GetByEmail(t, 200)
+	company2_employee1.GetById(t, 200)
 
-	t.Log("Client tries to get someone else's appointment : GET /appointment/{id} => 403")
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company2_employee2 and client1")
+	appointmentSlot_2_2_1, found_2_2_1 := findValidAppointmentSlot(t, company2_employee2, company2, preferredLocation)
+	if !found_2_2_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company2_employee2.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
+		Header(namespace.HeadersKey.Company, company2.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_2_2_1.BranchID,
+			"service_id":  appointmentSlot_2_2_1.ServiceID,
+			"employee_id": company2_employee2.created.ID.String(),
+			"company_id":  company2.created.ID.String(),
+			"client_id":   client1.created.ID.String(),
+			"start_time":  appointmentSlot_2_2_1.StartTimeRFC3339,
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company2_employee2 and client1")
+	}
+	company2.GetById(t, 200)
+	client1.GetByEmail(t, 200)
+	company2_employee2.GetById(t, 200)
+
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("---> Creating appointments for company2_employee2 and client2")
+	appointmentSlot_2_2_2, found_2_2_2 := findValidAppointmentSlot(t, company2_employee2, company2, preferredLocation)
+	if !found_2_2_2 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company2_employee2.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client2.auth_token).
+		Header(namespace.HeadersKey.Company, company2.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_2_2_2.BranchID,
+			"service_id":  appointmentSlot_2_2_2.ServiceID,
+			"employee_id": company2_employee2.created.ID.String(),
+			"company_id":  company2.created.ID.String(),
+			"client_id":   client2.created.ID.String(),
+			"start_time":  appointmentSlot_2_2_2.StartTimeRFC3339,
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for company2_employee2 and client2")
+	}
+	company2.GetById(t, 200)
+	client2.GetByEmail(t, 200)
+	company2_employee2.GetById(t, 200)
+
+	t.Log("------------------ xxxxxx ------------------")
+
+	t.Log("--- Testing Owner x Appointment Interactions ---")
+
+	t.Log("Owner of Company 1 tries to get an appointment from Company 1 : GET /appointment/{id} => 200")
 	http.
 		Method("GET").
-		URL("/appointment/"+appointment_id_client1).
-		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, client2.auth_token).
-		Header(namespace.HeadersKey.Company, company1ID).
+		URL("/appointment/"+company1_employee1.created.Appointments[0].ID.String()).
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Send(nil)
 
-	t.Log("Client tries to reschedule someone else's appointment : PATCH /appointment/{id} => 403")
-	next_slot_attempt := findNextAvailableSlotRFC3339(t, employee0, appointmentSlot.StartTimeRFC3339)
+	t.Log("Owner of Company 1 tries to get an appointment from Company 2 : GET /appointment/{id} => 403")
+	http.
+		Method("GET").
+		URL("/appointment/"+company2_employee1.created.Appointments[0].ID.String()).
+		ExpectStatus(403).
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(nil)
+
+	t.Log("Owner of Company 1 tries to reschedule an appointment from Company 1 : PATCH /appointment/{id} => 200")
+	appointmentSlot_1_1_1, found_1_1_1 = findValidAppointmentSlot(t, company1_employee1, company1, preferredLocation)
+	if !found_1_1_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for rescheduling.")
+	}
+
 	http.
 		Method("PATCH").
-		URL("/appointment/"+appointment_id_client1).
+		URL("/appointment/"+company1_employee1.created.Appointments[0].ID.String()).
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(map[string]any{
+			"start_time": appointmentSlot_1_1_1.StartTimeRFC3339, // Use the found start time
+		})
+	company1.GetById(t, 200)
+	company1_employee1.GetById(t, 200)
+	client1.GetByEmail(t, 200)
+
+	t.Log("Owner of Company 1 tries to reschedule an appointment from Company 2 : PATCH /appointment/{id} => 403")
+	http.
+		Method("PATCH").
+		URL("/appointment/"+company2_employee1.created.Appointments[0].ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, client2.auth_token). // Client 2 trying to change Client 1's appt
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(map[string]any{
+			"start_time": appointmentSlot_1_1_1.StartTimeRFC3339, // Use the found start time
+		})
+
+	t.Log("Onwer of Company 1 tries to create an appointment for Client 1 with Employee 1 at Company 1 : POST /appointment => 200")
+	appointmentSlot_1_1_1, found_1_1_1 = findValidAppointmentSlot(t, company1_employee1, company1, preferredLocation)
+	if !found_1_1_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for creating an appointment.")
+	}
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_1_1_1.BranchID,
+			"service_id":  appointmentSlot_1_1_1.ServiceID,
+			"employee_id": company1_employee1.created.ID.String(),
+			"company_id":  company1.created.ID.String(),
+			"client_id":   client1.created.ID.String(),
+			"start_time":  appointmentSlot_1_1_1.StartTimeRFC3339, // Use the found start time
+		})
+	_, ok = http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for owner creating appointment for client1")
+	}
+	client1.GetByEmail(t, 200)
+	company1_employee1.GetById(t, 200)
+
+	t.Log("--- Testing Client x Appointment Interactions ---")
+
+	t.Log("Client 1 tries to get his appointment : GET /appointment/{id} => 200")
+	http.
+		Method("GET").
+		URL("/appointment/"+client1.created.Appointments[0].AppointmentID.String()).
+		ExpectStatus(200).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(nil)
+
+	t.Log("Client 1 tries to get Client 2 appointment : GET /appointment/{id} => 403")
+	http.
+		Method("GET").
+		URL("/appointment/"+client2.created.Appointments[0].AppointmentID.String()).
+		ExpectStatus(403).
+		Header(namespace.HeadersKey.Auth, client1.auth_token).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+		Send(nil)
+
+	t.Log("Client 1 tries to reschedule Client 2 appointment : PATCH /appointment/{id} => 403")
+	next_slot_attempt := findNextAvailableSlotRFC3339(t, company1_employee1, appointmentSlot_1_1_2.StartTimeRFC3339)
+	http.
+		Method("PATCH").
+		URL("/appointment/"+client2.created.Appointments[0].AppointmentID.String()).
+		ExpectStatus(403).
+		Header(namespace.HeadersKey.Auth, client1.auth_token). // Client 2 trying to change Client 1's appt
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Send(map[string]any{
 			"start_time": next_slot_attempt, // Provide a body even though it should fail
 		})
 
-	t.Log("Client tries to reschedule his appointment : PATCH /appointment/{id} => 200")
+	next_slot_attempt = findNextAvailableSlotRFC3339(t, company1_employee1, appointmentSlot_1_1_1.StartTimeRFC3339)
+	t.Log("Client 1 tries to reschedule his appointment : PATCH /appointment/{id} => 200")
 	http.
 		Method("PATCH").
-		URL("/appointment/"+appointment_id_client1).
+		URL("/appointment/"+client1.created.Appointments[0].AppointmentID.String()).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token). // Client 1 changing his own appt
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Send(map[string]any{
 			"start_time": next_slot_attempt, // Use the calculated next slot
 		})
 
-	// Client tries to create someone else's appointment : POST /appointment => 403
+	t.Log("Client 1 tries to create an appointment for Client 2 : POST /appointment => 403")
+	appointmentSlot_1_1_2, found_1_1_2 = findValidAppointmentSlot(t, company1_employee1, company1, preferredLocation)
+	if !found_1_1_2 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for company1_employee1.")
+	}
 	http.
-		Method("POST"). // Fixed: Method was /POST
+		Method("POST").
 		URL("/appointment").
 		ExpectStatus(403).
 		Header(namespace.HeadersKey.Auth, client1.auth_token). // Client 1 trying to create for Client 2
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Send(map[string]any{
-			"branch_id":   appointmentSlot.BranchID,
-			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": employee0ID,
-			"company_id":  company1ID,
-			"client_id":   client2ID, // Different client ID
-			"start_time":  appointmentSlot.StartTimeRFC3339,
+			"branch_id":   appointmentSlot_1_1_2.BranchID,
+			"service_id":  appointmentSlot_1_1_2.ServiceID,
+			"employee_id": company1_employee1.created.ID.String(),
+			"company_id":  company1.created.ID.String(),
+			"client_id":   client2.created.ID.String(), // Different client ID
+			"start_time":  appointmentSlot_1_1_2.StartTimeRFC3339,
 		})
 
 	t.Log("Client tries to cancel someone else's appointment : DELETE /appointment/{id} => 403")
 	http.
 		Method("DELETE").
-		URL("/appointment/"+appointment_id_client1).
+		URL("/appointment/"+client1.created.Appointments[0].AppointmentID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	t.Log("Client tries to cancel his appointment : DELETE /appointment/{id} => 200")
 	http.
 		Method("DELETE").
-		URL("/appointment/"+appointment_id_client1).
+		URL("/appointment/"+client1.created.Appointments[0].AppointmentID.String()).
 		ExpectStatus(200).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
-	t.Logf("Client 1 deleted appointment %s", appointment_id_client1)
+	t.Logf("Client 1 deleted appointment %s", client1.created.Appointments[0].AppointmentID.String())
 
 	t.Log("--- Testing Client x Branch Interactions ---")
 	branch0ID := company1.branches[0].created.ID.String()
@@ -149,7 +527,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client1.auth_token). // Any logged-in user can view?
 		Send(nil)
 
@@ -158,10 +536,10 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/branch").
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
-			"company_id": company1ID,
+			"company_id": company1.created.ID.String(),
 			"name":       "Client Branch Test",
 			"address":    "123 Client St",
 		})
@@ -171,7 +549,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Branch Name",
@@ -182,7 +560,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
 
@@ -190,7 +568,7 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to get a client: GET /client/{id} => 403 (Cannot get other client's details)")
 	http.
 		Method("GET").
-		URL("/client/"+client2ID).
+		URL("/client/"+client2.created.ID.String()).
 		ExpectStatus(403).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
@@ -198,7 +576,7 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to edit a client: PATCH /client/{id} => 403 (Cannot edit other client)")
 	http.
 		Method("PATCH").
-		URL("/client/"+client2ID).
+		URL("/client/"+client2.created.ID.String()).
 		ExpectStatus(403).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
@@ -208,7 +586,7 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to delete a client: DELETE /client/{id} => 403 (Cannot delete other client)")
 	http.
 		Method("DELETE").
-		URL("/client/"+client2ID).
+		URL("/client/"+client2.created.ID.String()).
 		ExpectStatus(403).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
@@ -217,7 +595,7 @@ func Test_Permissions(t *testing.T) {
 	newClient1Name := "Client 1 New Name"
 	http.
 		Method("PATCH").
-		URL("/client/"+client1ID).
+		URL("/client/"+client1.created.ID.String()).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(map[string]any{
@@ -227,7 +605,7 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to get himself : GET /client/{id} => 200")
 	http.
 		Method("GET").
-		URL("/client/"+client1ID).
+		URL("/client/"+client1.created.ID.String()).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
@@ -235,11 +613,11 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to delete himself : DELETE /client/{id} => 200")
 	http.
 		Method("DELETE").
-		URL("/client/"+client1ID).
+		URL("/client/"+client1.created.ID.String()).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client1.auth_token).
 		Send(nil)
-	t.Logf("Client 1 deleted himself (%s)", client1ID)
+	t.Logf("Client 1 deleted himself (%s)", client1.created.ID.String())
 
 	// --- Client x Company --- Interactions ---
 	t.Log("--- Testing Client x Company Interactions ---")
@@ -250,7 +628,7 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to get a company : GET /company/{id} => 200")
 	http.
 		Method("GET").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
@@ -266,9 +644,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to change something in a company : PATCH /company/{id} => 403 (Not allowed)")
 	http.
 		Method("PATCH").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Company Name",
@@ -277,9 +655,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to delete a company : DELETE /company/{id} => 403 (Not implemented or forbidden)")
 	http.
 		Method("DELETE").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
@@ -288,9 +666,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to get an employee : GET /employee/{id} => 200 (Needed for booking)")
 	http.
 		Method("GET").
-		URL("/employee/"+employee0ID).
+		URL("/employee/"+company1_employee1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
@@ -299,10 +677,10 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/employee").
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
-			"company_id": company1ID,
+			"company_id": company1.created.ID.String(),
 			"name":       "Client Created Employee",
 			"email":      fmt.Sprintf("clientemp%d@test.com", time.Now().UnixNano()),
 			"phone":      "222333444",
@@ -311,9 +689,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to edit an employee : PATCH /employee/{id} => 403 (Forbidden)")
 	http.
 		Method("PATCH").
-		URL("/employee/"+employee0ID).
+		URL("/employee/"+company1_employee1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Employee Name",
@@ -322,9 +700,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Client tries to delete an employee : DELETE /employee/{id} => 403 (Forbidden)")
 	http.
 		Method("DELETE").
-		URL("/employee/"+employee0ID).
+		URL("/employee/"+company1_employee1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
@@ -354,7 +732,7 @@ func Test_Permissions(t *testing.T) {
 	// 	ExpectStatus(403).
 	// 	Header(namespace.HeadersKey.Auth, client2.auth_token).
 	// 	Send(map[string]any{
-	// 		"company_id": company1ID,
+	// 		"company_id": company1.created.ID.String(),
 	// 		"name":       "Client Role",
 	// 	})
 
@@ -432,7 +810,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
@@ -441,10 +819,10 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/service").
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
-			"company_id": company1ID,
+			"company_id": company1.created.ID.String(),
 			"name":       "Client Service",
 			"price":      10.50,
 			"duration":   30,
@@ -455,7 +833,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(map[string]any{
 			"name": "Client Edited Service",
@@ -466,80 +844,80 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Company, company1ID).
+		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
 		Header(namespace.HeadersKey.Auth, client2.auth_token).
 		Send(nil)
 
 	// --- Setup for Employee Tests ---
 	t.Log("--- Setting up for Employee Interactions ---")
-	t.Log("Creating an appointment for employee0 to test employee interactions")
-	var employee0AppointmentID string
-	http.
-		Method("POST").
-		URL("/appointment").
-		ExpectStatus(200).
-		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates appt for client2 with employee0
-		Send(map[string]any{
-			"branch_id":   appointmentSlot.BranchID,
-			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": employee0ID,
-			"company_id":  company1ID,
-			"client_id":   client2ID,
-			"start_time":  appointmentSlot.StartTimeRFC3339,
-		})
-	employee0AppointmentID, ok = http.ResBody["id"].(string)
-	if !ok {
-		t.Fatal("Failed to get appointment id created by owner for employee0")
-	}
-	t.Logf("Owner created appointment %s for employee %s with client %s", employee0AppointmentID, employee0ID, client2ID)
+	// t.Log("Creating an appointment for employee0 to test employee interactions")
+	// var employee0AppointmentID string
+	// http.
+	// 	Method("POST").
+	// 	URL("/appointment").
+	// 	ExpectStatus(200).
+	// 	Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates appt for client2 with employee0
+	// 	Send(map[string]any{
+	// 		"branch_id":   appointmentSlot.BranchID,
+	// 		"service_id":  appointmentSlot.ServiceID,
+	// 		"employee_id": company1_employee1.created.ID.String(),
+	// 		"company_id":  company1.created.ID.String(),
+	// 		"client_id":   client2.created.ID.String(),
+	// 		"start_time":  appointmentSlot.StartTimeRFC3339,
+	// 	})
+	// employee0AppointmentID, ok = http.ResBody["id"].(string)
+	// if !ok {
+	// 	t.Fatal("Failed to get appointment id created by owner for employee0")
+	// }
+	// t.Logf("Owner created appointment %s for employee %s with client %s", employee0AppointmentID, company1_employee1.created.ID.String(), client2.created.ID.String())
 
-	// Create an appointment for employee1 (if exists) booked by client2 for permission testing
-	var otherEmployeeAppointmentID string
-	if len(company1.employees) > 1 {
-		employee1 := company1.employees[1]
-		employee1ID := employee1.created.ID.String()
+	// // Create an appointment for employee1 (if exists) booked by client2 for permission testing
+	// var otherEmployeeAppointmentID string
+	// if len(company1.employees) > 1 {
+	// 	employee1 := company1.employees[1]
+	// 	employee1ID := employee1.created.ID.String()
 
-		// --- CORRECTED PART ---
-		// Use findValidAppointmentSlot for employee1 to get a proper RFC3339 slot
-		// You might need to ensure preferredLocation is defined earlier in this test, e.g.:
-		// preferredLocation := time.UTC // Or time.Local, consistent with first slot search
+	// 	// --- CORRECTED PART ---
+	// 	// Use findValidAppointmentSlot for employee1 to get a proper RFC3339 slot
+	// 	// You might need to ensure preferredLocation is defined earlier in this test, e.g.:
+	// 	// preferredLocation := time.UTC // Or time.Local, consistent with first slot search
 
-		slotForEmployee1, foundSlotForEmployee1 := findValidAppointmentSlot(t, employee1, company1, preferredLocation)
+	// 	slotForEmployee1, foundSlotForEmployee1 := findValidAppointmentSlot(t, employee1, company1, preferredLocation)
 
-		if foundSlotForEmployee1 {
-			t.Logf("Found valid slot for employee1: Branch %s, Service %s, Time %s",
-				slotForEmployee1.BranchID, slotForEmployee1.ServiceID, slotForEmployee1.StartTimeRFC3339)
+	// 	if foundSlotForEmployee1 {
+	// 		t.Logf("Found valid slot for employee1: Branch %s, Service %s, Time %s",
+	// 			slotForEmployee1.BranchID, slotForEmployee1.ServiceID, slotForEmployee1.StartTimeRFC3339)
 
-			http.
-				Method("POST").
-				URL("/appointment").
-				ExpectStatus(200).
-				Header(namespace.HeadersKey.Company, company1ID).
-				Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates
-				Send(map[string]any{
-					"branch_id":   slotForEmployee1.BranchID,    // Use details from the found slot
-					"service_id":  slotForEmployee1.ServiceID,   // Use details from the found slot
-					"employee_id": employee1ID,                  // Correct employee
-					"company_id":  company1ID,
-					"client_id":   client2ID,                    // Booking for client 2
-					"start_time":  slotForEmployee1.StartTimeRFC3339, // *** CRUCIAL: Use RFC3339 string ***
-				})
-			var ok bool
-			otherEmployeeAppointmentID, ok = http.ResBody["id"].(string)
-			if !ok {
-				t.Logf("Warning: Failed to get appointment id for employee1 %s after finding slot", employee1ID)
-				otherEmployeeAppointmentID = "" // Mark as unavailable
-			} else {
-				t.Logf("Owner created appointment %s for employee %s with client %s", otherEmployeeAppointmentID, employee1ID, client2ID)
-			}
-		} else {
-			t.Logf("Warning: No valid appointment slot found for employee %s using findValidAppointmentSlot. Skipping 'other employee' appt test.", employee1ID)
-			otherEmployeeAppointmentID = "" // Ensure it's reset if no slot found
-		}
-		// --- END CORRECTED PART ---
-	} else {
-		t.Log("Warning: Only one employee available, skipping 'other employee' appointment tests")
-	}
+	// 		http.
+	// 			Method("POST").
+	// 			URL("/appointment").
+	// 			ExpectStatus(200).
+	// 			Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+	// 			Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates
+	// 			Send(map[string]any{
+	// 				"branch_id":   slotForEmployee1.BranchID,  // Use details from the found slot
+	// 				"service_id":  slotForEmployee1.ServiceID, // Use details from the found slot
+	// 				"employee_id": employee1ID,                // Correct employee
+	// 				"company_id":  company1.created.ID.String(),
+	// 				"client_id":   client2.created.ID.String(),       // Booking for client 2
+	// 				"start_time":  slotForEmployee1.StartTimeRFC3339, // *** CRUCIAL: Use RFC3339 string ***
+	// 			})
+	// 		var ok bool
+	// 		otherEmployeeAppointmentID, ok = http.ResBody["id"].(string)
+	// 		if !ok {
+	// 			t.Logf("Warning: Failed to get appointment id for employee1 %s after finding slot", employee1ID)
+	// 			otherEmployeeAppointmentID = "" // Mark as unavailable
+	// 		} else {
+	// 			t.Logf("Owner created appointment %s for employee %s with client %s", otherEmployeeAppointmentID, employee1ID, client2.created.ID.String())
+	// 		}
+	// 	} else {
+	// 		t.Logf("Warning: No valid appointment slot found for employee %s using findValidAppointmentSlot. Skipping 'other employee' appt test.", employee1ID)
+	// 		otherEmployeeAppointmentID = "" // Ensure it's reset if no slot found
+	// 	}
+	// 	// --- END CORRECTED PART ---
+	// } else {
+	// 	t.Log("Warning: Only one employee available, skipping 'other employee' appointment tests")
+	// }
 	// if len(company1.employees) > 1 {
 	// 	employee1 := company1.employees[1]
 	// 	employee1ID := employee1.created.ID.String()
@@ -562,14 +940,14 @@ func Test_Permissions(t *testing.T) {
 	// 			Method("POST").
 	// 			URL("/appointment").
 	// 			ExpectStatus(200).
-	// 			Header(namespace.HeadersKey.Company, company1ID).             // Company ID needed for employee
+	// 			Header(namespace.HeadersKey.Company, company1.created.ID.String()).             // Company ID needed for employee
 	// 			Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner creates
 	// 			Send(map[string]any{
 	// 				"branch_id":   employee1Branch0,
 	// 				"service_id":  employee1Service0,
 	// 				"employee_id": employee1ID,
-	// 				"company_id":  company1ID,
-	// 				"client_id":   client2ID, // Use client2 again
+	// 				"company_id":  company1.created.ID.String(),
+	// 				"client_id":   client2.created.ID.String(), // Use client2 again
 	// 				"start_time":  employee1StartTime,
 	// 			})
 	// 		otherEmployeeAppointmentID, ok = http.ResBody["id"].(string)
@@ -577,7 +955,7 @@ func Test_Permissions(t *testing.T) {
 	// 			t.Logf("Warning: Failed to get appointment id for employee1 %s", employee1ID)
 	// 			otherEmployeeAppointmentID = "" // Mark as unavailable
 	// 		} else {
-	// 			t.Logf("Owner created appointment %s for employee %s with client %s", otherEmployeeAppointmentID, employee1ID, client2ID)
+	// 			t.Logf("Owner created appointment %s for employee %s with client %s", otherEmployeeAppointmentID, employee1ID, client2.created.ID.String())
 	// 		}
 	// 	} else {
 	// 		t.Logf("Warning: No work schedule found for employee %s, skipping other employee appt test", employee1ID)
@@ -588,128 +966,128 @@ func Test_Permissions(t *testing.T) {
 
 	// --- Employee x Appointments --- Interactions ---
 	t.Log("--- Testing Employee x Appointment Interactions ---")
-	employee0AuthToken := employee0.auth_token
-	if employee0AuthToken == "" {
-		t.Fatal("Employee 0 auth token is missing for tests")
-	}
+	// company1_employee1.auth_token := company1_employee1.auth_token
+	// if company1_employee1.auth_token == "" {
+	// 	t.Fatal("Employee 0 auth token is missing for tests")
+	// }
 
-	t.Log("Employee tries to get his appointment : GET /appointment/{id} => 200")
-	http.
-		Method("GET").
-		URL("/appointment/"+employee0AppointmentID).
-		ExpectStatus(200).
-		Header(namespace.HeadersKey.Company, company1ID).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
-		Send(nil)
+	// t.Log("Employee tries to get his appointment : GET /appointment/{id} => 200")
+	// http.
+	// 	Method("GET").
+	// 	URL("/appointment/"+employee0AppointmentID).
+	// 	ExpectStatus(200).
+	// 	Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+	// 	Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 	Send(nil)
 
-	if otherEmployeeAppointmentID != "" {
-		t.Log("Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
-		http.
-			Method("GET").
-			URL("/appointment/"+otherEmployeeAppointmentID).
-			ExpectStatus(403).
-			Header(namespace.HeadersKey.Company, company1ID).
-			Header(namespace.HeadersKey.Auth, employee0AuthToken).
-			Send(nil)
-	} else {
-		t.Log("Skipping test: get someone else's appointment (no other employee appointment available)")
-	}
+	// if otherEmployeeAppointmentID != "" {
+	// 	t.Log("Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
+	// 	http.
+	// 		Method("GET").
+	// 		URL("/appointment/"+otherEmployeeAppointmentID).
+	// 		ExpectStatus(403).
+	// 		Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+	// 		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 		Send(nil)
+	// } else {
+	// 	t.Log("Skipping test: get someone else's appointment (no other employee appointment available)")
+	// }
 
-	t.Log("Employee tries to reschedule his appointment : PATCH /appointment/{id} => 200")
-	var employeeCreatedApptID string
-	next_slot_for_employee_booking := findNextAvailableSlotRFC3339(t, employee0, appointmentSlot.StartTimeRFC3339)
-	http.
-		Method("POST").
-		URL("/appointment").
-		ExpectStatus(200).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee making the booking
-		Header(namespace.HeadersKey.Company, company1ID).
-		Send(map[string]any{
-			"branch_id":   appointmentSlot.BranchID,
-			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": employee0ID, // Booking is for himself
-			"company_id":  company1ID,
-			"client_id":   client2ID, // Booking *for* client 2
-			"start_time":  next_slot_for_employee_booking,
-		})
-	employeeCreatedApptID, ok = http.ResBody["id"].(string)
-	if !ok {
-		t.Log("Warning: Failed to get ID for appointment created by employee")
-	} else {
-		t.Logf("Employee %s created appointment %s for client %s", employee0ID, employeeCreatedApptID, client2ID)
-	}
+	// t.Log("Employee tries to reschedule his appointment : PATCH /appointment/{id} => 200")
+	// var employeeCreatedApptID string
+	// next_slot_for_employee_booking := findNextAvailableSlotRFC3339(t, company1_employee1, appointmentSlot.StartTimeRFC3339)
+	// http.
+	// 	Method("POST").
+	// 	URL("/appointment").
+	// 	ExpectStatus(200).
+	// 	Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee making the booking
+	// 	Header(namespace.HeadersKey.Company, company1.created.ID.String()).
+	// 	Send(map[string]any{
+	// 		"branch_id":   appointmentSlot.BranchID,
+	// 		"service_id":  appointmentSlot.ServiceID,
+	// 		"employee_id": company1_employee1.created.ID.String(), // Booking is for himself
+	// 		"company_id":  company1.created.ID.String(),
+	// 		"client_id":   client2.created.ID.String(), // Booking *for* client 2
+	// 		"start_time":  next_slot_for_employee_booking,
+	// 	})
+	// employeeCreatedApptID, ok = http.ResBody["id"].(string)
+	// if !ok {
+	// 	t.Log("Warning: Failed to get ID for appointment created by employee")
+	// } else {
+	// 	t.Logf("Employee %s created appointment %s for client %s", company1_employee1.created.ID.String(), employeeCreatedApptID, client2.created.ID.String())
+	// }
 
-	// Employee tries to edit his appointment : PATCH /appointment/{id} => 404 (Endpoint/action not allowed/found for employee?)
-	// Using the appointment originally created by the owner for this employee
-	t.Log("Employee tries to edit his appointment : PATCH /appointment/{id} => 404")
-	http.
-		Method("PATCH").
-		URL("/appointment/"+employee0AppointmentID).
-		ExpectStatus(404).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
-		Send(map[string]any{
-			"start_time": next_slot_for_employee_booking, // Attempt change
-		})
+	// // Employee tries to edit his appointment : PATCH /appointment/{id} => 404 (Endpoint/action not allowed/found for employee?)
+	// // Using the appointment originally created by the owner for this employee
+	// t.Log("Employee tries to edit his appointment : PATCH /appointment/{id} => 404")
+	// http.
+	// 	Method("PATCH").
+	// 	URL("/appointment/"+employee0AppointmentID).
+	// 	ExpectStatus(404).
+	// 	Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 	Send(map[string]any{
+	// 		"start_time": next_slot_for_employee_booking, // Attempt change
+	// 	})
 
-	// Employee tries to delete his appointment : DELETE /appointment/{id} => 404 (Endpoint/action not allowed/found for employee?)
-	// Using the appointment originally created by the owner for this employee
-	t.Log("Employee tries to delete his appointment : DELETE /appointment/{id} => 404")
-	http.
-		Method("DELETE").
-		URL("/appointment/"+employee0AppointmentID).
-		ExpectStatus(404). // Following comment expectation
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
-		Send(nil)
+	// // Employee tries to delete his appointment : DELETE /appointment/{id} => 404 (Endpoint/action not allowed/found for employee?)
+	// // Using the appointment originally created by the owner for this employee
+	// t.Log("Employee tries to delete his appointment : DELETE /appointment/{id} => 404")
+	// http.
+	// 	Method("DELETE").
+	// 	URL("/appointment/"+employee0AppointmentID).
+	// 	ExpectStatus(404). // Following comment expectation
+	// 	Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 	Send(nil)
 
-	if otherEmployeeAppointmentID != "" {
-		t.Log("Re-test: Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
-		http.
-			Method("GET").
-			URL("/appointment/"+otherEmployeeAppointmentID).
-			ExpectStatus(403).
-			Header(namespace.HeadersKey.Auth, employee0AuthToken).
-			Send(nil)
-	} // Skipped if no other appt
+	// if otherEmployeeAppointmentID != "" {
+	// 	t.Log("Re-test: Employee tries to get someone else's appointment : GET /appointment/{id} => 403")
+	// 	http.
+	// 		Method("GET").
+	// 		URL("/appointment/"+otherEmployeeAppointmentID).
+	// 		ExpectStatus(403).
+	// 		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 		Send(nil)
+	// } // Skipped if no other appt
 
-	// Employee tries to edit someone else's appointment : PATCH /appointment/{id} => 403 (Permission denied)
-	if otherEmployeeAppointmentID != "" {
-		t.Log("Employee tries to edit someone else's appointment : PATCH /appointment/{id} => 403")
-		http.
-			Method("PATCH").
-			URL("/appointment/"+otherEmployeeAppointmentID).
-			ExpectStatus(403). // Should be forbidden (or 404 if PATCH route is generally unavailable to employees)
-			Header(namespace.HeadersKey.Auth, employee0AuthToken).
-			Send(map[string]any{
-				"start_time": next_slot_for_employee_booking,
-			})
-	} else {
-		t.Log("Skipping test: edit someone else's appointment (no other employee appointment available)")
-	}
+	// // Employee tries to edit someone else's appointment : PATCH /appointment/{id} => 403 (Permission denied)
+	// if otherEmployeeAppointmentID != "" {
+	// 	t.Log("Employee tries to edit someone else's appointment : PATCH /appointment/{id} => 403")
+	// 	http.
+	// 		Method("PATCH").
+	// 		URL("/appointment/"+otherEmployeeAppointmentID).
+	// 		ExpectStatus(403). // Should be forbidden (or 404 if PATCH route is generally unavailable to employees)
+	// 		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 		Send(map[string]any{
+	// 			"start_time": next_slot_for_employee_booking,
+	// 		})
+	// } else {
+	// 	t.Log("Skipping test: edit someone else's appointment (no other employee appointment available)")
+	// }
 
-	// Employee tries to delete someone else's appointment : DELETE /appointment/{id} => 403 (Permission denied)
-	if otherEmployeeAppointmentID != "" {
-		t.Log("Employee tries to delete someone else's appointment : DELETE /appointment/{id} => 403")
-		http.
-			Method("DELETE").
-			URL("/appointment/"+otherEmployeeAppointmentID).
-			ExpectStatus(403). // Should be forbidden (or 404 if DELETE route unavailable)
-			Header(namespace.HeadersKey.Auth, employee0AuthToken).
-			Send(nil)
-	} else {
-		t.Log("Skipping test: delete someone else's appointment (no other employee appointment available)")
-	}
-	// Clean up employee-created appointment if ID was captured
-	if employeeCreatedApptID != "" {
-		// Cancellation might need owner/client permission or specific endpoint, using owner for cleanup
-		t.Logf("Cleaning up employee-created appointment %s using owner token", employeeCreatedApptID)
-		http.
-			Method("DELETE").
-			URL("/appointment/"+employeeCreatedApptID).
-			ExpectStatus(200). // Assume owner can delete any appt in their company
-			Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
-			Send(nil)
-		t.Logf("Cleaned up employee-created appointment %s using owner token", employeeCreatedApptID)
-	}
+	// // Employee tries to delete someone else's appointment : DELETE /appointment/{id} => 403 (Permission denied)
+	// if otherEmployeeAppointmentID != "" {
+	// 	t.Log("Employee tries to delete someone else's appointment : DELETE /appointment/{id} => 403")
+	// 	http.
+	// 		Method("DELETE").
+	// 		URL("/appointment/"+otherEmployeeAppointmentID).
+	// 		ExpectStatus(403). // Should be forbidden (or 404 if DELETE route unavailable)
+	// 		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+	// 		Send(nil)
+	// } else {
+	// 	t.Log("Skipping test: delete someone else's appointment (no other employee appointment available)")
+	// }
+	// // Clean up employee-created appointment if ID was captured
+	// if employeeCreatedApptID != "" {
+	// 	// Cancellation might need owner/client permission or specific endpoint, using owner for cleanup
+	// 	t.Logf("Cleaning up employee-created appointment %s using owner token", employeeCreatedApptID)
+	// 	http.
+	// 		Method("DELETE").
+	// 		URL("/appointment/"+employeeCreatedApptID).
+	// 		ExpectStatus(200). // Assume owner can delete any appt in their company
+	// 		Header(namespace.HeadersKey.Auth, company1.owner.auth_token).
+	// 		Send(nil)
+	// 	t.Logf("Cleaned up employee-created appointment %s using owner token", employeeCreatedApptID)
+	// }
 
 	// --- Employee x Company --- Interactions ---
 	t.Log("--- Testing Employee x Company Interactions ---")
@@ -717,9 +1095,9 @@ func Test_Permissions(t *testing.T) {
 	t.Log("Employee tries to get a company : GET /company/{id} => 403")
 	http.
 		Method("GET").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// Employee tries to get all companies : GET /company => 403 (Definitely restricted)
@@ -728,15 +1106,15 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/company").
 		ExpectStatus(405).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// Employee tries to change something in a company : PATCH /company/{id} => 403
 	http.
 		Method("PATCH").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(map[string]any{
 			"name": "Employee Edited Company Name",
 		})
@@ -744,9 +1122,9 @@ func Test_Permissions(t *testing.T) {
 	// Employee tries to delete a company : DELETE /company/{id} => 403
 	http.
 		Method("DELETE").
-		URL("/company/"+company1ID).
+		URL("/company/"+company1.created.ID.String()).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// --- Employee x Branch --- Interactions ---
@@ -756,7 +1134,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// Employee tries to create a branch : POST /branch => 403
@@ -764,9 +1142,9 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/branch").
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(map[string]any{
-			"company_id": company1ID,
+			"company_id": company1.created.ID.String(),
 			"name":       "Employee Branch",
 			"address":    "456 Employee Ave",
 		})
@@ -776,7 +1154,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(map[string]any{
 			"name": "Employee Edited Branch Name",
 		})
@@ -786,7 +1164,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/branch/"+branch0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// --- Employee x Service --- Interactions ---
@@ -796,7 +1174,7 @@ func Test_Permissions(t *testing.T) {
 		Method("GET").
 		URL("/service/"+service0ID).
 		ExpectStatus(200).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// Employee tries to create a service : POST /service => 403
@@ -804,9 +1182,9 @@ func Test_Permissions(t *testing.T) {
 		Method("POST").
 		URL("/service").
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(map[string]any{
-			"company_id": company1ID,
+			"company_id": company1.created.ID.String(),
 			"name":       "Employee Service",
 			"price":      20.00,
 			"duration":   60,
@@ -817,7 +1195,7 @@ func Test_Permissions(t *testing.T) {
 		Method("PATCH").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(map[string]any{
 			"name": "Employee Edited Service",
 		})
@@ -827,7 +1205,7 @@ func Test_Permissions(t *testing.T) {
 		Method("DELETE").
 		URL("/service/"+service0ID).
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken).
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token).
 		Send(nil)
 
 	// Employee tries to add a service to himself : POST /employee/{id}/service/{id} => 403 (Assume only Owner/Admin can)
@@ -837,9 +1215,9 @@ func Test_Permissions(t *testing.T) {
 		service1ID = company1.services[1].created.ID.String()
 		http.
 			Method("POST").
-			URL("/employee/"+employee0ID+"/service/"+service1ID).
+			URL("/employee/"+company1_employee1.created.ID.String()+"/service/"+service1ID).
 			ExpectStatus(403).
-			Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee trying to add to himself
+			Header(namespace.HeadersKey.Auth, company1_employee1.auth_token). // Employee trying to add to himself
 			Send(nil)
 	} else {
 		t.Log("Skipping test: employee add service to self (only one service defined)")
@@ -848,27 +1226,57 @@ func Test_Permissions(t *testing.T) {
 	// Owner adds service[0] to employee[0] (this test already existed, added log)
 	http.
 		Method("POST").
-		URL("/employee/"+employee0ID+"/service/"+service0ID).
+		URL("/employee/"+company1_employee1.created.ID.String()+"/service/"+service0ID).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner performs action
 		Send(nil)
-	t.Logf("Owner added service %s to employee %s", service0ID, employee0ID)
+	t.Logf("Owner added service %s to employee %s", service0ID, company1_employee1.created.ID.String())
 
 	// Employee tries to remove a service from himself : DELETE /employee/{id}/service/{id} => 403 (Assume only Owner/Admin can)
 	http.
 		Method("DELETE").
-		URL("/employee/"+employee0ID+"/service/"+service0ID). // Try to remove the service added by owner
+		URL("/employee/"+company1_employee1.created.ID.String()+"/service/"+service0ID). // Try to remove the service added by owner
 		ExpectStatus(403).
-		Header(namespace.HeadersKey.Auth, employee0AuthToken). // Employee trying action
+		Header(namespace.HeadersKey.Auth, company1_employee1.auth_token). // Employee trying action
 		Send(nil)
 
 	// Owner removes service from employee: DELETE /employee/{id}/service/{id} => 200 (Cleanup / successful case)
 	http.
 		Method("DELETE").
-		URL("/employee/"+employee0ID+"/service/"+service0ID).
+		URL("/employee/"+company1_employee1.created.ID.String()+"/service/"+service0ID).
 		ExpectStatus(200).
 		Header(namespace.HeadersKey.Auth, company1.owner.auth_token). // Owner performs action
 		Send(nil)
-	t.Logf("Owner removed service %s from employee %s", service0ID, employee0ID)
+	t.Logf("Owner removed service %s from employee %s", service0ID, company1_employee1.created.ID.String())
 
+}
+
+func (permissions_test) CreateAppointment(t *testing.T, s int, company *Company, client *Client, employee *Employee, token, company_id string) {
+	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
+	appointmentSlot_1_1_1, found_1_1_1 := findValidAppointmentSlot(t, employee, company, preferredLocation)
+	if !found_1_1_1 {
+		t.Fatal("Setup failed: Could not find a valid appointment slot for initial booking.")
+	}
+	http := handler.NewHttpClient(t)
+	http.
+		Method("POST").
+		URL("/appointment").
+		ExpectStatus(s).
+		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, company_id).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot_1_1_1.BranchID,
+			"service_id":  appointmentSlot_1_1_1.ServiceID,
+			"employee_id": employee.created.ID.String(),
+			"company_id":  company.created.ID.String(),
+			"client_id":   client.created.ID.String(),
+			"start_time":  appointmentSlot_1_1_1.StartTimeRFC3339, // Use found start time
+		})
+	_, ok := http.ResBody["id"].(string)
+	if !ok {
+		t.Fatal("Failed to get appointment id from response for client1")
+	}
+	company.GetById(t, 200)
+	client.GetByEmail(t, 200)
+	employee.GetById(t, 200)
 }

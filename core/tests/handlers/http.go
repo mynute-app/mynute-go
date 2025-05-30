@@ -15,6 +15,10 @@ import (
 
 type HttpClient struct{}
 
+func NewHttpClient(t *testing.T) *httpActions {
+	return (&HttpClient{}).SetTest(t)
+}
+
 type httpActions struct {
 	Error           string
 	Status          int
