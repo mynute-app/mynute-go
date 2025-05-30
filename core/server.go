@@ -120,6 +120,7 @@ func (s *Server) parallel() *Server {
 
 func (s *Server) listen() *Server {
 	app_port := os.Getenv("APP_PORT")
+	log.Printf("Server is starting at http://localhost:%s\n", app_port)
 	if err := s.App.Listen(":" + app_port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
@@ -131,6 +132,7 @@ func (s *Server) listen() *Server {
 //	@test:		starts the server in a goroutine. This is useful for unit testing.
 //	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {
+	log.Printf("Starting server in '%s' mode...\n", in)
 	if in == "test" {
 		app_env := os.Getenv("APP_ENV")
 		if app_env != "test" {
