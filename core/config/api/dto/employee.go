@@ -42,6 +42,7 @@ type WorkRange struct {
 	Start    string    `json:"start"` // Store as "15:30:00"
 	End      string    `json:"end"`   // Store as "18:00:00"
 	BranchID uuid.UUID `json:"branch_id"`
+	Services []uuid.UUID `json:"services"` // Store as UUIDs
 }
 
 type Employee struct {
