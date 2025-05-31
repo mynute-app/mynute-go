@@ -25,11 +25,11 @@ type Server struct {
 func NewServer() *Server {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	app := fiber.New(fiber.Config{
-		ErrorHandler:          middleware.Error(logger),
+		ErrorHandler:          middleware.ErrorV13(logger),
 		BodyLimit:             2 * 1024 * 1024, // 2 MB
 		DisableStartupMessage: true,
 	})
-	app.Use(middleware.Log(logger))
+	app.Use(middleware.LogV13(logger))
 	lib.LoadEnv()
 	db := database.Connect()
 	session := handler.NewCookieStore(handler.SessionOpts())

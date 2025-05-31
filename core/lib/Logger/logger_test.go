@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestLokiLog_SuccessFirstTry(t *testing.T) {
+func TestLokiLogStructured_SuccessFirstTry(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -16,11 +16,24 @@ func TestLokiLog_SuccessFirstTry(t *testing.T) {
 		httpmock.NewStringResponder(204, ""))
 
 	logger := &Loki{}
-	err := logger.Log("test message", map[string]string{"level": "info"})
+
+	labels := map[string]string{
+		"app":   "test-app",
+		"level": "info",
+		"type":  "test",
+	}
+
+	body := map[string]any{
+		"message": "structured log test",
+		"path":    "/test",
+		"method":  "GET",
+	}
+
+	err := logger.LogV13(labels, body)
 	assert.NoError(t, err)
 }
 
-func TestLokiLog_SuccessAfterRetries(t *testing.T) {
+func TestLokiLogStructured_SuccessAfterRetries(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -36,8 +49,20 @@ func TestLokiLog_SuccessAfterRetries(t *testing.T) {
 	)
 
 	logger := &Loki{}
+
+	labels := map[string]string{
+		"app":   "retry-app",
+		"level": "warning",
+		"type":  "test",
+	}
+
+	body := map[string]any{
+		"message": "retry structured log",
+		"step":    "step-1",
+	}
+
 	start := time.Now()
-	err := logger.Log("retry message", map[string]string{"level": "warning"})
+	err := logger.LogV13(labels, body)
 	duration := time.Since(start)
 
 	assert.NoError(t, err)
@@ -45,7 +70,7 @@ func TestLokiLog_SuccessAfterRetries(t *testing.T) {
 	assert.GreaterOrEqual(t, duration, 2*time.Second)
 }
 
-func TestLokiLog_FailAfterMaxRetries(t *testing.T) {
+func TestLokiLogStructured_FailAfterMaxRetries(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -53,7 +78,18 @@ func TestLokiLog_FailAfterMaxRetries(t *testing.T) {
 		httpmock.NewStringResponder(500, "Internal Server Error"))
 
 	logger := &Loki{}
-	err := logger.Log("fail message", map[string]string{"level": "error"})
+
+	labels := map[string]string{
+		"app":   "fail-app",
+		"level": "error",
+		"type":  "test",
+	}
+
+	body := map[string]any{
+		"message": "this should fail",
+	}
+
+	err := logger.LogV13(labels, body)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed after 3 attempts")
 }
