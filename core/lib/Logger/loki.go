@@ -62,12 +62,12 @@ func (l *Loki) LogV12(message string, labels map[string]string) error {
 // It includes a timestamp and retries sending the log up to 3 times with a 1 second delay between attempts.
 // It uses the Loki HTTP API to push logs.
 // The log body is expected to be a map with string keys and any values.
-// The baseLabels parameter is used to set the stream labels for the log entry.
+// The streamLabels parameter is used to set the stream labels for the log entry.
 // It returns an error if the log could not be sent after all retries.
 // Example usage:
 //   logger := myLogger.Loki{}
 //   err := logger.LogV13(map[string]string{"app": "myapp", "level": "info"}, map[string]any{"message": "This is a log message"})
-func (l *Loki) LogV13(baseLabels map[string]string, body map[string]any) error {
+func (l *Loki) LogV13(streamLabels map[string]string, bodyLabels map[string]any) error {
 	const (
 		lokiURL    = "http://localhost:3100/loki/api/v1/push"
 		maxRetries = 3
@@ -76,10 +76,10 @@ func (l *Loki) LogV13(baseLabels map[string]string, body map[string]any) error {
 
 	// Timestamp
 	timestamp := time.Now().UnixNano()
-	body["timestamp"] = time.Now().Format(time.RFC3339Nano)
+	bodyLabels["timestamp"] = time.Now().Format(time.RFC3339Nano)
 
 	// Encode log body as JSON
-	jsonBody, err := json.Marshal(body)
+	jsonBody, err := json.Marshal(bodyLabels)
 	if err != nil {
 		return fmt.Errorf("failed to marshal log body: %w", err)
 	}
@@ -88,7 +88,7 @@ func (l *Loki) LogV13(baseLabels map[string]string, body map[string]any) error {
 	entry := LokiEntry{
 		Streams: []LokiStream{
 			{
-				Stream: baseLabels,
+				Stream: streamLabels,
 				Values: [][2]string{
 					{fmt.Sprintf("%d", timestamp), string(jsonBody)},
 				},

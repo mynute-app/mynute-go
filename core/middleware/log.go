@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 )
+
 // Deprecated: Use LogV13 instead.
 func LogV12(logger *slog.Logger) fiber.Handler {
 	loki := &myLogger.Loki{}
@@ -39,15 +40,15 @@ func LogV12(logger *slog.Logger) fiber.Handler {
 
 		err := c.Next()
 
-		var status int
+		var http_status int
 
 		if myError, ok := err.(lib.ErrorStruct); ok {
-			status = myError.HTTPStatus
+			http_status = myError.HTTPStatus
 		} else {
-			status = c.Response().StatusCode()
+			http_status = c.Response().StatusCode()
 		}
 
-		ResLabels := labels.GetResLabels(start, status)
+		ResLabels := labels.GetResLabels(start, http_status)
 
 		ResMsg := myLogger.GetResMessage(c)
 
@@ -68,22 +69,30 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 		start := time.Now()
 
 		// --- Request log ---
-		reqLabels := map[string]string{
+		reqStreamLabels := map[string]string{
 			"app":   "main-api",
 			"level": "info",
 			"type":  "request",
 		}
 
-		reqBody := map[string]any{
-			"method":  c.Method(),
-			"path":    c.Path(),
-			"ip":      c.IP(),
-			"host":    string(c.Request().Host()),
-			"headers": myLogger.MaskSensibleInformation(string(c.Request().Header.Header())),
-			"body":    myLogger.MaskSensibleInformation(string(c.Request().Body())),
+		host := string(c.Request().Host())
+		ip := c.IP()
+		path := c.Path()
+		method := c.Method()
+
+		reqBody := myLogger.MaskSensibleInformation(string(c.Request().Body()))
+		reqHeaders := myLogger.MaskSensibleInformation(string(c.Request().Header.Header()))
+
+		reqBodyLabels := map[string]any{
+			"method":      method,
+			"path":        path,
+			"ip":          ip,
+			"host":        host,
+			"req_headers": reqBody,
+			"req_body":    reqHeaders,
 		}
 
-		if err := loki.LogV13(reqLabels, reqBody); err != nil {
+		if err := loki.LogV13(reqStreamLabels, reqBodyLabels); err != nil {
 			logger.Error("Failed to log request to Loki", slog.String("error", err.Error()))
 		}
 
@@ -91,39 +100,44 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 		err := c.Next()
 
 		// --- Response log ---
-		status := c.Response().StatusCode()
+		http_status := c.Response().StatusCode()
 		if myError, ok := err.(lib.ErrorStruct); ok {
-			status = myError.HTTPStatus
+			http_status = myError.HTTPStatus
 		}
 
 		level := "info"
 		switch {
-		case status >= 500:
+		case http_status >= 500:
 			level = "error"
-		case status >= 400:
+		case http_status >= 400:
 			level = "warning"
-		case status >= 200:
+		case http_status >= 200:
 			level = "success"
 		}
 
-		resLabels := map[string]string{
+		resHeaders := myLogger.MaskSensibleInformation(string(c.Response().Header.Header()))
+		resBody := myLogger.MaskSensibleInformation(string(c.Response().Body()))
+
+		resStreamLabels := map[string]string{
 			"app":   "main-api",
 			"level": level,
 			"type":  "response",
 		}
 
-		resBody := map[string]any{
-			"method":   c.Method(),
-			"path":     c.Path(),
-			"ip":       c.IP(),
-			"host":     string(c.Request().Host()),
-			"status":   status,
-			"duration": time.Since(start).String(),
-			"headers":  myLogger.MaskSensibleInformation(string(c.Response().Header.Header())),
-			"body":     myLogger.MaskSensibleInformation(string(c.Response().Body())),
+		resBodyLabels := map[string]any{
+			"method":      method,
+			"path":        path,
+			"ip":          ip,
+			"host":        host,
+			"http_status": http_status,
+			"duration":    time.Since(start).String(),
+			"req_body":    reqBody,
+			"req_headers": reqHeaders,
+			"res_headers": resHeaders,
+			"res_body":    resBody,
 		}
 
-		if err := loki.LogV13(resLabels, resBody); err != nil {
+		if err := loki.LogV13(resStreamLabels, resBodyLabels); err != nil {
 			logger.Error("Failed to log response to Loki", slog.String("error", err.Error()))
 		}
 

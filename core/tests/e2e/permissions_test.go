@@ -238,6 +238,16 @@ func Test_Employee_x_Appointments(t *testing.T) {
 	t.Log("---------------------- x ----------------------")
 }
 
+func Test_Cleanup_Environment(t *testing.T) {
+	if permissions_test_instance == nil || permissions_test_instance.server == nil {
+		Test_Start_Server(t)
+		Test_Setup_Environment(t)
+	}
+	t.Log("--- Cleaning up environment ---")
+	permissions_test_instance.server.Shutdown()
+	t.Log("Environment cleaned up successfully")
+}
+
 
 
 
