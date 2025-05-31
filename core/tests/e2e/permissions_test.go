@@ -159,3 +159,85 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	utils_test.CancelAppointment(t, 403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.Auth_token)
 	t.Log("---------------------- x ----------------------")
 }
+
+func Test_Employee_x_Appointments(t *testing.T) {
+	if permissions_test_instance == nil || permissions_test_instance.server == nil {
+		Test_Start_Server(t)
+		Test_Setup_Environment(t)
+	}
+
+	client1 := permissions_test_instance.client1
+	client2 := permissions_test_instance.client2
+	company1 := permissions_test_instance.company1
+	company2 := permissions_test_instance.company2
+	company1_employee1 := permissions_test_instance.company1.Employees[1]
+	company1_employee2 := permissions_test_instance.company1.Employees[2]
+	company2_employee1 := permissions_test_instance.company2.Employees[1]
+	company2_employee2 := permissions_test_instance.company2.Employees[2]
+
+	t.Log("--- Testing Employee x Appointment Interactions ---")
+
+	t.Log("---> Company1 Employee 1 creating appointment for client1 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
+	utils_test.CreateAppointment(t, 200, company1, client1, company1_employee1, company1_employee1.Auth_token, company1.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company1 Employee 1 creating appointment for client2 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
+	utils_test.CreateAppointment(t, 200, company1, client2, company1_employee1, company1_employee1.Auth_token, company1.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company2 Employee 2 creating appointment for client1 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
+	utils_test.CreateAppointment(t, 200, company2, client1, company2_employee2, company2_employee2.Auth_token, company2.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company2 Employee 2 creating appointment for client2 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
+	utils_test.CreateAppointment(t, 200, company2, client2, company2_employee2, company2_employee2.Auth_token, company2.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to create an appointment for Employee 2 from Company 1 : POST /appointment => HTTP 403")
+	utils_test.CreateAppointment(t, 403, company1, client1, company1_employee2, company1_employee1.Auth_token, company1.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to create an appointment for Employee 2 from Company 2 : POST /appointment => HTTP 403")
+	utils_test.CreateAppointment(t, 403, company2, client1, company2_employee2, company1_employee1.Auth_token, company2.Created.ID.String())
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to get an appointment of Employee 2 from Company 2 : GET /appointment/{id} => HTTP 403")
+	utils_test.GetAppointment(t, 403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 2 Employee 1 trying to get an appointment of Employee 2 from Company 2 : GET /appointment/{id} => HTTP 403")
+	utils_test.GetAppointment(t, 403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company2_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to get an appointment of Employee 1 from Company 1 : GET /appointment/{id} => HTTP 200")
+	utils_test.GetAppointment(t, 200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 1 from Company 1 : PATCH /appointment/{id} => HTTP 200")
+	utils_test.RescheduleAppointment(t, 200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 2 from Company 1 : PATCH /appointment/{id} => HTTP 403")
+	utils_test.RescheduleAppointment(t, 403, company1_employee2, company1, company1_employee2.Created.Appointments[0].ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 2 from Company 2 : PATCH /appointment/{id} => HTTP 403")
+	utils_test.RescheduleAppointment(t, 403, company2_employee2, company1, company2_employee2.Created.Appointments[0].ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to cancel an appointment of Employee 1 from Company 1 : DELETE /appointment/{id} => HTTP 200")
+	utils_test.CancelAppointment(t, 200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to cancel an appointment of Employee 2 from Company 1 : DELETE /appointment/{id} => HTTP 403")
+	utils_test.CancelAppointment(t, 403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+
+	t.Log("---> Company 1 Employee 1 trying to cancel an appointment of Employee 2 from Company 2 : DELETE /appointment/{id} => HTTP 403")
+	utils_test.CancelAppointment(t, 403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.Auth_token)
+	t.Log("---------------------- x ----------------------")
+}
+
+
+
+
