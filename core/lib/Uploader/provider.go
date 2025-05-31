@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -102,10 +103,12 @@ func make_bucket_public(client *s3.Client, bucket string) error {
 		Bucket: &bucket,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get bucket policy: %w", err)
+		if !strings.Contains(err.Error(), "NoSuchBucketPolicy") {
+			return fmt.Errorf("failed to get bucket policy: %w", err)
+		}
 	}
 	policy := cloud.PublicReadPolicy(bucket)
-	if policyOutput.Policy != nil && *policyOutput.Policy != "" {
+	if policyOutput != nil && policyOutput.Policy != nil {
 		if *policyOutput.Policy == policy {
 			return nil // Bucket is already public
 		}
