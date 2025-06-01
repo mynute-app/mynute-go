@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 	"testing"
 
 	"github.com/google/uuid"

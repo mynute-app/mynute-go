@@ -2,7 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 
 	"testing"
 )
@@ -33,4 +33,3 @@ func Test_Branch(t *testing.T) {
 	company.GetById(t, 200)
 	branch.Delete(t, 200)
 }
-

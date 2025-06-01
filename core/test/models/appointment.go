@@ -1,16 +1,145 @@
-package Tester
+package models_test
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
+	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/tests/handlers"
-	models_test "agenda-kaki-go/core/tests/models"
+	"encoding/json"
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type Appointment struct {
+	Created model.Appointment
+}
+
+func (a *Appointment) Create(status int, auth_token string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
+	http := (&handler.HttpClient{}).SetTest(t)
+	http.Method("POST")
+	http.URL("/appointment")
+	http.ExpectStatus(status)
+	http.Header(namespace.HeadersKey.Company, cy.Created.ID.String())
+	http.Header(namespace.HeadersKey.Auth, auth_token)
+	if startTime == nil {
+		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
+		startTime = &tempStartTime
+	}
+	A := DTO.CreateAppointment{
+		BranchID:   b.Created.ID,
+		EmployeeID: e.Created.ID,
+		ServiceID:  s.Created.ID,
+		ClientID:   ct.Created.ID,
+		CompanyID:  cy.Created.ID,
+		StartTime:  *startTime,
+	}
+	http.Send(A)
+	http.ParseResponse(&a.Created)
+	if err := b.GetById(200); err != nil {
+		return err
+	}
+	if err := e.GetById(200); err != nil {
+		return err
+	}
+	if err := s.GetById(200, nil); err != nil {
+		return err
+	}
+	if err := cy.GetById(200); err != nil {
+		return err
+	}
+	if err := ct.GetByEmail(200); err != nil {
+		return err
+	}
+	var ClientAppointment mJSON.ClientAppointment
+	aCreatedByte, err := json.Marshal(a.Created)
+	if err != nil {
+		return fmt.Errorf("failed to marshal appointment: %w", err)
+	}
+	err = json.Unmarshal(aCreatedByte, &ClientAppointment)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal appointment: %w", err)
+	}
+	ct.Created.Appointments.Add(&ClientAppointment)
+	e.Created.Appointments = append(e.Created.Appointments, a.Created)
+	b.Created.Appointments = append(b.Created.Appointments, a.Created)
+	return nil
+}
+
+func (a *Appointment) CreateRandom(s int, company *Company, client *Client, employee *Employee, token, company_id string) error {
+	if a.Created.ID != uuid.Nil {
+		return fmt.Errorf("appointment already created with ID %s, cannot create again", a.Created.ID)
+	}
+	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
+	appointmentSlot, found, err := FindValidAppointmentSlot(employee, company, preferredLocation)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("setup failed: could not find a valid appointment slot for initial booking")
+	}
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL("/appointment").
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, company_id).
+		Send(map[string]any{
+			"branch_id":   appointmentSlot.BranchID,
+			"service_id":  appointmentSlot.ServiceID,
+			"employee_id": employee.Created.ID.String(),
+			"company_id":  company.Created.ID.String(),
+			"client_id":   client.Created.ID.String(),
+			"start_time":  appointmentSlot.StartTimeRFC3339, // Use found start time
+		}).
+		ParseResponse(&a.Created).Error; err != nil {
+		return fmt.Errorf("failed to create appointment: %w", err)
+	}
+	if err := company.GetById(200); err != nil {
+		return err
+	}
+	if err := client.GetByEmail(200); err != nil {
+		return err
+	}
+	if err := employee.GetById(200); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Appointment) GetById(s int, appointment_id, company_id, token string) error {
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL("/appointment/"+appointment_id).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, company_id).
+		Send(nil).
+		ParseResponse(&a.Created).Error; err != nil {
+		return fmt.Errorf("failed to get appointment %s: %w", appointment_id, err)
+	}
+	return nil
+}
+
+func (a *Appointment) Cancel(s int, token string) error {
+	if a.Created.ID == uuid.Nil {
+		return fmt.Errorf("appointment not created, cannot cancel")
+	}
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL("/appointment/"+a.Created.ID.String()).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, a.Created.CompanyID.String()).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to cancel appointment %s: %w", a.Created.ID.String(), err)
+	}
+	return nil
+}
 
 type FoundAppointmentSlot struct {
 	StartTimeRFC3339 string
@@ -274,7 +403,7 @@ func parseTimeWithLocation(targetDate time.Time, timeStr string, loc *time.Locat
 // based on their work schedule, starting from the one provided.
 // NOTE: This is a simplified helper for testing and might not cover all edge cases.
 // Renamed and modified to handle full timestamps
-func findNextAvailableSlotRFC3339(employee *models_test.Employee, currentStartTimeRFC3339 string) (nextAvailableTimeRFC3339 string, err error) {
+func findNextAvailableSlotRFC3339(employee *Employee, currentStartTimeRFC3339 string) (nextAvailableTimeRFC3339 string, err error) {
 
 	layoutRFC3339 := time.RFC3339
 	start, err := time.Parse(layoutRFC3339, currentStartTimeRFC3339)
@@ -352,7 +481,7 @@ func findNextAvailableSlotRFC3339(employee *models_test.Employee, currentStartTi
 	return "", fmt.Errorf("no valid slot found after %s for employee %s", currentStartTimeRFC3339, employee.Created.ID)
 }
 
-func employeeIsAssignedToBranch(e *models_test.Employee, branchID uuid.UUID) bool {
+func employeeIsAssignedToBranch(e *Employee, branchID uuid.UUID) bool {
 	for _, b := range e.Branches {
 		if b.Created.ID == branchID {
 			return true
@@ -361,83 +490,33 @@ func employeeIsAssignedToBranch(e *models_test.Employee, branchID uuid.UUID) boo
 	return false
 }
 
-func CreateAppointment(s int, company *models_test.Company, client *models_test.Client, employee *models_test.Employee, token, company_id string) error {
+func RescheduleAppointmentRandomly(s int, employee *Employee, company *Company, appointment_id, token string) error {
 	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
-	appointmentSlot, found, err := FindValidAppointmentSlot(t, employee, company, preferredLocation)
+	appointmentSlot, found, err := FindValidAppointmentSlot(employee, company, preferredLocation)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to find valid appointment slot: %w", err)
 	}
 	if !found {
-		fmt.Printf("No valid appointment slot found for employee %s in company %s", employee.Created.ID.String(), company.Created.ID.String())
-		fmt.Printf("Employee Work Schedule: %+v", employee.Created.WorkSchedule)
-		return fmt.Errorf("setup failed: could not find a valid appointment slot for initial booking")
+		return fmt.Errorf("no valid appointment slot found for employee %s in company %s", employee.Created.ID.String(), company.Created.ID.String())
 	}
-	http := handler.NewHttpClient(t)
-	http.
-		Method("POST").
-		URL("/appointment").
-		ExpectStatus(s).
-		Header(namespace.HeadersKey.Auth, token).
-		Header(namespace.HeadersKey.Company, company_id).
-		Send(map[string]any{
-			"branch_id":   appointmentSlot.BranchID,
-			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": employee.Created.ID.String(),
-			"company_id":  company.Created.ID.String(),
-			"client_id":   client.Created.ID.String(),
-			"start_time":  appointmentSlot.StartTimeRFC3339, // Use found start time
-		})
-	_, ok := http.ResBody["id"].(string)
-	if !ok {
-		t.Fatal("Failed to get appointment id from response for client1")
-	}
-	company.GetById(t, 200)
-	client.GetByEmail(t, 200)
-	employee.GetById(t, 200)
-}
-
-func RescheduleAppointment(t *testing.T, s int, employee *models_test.Employee, company *models_test.Company, appointment_id, token string) {
-	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
-	appointmentSlot, found := FindValidAppointmentSlot(t, employee, company, preferredLocation)
-	if !found {
-		fmt.Printf("No valid appointment slot found for employee %s in company %s", employee.Created.ID.String(), company.Created.ID.String())
-		fmt.Printf("Employee Work Schedule: %+v", employee.Created.WorkSchedule)
-		t.Fatal("Setup failed: Could not find a valid appointment slot for initial booking.")
-	}
-	http := handler.NewHttpClient(t)
-	http.
+	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL("/appointment/"+appointment_id).
-		ExpectStatus(s).
+		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, token).
 		Header(namespace.HeadersKey.Company, company.Created.ID.String()).
 		Send(map[string]any{
 			"branch_id":  appointmentSlot.BranchID,
 			"service_id": appointmentSlot.ServiceID,
 			"start_time": appointmentSlot.StartTimeRFC3339,
-		})
-	employee.GetById(t, 200)
-	company.GetById(t, 200)
-}
-
-func GetAppointment(t *testing.T, s int, appointment_id, company_id, token string) {
-	http := handler.NewHttpClient(t)
-	http.
-		Method("GET").
-		URL("/appointment/"+appointment_id).
-		ExpectStatus(s).
-		Header(namespace.HeadersKey.Auth, token).
-		Header(namespace.HeadersKey.Company, company_id).
-		Send(nil)
-}
-
-func CancelAppointment(t *testing.T, s int, appointment_id, company_id, token string) {
-	http := handler.NewHttpClient(t)
-	http.
-		Method("DELETE").
-		URL("/appointment/"+appointment_id).
-		ExpectStatus(s).
-		Header(namespace.HeadersKey.Auth, token).
-		Header(namespace.HeadersKey.Company, company_id).
-		Send(nil)
+		}).Error; err != nil {
+		return fmt.Errorf("failed to reschedule appointment: %w", err)
+	}
+	if err := employee.GetById(200); err != nil {
+		return err
+	}
+	if err := company.GetById(200); err != nil {
+		return err
+	}
+	return nil
 }

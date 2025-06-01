@@ -3,12 +3,10 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/lib"
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 
 	"testing"
 )
-
-
 
 func Test_Service(t *testing.T) {
 	server := core.NewServer().Run("test")

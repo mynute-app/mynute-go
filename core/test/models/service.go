@@ -4,7 +4,7 @@ import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/tests/handlers"
+	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
 	"testing"
 )
@@ -16,7 +16,6 @@ type Service struct {
 	Employees  []*Employee
 	Branches   []*Branch
 }
-
 
 func (s *Service) Create(t *testing.T, status int) map[string]any {
 	http := (&handler.HttpClient{}).SetTest(t)
@@ -84,4 +83,3 @@ func (s *Service) Delete(t *testing.T, status int) {
 	http.Header(namespace.HeadersKey.Auth, s.Auth_token)
 	http.Send(nil)
 }
-

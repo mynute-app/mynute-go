@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/tests/handlers"
+	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
 	"testing"
 )
@@ -17,7 +17,6 @@ type Employee struct {
 	Services   []*Service
 	Branches   []*Branch
 }
-
 
 func (e *Employee) Create(t *testing.T, s int) {
 	http := (&handler.HttpClient{}).SetTest(t)

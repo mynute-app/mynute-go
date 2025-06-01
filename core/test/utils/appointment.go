@@ -3,8 +3,8 @@ package utils_test
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
-	handler "agenda-kaki-go/core/tests/handlers"
-	models_test "agenda-kaki-go/core/tests/models"
+	handler "agenda-kaki-go/core/test/handlers"
+	models_test "agenda-kaki-go/core/test/models"
 	"fmt"
 	"testing"
 	"time"

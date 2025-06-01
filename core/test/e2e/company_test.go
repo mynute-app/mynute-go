@@ -4,7 +4,7 @@ import (
 	"agenda-kaki-go/core"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib/FileBytes"
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 
 	"testing"
 )

@@ -4,21 +4,19 @@ import (
 	"agenda-kaki-go/core"
 
 	mJSON "agenda-kaki-go/core/config/db/model/json"
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 	"testing"
 )
 
 // import (
 // 	"agenda-kaki-go/core"
 // 	"agenda-kaki-go/core/config/db/model"
-// 	handler "agenda-kaki-go/core/tests/handlers"
+// 	handler "agenda-kaki-go/core/test/handlers"
 // 	"fmt"
 // 	"testing"
 
 // 	"github.com/prometheus/common/server"
 // )
-
-
 
 func Test_Employee(t *testing.T) {
 	server := core.NewServer().Run("test")

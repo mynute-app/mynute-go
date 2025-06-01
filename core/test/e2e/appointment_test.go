@@ -2,8 +2,8 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	models_test "agenda-kaki-go/core/tests/models"
-	utils_test "agenda-kaki-go/core/tests/utils"
+	models_test "agenda-kaki-go/core/test/models"
+	utils_test "agenda-kaki-go/core/test/utils"
 	"testing"
 	"time"
 

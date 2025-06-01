@@ -3,7 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/config/db/model"
-	models_test "agenda-kaki-go/core/tests/models"
+	models_test "agenda-kaki-go/core/test/models"
 
 	"testing"
 )

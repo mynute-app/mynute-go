@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/tests/handlers"
+	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
 	"testing"
 )

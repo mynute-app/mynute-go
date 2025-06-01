@@ -2,8 +2,8 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	models_test "agenda-kaki-go/core/tests/models"
-	utils_test "agenda-kaki-go/core/tests/utils"
+	models_test "agenda-kaki-go/core/test/models"
+	utils_test "agenda-kaki-go/core/test/utils"
 	"testing"
 )
 
@@ -247,7 +247,3 @@ func Test_Cleanup_Environment(t *testing.T) {
 	permissions_test_instance.server.Shutdown()
 	t.Log("Environment cleaned up successfully")
 }
-
-
-
-

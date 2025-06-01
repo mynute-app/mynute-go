@@ -5,7 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/tests/handlers"
+	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
 	"testing"
 )
@@ -14,7 +14,6 @@ type Client struct {
 	Created    model.ClientFull
 	Auth_token string
 }
-
 
 func (u *Client) Set(t *testing.T) {
 	u.Create(t, 200)
@@ -92,4 +91,3 @@ func (u *Client) Login(t *testing.T, s int) {
 	}
 	u.Auth_token = auth[0]
 }
-
