@@ -185,7 +185,7 @@ func (h *httpActions) ParseResponse(to any) *httpActions {
 		return h.set_error(fmt.Sprintf("failed to unmarshal response body: %v", err))
 	}
 
-	return nil
+	return h
 }
 
 

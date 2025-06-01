@@ -35,6 +35,7 @@ func Test_Appointment(t *testing.T) {
 	slot0, found0, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
 	tt.Test(err)
 	if !found0 {
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
 		t.Fatalf("Test setup failed: Could not find any valid appointment slot for employee %s for test case a[0]", baseEmployee.Created.ID)
 	}
 	// Retrieve the actual Branch and Service objects based on IDs from slot0
@@ -51,6 +52,7 @@ func Test_Appointment(t *testing.T) {
 	slot1, found1, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
 	tt.Test(err)
 	if !found1 {
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
 		t.Fatalf("Test setup failed: Could not find a second valid appointment slot for employee %s for test case a[1]", baseEmployee.Created.ID)
 	}
 	branchForSlot1, err := utilsT.GetBranchByID(cy, slot1.BranchID)
@@ -64,6 +66,7 @@ func Test_Appointment(t *testing.T) {
 	slot2, found2, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
 	tt.Test(err)
 	if !found2 {
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
 		t.Fatalf("Test setup failed: Could not find a third valid appointment slot for employee %s for test case a[2]", baseEmployee.Created.ID)
 	}
 	branchForSlot2, err := utilsT.GetBranchByID(cy, slot2.BranchID)

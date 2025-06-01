@@ -68,46 +68,50 @@ func (c *Company) Set() error {
 	if err := c.GetById(200); err != nil {
 		return err
 	}
-	if err := c.Employees[0].AddService(200, c.Services[0], nil); err != nil {
-		return err
+	for _, employee := range c.Employees {
+		for _, branch := range c.Branches {
+			if err := employee.AddBranch(200, branch, &c.Auth_token); err != nil {
+				return fmt.Errorf("failed to assign employee %s to branch %s: %v", employee.Created.Email, branch.Created.Name, err)
+			}
+		}
+		for _, service := range c.Services {
+			if err := employee.AddService(200, service, nil); err != nil {
+				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
+			}
+		}
+		if err := employee.Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
+			{
+				Monday: []mJSON.WorkRange{
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Tuesday: []mJSON.WorkRange{
+					{Start: "09:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "18:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Wednesday: []mJSON.WorkRange{
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Thursday: []mJSON.WorkRange{
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Friday: []mJSON.WorkRange{
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Saturday: []mJSON.WorkRange{
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+				},
+				Sunday: []mJSON.WorkRange{},
+			},
+		}}); err != nil {
+			return err
+		}
 	}
-	if err := c.Employees[0].AddBranch(200, c.Branches[0], &c.Owner.Auth_token); err != nil {
-		return err
-	}
-	if err := c.Branches[0].AddService(200, c.Services[0], nil); err != nil {
-		return err
-	}
-	if err := c.Employees[0].Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
-		{
-			Monday: []mJSON.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Tuesday: []mJSON.WorkRange{
-				{Start: "09:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "18:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Wednesday: []mJSON.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Thursday: []mJSON.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Friday: []mJSON.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Saturday: []mJSON.WorkRange{
-				{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-				{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
-			},
-			Sunday: []mJSON.WorkRange{},
-		},
-	}}); err != nil {
-		return err
-	}
+	
 	if err := c.UploadImages(200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_1,
 	}); err != nil {
