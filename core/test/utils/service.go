@@ -1,23 +1,21 @@
-package utils_test
+package utilsT
 
 import (
-	models_test "agenda-kaki-go/core/test/models"
-	"testing"
+	modelT "agenda-kaki-go/core/test/models"
+	"fmt"
 
 	"github.com/google/uuid"
 )
 
-func GetServiceByID(t *testing.T, company *models_test.Company, serviceIDStr string) *models_test.Service {
-	t.Helper()
+func GetServiceByID(company *modelT.Company, serviceIDStr string) (*modelT.Service, error) {
 	serviceUUID, err := uuid.Parse(serviceIDStr)
 	if err != nil {
-		t.Fatalf("Invalid Service ID string from slot finder: %s, error: %v", serviceIDStr, err)
+		return nil, fmt.Errorf("Invalid Service ID string from slot finder: %s, error: %v", serviceIDStr, err)
 	}
 	for _, serv := range company.Services { // Assuming company.Services holds all services
 		if serv.Created.ID == serviceUUID {
-			return serv
+			return serv, nil
 		}
 	}
-	t.Fatalf("Test setup error: Service with ID %s (found by slot finder) not in company.Services", serviceIDStr)
-	return nil
+	return nil, fmt.Errorf("Service with ID %s (found by slot finder) not in company.Services", serviceIDStr)
 }

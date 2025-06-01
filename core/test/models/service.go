@@ -1,4 +1,4 @@
-package models_test
+package modelT
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
-	"testing"
 )
 
 type Service struct {
@@ -17,69 +16,93 @@ type Service struct {
 	Branches   []*Branch
 }
 
-func (s *Service) Create(t *testing.T, status int) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("POST")
-	http.URL("/service")
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Company, s.Company.Created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, s.Auth_token)
-	http.Send(DTO.CreateService{
-		Name:        lib.GenerateRandomName("Service"),
-		Description: lib.GenerateRandomName("Description"),
-		CompanyID:   s.Company.Created.ID,
-		Price:       int32(lib.GenerateRandomInt(3)),
-		Duration:    60,
-	})
-	http.ParseResponse(&s.Created)
-	return http.ResBody
-}
-
-func (s *Service) Update(t *testing.T, status int, changes map[string]any) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("PATCH")
-	http.Header(namespace.HeadersKey.Company, s.Company.Created.ID.String())
-	http.URL("/service/" + fmt.Sprintf("%v", s.Created.ID.String()))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Auth, s.Auth_token)
-	http.Send(changes)
-	s.GetById(t, 200, nil)
-}
-
-func (s *Service) GetById(t *testing.T, status int, token *string) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("GET")
-	http.Header(namespace.HeadersKey.Company, s.Company.Created.ID.String())
-	http.URL("/service/" + fmt.Sprintf("%v", s.Created.ID.String()))
-	http.ExpectStatus(status)
-	if token != nil {
-		http.Header(namespace.HeadersKey.Auth, *token)
-	} else {
-		http.Header(namespace.HeadersKey.Auth, s.Auth_token)
+func (s *Service) Create(status int) error {
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL("/service").
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Send(DTO.CreateService{
+			Name:        lib.GenerateRandomName("Service"),
+			Description: lib.GenerateRandomName("Description"),
+			CompanyID:   s.Company.Created.ID,
+			Price:       int32(lib.GenerateRandomInt(3)),
+			Duration:    60,
+		}).
+		ParseResponse(&s.Created).
+		Error; err != nil {
+		return fmt.Errorf("failed to create service: %w", err)
 	}
-	http.Send(nil)
-	http.ParseResponse(&s.Created)
-	return http.ResBody
+	return nil
 }
 
-func (s *Service) GetByName(t *testing.T, status int) map[string]any {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("GET")
-	http.Header(namespace.HeadersKey.Company, s.Company.Created.ID.String())
-	http.URL("/service/name/" + s.Created.Name)
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Auth, s.Auth_token)
-	http.Send(nil)
-	http.ParseResponse(&s.Created)
-	return http.ResBody
+func (s *Service) Update(status int, changes map[string]any) error {
+	if len(changes) == 0 {
+		return fmt.Errorf("no changes provided")
+	}
+	if err := handler.NewHttpClient().
+		Method("PATCH").
+		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Send(changes).
+		ParseResponse(&s.Created).
+		Error; err != nil {
+		return fmt.Errorf("failed to update service: %w", err)
+	}
+	return nil
 }
 
-func (s *Service) Delete(t *testing.T, status int) {
-	http := (&handler.HttpClient{}).SetTest(t)
-	http.Method("DELETE")
-	http.Header(namespace.HeadersKey.Company, s.Company.Created.ID.String())
-	http.URL("/service/" + fmt.Sprintf("%v", s.Created.ID.String()))
-	http.ExpectStatus(status)
-	http.Header(namespace.HeadersKey.Auth, s.Auth_token)
-	http.Send(nil)
+func (s *Service) GetById(status int, token *string) error {
+	var t string
+	if token == nil && s.Auth_token == "" {
+		return fmt.Errorf("no authentication token provided")
+	} else if token != nil {
+		t = *token
+	} else {
+		t = s.Auth_token
+	}
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(nil).
+		ParseResponse(&s.Created).
+		Error; err != nil {
+		return fmt.Errorf("failed to get service by ID: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) GetByName(status int) error {
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL("/service/name/"+s.Created.Name).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Send(nil).
+		ParseResponse(&s.Created).
+		Error; err != nil {
+		return fmt.Errorf("failed to get service by name: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) Delete(status int) error {
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Send(nil).
+		Error; err != nil {
+		return fmt.Errorf("failed to delete service: %w", err)
+	}
+	return nil
 }

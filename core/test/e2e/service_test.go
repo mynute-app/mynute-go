@@ -3,7 +3,8 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/lib"
-	models_test "agenda-kaki-go/core/test/models"
+	handlerT "agenda-kaki-go/core/test/handlers"
+	modelT "agenda-kaki-go/core/test/models"
 
 	"testing"
 )
@@ -11,24 +12,25 @@ import (
 func Test_Service(t *testing.T) {
 	server := core.NewServer().Run("test")
 	defer server.Shutdown()
-	client := &models_test.Client{}
-	client.Set(t)
-	company := &models_test.Company{}
-	company.Set(t)
-	service := &models_test.Service{}
+	client := &modelT.Client{}
+	tt := handlerT.NewTestErrorHandler(t)
+	tt.Test(client.Set())
+	company := &modelT.Company{}
+	tt.Test(company.Set())
+	service := &modelT.Service{}
 	service.Auth_token = company.Owner.Auth_token
 	service.Company = company
-	service.Create(t, 200)
-	service.Update(t, 200, map[string]any{
+	tt.Test(service.Create(200))
+	tt.Test(service.Update(200, map[string]any{
 		"name": lib.GenerateRandomName("Updated Service"),
-	})
-	service.GetById(t, 200, nil)
-	service.GetByName(t, 200)
-	branch := &models_test.Branch{}
+	}))
+	tt.Test(service.GetById(200, nil))
+	tt.Test(service.GetByName(200))
+	branch := &modelT.Branch{}
 	branch.Auth_token = company.Owner.Auth_token
 	branch.Company = company
-	branch.Create(t, 200)
-	branch.AddService(t, 200, service, nil)
-	service.Delete(t, 200)
-	branch.Delete(t, 200)
+	tt.Test(branch.Create(200))
+	tt.Test(branch.AddService(200, service, nil))
+	tt.Test(service.Delete(200))
+	tt.Test(branch.Delete(200))
 }

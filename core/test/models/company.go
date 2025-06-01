@@ -1,4 +1,4 @@
-package models_test
+package modelT
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
@@ -7,13 +7,11 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/lib/FileBytes"
-	handler "agenda-kaki-go/core/lib/Test"
 	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
 	"math/rand"
 	"strings"
-	"testing"
 
 	"github.com/google/uuid"
 )
@@ -70,7 +68,7 @@ func (c *Company) Set() error {
 	if err := c.GetById(200); err != nil {
 		return err
 	}
-	if err := c.Employees[0].AddService(200, c.Services[0]); err != nil {
+	if err := c.Employees[0].AddService(200, c.Services[0], nil); err != nil {
 		return err
 	}
 	if err := c.Employees[0].AddBranch(200, c.Branches[0], &c.Owner.Auth_token); err != nil {
@@ -227,6 +225,7 @@ func (c *Company) SetupRandomized(numEmployees, numBranches, numServices int) er
 	}
 
 	fmt.Println("Randomized Company setup completed.")
+	return nil
 }
 
 // --- Generation Functions ---
@@ -448,7 +447,7 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 				i, employee.Created.Email, employee.Created.ID)
 
 			// Use Employee.AddService, assumes employee's token is used
-			if err := employee.AddService(200, service); err != nil {
+			if err := employee.AddService(200, service, nil); err != nil {
 				return fmt.Errorf("failed to assign service %d (%s, ID: %s) to employee %d (%s, ID: %s): %v",
 					serviceIndex, service.Created.Name, service.Created.ID,
 					i, employee.Created.Email, employee.Created.ID, err)
@@ -675,8 +674,8 @@ func generateRangesForDayModel(validBranches []*Branch, employee *Employee, rand
 }
 
 func (c *Company) Create(status int) error {
-	if c != nil {
-		return fmt.Errorf("company already created")
+	if c == nil {
+		return fmt.Errorf("company receiver is nil")
 	}
 	ownerPswd := "1SecurePswd!"
 	if err := handler.NewHttpClient().
@@ -697,6 +696,9 @@ func (c *Company) Create(status int) error {
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to create company: %w", err)
+	}
+	if c.Created.Employees == nil || len(c.Created.Employees) == 0 {
+		return fmt.Errorf("failed to create company: no employees found in response")
 	}
 	owner := c.Created.Employees[0]
 	owner.Password = ownerPswd
@@ -834,7 +836,7 @@ func (c *Company) DeleteImages(status int, images []string) error {
 	return nil
 }
 
-func (c *Company) ChangeColors(t *testing.T, status int, colors mJSON.Colors) error {
+func (c *Company) ChangeColors(status int, colors mJSON.Colors) error {
 	if err := handler.NewHttpClient().
 		Method("PUT").
 		URL(fmt.Sprintf("/Company/%s/design/colors", c.Created.ID.String())).
@@ -854,7 +856,7 @@ func (c *Company) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 	http := handler.NewHttpClient()
 	http.Method("GET")
 	http.URL(imageURL)
-	http.ExpectStatus(status)
+	http.ExpectedStatus(status)
 	http.Header(namespace.HeadersKey.Auth, c.Auth_token)
 	http.Header(namespace.HeadersKey.Company, c.Created.ID.String())
 	http.Send(nil)
