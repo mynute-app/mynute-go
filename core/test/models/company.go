@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/google/uuid"
@@ -111,7 +112,7 @@ func (c *Company) Set() error {
 			return err
 		}
 	}
-	
+
 	if err := c.UploadImages(200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_1,
 	}); err != nil {
@@ -127,105 +128,53 @@ func (c *Company) Set() error {
 // It creates the Company, owner, and then generates the specified number
 // of employees, branches, and services, linking them randomly.
 func (c *Company) SetupRandomized(numEmployees, numBranches, numServices int) error {
+	if os.Getenv("APP_ENV") == "prod" { // Make sure it never runs in production
+		panic("Cannot run tests in production environment. Set APP_ENV to 'test' or 'dev'.")
+	}
+
+
 	fmt.Printf("Setting up randomized Company with %d employees, %d branches, %d services", numEmployees, numBranches, numServices)
 
-	// 1. Create Company and Owner (uses Company.Create from your e2e_test)
+	//  --- Creating company ---
+
 	if err := c.Create(200); err != nil {
 		return err
 	}
-	if c.Created.ID == uuid.Nil || c.Owner == nil || c.Owner.Created.ID == uuid.Nil {
-		return fmt.Errorf("failed to create Company or owner structure")
-	}
-	fmt.Printf("Company Created: ID %s, Owner Email: %s", c.Created.ID, c.Owner.Created.Email)
 
-	// Link owner back to Company and get token
-	c.Owner.Company = c // Ensure back-reference for owner helper
-	if err := c.Owner.VerifyEmail(200); err != nil {
-		return err
-	}
-	if err := c.Owner.Login(200); err != nil {
-		return err
-	}
-	c.Auth_token = c.Owner.Auth_token // Store owner's token in Company helper
-	if err := c.Owner.GetById(200); err != nil {
-		return err
-	}
-	// Check if Create already added the owner to c.Created.Employees and maybe sync c.Employees
-	foundOwner := false
-	for _, empHelper := range c.Employees { // Assuming c.Employees is also populated by Create/Set logic initially if owner added
-		if empHelper.Created.ID == c.Owner.Created.ID {
-			foundOwner = true
-			break
-		}
-	}
-	if !foundOwner {
-		c.Employees = append(c.Employees, c.Owner) // Add owner to the employee list if not already present
-	}
-	fmt.Println("Company owner configured and logged in.")
-
-	// --- Entity Generation ---
-	// These functions now use the Create methods from your e2e_test helpers
+	// --- Generating Employees, Branches, and Services ---
 
 	if err := c.GenerateEmployees(numEmployees); err != nil {
 		return err
-	} // Generate *additional* employees
-	fmt.Printf("Generated %d additional employees. Total employees (incl. owner): %d", numEmployees, len(c.Employees))
+	}
 
 	if err := c.GenerateBranches(numBranches); err != nil {
 		return err
 	}
-	fmt.Printf("Generated %d branches.", len(c.Branches))
 
 	if err := c.GenerateServices(numServices); err != nil {
 		return err
 	}
-	fmt.Printf("Generated %d services.", len(c.Services))
 
-	// Refresh Company data potentially, if needed after additions
 	if err := c.GetById(200); err != nil {
 		return err
 	}
 
 	// --- Random Relationship Assignments ---
-	// These functions now use AddBranch/AddService from your e2e_test helpers
 
-	if len(c.Employees) > 0 && len(c.Branches) > 0 {
-		if err := c.RandomlyAssignEmployeesToBranches(); err != nil {
-			return err
-		}
-		fmt.Println("Randomly assigned employees to branches.")
-	} else {
-		fmt.Println("Skipping employee-to-branch assignment (not enough employees or branches).")
+	if err := c.RandomlyAssignServicesToEmployees(); err != nil {
+		return err
 	}
 
-	if len(c.Employees) > 0 && len(c.Services) > 0 {
-		if err := c.RandomlyAssignServicesToEmployees(); err != nil {
-			return err
-		}
-		fmt.Println("Randomly assigned services to employees.")
-	} else {
-		fmt.Println("Skipping service-to-employee assignment (not enough employees or services).")
+	if err := c.RandomlyAssignServicesToBranches(); err != nil {
+		return err
 	}
 
-	if len(c.Branches) > 0 && len(c.Services) > 0 {
-		if err := c.RandomlyAssignServicesToBranches(); err != nil {
-			return err
-		}
-		fmt.Println("Randomly assigned services to branches.")
-	} else {
-		fmt.Println("Skipping service-to-branch assignment (not enough branches or services).")
+	if err := c.RandomlyAssignEmployeesToBranches(); err != nil {
+		return err
 	}
 
-	// --- Random Work Schedule Assignment ---
-	// Uses Employee.Update from your e2e_test helper
-
-	if len(c.Employees) > 0 && len(c.Branches) > 0 {
-		if err := c.RandomlyAssignWorkSchedules(); err != nil {
-			return err
-		}
-		fmt.Println("Randomly assigned work schedules to employees.")
-	} else {
-		fmt.Println("Skipping work schedule assignment (not enough employees or branches).")
+	if err := c.RandomlyAssignWorkScheduleToEmployees(); err != nil {
+		return err
 	}
 
 	fmt.Println("Randomized Company setup completed.")
@@ -236,6 +185,8 @@ func (c *Company) SetupRandomized(numEmployees, numBranches, numServices int) er
 
 // GenerateEmployees creates n *additional* employees (owner already exists).
 func (c *Company) GenerateEmployees(n int) error {
+	fmt.Printf("Generating %d employees for Company ID %s", n, c.Created.ID)
+
 	if n <= 0 {
 		return fmt.Errorf("employee generation failed: n must be greater than 0")
 	} else if c.Created.ID == uuid.Nil {
@@ -266,6 +217,7 @@ func (c *Company) GenerateEmployees(n int) error {
 		if err := employee.Login(200); err != nil {
 			return err
 		}
+
 		if employee.Auth_token == "" {
 			return fmt.Errorf("failed to login employee %d/%d or retrieve Auth Token.", i+1, n)
 		}
@@ -278,11 +230,15 @@ func (c *Company) GenerateEmployees(n int) error {
 	if len(c.Employees) != initialEmployeeCount+createdCount {
 		return fmt.Errorf("Company employee slice length (%d) does not match expected count (%d).", len(c.Employees), initialEmployeeCount+createdCount)
 	}
+	fmt.Printf("Generated %d employees. Initial count was %d.", createdCount, initialEmployeeCount)
+	fmt.Printf("Total employees after generation: %d", len(c.Employees))
 	return nil
 }
 
 // GenerateBranches creates n branches for the Company.
 func (c *Company) GenerateBranches(n int) error {
+	fmt.Printf("Generating %d branches for Company ID %s", n, c.Created.ID)
+
 	if n <= 0 {
 		return fmt.Errorf("branch generation failed: n must be greater than 0")
 	} else if c.Created.ID == uuid.Nil {
@@ -313,12 +269,15 @@ func (c *Company) GenerateBranches(n int) error {
 	if len(c.Branches) != initialBranchCount+createdCount {
 		return fmt.Errorf("Company branch slice length (%d) does not match expected count (%d).", len(c.Branches), initialBranchCount+createdCount)
 	}
-
+	fmt.Printf("Generated %d branches. Initial count was %d.", createdCount, initialBranchCount)
+	fmt.Printf("Total branches after generation: %d", len(c.Branches))
 	return nil
 }
 
 // GenerateServices creates n services for the Company.
 func (c *Company) GenerateServices(n int) error {
+	fmt.Printf("Generating %d services for Company ID %s", n, c.Created.ID)
+
 	if n <= 0 {
 		return fmt.Errorf("service generation failed: n must be greater than 0, Company ID must not be nil, and Auth Token must not be empty")
 	} else if c.Created.ID == uuid.Nil {
@@ -349,7 +308,8 @@ func (c *Company) GenerateServices(n int) error {
 	if len(c.Services) != initialServiceCount+createdCount {
 		return fmt.Errorf("Company service slice length (%d) does not match expected count (%d).", len(c.Services), initialServiceCount+createdCount)
 	}
-
+	fmt.Printf("Generated %d services. Initial count was %d.", createdCount, initialServiceCount)
+	fmt.Printf("Total services after generation: %d", len(c.Services))
 	return nil
 }
 
@@ -516,9 +476,13 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 // --- Work Schedule Assignment ---
 
 // RandomlyAssignWorkSchedules assigns a generated work schedule to each employee.
-func (c *Company) RandomlyAssignWorkSchedules() error {
-	if len(c.Employees) == 0 || len(c.Branches) == 0 {
-		return fmt.Errorf("no employees or branches for work schedule assignment.")
+func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
+	if len(c.Employees) == 0 {
+		return fmt.Errorf("no employees to assign work schedules.")
+	} else if len(c.Branches) == 0 {
+		return fmt.Errorf("no branches to reference for work schedule assignment.")
+	} else if len(c.Services) == 0 {
+		return fmt.Errorf("no services to reference for work schedule assignment.")
 	}
 
 	validBranches := []*Branch{}
@@ -709,6 +673,25 @@ func (c *Company) Create(status int) error {
 	c.Owner = &Employee{
 		Company: c,
 		Created: owner,
+	}
+	if err := c.Owner.VerifyEmail(200); err != nil {
+		return fmt.Errorf("failed to verify owner email: %w", err)
+	}
+	if err := c.Owner.Login(200); err != nil {
+		return fmt.Errorf("failed to login owner: %w", err)
+	}
+	c.Auth_token = c.Owner.Auth_token
+	if err := c.Owner.GetById(200); err != nil {
+		return err
+	}
+	if c.Created.ID == uuid.Nil {
+		return fmt.Errorf("failed to create Company: ID is nil")
+	} else if c.Owner == nil {
+		return fmt.Errorf("failed to create Company: Owner is nil")
+	} else if c.Owner.Created.ID == uuid.Nil {
+		return fmt.Errorf("failed to create Company: Owner ID is nil")
+	} else if c.Owner.Auth_token == "" {
+		return fmt.Errorf("failed to create Company: Owner Auth Token is empty")
 	}
 	return nil
 }

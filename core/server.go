@@ -74,20 +74,20 @@ func (s *Server) listen() *Server {
 
 // Runs the server in two modes: test and listen
 //
-//	@test:		starts the server in a goroutine. This is useful for unit testing.
+//	@parallel:		starts the server in a goroutine. This is useful for unit testing.
 //	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {
 	log.Printf("Starting server in '%s' mode...\n", in)
-	if in == "test" {
+	if in == "parallel" {
 		app_env := os.Getenv("APP_ENV")
-		if app_env != "test" {
-			log.Fatalf("Server run for tests must have APP_ENV as 'test'. Currently is '%s'.\nPlease, set APP_ENV=test at .env file", app_env)
+		if app_env == "prod" {
+			log.Fatal("Server run for production can not be in parallel. For parallel running set APP_ENV=test or APP_ENV=dev at .env file")
 		}
 		s.parallel()
 	} else if in == "listen" {
 		s.listen()
 	} else {
-		log.Fatalf("Server run mode not recognized. Please, use 'test' or 'listen' as argument.")
+		log.Fatal("Server run mode not recognized. Please, provide a valid argument")
 	}
 	return s
 }

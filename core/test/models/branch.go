@@ -45,7 +45,7 @@ func (b *Branch) Create(status int) error {
 func (b *Branch) Update(status int, changes map[string]any) error {
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL("/branch/" + fmt.Sprintf("%v", b.Created.ID.String())).
+		URL("/branch/"+fmt.Sprintf("%v", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
 		Header(namespace.HeadersKey.Auth, b.Auth_token).
@@ -99,11 +99,19 @@ func (b *Branch) Delete(status int) error {
 }
 
 func (b *Branch) AddService(status int, service *Service, token *string) error {
+	var t string
+	if token == nil && b.Auth_token == "" {
+		return fmt.Errorf("no authentication token provided")
+	} else if token != nil {
+		t = *token
+	} else {
+		t = b.Auth_token
+	}
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL(fmt.Sprintf("/branch/%s/service/%s", b.Created.ID.String(), service.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, *token).
+		Header(namespace.HeadersKey.Auth, t).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
 		Send(nil).
 		Error; err != nil {

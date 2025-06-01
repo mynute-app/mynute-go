@@ -22,21 +22,34 @@ type permissions_test struct {
 
 var permissions_test_instance *permissions_test
 
-func Test_Start_Server(t *testing.T) {
-	permissions_test_instance = &permissions_test{
-		server: core.NewServer().Run("test"),
+func load_permissions_test_instance(t *testing.T) {
+	if permissions_test_instance != nil && permissions_test_instance.server != nil {
+		return
 	}
+	Test_Setup_Permissions_Instance(t)
+}
+
+func Test_Setup_Permissions_Instance(t *testing.T) {
+	if permissions_test_instance != nil {
+		return
+	} 
+	permissions_test_instance = &permissions_test{}
+	tt := handlerT.NewTestErrorHandler(t)
+
+	companies, err := utilsT.CreateCompaniesRandomly(2)
+	if err != nil {
+		t.Fatal("Failed to create companies:", err)
+	}
+
+	permissions_test_instance.server = core.NewServer().Run("test")
+
 	if permissions_test_instance.server == nil {
 		t.Fatal("Failed to start the server")
 	}
-	t.Log("Server started successfully")
-}
 
-func Test_Setup_Environment(t *testing.T) {
-	if permissions_test_instance == nil || permissions_test_instance.server == nil {
-		Test_Start_Server(t)
-	}
-	tt := handlerT.NewTestErrorHandler(t)
+	permissions_test_instance.company1 = companies[0]
+	permissions_test_instance.company2 = companies[1]
+
 	company_1_employee_number := 4
 	company_2_employee_number := 3
 	company_1_branch_number := 3
@@ -51,24 +64,6 @@ func Test_Setup_Environment(t *testing.T) {
 	tt.Test(permissions_test_instance.client1.Set())
 	permissions_test_instance.client2 = &modelT.Client{}
 	tt.Test(permissions_test_instance.client2.Set())
-
-	if permissions_test_instance.company1.Owner.Auth_token == "" {
-		t.Fatal("Company 1 Owner auth token is missing")
-	} else if permissions_test_instance.company2.Owner.Auth_token == "" {
-		t.Fatal("Company 2 Owner auth token is missing")
-	} else if len(permissions_test_instance.company1.Employees) != company_1_employee_number+1 { // +1 for the owner
-		t.Fatalf("Company 1 does not have enough employees, expected %d, got %d", company_1_employee_number, len(permissions_test_instance.company1.Employees))
-	} else if len(permissions_test_instance.company2.Employees) != company_2_employee_number+1 { // +1 for the owner
-		t.Fatalf("Company 2 does not have enough employees, expected %d, got %d", company_2_employee_number, len(permissions_test_instance.company2.Employees))
-	} else if len(permissions_test_instance.company1.Branches) != company_1_branch_number {
-		t.Fatalf("Company 1 does not have enough branches, expected %d, got %d", company_1_branch_number, len(permissions_test_instance.company1.Branches))
-	} else if len(permissions_test_instance.company2.Branches) != company_2_branch_number {
-		t.Fatalf("Company 2 does not have enough branches, expected %d, got %d", company_2_branch_number, len(permissions_test_instance.company2.Branches))
-	} else if len(permissions_test_instance.company1.Services) != company_1_service_number {
-		t.Fatalf("Company 1 does not have enough services, expected %d, got %d", company_1_service_number, len(permissions_test_instance.company1.Services))
-	} else if len(permissions_test_instance.company2.Services) != company_2_service_number {
-		t.Fatalf("Company 2 does not have enough services, expected %d, got %d", company_2_service_number, len(permissions_test_instance.company2.Services))
-	}
 
 	permissions_test_instance.company1_employee1 = permissions_test_instance.company1.Employees[1]
 	permissions_test_instance.company1_employee2 = permissions_test_instance.company1.Employees[2]
@@ -87,11 +82,7 @@ func Test_Setup_Environment(t *testing.T) {
 }
 
 func Test_Owner_x_Appointments(t *testing.T) {
-	if permissions_test_instance == nil || permissions_test_instance.server == nil {
-		Test_Start_Server(t)
-		Test_Setup_Environment(t)
-	}
-	
+	load_permissions_test_instance(t)
 	tt := handlerT.NewTestErrorHandler(t)
 
 	client1 := permissions_test_instance.client1
@@ -165,10 +156,7 @@ func Test_Owner_x_Appointments(t *testing.T) {
 }
 
 func Test_Employee_x_Appointments(t *testing.T) {
-	if permissions_test_instance == nil || permissions_test_instance.server == nil {
-		Test_Start_Server(t)
-		Test_Setup_Environment(t)
-	}
+	load_permissions_test_instance(t)
 
 	client1 := permissions_test_instance.client1
 	client2 := permissions_test_instance.client2
@@ -244,8 +232,7 @@ func Test_Employee_x_Appointments(t *testing.T) {
 
 func Test_Cleanup_Environment(t *testing.T) {
 	if permissions_test_instance == nil || permissions_test_instance.server == nil {
-		Test_Start_Server(t)
-		Test_Setup_Environment(t)
+		Test_Setup_Permissions_Instance(t)
 	}
 	t.Log("--- Cleaning up environment ---")
 	permissions_test_instance.server.Shutdown()
