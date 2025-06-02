@@ -9,9 +9,8 @@ import (
 	"testing"
 )
 
-
 func Test_Employee(t *testing.T) {
-	server := core.NewServer().Run("test")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 	company := &modelT.Company{}
 	tt := handlerT.NewTestErrorHandler(t)

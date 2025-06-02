@@ -3,6 +3,7 @@ package handlerT
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -97,9 +98,11 @@ func (h *httpActions) Send(body any) *httpActions {
 	}
 	h.ResBody = nil
 	h.ResHeaders = nil
-	fmt.Printf(">>>>>>>>>> Sending %s request to %s", h.method, h.url)
-	fmt.Printf("request body: %+v", body)
-	fmt.Printf("request headers: %+v", h.reqHeaders)
+	fmt.Printf("\n--------------- NEW REQUEST ---------------\n")
+	fmt.Printf("\n>>>>>>>>>> Sending %s request to %s <<<<<<<<<<\n", h.method, h.url)
+	fmt.Printf("\n>>>>>>>>>> Request body: %+v\n", body)
+	fmt.Printf("\n>>>>>>>>>> Request headers: %+v\n\n", h.reqHeaders)
+
 
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
 
@@ -145,8 +148,9 @@ func (h *httpActions) Send(body any) *httpActions {
 		}
 	}
 
-	fmt.Printf("response body: %+v", h.ResBody)
-	fmt.Printf("response headers: %+v", h.ResHeaders)
+	fmt.Printf("\n>>>>>>>>>> Response body: %+v\n", h.ResBody)
+	fmt.Printf("\n>>>>>>>>>> Response headers: %+v\n", h.ResHeaders)
+	fmt.Printf("\n---------------- x ----------------\n")
 
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
 		return h.set_error(fmt.Sprintf("expected status code: %d | received status code: %d \n", h.expectedStatus, res.StatusCode))
@@ -216,7 +220,7 @@ func (h *httpActions) parseFiles(files Files) ([]byte, error) {
 
 func (h *httpActions) set_error(e string) *httpActions {
 	if h.Error == nil {
-		h.Error = fmt.Errorf(e)
+		h.Error = errors.New(e)
 	}
 	return h
 }

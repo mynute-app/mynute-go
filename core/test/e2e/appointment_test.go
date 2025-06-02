@@ -2,9 +2,9 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
-	"agenda-kaki-go/core/test/handlers"
-	"agenda-kaki-go/core/test/models"
-	"agenda-kaki-go/core/test/utils"
+	handlerT "agenda-kaki-go/core/test/handlers"
+	modelT "agenda-kaki-go/core/test/models"
+	utilsT "agenda-kaki-go/core/test/utils"
 	"testing"
 	"time"
 
@@ -13,7 +13,7 @@ import (
 
 func Test_Appointment(t *testing.T) {
 	var err error
-	server := core.NewServer().Run("test")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 	tt := handlerT.NewTestErrorHandler(t)
 	ct := &modelT.Client{}
@@ -25,7 +25,7 @@ func Test_Appointment(t *testing.T) {
 	cy := &modelT.Company{}
 	tt.Test(cy.Set()) // This sets up company, employees (with schedules), branches, services.
 
-	baseEmployee := cy.Employees[0]
+	baseEmployee := cy.Owner
 
 	a := []*modelT.Appointment{}
 

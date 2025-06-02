@@ -15,7 +15,7 @@ type Client struct {
 }
 
 func Test_Client(t *testing.T) {
-	server := core.NewServer().Run("test")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 	client := &modelT.Client{}
 	tt := handlerT.NewTestErrorHandler(t)

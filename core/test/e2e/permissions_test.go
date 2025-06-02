@@ -32,7 +32,7 @@ func load_permissions_test_instance(t *testing.T) {
 func Test_Setup_Permissions_Instance(t *testing.T) {
 	if permissions_test_instance != nil {
 		return
-	} 
+	}
 	permissions_test_instance = &permissions_test{}
 	tt := handlerT.NewTestErrorHandler(t)
 
@@ -41,7 +41,7 @@ func Test_Setup_Permissions_Instance(t *testing.T) {
 		t.Fatal("Failed to create companies:", err)
 	}
 
-	permissions_test_instance.server = core.NewServer().Run("test")
+	permissions_test_instance.server = core.NewServer().Run("parallel")
 
 	if permissions_test_instance.server == nil {
 		t.Fatal("Failed to start the server")
