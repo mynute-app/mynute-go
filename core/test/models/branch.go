@@ -11,19 +11,18 @@ import (
 
 type Branch struct {
 	Created    model.Branch
-	Auth_token string
 	Company    *Company
 	Services   []*Service
 	Employees  []*Employee
 }
 
-func (b *Branch) Create(status int) error {
+func (b *Branch) Create(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/branch").
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, b.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(DTO.CreateBranch{
 			Name:         lib.GenerateRandomName("Branch Name"),
 			CompanyID:    b.Company.Created.ID,
@@ -42,13 +41,13 @@ func (b *Branch) Create(status int) error {
 	return nil
 }
 
-func (b *Branch) Update(status int, changes map[string]any) error {
+func (b *Branch) Update(status int, changes map[string]any, token string) error {
 	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL("/branch/"+fmt.Sprintf("%v", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, b.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(changes).
 		ParseResponse(&b.Created).Error; err != nil {
 		return fmt.Errorf("failed to update branch: %w", err)
@@ -56,13 +55,13 @@ func (b *Branch) Update(status int, changes map[string]any) error {
 	return nil
 }
 
-func (b *Branch) GetByName(status int) error {
+func (b *Branch) GetByName(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/branch/name/%s", b.Created.Name)).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, b.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		ParseResponse(&b.Created).Error; err != nil {
 		return fmt.Errorf("failed to get branch by name: %w", err)
@@ -70,13 +69,13 @@ func (b *Branch) GetByName(status int) error {
 	return nil
 }
 
-func (b *Branch) GetById(status int) error {
+func (b *Branch) GetById(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/branch/%s", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, b.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		ParseResponse(&b.Created).Error; err != nil {
 		return fmt.Errorf("failed to get branch by id: %w", err)
@@ -84,13 +83,13 @@ func (b *Branch) GetById(status int) error {
 	return nil
 }
 
-func (b *Branch) Delete(status int) error {
+func (b *Branch) Delete(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL(fmt.Sprintf("/branch/%s", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, b.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete branch: %w", err)
@@ -98,20 +97,12 @@ func (b *Branch) Delete(status int) error {
 	return nil
 }
 
-func (b *Branch) AddService(status int, service *Service, token *string) error {
-	var t string
-	if token == nil && b.Auth_token == "" {
-		return fmt.Errorf("no authentication token provided")
-	} else if token != nil {
-		t = *token
-	} else {
-		t = b.Auth_token
-	}
+func (b *Branch) AddService(status int, service *Service, token string) error {
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL(fmt.Sprintf("/branch/%s/service/%s", b.Created.ID.String(), service.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, t).
+		Header(namespace.HeadersKey.Auth, token).
 		Header(namespace.HeadersKey.Company, b.Company.Created.ID.String()).
 		Send(nil).
 		Error; err != nil {

@@ -10,8 +10,8 @@ import (
 )
 
 type Client struct {
-	Created    model.ClientFull
-	Auth_token string
+	Created      model.ClientFull
+	X_Auth_Token string
 }
 
 func (u *Client) Set() error {
@@ -49,9 +49,9 @@ func (u *Client) Create(s int) error {
 func (u *Client) Update(s int, changes map[string]any) error {
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL("/client/" + fmt.Sprintf("%v", u.Created.ID.String())).
+		URL("/client/"+fmt.Sprintf("%v", u.Created.ID.String())).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.Auth_token).
+		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(changes).
 		Error; err != nil {
 		return fmt.Errorf("failed to update client: %w", err)
@@ -62,9 +62,9 @@ func (u *Client) Update(s int, changes map[string]any) error {
 func (u *Client) GetByEmail(s int) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL("/client/email/" + u.Created.Email).
+		URL("/client/email/"+u.Created.Email).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.Auth_token).
+		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to get client by email: %w", err)
@@ -77,7 +77,7 @@ func (u *Client) Delete(s int) error {
 		Method("DELETE").
 		URL(fmt.Sprintf("/client/%v", u.Created.ID.String())).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.Auth_token).
+		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete client: %w", err)
@@ -90,7 +90,7 @@ func (u *Client) VerifyEmail(s int) error {
 		Method("POST").
 		URL(fmt.Sprintf("/client/verify-email/%v/%s", u.Created.Email, "12345")).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.Auth_token).
+		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to verify client email: %w", err)
@@ -115,6 +115,6 @@ func (u *Client) Login(s int) error {
 	if len(auth) == 0 {
 		return fmt.Errorf("Authorization header not found")
 	}
-	u.Auth_token = auth[0]
+	u.X_Auth_Token = auth[0]
 	return nil
 }

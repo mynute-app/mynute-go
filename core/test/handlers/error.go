@@ -10,8 +10,8 @@ func NewTestErrorHandler(t *testing.T) *testErrorHandler {
 	return &testErrorHandler{t: t}
 }
 
-func (h *testErrorHandler) Test(e error) {
+func (h *testErrorHandler) Test(e error, it string) {
 	if e != nil {
-		h.t.Fatalf("Test failed with error: %v", e)
+		h.t.Fatalf("%s failed with error: %v", it, e)
 	}
 }

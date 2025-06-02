@@ -10,19 +10,18 @@ import (
 
 type Service struct {
 	Created    DTO.Service
-	Auth_token string
 	Company    *Company
 	Employees  []*Employee
 	Branches   []*Branch
 }
 
-func (s *Service) Create(status int) error {
+func (s *Service) Create(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/service").
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(DTO.CreateService{
 			Name:        lib.GenerateRandomName("Service"),
 			Description: lib.GenerateRandomName("Description"),
@@ -37,7 +36,7 @@ func (s *Service) Create(status int) error {
 	return nil
 }
 
-func (s *Service) Update(status int, changes map[string]any) error {
+func (s *Service) Update(status int, changes map[string]any, token string) error {
 	if len(changes) == 0 {
 		return fmt.Errorf("no changes provided")
 	}
@@ -46,7 +45,7 @@ func (s *Service) Update(status int, changes map[string]any) error {
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(changes).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -55,21 +54,13 @@ func (s *Service) Update(status int, changes map[string]any) error {
 	return nil
 }
 
-func (s *Service) GetById(status int, token *string) error {
-	var t string
-	if token == nil && s.Auth_token == "" {
-		return fmt.Errorf("no authentication token provided")
-	} else if token != nil {
-		t = *token
-	} else {
-		t = s.Auth_token
-	}
+func (s *Service) GetById(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, t).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -78,13 +69,13 @@ func (s *Service) GetById(status int, token *string) error {
 	return nil
 }
 
-func (s *Service) GetByName(status int) error {
+func (s *Service) GetByName(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL("/service/name/"+s.Created.Name).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -93,13 +84,13 @@ func (s *Service) GetByName(status int) error {
 	return nil
 }
 
-func (s *Service) Delete(status int) error {
+func (s *Service) Delete(status int, token string) error {
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, s.Auth_token).
+		Header(namespace.HeadersKey.Auth, token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete service: %w", err)
