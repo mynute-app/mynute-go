@@ -138,5 +138,13 @@ func (b *Branch) AddService(status int, service *Service, x_auth_token string, x
 		Error; err != nil {
 		return fmt.Errorf("failed to add service to branch: %w", err)
 	}
+	if err := b.GetById(200, b.Company.Owner.X_Auth_Token, nil); err != nil {
+		return fmt.Errorf("failed to get branch by ID after adding service: %w", err)
+	}
+	if err := service.GetById(200, b.Company.Owner.X_Auth_Token, nil); err != nil {
+		return fmt.Errorf("failed to get service by ID after adding to branch: %w", err)
+	}
+	service.Branches = append(service.Branches, b)
+	b.Services = append(b.Services, service)
 	return nil
 }

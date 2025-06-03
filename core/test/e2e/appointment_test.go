@@ -32,7 +32,7 @@ func Test_Appointment(t *testing.T) {
 	// --- Test Case 0: Successful creation by client ---
 	a = append(a, &modelT.Appointment{})
 	// Find a valid slot for the base employee. Using time.Local for preferred location.
-	slot0, found0, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
+	slot0, found0, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
 	tt.Test(err, "Finding valid appointment slot for base employee")
 	if !found0 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
@@ -49,7 +49,7 @@ func Test_Appointment(t *testing.T) {
 	// The employee's appointments list (baseEmployee.Created.Appointments) should have been updated by a[0].Create(),
 	// so findValidAppointmentSlot should now find the *next* available slot.
 	a = append(a, &modelT.Appointment{})
-	slot1, found1, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
+	slot1, found1, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
 	tt.Test(err, "Finding valid appointment slot for base employee")
 	if !found1 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
@@ -63,7 +63,7 @@ func Test_Appointment(t *testing.T) {
 
 	// --- Test Case 2: Successful creation by company owner ---
 	a = append(a, &modelT.Appointment{})
-	slot2, found2, err := utilsT.FindValidAppointmentSlot(baseEmployee, cy, time.Local)
+	slot2, found2, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
 	tt.Test(err, "Finding valid appointment slot for base employee")
 	if !found2 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)

@@ -234,10 +234,14 @@ func (e *Employee) AddBranch(s int, branch *Branch, token *string, x_company_id 
 		Error; err != nil {
 		return fmt.Errorf("failed to add branch to employee: %w", err)
 	}
-	if err := branch.GetById(s, t, nil); err != nil {
+	if err := branch.GetById(s, e.Company.Owner.X_Auth_Token, nil); err != nil {
 		return fmt.Errorf("failed to get branch by ID after adding to employee: %w", err)
 	}
+	if err := e.GetById(s, nil, nil); err != nil {
+		return fmt.Errorf("failed to get employee by ID after adding branch: %w", err)
+	}
 	branch.Employees = append(branch.Employees, e)
+	e.Branches = append(e.Branches, branch)
 	return nil
 }
 
@@ -260,6 +264,12 @@ func (e *Employee) AddService(s int, service *Service, token *string, x_company_
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to add service to employee: %w", err)
+	}
+	if err := service.GetById(s, e.Company.Owner.X_Auth_Token, nil); err != nil {
+		return fmt.Errorf("failed to get service by ID after adding to employee: %w", err)
+	}
+	if err := e.GetById(s, nil, nil); err != nil {
+		return fmt.Errorf("failed to get employee by ID after adding service: %w", err)
 	}
 	service.Employees = append(service.Employees, e)
 	return nil

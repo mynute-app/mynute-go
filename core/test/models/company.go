@@ -18,11 +18,11 @@ import (
 )
 
 type Company struct {
-	Created    model.CompanyMerged
-	Owner      *Employee
-	Employees  []*Employee
-	Branches   []*Branch
-	Services   []*Service
+	Created   model.CompanyMerged
+	Owner     *Employee
+	Employees []*Employee
+	Branches  []*Branch
+	Services  []*Service
 }
 
 // Sets the company with 4 employees (1 owner),
@@ -77,6 +77,13 @@ func (c *Company) Set() error {
 
 	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
 		return err
+	}
+	for _, branch := range c.Branches {
+		for _, service := range c.Services {
+			if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
+			}
+		}
 	}
 	for _, employee := range c.Employees {
 		for _, branch := range c.Branches {
