@@ -229,14 +229,14 @@ func FindValidAppointmentSlot(employee *modelT.Employee, company *modelT.Company
 	return slot, false, fmt.Errorf("no valid appointment slot found for employee %s in company %s within the search horizon", employee.Created.ID, company.Created.ID)
 }
 
-func FindValidAppointmentSlotV2(employee *model.Employee, preferredLocation *time.Location) (slot *FoundAppointmentSlot, found bool, err error) {
+func FindValidAppointmentSlotV2(employee *modelT.Employee, preferredLocation *time.Location) (slot *FoundAppointmentSlot, found bool, err error) {
 	if preferredLocation == nil {
 		return nil, false, fmt.Errorf("preferredLocation is nil; timezone must be explicitly passed")
 	}
-	fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.ID.String())
+	fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
 	fmt.Printf("PreferredLocation: %s, SlotSearchHorizon: %d days, TimeStep: %v\n", preferredLocation.String(), slotSearchHorizonDays, slotSearchTimeStep)
 
-	WorkSchedule := employee.WorkSchedule
+	WorkSchedule := employee.Created.WorkSchedule
 	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{
 		time.Sunday:    WorkSchedule.Sunday,
 		time.Monday:    WorkSchedule.Monday,
@@ -251,26 +251,70 @@ func FindValidAppointmentSlotV2(employee *model.Employee, preferredLocation *tim
 	searchStartDate := time.Date(nowInPreferredLocation.Year(), nowInPreferredLocation.Month(), nowInPreferredLocation.Day(), 0, 0, 0, 0, preferredLocation)
 	fmt.Printf("Searching from %s (now in preferred TZ is %s)\n", searchStartDate.Format(time.RFC3339), nowInPreferredLocation.Format(time.RFC3339))
 
-	isEmployeeAssignedToBranchV2 := func(employee *model.Employee, branch_id string) bool {
+	isBranchAssignedToEmployee := func(branch_id string) (bool, error) {
+		var Branch model.Branch
+		if err := handlerT.NewHttpClient().
+			Method("GET").
+			URL(fmt.Sprintf("/branch/%s", branch_id)).
+			ExpectedStatus(200).
+			Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
+			Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token).
+			Send(nil).
+			ParseResponse(&Branch).Error; err != nil {
+			return false, fmt.Errorf("failed to get branch by id: %w", err)
+		}
 		isAssigned := false
-		for _, b := range employee.Branches {
+		for _, b := range employee.Created.Branches {
 			if b.ID.String() == branch_id {
 				isAssigned = true
 				break
 			}
 		}
-		return isAssigned
+		return isAssigned, nil
 	}
 
-	isEmployeeAssignedToServiceV2 := func(employee *model.Employee, service_id string) bool {
+	isServiceAssignedToEmployeeV2 := func(service_id string) (bool, error) {
+		var Service model.Service
+		if err := handlerT.NewHttpClient().
+			Method("GET").
+			URL(fmt.Sprintf("/service/%s", service_id)).
+			ExpectedStatus(200).
+			Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
+			Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token).
+			Send(nil).
+			ParseResponse(&Service).Error; err != nil {
+			return false, fmt.Errorf("failed to get service by id: %w", err)
+		}
 		isAssigned := false
-		for _, s := range employee.Services {
+		for _, s := range employee.Created.Services {
 			if s.ID.String() == service_id {
 				isAssigned = true
 				break
 			}
 		}
-		return isAssigned
+		return isAssigned, nil
+	}
+
+	isServiceAssignedToBranchV2 := func(branch_id, service_id string) (bool, error) {
+		var Branch model.Branch
+		if err := handlerT.NewHttpClient().
+			Method("GET").
+			URL(fmt.Sprintf("/branch/%s", branch_id)).
+			ExpectedStatus(200).
+			Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
+			Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token).
+			Send(nil).
+			ParseResponse(&Branch).Error; err != nil {
+			return false, fmt.Errorf("failed to get branch by id: %w", err)
+		}
+		isAssigned := false
+		for _, s := range Branch.Services {
+			if s.ID.String() == service_id {
+				isAssigned = true
+				break
+			}
+		}
+		return isAssigned, nil
 	}
 
 	isValidWorkRangeDate := func(wr mJSON.WorkRange, currentSearchDate time.Time) (bool, error) {
@@ -299,26 +343,76 @@ func FindValidAppointmentSlotV2(employee *model.Employee, preferredLocation *tim
 			continue
 		}
 		fmt.Printf("    Found %d schedule range(s) for %s\n", len(dayScheduleRanges), currentWeekday)
-
 		for iWr, wr := range dayScheduleRanges {
 			fmt.Printf("      Processing WorkRange #%d: Start='%s', End='%s', BranchID='%s'\n", iWr, wr.Start, wr.End, wr.BranchID)
 			if wr.Start == "" || wr.End == "" || wr.BranchID == uuid.Nil {
-				return nil, false, fmt.Errorf("work range #%d has invalid data for employee %s: Start, End, or BranchID is missing. WorkSchedule: %+v", iWr, employee.ID.String(), WorkSchedule)
+				return nil, false, fmt.Errorf("work range #%d has invalid data for employee %s: Start, End, or BranchID is missing. WorkSchedule: %+v", iWr, employee.Created.ID.String(), WorkSchedule)
 			}
-			if !isEmployeeAssignedToBranchV2(employee, wr.BranchID.String()) {
-				return nil, false, fmt.Errorf("work range #%d has invalid branch assignment as employee %s is not assigned to branch %s", iWr, employee.ID.String(), wr.BranchID.String())
+			if ok, err := isBranchAssignedToEmployee(wr.BranchID.String()); !ok {
+				if err != nil {
+					return nil, false, fmt.Errorf("error checking branch assignment for employee %s: %w", employee.Created.ID.String(), err)
+				}
+				return nil, false, fmt.Errorf("work range #%d has invalid branch assignment as employee %s is not assigned to branch %s", iWr, employee.Created.ID.String(), wr.BranchID.String())
 			}
 			if ok, err := isValidWorkRangeDate(wr, currentSearchDate); !ok {
-				return nil, false, fmt.Errorf("work range #%d has invalid work range assignment for employee %s: %w", iWr, employee.ID.String(), err)
+				return nil, false, fmt.Errorf("work range #%d has invalid work range assignment for employee %s: %w", iWr, employee.Created.ID.String(), err)
 			}
 			for iSrv, service_id := range wr.Services {
-				if !isEmployeeAssignedToServiceV2(employee, service_id.String()) {
-					return nil, false, fmt.Errorf("work range #%d has invalid service assignment at #%d since employee %s is not assigned to service %s", iWr, iSrv, employee.ID.String(), service_id.String())
+				if uuid.Nil == service_id {
+					return nil, false, fmt.Errorf("employee %s work range #%d has invalid service assignment at #%d: service ID is nil", employee.Created.ID.String(), iWr, iSrv)
+				}
+				if ok, err := isServiceAssignedToEmployeeV2(service_id.String()); !ok {
+					if err != nil {
+						return nil, false, fmt.Errorf("error checking service assignment for employee %s: %w", employee.Created.ID.String(), err)
+					}
+					return nil, false, fmt.Errorf("employee %s work range #%d has invalid service assignment at #%d: employee is not assigned to service %s", employee.Created.ID.String(), iWr, iSrv, service_id.String())
+				}
+				if ok, err := isServiceAssignedToBranchV2(wr.BranchID.String(), service_id.String()); !ok {
+					if err != nil {
+						return nil, false, fmt.Errorf("error checking service assignment for branch %s: %w", wr.BranchID.String(), err)
+					}
+					return nil, false, fmt.Errorf("employee %s work range #%d has invalid service assignment at #%d: branch %s is not assigned to service %s", employee.Created.ID.String(), iWr, iSrv, wr.BranchID.String(), service_id.String())
+				}
+				fmt.Printf("        WorkRange #%d, Service #%d: Valid service %s found for employee %s in branch %s\n", iWr, iSrv, service_id.String(), employee.Created.ID.String(), wr.BranchID.String())
+				serviceDuration := time.Duration(employee.Services[iSrv].Created.Duration) * time.Minute
+				for potentialStartTime := time.Date(currentSearchDate.Year(), currentSearchDate.Month(), currentSearchDate.Day(), 0, 0, 0, 0, preferredLocation); potentialStartTime.Before(currentSearchDate.AddDate(0, 0, slotSearchHorizonDays)); potentialStartTime = potentialStartTime.Add(slotSearchTimeStep) {
+					potentialEndTime := potentialStartTime.Add(serviceDuration)
+					fmt.Printf("          Testing Slot: PotentialStart=%s, PotentialEnd=%s\n", potentialStartTime.Format(time.RFC3339), potentialEndTime.Format(time.RFC3339))
+					// If the service cannot be completed by the end of the work range
+					if potentialEndTime.After(currentSearchDate.AddDate(0, 0, slotSearchHorizonDays)) {
+						fmt.Printf("            Slot ends after work range. Breaking from time-stepping for this service in this work range.\n")
+						// No further time steps for THIS service in THIS work range will fit.
+						break // Break from the time-stepping loop (for current service)
+					}
+					// Skip past slots
+					if potentialStartTime.Before(nowInPreferredLocation) {
+						fmt.Printf("            Slot starts before current time. Skipping...\n")
+						continue
+					}
+					overlap := false
+					fmt.Printf("          Checking for overlaps with %d existing appointments...\n", len(employee.Created.Appointments))
+					for _, appt := range employee.Created.Appointments {
+						if appt.StartTime.Before(potentialEndTime) && appt.EndTime.After(potentialStartTime) {
+							overlap = true
+							fmt.Printf("            Found overlapping appointment: %s - %s\n", appt.StartTime.Format(time.RFC3339), appt.EndTime.Format(time.RFC3339))
+						}
+					}
+					if overlap {
+						fmt.Printf("          Slot %s - %s overlaps with existing appointments. Skipping...\n", potentialStartTime.Format(time.RFC3339), potentialEndTime.Format(time.RFC3339))
+						continue
+					}
+					fmt.Printf("          Slot %s - %s is valid and has no overlaps.\n", potentialStartTime.Format(time.RFC3339), potentialEndTime.Format(time.RFC3339))
+					slot = &FoundAppointmentSlot{
+						StartTimeRFC3339: potentialStartTime.Format(time.RFC3339),
+						BranchID:         wr.BranchID.String(),
+						ServiceID:        service_id.String(),
+					}
+					return slot, true, nil // Found a valid slot
 				}
 			}
 		}
 	}
-	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s in company %s within the search horizon", employee.ID.String(), employee.CompanyID.String())
+	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s in company %s within the search horizon", employee.Created.ID.String(), employee.Company.Created.ID.String())
 }
 
 // Helper to parse HH:MM or HH:MM:SS time string into a full time.Time on a specific date/location
