@@ -15,13 +15,18 @@ type Service struct {
 	Branches   []*Branch
 }
 
-func (s *Service) Create(status int, token string) error {
+func (s *Service) Create(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/service").
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(DTO.CreateService{
 			Name:        lib.GenerateRandomName("Service"),
 			Description: lib.GenerateRandomName("Description"),
@@ -36,16 +41,21 @@ func (s *Service) Create(status int, token string) error {
 	return nil
 }
 
-func (s *Service) Update(status int, changes map[string]any, token string) error {
+func (s *Service) Update(status int, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	if len(changes) == 0 {
 		return fmt.Errorf("no changes provided")
+	}
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
 	}
 	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(changes).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -54,13 +64,18 @@ func (s *Service) Update(status int, changes map[string]any, token string) error
 	return nil
 }
 
-func (s *Service) GetById(status int, token string) error {
+func (s *Service) GetById(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(nil).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -69,13 +84,18 @@ func (s *Service) GetById(status int, token string) error {
 	return nil
 }
 
-func (s *Service) GetByName(status int, token string) error {
+func (s *Service) GetByName(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL("/service/name/"+s.Created.Name).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(nil).
 		ParseResponse(&s.Created).
 		Error; err != nil {
@@ -84,13 +104,18 @@ func (s *Service) GetByName(status int, token string) error {
 	return nil
 }
 
-func (s *Service) Delete(status int, token string) error {
+func (s *Service) Delete(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL("/service/"+fmt.Sprintf("%v", s.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Company, s.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete service: %w", err)

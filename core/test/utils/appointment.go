@@ -253,83 +253,83 @@ func parseTimeWithLocation(targetDate time.Time, timeStr string, loc *time.Locat
 	), nil
 }
 
-// findNextAvailableSlot attempts to find the next available start time for an employee
-// based on their work schedule, starting from the one provided.
-// NOTE: This is a simplified helper for testing and might not cover all edge cases.
-// Renamed and modified to handle full timestamps
-func findNextAvailableSlotRFC3339(employee *modelT.Employee, currentStartTimeRFC3339 string) (string, error) {
-	layoutRFC3339 := time.RFC3339
-	start, err := time.Parse(layoutRFC3339, currentStartTimeRFC3339)
-	if err != nil {
-		return "", fmt.Errorf("Failed to parse current start time RFC3339 '%s': %v", currentStartTimeRFC3339, err)
-	}
+// // findNextAvailableSlot attempts to find the next available start time for an employee
+// // based on their work schedule, starting from the one provided.
+// // NOTE: This is a simplified helper for testing and might not cover all edge cases.
+// // Renamed and modified to handle full timestamps
+// func findNextAvailableSlotRFC3339(employee *modelT.Employee, currentStartTimeRFC3339 string) (string, error) {
+// 	layoutRFC3339 := time.RFC3339
+// 	start, err := time.Parse(layoutRFC3339, currentStartTimeRFC3339)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to parse current start time RFC3339 '%s': %v", currentStartTimeRFC3339, err)
+// 	}
 
-	// --- Service Duration calculation (remains similar) ---
-	if len(employee.Services) == 0 {
-		return "", fmt.Errorf("Employee has no services, cannot determine next slot based on duration.")
-	}
-	duration := time.Duration(employee.Services[0].Created.Duration) * time.Minute
-	nextPossibleStart := start.Add(duration)
+// 	// --- Service Duration calculation (remains similar) ---
+// 	if len(employee.Services) == 0 {
+// 		return "", fmt.Errorf("employee has no services, cannot determine next slot based on duration.")
+// 	}
+// 	duration := time.Duration(employee.Services[0].Created.Duration) * time.Minute
+// 	nextPossibleStart := start.Add(duration)
 
-	// --- Schedule Check (Now uses the date from input timestamp) ---
-	schedule := employee.Created.WorkSchedule
-	targetDate := start     // Use the date from the input timestamp
-	loc := start.Location() // Preserve the timezone/location
+// 	// --- Schedule Check (Now uses the date from input timestamp) ---
+// 	schedule := employee.Created.WorkSchedule
+// 	targetDate := start     // Use the date from the input timestamp
+// 	loc := start.Location() // Preserve the timezone/location
 
-	// Get the day schedule based on the start time's day of the week
-	dayOfWeek := targetDate.Weekday()
-	var daySchedule []mJSON.WorkRange
-	switch dayOfWeek {
-	case time.Monday:
-		daySchedule = schedule.Monday
-	case time.Tuesday:
-		daySchedule = schedule.Tuesday
-	case time.Wednesday:
-		daySchedule = schedule.Wednesday
-	case time.Thursday:
-		daySchedule = schedule.Thursday
-	case time.Friday:
-		daySchedule = schedule.Friday
-	case time.Saturday:
-		daySchedule = schedule.Saturday
-	case time.Sunday:
-		daySchedule = schedule.Sunday
-	}
+// 	// Get the day schedule based on the start time's day of the week
+// 	dayOfWeek := targetDate.Weekday()
+// 	var daySchedule []mJSON.WorkRange
+// 	switch dayOfWeek {
+// 	case time.Monday:
+// 		daySchedule = schedule.Monday
+// 	case time.Tuesday:
+// 		daySchedule = schedule.Tuesday
+// 	case time.Wednesday:
+// 		daySchedule = schedule.Wednesday
+// 	case time.Thursday:
+// 		daySchedule = schedule.Thursday
+// 	case time.Friday:
+// 		daySchedule = schedule.Friday
+// 	case time.Saturday:
+// 		daySchedule = schedule.Saturday
+// 	case time.Sunday:
+// 		daySchedule = schedule.Sunday
+// 	}
 
-	if len(daySchedule) == 0 {
-		return "", fmt.Errorf("No work schedule found for employee %s on %s.", employee.Created.ID, dayOfWeek)
-	}
+// 	if len(daySchedule) == 0 {
+// 		return "", fmt.Errorf("No work schedule found for employee %s on %s.", employee.Created.ID, dayOfWeek)
+// 	}
 
-	timeLayout := "15:04" // Layout for parsing schedule times HH:MM
+// 	timeLayout := "15:04" // Layout for parsing schedule times HH:MM
 
-	for _, block := range daySchedule {
-		blockStartTimeStr := block.Start
-		blockEndTimeStr := block.End
+// 	for _, block := range daySchedule {
+// 		blockStartTimeStr := block.Start
+// 		blockEndTimeStr := block.End
 
-		// Parse the block start/end times *relative to the targetDate's date and location*
-		blockStartParsed, err := time.ParseInLocation(timeLayout, blockStartTimeStr, loc)
-		if err != nil {
-			return "", fmt.Errorf("Warn: bad block start time %s: %v", blockStartTimeStr, err)
-		}
-		blockEndParsed, err := time.ParseInLocation(timeLayout, blockEndTimeStr, loc)
-		if err != nil {
-			return "", fmt.Errorf("Warn: bad block end time %s: %v", blockEndTimeStr, err)
-		}
+// 		// Parse the block start/end times *relative to the targetDate's date and location*
+// 		blockStartParsed, err := time.ParseInLocation(timeLayout, blockStartTimeStr, loc)
+// 		if err != nil {
+// 			return "", fmt.Errorf("Warn: bad block start time %s: %v", blockStartTimeStr, err)
+// 		}
+// 		blockEndParsed, err := time.ParseInLocation(timeLayout, blockEndTimeStr, loc)
+// 		if err != nil {
+// 			return "", fmt.Errorf("Warn: bad block end time %s: %v", blockEndTimeStr, err)
+// 		}
 
-		// Construct full datetime objects for the block boundaries on the target date
-		blockStartDateTime := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(),
-			blockStartParsed.Hour(), blockStartParsed.Minute(), 0, 0, loc)
-		blockEndDateTime := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(),
-			blockEndParsed.Hour(), blockEndParsed.Minute(), 0, 0, loc)
+// 		// Construct full datetime objects for the block boundaries on the target date
+// 		blockStartDateTime := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(),
+// 			blockStartParsed.Hour(), blockStartParsed.Minute(), 0, 0, loc)
+// 		blockEndDateTime := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(),
+// 			blockEndParsed.Hour(), blockEndParsed.Minute(), 0, 0, loc)
 
-		// Check if the calculated nextPossibleStart fits within this block
-		if !nextPossibleStart.Before(blockStartDateTime) && !nextPossibleStart.Add(duration).After(blockEndDateTime) {
-			return nextPossibleStart.Format(layoutRFC3339), nil // Return the RFC3339 string
-		}
-	}
+// 		// Check if the calculated nextPossibleStart fits within this block
+// 		if !nextPossibleStart.Before(blockStartDateTime) && !nextPossibleStart.Add(duration).After(blockEndDateTime) {
+// 			return nextPossibleStart.Format(layoutRFC3339), nil // Return the RFC3339 string
+// 		}
+// 	}
 
-	return "", fmt.Errorf("Could not find next available slot after %s for employee %s.", currentStartTimeRFC3339, employee.Created.ID)
-}
+// 	return "", fmt.Errorf("Could not find next available slot after %s for employee %s.", currentStartTimeRFC3339, employee.Created.ID)
+// }
 
 func isEmployeeAssignedToBranch(e *modelT.Employee, branchID uuid.UUID) bool {
 	for _, b := range e.Branches {
@@ -363,10 +363,10 @@ func RescheduleAppointmentRandomly(s int, employee *modelT.Employee, company *mo
 		}).Error; err != nil {
 		return fmt.Errorf("failed to reschedule appointment: %w", err)
 	}
-	if err := employee.GetById(200); err != nil {
+	if err := employee.GetById(200, nil, nil); err != nil {
 		return err
 	}
-	if err := company.GetById(200); err != nil {
+	if err := company.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
 		return err
 	}
 	return nil
@@ -401,13 +401,13 @@ func CreateAppointmentRandomly(s int, company *modelT.Company, client *modelT.Cl
 	if a != nil {
 		http.ParseResponse(&a.Created)
 	}
-	if err := company.GetById(200); err != nil {
+	if err := company.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
 		return err
 	}
 	if err := client.GetByEmail(200); err != nil {
 		return err
 	}
-	if err := employee.GetById(200); err != nil {
+	if err := employee.GetById(200, nil, nil); err != nil {
 		return err
 	}
 	return nil

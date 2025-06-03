@@ -87,7 +87,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	if fullCompany, err := company.GetFullCompany(tx); err != nil {
 		return err
 	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.Company{}); err != nil {
+		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -126,7 +126,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 	if full_c, err := company.GetFullCompany(tx); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -170,7 +170,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 	if full_c, err := company.GetFullCompany(tx); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -209,7 +209,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 	if full_c, err := company.GetFullCompany(tx); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -260,7 +260,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.CompanyPublic{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &company, &DTO.CompanyBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -302,7 +302,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 	if full_c, err := company.GetFullCompany(tx); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	} else {
-		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.Company{}); err != nil {
+		if err := lib.ResponseFactory(c).SendDTO(200, full_c, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}

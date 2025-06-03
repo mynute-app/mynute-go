@@ -9,21 +9,24 @@ import (
 	handler "agenda-kaki-go/core/test/handlers"
 	"encoding/json"
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
 type Appointment struct {
 	Created model.Appointment
 }
 
-func (a *Appointment) Create(status int, auth_token string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
+func (a *Appointment) Create(status int, x_auth_token string, x_company_id *string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
+	companyIDStr := cy.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	http := handler.NewHttpClient()
 	http.Method("POST")
 	http.URL("/appointment")
 	http.ExpectedStatus(status)
-	http.Header(namespace.HeadersKey.Company, cy.Created.ID.String())
-	http.Header(namespace.HeadersKey.Auth, auth_token)
+	http.Header(namespace.HeadersKey.Company, cID)
+	http.Header(namespace.HeadersKey.Auth, x_auth_token)
 	if startTime == nil {
 		tempStartTime := lib.GenerateDateRFC3339(2027, 10, 29)
 		startTime = &tempStartTime
@@ -38,16 +41,16 @@ func (a *Appointment) Create(status int, auth_token string, startTime *string, b
 	}
 	http.Send(A)
 	http.ParseResponse(&a.Created)
-	if err := b.GetById(200); err != nil {
+	if err := b.GetById(200, x_auth_token, x_company_id); err != nil {
 		return err
 	}
-	if err := e.GetById(200); err != nil {
+	if err := e.GetById(200, nil, x_company_id); err != nil {
 		return err
 	}
-	if err := s.GetById(200, nil); err != nil {
+	if err := s.GetById(200, x_auth_token, x_company_id); err != nil {
 		return err
 	}
-	if err := cy.GetById(200); err != nil {
+	if err := cy.GetById(200, x_auth_token, x_company_id); err != nil {
 		return err
 	}
 	if err := ct.GetByEmail(200); err != nil {
@@ -68,30 +71,37 @@ func (a *Appointment) Create(status int, auth_token string, startTime *string, b
 	return nil
 }
 
-func (a *Appointment) GetById(s int, appointment_id, company_id, token string) error {
+func (a *Appointment) GetById(s int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := a.Created.CompanyID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL("/appointment/"+appointment_id).
+		URL("/appointment/"+a.Created.ID.String()).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, token).
-		Header(namespace.HeadersKey.Company, company_id).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).
 		ParseResponse(&a.Created).Error; err != nil {
-		return fmt.Errorf("failed to get appointment %s: %w", appointment_id, err)
+		return fmt.Errorf("failed to get appointment %s: %w", a.Created.ID.String(), err)
 	}
 	return nil
 }
 
-func (a *Appointment) Cancel(s int, token string) error {
-	if a.Created.ID == uuid.Nil {
-		return fmt.Errorf("appointment not created, cannot cancel")
+func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := a.Created.CompanyID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
 	}
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL("/appointment/"+a.Created.ID.String()).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, token).
-		Header(namespace.HeadersKey.Company, a.Created.CompanyID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to cancel appointment %s: %w", a.Created.ID.String(), err)
 	}

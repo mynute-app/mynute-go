@@ -39,35 +39,33 @@ type WorkSchedule struct {
 }
 
 type WorkRange struct {
-	Start    string    `json:"start"` // Store as "15:30:00"
-	End      string    `json:"end"`   // Store as "18:00:00"
-	BranchID uuid.UUID `json:"branch_id"`
+	Start    string      `json:"start"` // Store as "15:30:00"
+	End      string      `json:"end"`   // Store as "18:00:00"
+	BranchID uuid.UUID   `json:"branch_id"`
 	Services []uuid.UUID `json:"services"` // Store as UUIDs
 }
 
-type Employee struct {
-	ID           uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	Name         string             `json:"name" example:"John"`
-	Surname      string             `json:"surname" example:"Doe"`
-	Email        string             `json:"email" example:"john.doe@example.com"`
-	Phone        string             `json:"phone" example:"+15555555555"`
-	Tags         []string           `json:"tags" example:"[\"tag1\", \"tag2\"]"`
-	Verified     bool               `json:"verified" example:"true"`
-	WorkSchedule WorkSchedule       `json:"work_schedule"`
-	Appointments []Appointment      `json:"appointments"`
-	CompanyID    uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Branches     []BranchPopulated  `json:"branches"`
-	Services     []ServicePopulated `json:"services"`
-	Roles        []RolePopulated    `json:"roles"`
+// @description	Employee Full DTO
+// @name			EmployeeFullDTO
+// @tag.name		employee.full.dto
+type EmployeeFull struct {
+	EmployeeBase
+	Verified     bool            `json:"verified" example:"true"`
+	WorkSchedule WorkSchedule    `json:"work_schedule"`
+	Appointments []Appointment   `json:"appointments"`
+	Branches     []BranchBase    `json:"branches"`
+	Services     []ServiceBase   `json:"services"`
+	Roles        []RolePopulated `json:"roles"`
 }
 
-type EmployeePopulated struct {
+// @description	Employee Base DTO
+// @name			EmployeeBaseDTO
+// @tag.name		employee.base.dto
+type EmployeeBase struct {
 	ID        uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	Name      string    `json:"name" example:"John"`
 	Surname   string    `json:"surname" example:"Doe"`
-	Role      string    `json:"role" example:"client"`
 	Email     string    `json:"email" example:"john.doe@example.com"`
 	Phone     string    `json:"phone" example:"+15555555555"`
-	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Tags      []string  `json:"tags" example:"[\"tag1\", \"tag2\"]"`
 }

@@ -18,19 +18,17 @@ func Test_Service(t *testing.T) {
 	company := &modelT.Company{}
 	tt.Test(company.Set(), "Company setup")
 	service := &modelT.Service{}
-	service.X_Auth_Token = company.Owner.X_Auth_Token
 	service.Company = company
-	tt.Test(service.Create(200), "Service creation")
+	tt.Test(service.Create(200, company.Owner.X_Auth_Token, nil), "Service creation")
 	tt.Test(service.Update(200, map[string]any{
 		"name": lib.GenerateRandomName("Updated Service"),
-	}), "Service update")
-	tt.Test(service.GetById(200, nil), "Service get by ID")
-	tt.Test(service.GetByName(200), "Service get by name")
+	}, company.Owner.X_Auth_Token, nil), "Service update")
+	tt.Test(service.GetById(200, company.Owner.X_Auth_Token, nil), "Service get by ID")
+	tt.Test(service.GetByName(200, company.Owner.X_Auth_Token, nil), "Service get by name")
 	branch := &modelT.Branch{}
-	branch.X_Auth_Token = company.Owner.X_Auth_Token
 	branch.Company = company
-	tt.Test(branch.Create(200), "Branch creation")
-	tt.Test(branch.AddService(200, service, nil), "Branch add service")
-	tt.Test(service.Delete(200), "Service deletion")
-	tt.Test(branch.Delete(200), "Branch deletion")
+	tt.Test(branch.Create(200, company.Owner.X_Auth_Token, nil), "Branch creation")
+	tt.Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil), "Branch add service")
+	tt.Test(service.Delete(200, company.Owner.X_Auth_Token, nil), "Service deletion")
+	tt.Test(branch.Delete(200, company.Owner.X_Auth_Token, nil), "Branch deletion")
 }

@@ -39,7 +39,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -174,7 +174,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -200,7 +200,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 	if err := GetOneBy("email", c, &employee); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -227,7 +227,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 	if err := UpdateOneById(c, &employee); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -292,7 +292,7 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -338,7 +338,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -384,7 +384,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -430,7 +430,7 @@ func RemoveBranchFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -461,7 +461,7 @@ func AddRoleToEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -492,7 +492,7 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.Employee{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

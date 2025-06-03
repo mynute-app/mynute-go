@@ -43,7 +43,7 @@ func Test_Appointment(t *testing.T) {
 	tt.Test(err, "Getting branch for slot 0")
 	serviceForSlot0, err := utilsT.GetServiceByID(cy, slot0.ServiceID)
 	tt.Test(err, "Getting service for slot 0")
-	a[0].Create(200, ct.X_Auth_Token, &slot0.StartTimeRFC3339, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
+	a[0].Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
 
 	// --- Test Case 1: Another successful creation by client ---
 	// The employee's appointments list (baseEmployee.Created.Appointments) should have been updated by a[0].Create(),
@@ -59,7 +59,7 @@ func Test_Appointment(t *testing.T) {
 	tt.Test(err, "Getting branch for slot 1")
 	serviceForSlot1, err := utilsT.GetServiceByID(cy, slot1.ServiceID)
 	tt.Test(err, "Getting service for slot 1")
-	a[1].Create(200, ct.X_Auth_Token, &slot1.StartTimeRFC3339, branchForSlot1, baseEmployee, serviceForSlot1, cy, ct)
+	a[1].Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, branchForSlot1, baseEmployee, serviceForSlot1, cy, ct)
 
 	// --- Test Case 2: Successful creation by company owner ---
 	a = append(a, &modelT.Appointment{})
@@ -73,7 +73,7 @@ func Test_Appointment(t *testing.T) {
 	tt.Test(err, "Getting branch for slot 2")
 	serviceForSlot2, err := utilsT.GetServiceByID(cy, slot2.ServiceID)
 	tt.Test(err, "Getting service for slot 2")
-	a[2].Create(200, cy.Owner.X_Auth_Token, &slot2.StartTimeRFC3339, branchForSlot2, baseEmployee, serviceForSlot2, cy, ct)
+	a[2].Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, branchForSlot2, baseEmployee, serviceForSlot2, cy, ct)
 
 	// --- Test Case 3: Attempt to create conflicting appointment (expects 400) ---
 	// This test uses the details of the first successfully created appointment (a[0]) to force a conflict.
@@ -85,5 +85,5 @@ func Test_Appointment(t *testing.T) {
 	// The branch, employee, service must be the same as a[0] to ensure a direct conflict.
 	// branchForSlot0, baseEmployee, serviceForSlot0 are already the correct objects.
 	a = append(a, &modelT.Appointment{})
-	a[3].Create(409, ct.X_Auth_Token, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
+	a[3].Create(409, ct.X_Auth_Token, nil, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct)
 }

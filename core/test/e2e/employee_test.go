@@ -16,9 +16,9 @@ func Test_Employee(t *testing.T) {
 	tt := handlerT.NewTestErrorHandler(t)
 	tt.Test(company.Set(), "Company setup") // This sets up company, employees (with schedules), branches, services.
 	employee := company.Employees[0]
-	tt.Test(employee.GetById(200), "Employee get by ID")
-	tt.Test(employee.GetByEmail(200), "Employee get by email")
-	tt.Test(employee.Update(200, map[string]any{"name": "Updated Employee Name xD"}), "Employee update")
+	tt.Test(employee.GetById(200, nil, nil), "Employee get by ID")
+	tt.Test(employee.GetByEmail(200, nil, nil), "Employee get by email")
+	tt.Test(employee.Update(200, map[string]any{"name": "Updated Employee Name xD"}, nil, nil), "Employee update")
 	tt.Test(employee.Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
 		{
 			Monday: []mJSON.WorkRange{
@@ -39,6 +39,6 @@ func Test_Employee(t *testing.T) {
 			},
 			Sunday: []mJSON.WorkRange{},
 		},
-	}}), "Employee update work schedule")
-	tt.Test(employee.Delete(200), "Employee deletion")
+	}}, nil, nil), "Employee update work schedule")
+	tt.Test(employee.Delete(200, nil, nil), "Employee deletion")
 }

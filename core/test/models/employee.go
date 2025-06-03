@@ -17,15 +17,24 @@ type Employee struct {
 	Branches     []*Branch
 }
 
-func (e *Employee) Create(s int) error {
+func (e *Employee) Create(s int, x_auth_token *string, x_company_id *string) error {
 	pswd := "1SecurePswd!"
 
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/employee").
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Send(DTO.CreateEmployee{
 			CompanyID: e.Company.Created.ID,
 			Name:      lib.GenerateRandomName("Employee Name"),
@@ -42,16 +51,25 @@ func (e *Employee) Create(s int) error {
 	return nil
 }
 
-func (e *Employee) Update(s int, changes map[string]any) error {
+func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x_company_id *string) error {
 	if len(changes) == 0 {
 		return fmt.Errorf("no changes provided")
+	}
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
 	}
 	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL(fmt.Sprintf("/employee/%s", e.Created.ID.String())).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Send(changes).
 		ParseResponse(&e.Created).
 		Error; err != nil {
@@ -60,13 +78,22 @@ func (e *Employee) Update(s int, changes map[string]any) error {
 	return nil
 }
 
-func (e *Employee) GetById(s int) error {
+func (e *Employee) GetById(s int, x_auth_token *string, x_company_id *string) error {
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/employee/%s", e.Created.ID.String())).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Send(nil).
 		ParseResponse(&e.Created).
 		Error; err != nil {
@@ -75,13 +102,22 @@ func (e *Employee) GetById(s int) error {
 	return nil
 }
 
-func (e *Employee) GetByEmail(s int) error {
+func (e *Employee) GetByEmail(s int, x_auth_token *string, x_company_id *string) error {
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/employee/email/%s", e.Created.Email)).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Send(nil).
 		ParseResponse(&e.Created).
 		Error; err != nil {
@@ -90,13 +126,22 @@ func (e *Employee) GetByEmail(s int) error {
 	return nil
 }
 
-func (e *Employee) Delete(s int) error {
+func (e *Employee) Delete(s int, x_auth_token *string, x_company_id *string) error {
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL(fmt.Sprintf("/employee/%s", e.Created.ID.String())).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Company.Created.ID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete employee: %w", err)
@@ -104,17 +149,22 @@ func (e *Employee) Delete(s int) error {
 	return nil
 }
 
-func (e *Employee) Login(s int) error {
+func (e *Employee) Login(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	login := DTO.LoginEmployee{
 		Email:    e.Created.Email,
 		Password: e.Created.Password,
 	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := http.
 		Method("POST").
 		URL("/employee/login").
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Created.CompanyID.String()).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(login).Error; err != nil {
 		return fmt.Errorf("failed to login employee: %w", err)
 	}
@@ -126,13 +176,17 @@ func (e *Employee) Login(s int) error {
 	return nil
 }
 
-func (e *Employee) VerifyEmail(s int) error {
+func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL(fmt.Sprintf("/employee/verify-email/%s/%s", e.Created.Email, "12345")).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, e.Created.CompanyID.String()).
-		Header(namespace.HeadersKey.Auth, e.Company.X_Auth_Token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to verify employee email: %w", err)
@@ -143,7 +197,7 @@ func (e *Employee) VerifyEmail(s int) error {
 func (e *Employee) CreateBranch(s int) error {
 	Branch := &Branch{}
 	Branch.Company = e.Company
-	if err := Branch.Create(s); err != nil {
+	if err := Branch.Create(s, e.X_Auth_Token, nil); err != nil {
 		return fmt.Errorf("failed to create branch: %w", err)
 	}
 	e.Company.Branches = append(e.Company.Branches, Branch)
@@ -153,7 +207,7 @@ func (e *Employee) CreateBranch(s int) error {
 func (e *Employee) CreateService(s int) error {
 	Service := &Service{}
 	Service.Company = e.Company
-	if err := Service.Create(s, e.X_Auth_Token); err != nil {
+	if err := Service.Create(s, e.X_Auth_Token, nil); err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
 	e.Company.Services = append(e.Company.Services, Service)
@@ -165,7 +219,8 @@ func (e *Employee) AddBranch(s int, branch *Branch, token *string, x_company_id 
 	if err != nil {
 		return err
 	}
-	cID, err := get_x_company_id(e.Company, x_company_id)
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -179,7 +234,7 @@ func (e *Employee) AddBranch(s int, branch *Branch, token *string, x_company_id 
 		Error; err != nil {
 		return fmt.Errorf("failed to add branch to employee: %w", err)
 	}
-	if err := branch.GetById(s); err != nil {
+	if err := branch.GetById(s, t, nil); err != nil {
 		return fmt.Errorf("failed to get branch by ID after adding to employee: %w", err)
 	}
 	branch.Employees = append(branch.Employees, e)
@@ -191,7 +246,8 @@ func (e *Employee) AddService(s int, service *Service, token *string, x_company_
 	if err != nil {
 		return err
 	}
-	cID, err := get_x_company_id(e.Company, x_company_id)
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -214,7 +270,8 @@ func (e *Employee) AddRole(s int, role *Role, x_auth_token *string, x_company_id
 	if err != nil {
 		return err
 	}
-	cID, err := get_x_company_id(&e.Company.Created.ID.String(), x_company_id)
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}

@@ -32,19 +32,20 @@ func (c *Company) Set() error {
 	if err := c.Create(200); err != nil {
 		return err
 	}
+	cOwnerToken := c.Owner.X_Auth_Token
 	for range 3 {
 		employee := &Employee{}
 		employee.Company = c
-		if err := employee.Create(200); err != nil {
+		if err := employee.Create(200, &cOwnerToken, nil); err != nil {
 			return err
 		}
-		if err := employee.VerifyEmail(200); err != nil {
+		if err := employee.VerifyEmail(200, nil); err != nil {
 			return err
 		}
-		if err := employee.Login(200); err != nil {
+		if err := employee.Login(200, nil); err != nil {
 			return err
 		}
-		if err := employee.GetById(200); err != nil {
+		if err := employee.GetById(200, nil, nil); err != nil {
 			return err
 		}
 		c.Employees = append(c.Employees, employee)
@@ -53,10 +54,10 @@ func (c *Company) Set() error {
 	for range 2 {
 		service := &Service{}
 		service.Company = c
-		if err := service.Create(200, c.Owner.X_Auth_Token); err != nil {
+		if err := service.Create(200, cOwnerToken, nil); err != nil {
 			return err
 		}
-		if err := service.GetById(200, c.Owner.X_Auth_Token); err != nil {
+		if err := service.GetById(200, cOwnerToken, nil); err != nil {
 			return err
 		}
 		c.Services = append(c.Services, service)
@@ -64,28 +65,27 @@ func (c *Company) Set() error {
 
 	for range 1 {
 		branch := &Branch{}
-		branch.X_Auth_Token = c.Owner.X_Auth_Token
 		branch.Company = c
-		if err := branch.Create(200, c.Owner.X_Auth_Token); err != nil {
+		if err := branch.Create(200, c.Owner.X_Auth_Token, nil); err != nil {
 			return err
 		}
-		if err := branch.GetById(200, c.Owner.X_Auth_Token); err != nil {
+		if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
 			return err
 		}
 		c.Branches = append(c.Branches, branch)
 	}
 
-	if err := c.GetById(200, c.Owner.X_Auth_Token); err != nil {
+	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
 		return err
 	}
 	for _, employee := range c.Employees {
 		for _, branch := range c.Branches {
-			if err := employee.AddBranch(200, branch, &c.Owner.X_Auth_Token); err != nil {
+			if err := employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %s to branch %s: %v", employee.Created.Email, branch.Created.Name, err)
 			}
 		}
 		for _, service := range c.Services {
-			if err := employee.AddService(200, service, &c.Owner.X_Auth_Token); err != nil {
+			if err := employee.AddService(200, service, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
 			}
 		}
@@ -117,14 +117,14 @@ func (c *Company) Set() error {
 				},
 				Sunday: []mJSON.WorkRange{},
 			},
-		}}); err != nil {
+		}}, nil, nil); err != nil {
 			return err
 		}
 	}
 
 	if err := c.UploadImages(200, map[string][]byte{
 		"logo": FileBytes.PNG_FILE_1,
-	}); err != nil {
+	}, c.Owner.X_Auth_Token, nil); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ func (c *Company) SetupRandomized(numEmployees, numBranches, numServices int) er
 		return err
 	}
 
-	if err := c.GetById(200); err != nil {
+	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
 		return err
 	}
 
@@ -199,8 +199,6 @@ func (c *Company) GenerateEmployees(n int) error {
 		return fmt.Errorf("employee generation failed: n must be greater than 0")
 	} else if c.Created.ID == uuid.Nil {
 		return fmt.Errorf("employee generation failed: Company ID is nil")
-	} else if c.X_Auth_Token == "" {
-		return fmt.Errorf("employee generation failed: Company Auth Token is empty")
 	}
 
 	initialEmployeeCount := len(c.Employees)
@@ -208,7 +206,7 @@ func (c *Company) GenerateEmployees(n int) error {
 
 	for i := range n {
 		employee := &Employee{Company: c}
-		if err := employee.Create(200); err != nil {
+		if err := employee.Create(200, &c.Owner.X_Auth_Token, nil); err != nil {
 			return err
 		}
 
@@ -219,10 +217,10 @@ func (c *Company) GenerateEmployees(n int) error {
 		createdCount++
 		fmt.Printf("Generated employee %d/%d: ID %s, Email %s", i+1, n, employee.Created.ID, employee.Created.Email)
 
-		if err := employee.VerifyEmail(200); err != nil {
+		if err := employee.VerifyEmail(200, nil); err != nil {
 			return err
 		}
-		if err := employee.Login(200); err != nil {
+		if err := employee.Login(200, nil); err != nil {
 			return err
 		}
 
@@ -251,16 +249,14 @@ func (c *Company) GenerateBranches(n int) error {
 		return fmt.Errorf("branch generation failed: n must be greater than 0")
 	} else if c.Created.ID == uuid.Nil {
 		return fmt.Errorf("branch generation failed: Company ID is nil")
-	} else if c.X_Auth_Token == "" {
-		return fmt.Errorf("branch generation failed: Company Auth Token is empty")
 	}
 
 	initialBranchCount := len(c.Branches)
 	createdCount := 0
 
 	for i := range n {
-		branch := &Branch{Company: c, Auth_token: c.X_Auth_Token}
-		if err := branch.Create(200); err != nil {
+		branch := &Branch{Company: c}
+		if err := branch.Create(200, c.Owner.X_Auth_Token, nil); err != nil {
 			return fmt.Errorf("failed to create branch %d/%d: %v", i+1, n, err)
 		}
 
@@ -290,8 +286,6 @@ func (c *Company) GenerateServices(n int) error {
 		return fmt.Errorf("service generation failed: n must be greater than 0, Company ID must not be nil, and Auth Token must not be empty")
 	} else if c.Created.ID == uuid.Nil {
 		return fmt.Errorf("service generation failed: Company ID is nil")
-	} else if c.X_Auth_Token == "" {
-		return fmt.Errorf("service generation failed: Company Auth Token is empty")
 	}
 
 	initialServiceCount := len(c.Services)
@@ -299,7 +293,7 @@ func (c *Company) GenerateServices(n int) error {
 
 	for i := range n {
 		service := &Service{Company: c}
-		if err := service.Create(200, c.Owner.X_Auth_Token); err != nil {
+		if err := service.Create(200, c.Owner.X_Auth_Token, nil); err != nil {
 			return fmt.Errorf("failed to create service %d/%d: %v", i+1, n, err)
 		}
 
@@ -366,7 +360,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 				branchIndex, branch.Created.Name, branch.Created.ID)
 
 			// Use owner token for privilege when assigning employees to branches
-			if err := employee.AddBranch(200, branch, &c.X_Auth_Token); err != nil {
+			if err := employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %d (%s, ID: %s) to branch %d (%s, ID: %s): %v",
 					i, employee.Created.Email, employee.Created.ID,
 					branchIndex, branch.Created.Name, branch.Created.ID, err)
@@ -419,7 +413,7 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 				i, employee.Created.Email, employee.Created.ID)
 
 			// Use Employee.AddService, assumes employee's token is used
-			if err := employee.AddService(200, service, nil); err != nil {
+			if err := employee.AddService(200, service, nil, nil); err != nil {
 				return fmt.Errorf("failed to assign service %d (%s, ID: %s) to employee %d (%s, ID: %s): %v",
 					serviceIndex, service.Created.Name, service.Created.ID,
 					i, employee.Created.Email, employee.Created.ID, err)
@@ -471,7 +465,7 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 				i, branch.Created.Name, branch.Created.ID)
 
 			// Use Branch.AddService method. Use owner's token implicitly (branch.X_Auth_Token or nil param).
-			if err := branch.AddService(200, service, nil); err != nil {
+			if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign service %d (%s, ID: %s) to branch %d (%s, ID: %s): %v",
 					serviceIndex, service.Created.Name, service.Created.ID,
 					i, branch.Created.Name, branch.Created.ID, err)
@@ -520,7 +514,7 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 		}
 
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
-		if err := employee.Update(200, payload); err != nil {
+		if err := employee.Update(200, payload, nil, nil); err != nil {
 			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v",
 				i, employee.Created.Email, err)
 		}
@@ -683,15 +677,14 @@ func (c *Company) Create(status int) error {
 		Company: c,
 		Created: owner,
 	}
-	if err := c.Owner.VerifyEmail(200); err != nil {
+	if err := c.Owner.VerifyEmail(200, nil); err != nil {
 		return fmt.Errorf("failed to verify owner email: %w", err)
 	}
-	if err := c.Owner.Login(200); err != nil {
+	if err := c.Owner.Login(200, nil); err != nil {
 		return fmt.Errorf("failed to login owner: %w", err)
 	}
 	c.Employees = append(c.Employees, c.Owner)
-	c.X_Auth_Token = c.Owner.X_Auth_Token
-	if err := c.Owner.GetById(200); err != nil {
+	if err := c.Owner.GetById(200, nil, nil); err != nil {
 		return err
 	}
 	if c.Created.ID == uuid.Nil {
@@ -706,11 +699,18 @@ func (c *Company) Create(status int) error {
 	return nil
 }
 
-func (c *Company) GetByName(status int) error {
+func (c *Company) GetByName(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/Company/name/%s", c.Created.LegalName)).
 		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to get company by name: %w", err)
@@ -720,7 +720,6 @@ func (c *Company) GetByName(status int) error {
 }
 
 func (c *Company) GetBySubdomain(status int) error {
-
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/Company/subdomain/%s", c.Created.Subdomains[0].Name)).
@@ -733,11 +732,18 @@ func (c *Company) GetBySubdomain(status int) error {
 	return nil
 }
 
-func (c *Company) GetById(status int) error {
+func (c *Company) GetById(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("GET").
 		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to get company by id: %w", err)
@@ -746,13 +752,18 @@ func (c *Company) GetById(status int) error {
 	return nil
 }
 
-func (c *Company) Update(status int, changes map[string]any) error {
+func (c *Company) Update(status int, changes map[string]any, x_auth_token string, x_company_id *string) error {
+	var companyIDStr = c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, c.X_Auth_Token).
-		Header(namespace.HeadersKey.Company, c.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(changes).
 		Error; err != nil {
 		return fmt.Errorf("failed to update company: %w", err)
@@ -761,13 +772,18 @@ func (c *Company) Update(status int, changes map[string]any) error {
 	return nil
 }
 
-func (c *Company) Delete(status int) error {
+func (c *Company) Delete(status int, x_auth_token string, x_company_id *string) error {
+	var companyIDStr = c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, c.X_Auth_Token).
-		Header(namespace.HeadersKey.Company, c.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete company: %w", err)
@@ -776,7 +792,7 @@ func (c *Company) Delete(status int) error {
 	return nil
 }
 
-func (c *Company) UploadImages(status int, files map[string][]byte) error {
+func (c *Company) UploadImages(status int, files map[string][]byte, x_auth_token string, x_company_id *string) error {
 	var fileMap = make(handler.Files)
 	for field, content := range files {
 		fileMap[field] = handler.MyFile{
@@ -785,12 +801,18 @@ func (c *Company) UploadImages(status int, files map[string][]byte) error {
 		}
 	}
 
+	companyIDStr := c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
 	if err := handler.NewHttpClient().
 		Method("PATCH").
 		URL(fmt.Sprintf("/Company/%s/design/images", c.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, c.X_Auth_Token).
-		Header(namespace.HeadersKey.Company, c.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(fileMap).
 		ParseResponse(&c.Created.Design.Images).
 		Error; err != nil {
@@ -800,9 +822,15 @@ func (c *Company) UploadImages(status int, files map[string][]byte) error {
 	return nil
 }
 
-func (c *Company) DeleteImages(status int, images []string, x_auth_token) error {
+func (c *Company) DeleteImages(status int, images []string, x_auth_token string, x_company_id *string) error {
 	if len(images) == 0 {
 		return fmt.Errorf("no images provided to delete")
+	}
+
+	createdCompanyID := c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &createdCompanyID)
+	if err != nil {
+		return fmt.Errorf("failed to get company ID for deletion: %w", err)
 	}
 
 	http := handler.NewHttpClient()
@@ -810,8 +838,8 @@ func (c *Company) DeleteImages(status int, images []string, x_auth_token) error 
 	if err := http.
 		Method("DELETE").
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, c.X_Auth_Token).
-		Header(namespace.HeadersKey.Company, c.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Error; err != nil {
 		return fmt.Errorf("failed to prepare delete images request: %w", err)
 	}
@@ -833,13 +861,18 @@ func (c *Company) DeleteImages(status int, images []string, x_auth_token) error 
 	return nil
 }
 
-func (c *Company) ChangeColors(status int, colors mJSON.Colors) error {
+func (c *Company) ChangeColors(status int, colors mJSON.Colors, x_auth_token string, x_company_id *string) error {
+	var companyIDStr = c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
 	if err := handler.NewHttpClient().
 		Method("PUT").
 		URL(fmt.Sprintf("/Company/%s/design/colors", c.Created.ID.String())).
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, c.X_Auth_Token).
-		Header(namespace.HeadersKey.Company, c.Created.ID.String()).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
 		Send(colors).
 		ParseResponse(&c.Created.Design.Colors).
 		Error; err != nil {
@@ -854,8 +887,6 @@ func (c *Company) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 	http.Method("GET")
 	http.URL(imageURL)
 	http.ExpectedStatus(status)
-	http.Header(namespace.HeadersKey.Auth, c.X_Auth_Token)
-	http.Header(namespace.HeadersKey.Company, c.Created.ID.String())
 	http.Send(nil)
 	// Compare the response bytes with the expected image bytes
 	if compareImgBytes != nil {

@@ -235,23 +235,29 @@ var CreateCompany = &EndPoint{
 	Description:    "Create a company",
 }
 var GetCompanyById = &EndPoint{
-	Path:           "/company/:id",
-	Method:         namespace.ViewActionMethod,
-	ControllerName: "GetCompanyById",
-	Description:    "View company by ID",
-	Resource:       CompanyResource,
+	Path:             "/company/:id",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetCompanyById",
+	Description:      "View company by ID",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         CompanyResource,
 }
 var GetCompanyByName = &EndPoint{
-	Path:           "/company/name/:name",
-	Method:         namespace.ViewActionMethod,
-	ControllerName: "GetCompanyByName",
-	Description:    "View company by name",
+	Path:             "/company/name/:name",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetCompanyByName",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Description:      "View company by name",
 }
 var GetCompanyByTaxId = &EndPoint{
-	Path:           "/company/tax_id/:tax_id",
-	Method:         namespace.ViewActionMethod,
-	ControllerName: "GetCompanyByTaxId",
-	Description:    "View company by tax ID",
+	Path:             "/company/tax_id/:tax_id",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetCompanyByTaxId",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Description:      "View company by tax ID",
 }
 var GetCompanyBySubdomain = &EndPoint{
 	Path:           "/company/subdomain/:subdomain_name",
