@@ -14,8 +14,6 @@ func Test_Branch(t *testing.T) {
 	company := &modelT.Company{}
 	tt := handlerT.NewTestErrorHandler(t)
 	tt.Test(company.Create(200), "Company creation")
-	tt.Test(company.Owner.VerifyEmail(200, nil), "Company owner email verification")
-	tt.Test(company.Owner.Login(200, nil), "Company owner login")
 	branch := &modelT.Branch{}
 	branch.Company = company
 	tt.Test(branch.Create(200, company.Owner.X_Auth_Token, nil), "Branch creation")

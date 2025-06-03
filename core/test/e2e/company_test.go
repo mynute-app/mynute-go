@@ -16,8 +16,6 @@ func Test_Company(t *testing.T) {
 	company := &modelT.Company{}
 	tt := handlerT.NewTestErrorHandler(t)
 	tt.Test(company.Create(200), "Company creation")
-	tt.Test(company.Owner.VerifyEmail(200, nil), "Company owner email verification")
-	tt.Test(company.Owner.Login(200, nil), "Company owner login")
 	tt.Test(company.Update(200, map[string]any{"design": mJSON.DesignConfig{
 		Colors: mJSON.Colors{
 			Primary:   "#FF5733",
