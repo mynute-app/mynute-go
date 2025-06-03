@@ -215,7 +215,7 @@ func (e *Employee) CreateService(s int) error {
 }
 
 func (e *Employee) AddBranch(s int, branch *Branch, token *string, x_company_id *string) error {
-	t, err := get_token(&e.X_Auth_Token, token)
+	t, err := get_token(token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (e *Employee) AddBranch(s int, branch *Branch, token *string, x_company_id 
 }
 
 func (e *Employee) AddService(s int, service *Service, token *string, x_company_id *string) error {
-	t, err := get_token(&e.X_Auth_Token, token)
+	t, err := get_token(token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}

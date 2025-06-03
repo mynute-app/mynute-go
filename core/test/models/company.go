@@ -92,28 +92,28 @@ func (c *Company) Set() error {
 		if err := employee.Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
 			{
 				Monday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Tuesday: []mJSON.WorkRange{
-					{Start: "09:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "18:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "09:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "18:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Wednesday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Thursday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Friday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Saturday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID},
+					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
 				},
 				Sunday: []mJSON.WorkRange{},
 			},

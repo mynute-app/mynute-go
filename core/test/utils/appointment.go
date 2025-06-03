@@ -1,6 +1,7 @@
 package utilsT
 
 import (
+	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
 	handlerT "agenda-kaki-go/core/test/handlers"
@@ -228,6 +229,98 @@ func FindValidAppointmentSlot(employee *modelT.Employee, company *modelT.Company
 	return slot, false, fmt.Errorf("no valid appointment slot found for employee %s in company %s within the search horizon", employee.Created.ID, company.Created.ID)
 }
 
+func FindValidAppointmentSlotV2(employee *model.Employee, preferredLocation *time.Location) (slot *FoundAppointmentSlot, found bool, err error) {
+	if preferredLocation == nil {
+		return nil, false, fmt.Errorf("preferredLocation is nil; timezone must be explicitly passed")
+	}
+	fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.ID.String())
+	fmt.Printf("PreferredLocation: %s, SlotSearchHorizon: %d days, TimeStep: %v\n", preferredLocation.String(), slotSearchHorizonDays, slotSearchTimeStep)
+
+	WorkSchedule := employee.WorkSchedule
+	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{
+		time.Sunday:    WorkSchedule.Sunday,
+		time.Monday:    WorkSchedule.Monday,
+		time.Tuesday:   WorkSchedule.Tuesday,
+		time.Wednesday: WorkSchedule.Wednesday,
+		time.Thursday:  WorkSchedule.Thursday,
+		time.Friday:    WorkSchedule.Friday,
+		time.Saturday:  WorkSchedule.Saturday,
+	}
+
+	nowInPreferredLocation := time.Now().In(preferredLocation)
+	searchStartDate := time.Date(nowInPreferredLocation.Year(), nowInPreferredLocation.Month(), nowInPreferredLocation.Day(), 0, 0, 0, 0, preferredLocation)
+	fmt.Printf("Searching from %s (now in preferred TZ is %s)\n", searchStartDate.Format(time.RFC3339), nowInPreferredLocation.Format(time.RFC3339))
+
+	isEmployeeAssignedToBranchV2 := func(employee *model.Employee, branch_id string) bool {
+		isAssigned := false
+		for _, b := range employee.Branches {
+			if b.ID.String() == branch_id {
+				isAssigned = true
+				break
+			}
+		}
+		return isAssigned
+	}
+
+	isEmployeeAssignedToServiceV2 := func(employee *model.Employee, service_id string) bool {
+		isAssigned := false
+		for _, s := range employee.Services {
+			if s.ID.String() == service_id {
+				isAssigned = true
+				break
+			}
+		}
+		return isAssigned
+	}
+
+	isValidWorkRangeDate := func(wr mJSON.WorkRange, currentSearchDate time.Time) (bool, error) {
+		workRangeStartDateTime, err := parseTimeWithLocation(currentSearchDate, wr.Start, preferredLocation)
+		if err != nil {
+			return false, fmt.Errorf("error parsing WorkRange Start Time '%s': %w", wr.Start, err)
+		}
+		workRangeEndDateTime, err := parseTimeWithLocation(currentSearchDate, wr.End, preferredLocation)
+		if err != nil {
+			return false, fmt.Errorf("error parsing WorkRange End Time '%s': %w", wr.End, err)
+		}
+		if !workRangeStartDateTime.Before(workRangeEndDateTime) {
+			return false, fmt.Errorf("WorkRange Start (%s) is not before End (%s)", workRangeStartDateTime, workRangeEndDateTime)
+		}
+		return true, nil
+	}
+
+	for dayOffset := range slotSearchHorizonDays {
+		currentSearchDate := searchStartDate.AddDate(0, 0, dayOffset)
+		currentWeekday := currentSearchDate.Weekday()
+		fmt.Printf("  Checking Date: %s (Weekday: %s, DayOffset: %d)\n", currentSearchDate.Format("2006-01-02"), currentWeekday, dayOffset)
+
+		dayScheduleRanges, hasScheduleForDay := weekdaySchedules[currentWeekday]
+		if !hasScheduleForDay || len(dayScheduleRanges) == 0 {
+			fmt.Printf("    No schedule ranges for this day.\n")
+			continue
+		}
+		fmt.Printf("    Found %d schedule range(s) for %s\n", len(dayScheduleRanges), currentWeekday)
+
+		for iWr, wr := range dayScheduleRanges {
+			fmt.Printf("      Processing WorkRange #%d: Start='%s', End='%s', BranchID='%s'\n", iWr, wr.Start, wr.End, wr.BranchID)
+			if wr.Start == "" || wr.End == "" || wr.BranchID == uuid.Nil {
+				return nil, false, fmt.Errorf("work range #%d has invalid data for employee %s: Start, End, or BranchID is missing. WorkSchedule: %+v", iWr, employee.ID.String(), WorkSchedule)
+			}
+			if !isEmployeeAssignedToBranchV2(employee, wr.BranchID.String()) {
+				return nil, false, fmt.Errorf("work range #%d has invalid branch assignment as employee %s is not assigned to branch %s", iWr, employee.ID.String(), wr.BranchID.String())
+			}
+			if ok, err := isValidWorkRangeDate(wr, currentSearchDate); !ok {
+				return nil, false, fmt.Errorf("work range #%d has invalid work range assignment for employee %s: %w", iWr, employee.ID.String(), err)
+			}
+			for iSrv, service_id := range wr.Services {
+				if !isEmployeeAssignedToServiceV2(employee, service_id.String()) {
+					return nil, false, fmt.Errorf("work range #%d has invalid service assignment at #%d since employee %s is not assigned to service %s", iWr, iSrv, employee.ID.String(), service_id.String())
+				}
+			}
+		}
+	}
+	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s in company %s within the search horizon", employee.ID.String(), employee.CompanyID.String())
+}
+
 // Helper to parse HH:MM or HH:MM:SS time string into a full time.Time on a specific date/location
 func parseTimeWithLocation(targetDate time.Time, timeStr string, loc *time.Location) (time.Time, error) {
 	layout := "15:04" // Default HH:MM
@@ -339,7 +432,6 @@ func isEmployeeAssignedToBranch(e *modelT.Employee, branchID uuid.UUID) bool {
 	}
 	return false
 }
-
 
 func RescheduleAppointmentRandomly(s int, employee *modelT.Employee, company *modelT.Company, appointment_id, token string) error {
 	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
