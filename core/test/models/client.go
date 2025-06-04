@@ -10,7 +10,7 @@ import (
 )
 
 type Client struct {
-	Created      model.ClientFull
+	Created      model.Client
 	X_Auth_Token string
 }
 
@@ -53,6 +53,7 @@ func (u *Client) Update(s int, changes map[string]any) error {
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(changes).
+		ParseResponse(&u.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to update client: %w", err)
 	}
@@ -66,7 +67,7 @@ func (u *Client) GetByEmail(s int) error {
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
-		Error; err != nil {
+		ParseResponse(&u.Created).Error; err != nil {
 		return fmt.Errorf("failed to get client by email: %w", err)
 	}
 	return nil
@@ -113,8 +114,11 @@ func (u *Client) Login(s int) error {
 	}
 	auth := http.ResHeaders[namespace.HeadersKey.Auth]
 	if len(auth) == 0 {
-		return fmt.Errorf("Authorization header not found")
+		return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
 	}
 	u.X_Auth_Token = auth[0]
+	if err := u.GetByEmail(200); err != nil {
+		return fmt.Errorf("failed to get client by email after login: %w", err)
+	}
 	return nil
 }

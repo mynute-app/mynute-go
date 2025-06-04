@@ -76,7 +76,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	var user any
 	var schema string
 	if claim.CompanyID == uuid.Nil {
-		user = &model.ClientFull{}
+		user = &model.Client{}
 		schema = "public"
 	} else {
 		user = &model.Employee{}

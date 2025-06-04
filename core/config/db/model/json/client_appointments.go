@@ -12,19 +12,21 @@ import (
 type ClientAppointments []*ClientAppointment
 
 type ClientAppointment struct {
-	AppointmentID uuid.UUID `json:"appointment_id"`
-	ServiceName   string    `json:"service_name"`
-	ServiceValue  uint      `json:"service_value"`
-	ServiceID     uuid.UUID `json:"service_id"`
-	CompanyName   string    `json:"company_name"`
-	CompanyID     uuid.UUID `json:"company_id"`
-	BranchAddress string    `json:"branch_address"`
-	BranchID      uuid.UUID `json:"branch_id"`
-	EmployeeName  string    `json:"employee_name"`
-	EmployeeID    uuid.UUID `json:"employee_id"`
-	IsCancelled   bool      `json:"is_cancelled"`
-	StartTime     time.Time `json:"start_time"`
-	ValuePaid     *uint     `json:"value_paid"`
+	AppointmentID    uuid.UUID `json:"appointment_id"`
+	ServiceName      string    `json:"service_name"`
+	ServicePrice     int64     `json:"service_price"`
+	ServiceID        uuid.UUID `json:"service_id"`
+	CompanyTradeName string    `json:"company_trade_name"`
+	CompanyLegalName string    `json:"company_legal_name"`
+	CompanyID        uuid.UUID `json:"company_id"`
+	BranchAddress    string    `json:"branch_address"`
+	BranchID         uuid.UUID `json:"branch_id"`
+	EmployeeName     string    `json:"employee_name"`
+	EmployeeID       uuid.UUID `json:"employee_id"`
+	IsCancelled      bool      `json:"is_cancelled"`
+	StartTime        time.Time `json:"start_time"`
+	Price            *int64    `json:"price"`
+	Currency         *string   `json:"currency"` // Default currency is BRL
 }
 
 func (cas *ClientAppointments) Value() (driver.Value, error) {

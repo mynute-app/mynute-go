@@ -10,7 +10,7 @@ import (
 )
 
 type Client struct {
-	Created    model.ClientFull
+	Created    model.Client
 	Auth_token string
 }
 

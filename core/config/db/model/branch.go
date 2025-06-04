@@ -4,6 +4,7 @@ import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -74,4 +75,30 @@ func (b *Branch) RemoveService(tx *gorm.DB, service *Service) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
+}
+
+func (b *Branch) GetAddress() string {
+	number := b.Number
+
+	if number == "" {
+		switch strings.ToLower(b.Country) {
+		case "brazil", "brasil":
+			number = "S/N"
+		case "usa", "united states", "united states of america":
+			number = "N/A"
+		case "spain", "españa", "mexico", "méxico":
+			number = "S/N"
+		default:
+			number = "N/A" // fallback universal
+		}
+	}
+
+	// Evita espaços e vírgulas sobrando
+	parts := []string{b.Street, number}
+	if b.Complement != "" {
+		parts = append(parts, b.Complement)
+	}
+	parts = append(parts, b.Neighborhood, b.City, b.State)
+
+	return strings.Join(parts, ", ")
 }

@@ -326,158 +326,227 @@ func (c *Company) GenerateServices(n int) error {
 
 // RandomlyAssignEmployeesToBranches assigns each employee to 1 to N random branches.
 func (c *Company) RandomlyAssignEmployeesToBranches() error {
-	if len(c.Employees) == 0 || len(c.Branches) == 0 {
-		return fmt.Errorf("no employees or branches to assign")
+	if len(c.Employees) == 0 {
+		fmt.Println("Warning: No employees to assign branches to in RandomlyAssignEmployeesToBranches.")
+		return nil
+	}
+	if len(c.Branches) == 0 {
+		fmt.Println("Warning: No branches available in the company to assign to employees in RandomlyAssignEmployeesToBranches.")
+		return nil // Não é um erro se não houver filiais, mas os funcionários não serão atribuídos.
 	}
 
-	// Limit the number of branches assigned to each employee
-	maxBranchesPerEmployee := min(len(c.Branches)+1, 10)
+	// Filtrar por filiais válidas (ID não nulo) antecipadamente
+	validBranches := []*Branch{}
+	for _, b := range c.Branches {
+		if b.Created.ID != uuid.Nil {
+			validBranches = append(validBranches, b)
+		}
+	}
+
+	if len(validBranches) == 0 {
+		// Se, após a filtragem, não houver filiais válidas, isso é um problema se esperávamos atribuir.
+		return fmt.Errorf("random assignment error: no valid branches found in the company (total branches: %d) to assign to employees", len(c.Branches))
+	}
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil {
-			return fmt.Errorf("skipping branch assignment for employee %d (email: %s): Employee ID is nil", i, employee.Created.Email)
+			fmt.Printf("Skipping branch assignment for employee (index %d, email: %s): Employee ID is nil\n", i, employee.Created.Email)
+			continue // Pular este funcionário se o ID for nulo
 		}
+
+		// Determinar quantas filiais únicas atribuir a este funcionário.
+		// Atribuir pelo menos 1, até todas as filiais válidas disponíveis, limitado a um máximo razoável (ex: 10).
+		maxAssignmentsForThisEmployee := len(validBranches)
+		// Pode-se adicionar um teto, ex: if maxAssignmentsForThisEmployee > 5 { maxAssignmentsForThisEmployee = 5 }
 
 		numBranchesToAssign := 1
-		if maxBranchesPerEmployee > 1 {
-			numBranchesToAssign = rand.Intn(maxBranchesPerEmployee) + 1
+		if maxAssignmentsForThisEmployee > 1 {
+			numBranchesToAssign = rand.Intn(maxAssignmentsForThisEmployee) + 1 // Gera número de 1 a maxAssignmentsForThisEmployee
 		}
-		assignedBranchIndices := make(map[int]bool)
+        // Garante que não tentaremos atribuir mais filiais do que as disponíveis.
+        if numBranchesToAssign > len(validBranches) {
+            numBranchesToAssign = len(validBranches)
+        }
+
+
+		// Criar uma lista de índices para validBranches [0, 1, ..., len(validBranches)-1]
+		shuffledIndices := make([]int, len(validBranches))
+		for j := range shuffledIndices {
+			shuffledIndices[j] = j
+		}
+		rand.Shuffle(len(shuffledIndices), func(k, l int) {
+			shuffledIndices[k], shuffledIndices[l] = shuffledIndices[l], shuffledIndices[k]
+		})
+
 		assignedCount := 0
+		for k := 0; k < numBranchesToAssign && k < len(shuffledIndices); k++ {
+			actualBranchIndexInValidBranches := shuffledIndices[k]
+			branchToAssign := validBranches[actualBranchIndexInValidBranches]
 
-		for k := 0; k < numBranchesToAssign && assignedCount < len(c.Branches); k++ { // Use assignedCount guard
-			branchIndex := -1
-			for range len(c.Branches) * 2 { // Limit attempts
-				potentialIndex := rand.Intn(len(c.Branches))
-				if !assignedBranchIndices[potentialIndex] && c.Branches[potentialIndex].Created.ID != uuid.Nil {
-					branchIndex = potentialIndex
-					break
-				}
-			}
-			if branchIndex == -1 {
-				return fmt.Errorf("could not find unique valid branch for employee %s after attempts", employee.Created.Email)
-			}
-
-			branch := c.Branches[branchIndex]
-			assignedBranchIndices[branchIndex] = true
-			assignedCount++ // Increment count of successfully assigned unique branches
-
-			fmt.Printf("Assigning employee %d (%s, ID: %s) to branch %d (%s, ID: %s)",
+			fmt.Printf("Assigning employee %d (%s, ID: %s) to branch (Name: %s, ID: %s)\n",
 				i, employee.Created.Email, employee.Created.ID,
-				branchIndex, branch.Created.Name, branch.Created.ID)
+				branchToAssign.Created.Name, branchToAssign.Created.ID)
 
-			// Use owner token for privilege when assigning employees to branches
-			if err := employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to assign employee %d (%s, ID: %s) to branch %d (%s, ID: %s): %v",
+			// Usar token do proprietário para privilégio ao atribuir funcionários a filiais
+			if err := employee.AddBranch(200, branchToAssign, &c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to assign employee %d (%s, ID: %s) to branch (Name: %s, ID: %s): %v",
 					i, employee.Created.Email, employee.Created.ID,
-					branchIndex, branch.Created.Name, branch.Created.ID, err)
+					branchToAssign.Created.Name, branchToAssign.Created.ID, err)
 			}
+			assignedCount++
 		}
+		if assignedCount == 0 && numBranchesToAssign > 0 {
+             fmt.Printf("Warning: Employee %s was intended to be assigned %d branches, but 0 were assigned. Valid branches: %d. This might be due to previous errors or lack of valid branches.\n", employee.Created.Email, numBranchesToAssign, len(validBranches))
+        }
 	}
 	return nil
 }
 
 // RandomlyAssignServicesToEmployees assigns each employee 1 to N random services.
 func (c *Company) RandomlyAssignServicesToEmployees() error {
-	if len(c.Employees) == 0 || len(c.Services) == 0 {
-		return fmt.Errorf("no employees or services to assign")
+	if len(c.Employees) == 0 {
+		fmt.Println("Warning: No employees to assign services to in RandomlyAssignServicesToEmployees.")
+		return nil
+	}
+	if len(c.Services) == 0 {
+		fmt.Println("Warning: No services available in the company to assign to employees in RandomlyAssignServicesToEmployees.")
+		return nil
+	}
+	
+	validServices := []*Service{}
+	for _, s := range c.Services {
+		if s.Created.ID != uuid.Nil {
+			validServices = append(validServices, s)
+		}
 	}
 
-	// Limit the number of services assigned to each employee
-	maxServicesPerEmployee := min(len(c.Services)+1, 10)
+	if len(validServices) == 0 {
+		return fmt.Errorf("random assignment error: no valid services found in the company (total services: %d) to assign to employees", len(c.Services))
+	}
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil || employee.X_Auth_Token == "" {
-			return fmt.Errorf("skipping service assignment for employee %d (email: %s): Employee ID nil or not logged in", i, employee.Created.Email)
+			fmt.Printf("Skipping service assignment for employee (index %d, email: %s): Employee ID nil or not logged in\n", i, employee.Created.Email)
+			continue
 		}
+
+		maxAssignmentsForThisEmployee := len(validServices)
+		// Pode-se adicionar um teto aqui também, ex: if maxAssignmentsForThisEmployee > 10 { maxAssignmentsForThisEmployee = 10 }
+
 
 		numServicesToAssign := 1
-		if maxServicesPerEmployee > 1 {
-			numServicesToAssign = rand.Intn(maxServicesPerEmployee) + 1
+		if maxAssignmentsForThisEmployee > 1 {
+			numServicesToAssign = rand.Intn(maxAssignmentsForThisEmployee) + 1
 		}
-		assignedServiceIndices := make(map[int]bool)
+        if numServicesToAssign > len(validServices) {
+            numServicesToAssign = len(validServices)
+        }
+
+		shuffledIndices := make([]int, len(validServices))
+		for j := range shuffledIndices {
+			shuffledIndices[j] = j
+		}
+		rand.Shuffle(len(shuffledIndices), func(k, l int) {
+			shuffledIndices[k], shuffledIndices[l] = shuffledIndices[l], shuffledIndices[k]
+		})
+
 		assignedCount := 0
+		for k := 0; k < numServicesToAssign && k < len(shuffledIndices); k++ {
+			actualServiceIndexInValidServices := shuffledIndices[k]
+			serviceToAssign := validServices[actualServiceIndexInValidServices]
 
-		for k := 0; k < numServicesToAssign && assignedCount < len(c.Services); k++ {
-			serviceIndex := -1
-			for range len(c.Services) * 2 {
-				potentialIndex := rand.Intn(len(c.Services))
-				if !assignedServiceIndices[potentialIndex] && c.Services[potentialIndex].Created.ID != uuid.Nil {
-					serviceIndex = potentialIndex
-					break
-				}
-			}
-			if serviceIndex == -1 {
-				return fmt.Errorf("could not find unique valid service for employee %s after attempts", employee.Created.Email)
-			}
-
-			service := c.Services[serviceIndex]
-			assignedServiceIndices[serviceIndex] = true
-			assignedCount++
-
-			fmt.Printf("Assigning service %d (%s, ID: %s) to employee %d (%s, ID: %s)",
-				serviceIndex, service.Created.Name, service.Created.ID,
+			fmt.Printf("Assigning service (Name: %s, ID: %s) to employee %d (%s, ID: %s)\n",
+				serviceToAssign.Created.Name, serviceToAssign.Created.ID,
 				i, employee.Created.Email, employee.Created.ID)
-
-			// Use Employee.AddService, assumes employee's token is used
-			if err := employee.AddService(200, service, nil, nil); err != nil {
-				return fmt.Errorf("failed to assign service %d (%s, ID: %s) to employee %d (%s, ID: %s): %v",
-					serviceIndex, service.Created.Name, service.Created.ID,
+			
+			// Usar Employee.AddService, o token do funcionário é usado (passando nil para X_Auth_Token em AddService)
+			if err := employee.AddService(200, serviceToAssign, nil, nil); err != nil {
+				return fmt.Errorf("failed to assign service (Name: %s, ID: %s) to employee %d (%s, ID: %s): %v",
+					serviceToAssign.Created.Name, serviceToAssign.Created.ID,
 					i, employee.Created.Email, employee.Created.ID, err)
 			}
+			assignedCount++
 		}
+        if assignedCount == 0 && numServicesToAssign > 0 {
+            fmt.Printf("Warning: Employee %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", employee.Created.Email, numServicesToAssign, len(validServices))
+        }
 	}
 	return nil
 }
 
 // RandomlyAssignServicesToBranches assigns each branch 1 to N random services.
 func (c *Company) RandomlyAssignServicesToBranches() error {
-	if len(c.Branches) == 0 || len(c.Services) == 0 {
-		return fmt.Errorf("no branches or services to assign")
+	if len(c.Branches) == 0 {
+		fmt.Println("Warning: No branches to assign services to in RandomlyAssignServicesToBranches.")
+		return nil
 	}
-	// Limit the number of services assigned to each branch
-	maxServicesPerBranch := min(len(c.Services)+1, 20)
+	if len(c.Services) == 0 {
+		fmt.Println("Warning: No services available in the company to assign to branches in RandomlyAssignServicesToBranches.")
+		return nil
+	}
 
-	for i, branch := range c.Branches {
-		if branch.Created.ID == uuid.Nil {
-			return fmt.Errorf("skipping service assignment for branch %d (%s): Branch ID is nil", i, branch.Created.Name)
+	validBranches := []*Branch{}
+	for _, b := range c.Branches {
+		if b.Created.ID != uuid.Nil {
+			validBranches = append(validBranches, b)
 		}
+	}
+	if len(validBranches) == 0 {
+		return fmt.Errorf("random assignment error: no valid branches found (total: %d)", len(c.Branches))
+	}
+	
+	validServices := []*Service{}
+	for _, s := range c.Services {
+		if s.Created.ID != uuid.Nil {
+			validServices = append(validServices, s)
+		}
+	}
+	if len(validServices) == 0 {
+		return fmt.Errorf("random assignment error: no valid services found (total: %d)", len(c.Services))
+	}
+
+
+	for i, branch := range validBranches { // Iterar sobre validBranches
+		// Não precisa checar branch.Created.ID != uuid.Nil aqui, pois já foi filtrado.
+
+		maxAssignmentsForThisBranch := len(validServices)
+		// Pode-se adicionar um teto aqui, ex: if maxAssignmentsForThisBranch > 15 { maxAssignmentsForThisBranch = 15 }
 
 		numServicesToAssign := 1
-		if maxServicesPerBranch > 1 {
-			numServicesToAssign = rand.Intn(maxServicesPerBranch) + 1
+		if maxAssignmentsForThisBranch > 1 {
+			numServicesToAssign = rand.Intn(maxAssignmentsForThisBranch) + 1
 		}
-		assignedServiceIndices := make(map[int]bool)
+        if numServicesToAssign > len(validServices) {
+            numServicesToAssign = len(validServices)
+        }
+
+		shuffledIndices := make([]int, len(validServices))
+		for j := range shuffledIndices {
+			shuffledIndices[j] = j
+		}
+		rand.Shuffle(len(shuffledIndices), func(k, l int) {
+			shuffledIndices[k], shuffledIndices[l] = shuffledIndices[l], shuffledIndices[k]
+		})
+
 		assignedCount := 0
+		for k := 0; k < numServicesToAssign && k < len(shuffledIndices); k++ {
+			actualServiceIndexInValidServices := shuffledIndices[k]
+			serviceToAssign := validServices[actualServiceIndexInValidServices]
 
-		for k := 0; k < numServicesToAssign && assignedCount < len(c.Services); k++ {
-			serviceIndex := -1
-			for attempts := 0; attempts < len(c.Services)*2; attempts++ {
-				potentialIndex := rand.Intn(len(c.Services))
-				if !assignedServiceIndices[potentialIndex] && c.Services[potentialIndex].Created.ID != uuid.Nil {
-					serviceIndex = potentialIndex
-					break
-				}
-			}
-			if serviceIndex == -1 {
-				return fmt.Errorf("could not find unique valid service for branch %s after attempts", branch.Created.Name)
-			}
-
-			service := c.Services[serviceIndex]
-			assignedServiceIndices[serviceIndex] = true
-			assignedCount++
-
-			fmt.Printf("Assigning service %d (%s, ID: %s) to branch %d (%s, ID: %s)",
-				serviceIndex, service.Created.Name, service.Created.ID,
+			fmt.Printf("Assigning service (Name: %s, ID: %s) to branch %d (%s, ID: %s)\n",
+				serviceToAssign.Created.Name, serviceToAssign.Created.ID,
 				i, branch.Created.Name, branch.Created.ID)
 
-			// Use Branch.AddService method. Use owner's token implicitly (branch.X_Auth_Token or nil param).
-			if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to assign service %d (%s, ID: %s) to branch %d (%s, ID: %s): %v",
-					serviceIndex, service.Created.Name, service.Created.ID,
+			if err := branch.AddService(200, serviceToAssign, c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to assign service (Name: %s, ID: %s) to branch %d (%s, ID: %s): %v",
+					serviceToAssign.Created.Name, serviceToAssign.Created.ID,
 					i, branch.Created.Name, branch.Created.ID, err)
 			}
+			assignedCount++
 		}
+        if assignedCount == 0 && numServicesToAssign > 0 {
+             fmt.Printf("Warning: Branch %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", branch.Created.Name, numServicesToAssign, len(validServices))
+        }
 	}
 	return nil
 }

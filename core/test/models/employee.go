@@ -212,6 +212,9 @@ func (e *Employee) Login(s int, x_company_id *string) error {
 		return fmt.Errorf("authentication token not found in response headers")
 	}
 	e.X_Auth_Token = auth[0]
+	if err := e.GetById(200, nil, nil); err != nil {
+		return fmt.Errorf("failed to get employee by ID after login: %w", err)
+	}
 	return nil
 }
 
@@ -311,6 +314,7 @@ func (e *Employee) AddService(s int, service *Service, token *string, x_company_
 		return fmt.Errorf("failed to get employee by ID after adding service: %w", err)
 	}
 	service.Employees = append(service.Employees, e)
+	e.Services = append(e.Services, service)
 	return nil
 }
 

@@ -77,6 +77,28 @@ func AppointmentIndexes(table string) map[string]string {
 
 // --- Appointment Hooks ---
 
+func (a *Appointment) AfterCreate(tx *gorm.DB) error {
+	var client Client
+	if err := tx.Model(&Client{}).Where("id = ?", a.ClientID).First(&client).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Client.NotFound.WithError(fmt.Errorf("client ID %s", a.ClientID))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading client: %w", err))
+	}
+	var company Company
+	if err := tx.Model(&Company{}).Where("id = ?", a.CompanyID).First(&company).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return lib.Error.Company.NotFound.WithError(fmt.Errorf("company ID %s", a.CompanyID))
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading company: %w", err))
+	}
+	client.AddAppointment(a, a.Service, &company, a.Branch, a.Employee)
+	if err := tx.Save(&client).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("updating client: %w", err))
+	}
+	return nil
+}
+
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if !a.History.IsEmpty() {
 		return lib.Error.Appointment.HistoryManualUpdateForbidden

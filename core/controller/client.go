@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -30,7 +31,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var client model.ClientFull
+	var client model.Client
 	if err := c.BodyParser(&client); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -40,7 +41,7 @@ func CreateClient(c *fiber.Ctx) error {
 		return err
 	}
 	client.Appointments = mJSON.ClientAppointments{}
-	if err := tx.Model(&model.ClientFull{}).Create(&client).Error; err != nil {
+	if err := tx.Model(&model.Client{}).Create(&client).Error; err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
@@ -73,7 +74,7 @@ func LoginClient(c *fiber.Ctx) error {
 	}
 
 	var client model.ClientMeta
-	if err := tx.Model(&model.ClientFull{}).Where("email = ?", body.Email).First(&client).Error; err != nil {
+	if err := tx.Model(&model.Client{}).Where("email = ?", body.Email).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
@@ -127,7 +128,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var clientFull model.ClientFull
+	var clientFull model.Client
 	var exists string
 	if err := tx.Model(&clientFull).
 		Where("email = ?", email).
@@ -174,7 +175,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 	}
 
 	var client model.ClientMeta
-	if err := tx.Model(&model.ClientFull{}).Where("email = ?", email).First(&client).Error; err != nil {
+	if err := tx.Model(&model.Client{}).Where("email = ?", email).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
@@ -210,7 +211,7 @@ func GetClientById(c *fiber.Ctx) error {
 	}
 
 	var client model.ClientMeta
-	if err := tx.Model(&model.ClientFull{}).Where("id = ?", id).First(&client).Error; err != nil {
+	if err := tx.Model(&model.Client{}).Where("id = ?", id).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
@@ -247,7 +248,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 	}
 
 	var appointments mJSON.ClientAppointments
-	if err := tx.Model(&model.ClientFull{}).
+	if err := tx.Model(&model.Client{}).
 		Where("id = ?", id).
 		Pluck("appointments", &appointments).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -294,17 +295,22 @@ func UpdateClientById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var cFull model.ClientFull
-
 	if err := tx.
-		Model(&cFull).
+		Model(&model.Client{}).
 		Where("id = ?", id).
 		Omit(clause.Associations).
 		Updates(changes).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &cFull, &DTO.Client{}); err != nil {
+	var client model.Client
+	client.ID = uuid.MustParse(id)
+
+	if err := client.GetFullClient(tx); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -325,7 +331,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Failure		404	{object}	nil
 //	@Router			/client/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.ClientFull{})
+	return DeleteOneById(c, &model.Client{})
 }
 
 func Client(Gorm *handler.Gorm) {

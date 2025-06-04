@@ -137,7 +137,7 @@ var BranchResource = &Resource{
 var ClientResource = &Resource{
 	Name:        "client",
 	Description: "Client resource",
-	Table:       (&ClientFull{}).TableName(),
+	Table:       (&Client{}).TableName(),
 	References: ResourceReferences{
 		SingleQueryRef(),
 		SinglePathRef(),
