@@ -40,6 +40,28 @@ func NewHttpClient() *httpActions {
 	}
 }
 
+func (h *httpActions) Clone() *httpActions {
+	// Create a new instance of httpActions
+	newH := &httpActions{
+		Error:           nil,
+		Status:          0,
+		ResBody:         make(map[string]any),
+		ResHeaders:      make(map[string][]string),
+		reqHeaders:      make(http.Header),
+		rawResponseBody: make([]byte, len(h.rawResponseBody)),
+	}
+
+	// Copy the raw response body
+	copy(newH.rawResponseBody, h.rawResponseBody)
+
+	// Copy the headers
+	for key, values := range h.reqHeaders {
+		newH.reqHeaders[key] = values
+	}
+
+	return newH
+}
+
 func (h *httpActions) URL(url string) *httpActions {
 	AppPort := os.Getenv("APP_PORT")
 	BaseUrl := fmt.Sprintf("http://localhost:%s", AppPort)
@@ -164,6 +186,10 @@ func (h *httpActions) Send(body any) *httpActions {
 func (h *httpActions) ParseResponse(to any) *httpActions {
 	if h.Error != nil {
 		return h
+	}
+
+	if h.Status == 0 {
+		return h.set_error("no response received, please call Send() first")
 	}
 
 	if reflect.TypeOf(to).Kind() != reflect.Ptr {

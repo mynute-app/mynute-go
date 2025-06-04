@@ -19,7 +19,7 @@ func Test_Employee(t *testing.T) {
 	tt.Test(employee.GetById(200, nil, nil), "Employee get by ID")
 	tt.Test(employee.GetByEmail(200, nil, nil), "Employee get by email")
 	tt.Test(employee.Update(200, map[string]any{"name": "Updated Employee Name xD"}, nil, nil), "Employee update")
-	tt.Test(employee.Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
+	tt.Test(employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{
 		{
 			Monday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: company.Branches[0].Created.ID},
@@ -39,6 +39,6 @@ func Test_Employee(t *testing.T) {
 			},
 			Sunday: []mJSON.WorkRange{},
 		},
-	}}, nil, nil), "Employee update work schedule")
+	}, nil, nil), "Employee update work schedule")
 	tt.Test(employee.Delete(200, nil, nil), "Employee deletion")
 }

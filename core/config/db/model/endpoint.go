@@ -247,8 +247,6 @@ var GetCompanyByName = &EndPoint{
 	Path:             "/company/name/:name",
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetCompanyByName",
-	DenyUnauthorized: true,
-	NeedsCompanyId:   true,
 	Description:      "View company by name",
 }
 var GetCompanyByTaxId = &EndPoint{

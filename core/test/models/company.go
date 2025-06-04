@@ -96,7 +96,7 @@ func (c *Company) Set() error {
 				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
 			}
 		}
-		if err := employee.Update(200, map[string]any{"work_schedule": []mJSON.WorkSchedule{
+		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{
 			{
 				Monday: []mJSON.WorkRange{
 					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
@@ -124,7 +124,7 @@ func (c *Company) Set() error {
 				},
 				Sunday: []mJSON.WorkRange{},
 			},
-		}}, nil, nil); err != nil {
+		}, nil, nil); err != nil {
 			return err
 		}
 	}
@@ -331,7 +331,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 	}
 
 	// Limit the number of branches assigned to each employee
-	maxBranchesPerEmployee := min(len(c.Branches), 10)
+	maxBranchesPerEmployee := min(len(c.Branches)+1, 10)
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil {
@@ -347,7 +347,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 
 		for k := 0; k < numBranchesToAssign && assignedCount < len(c.Branches); k++ { // Use assignedCount guard
 			branchIndex := -1
-			for attempts := 0; attempts < len(c.Branches)*2; attempts++ { // Limit attempts
+			for range len(c.Branches) * 2 { // Limit attempts
 				potentialIndex := rand.Intn(len(c.Branches))
 				if !assignedBranchIndices[potentialIndex] && c.Branches[potentialIndex].Created.ID != uuid.Nil {
 					branchIndex = potentialIndex
@@ -384,7 +384,7 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 	}
 
 	// Limit the number of services assigned to each employee
-	maxServicesPerEmployee := min(len(c.Services), 10)
+	maxServicesPerEmployee := min(len(c.Services)+1, 10)
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil || employee.X_Auth_Token == "" {
@@ -436,7 +436,7 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 		return fmt.Errorf("no branches or services to assign")
 	}
 	// Limit the number of services assigned to each branch
-	maxServicesPerBranch := min(len(c.Services), 20)
+	maxServicesPerBranch := min(len(c.Services)+1, 20)
 
 	for i, branch := range c.Branches {
 		if branch.Created.ID == uuid.Nil {
@@ -515,13 +515,8 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 		scheduleModel := GenerateRandomModelWorkSchedule(validBranches, employee)
 		fmt.Printf("Generated work schedule for employee %d (%s), referencing %d valid branch(es)", i, employee.Created.Email, len(validBranches))
 
-		// Payload format for Employee.Update
-		payload := map[string]any{
-			"work_schedule": []mJSON.WorkSchedule{scheduleModel},
-		}
-
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
-		if err := employee.Update(200, payload, nil, nil); err != nil {
+		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{scheduleModel}, nil, nil); err != nil {
 			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v",
 				i, employee.Created.Email, err)
 		}
@@ -718,6 +713,7 @@ func (c *Company) GetByName(status int, x_auth_token string, x_company_id *strin
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to get company by name: %w", err)
@@ -731,6 +727,7 @@ func (c *Company) GetBySubdomain(status int) error {
 		Method("GET").
 		URL(fmt.Sprintf("/Company/subdomain/%s", c.Created.Subdomains[0].Name)).
 		ExpectedStatus(status).
+		Send(nil).
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to get company by subdomain: %w", err)
@@ -751,6 +748,7 @@ func (c *Company) GetById(status int, x_auth_token string, x_company_id *string)
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).
 		ParseResponse(&c.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to get company by id: %w", err)
