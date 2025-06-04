@@ -107,6 +107,3 @@ func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) e
 	}
 	return nil
 }
-
-
-

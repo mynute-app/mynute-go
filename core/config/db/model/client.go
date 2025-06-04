@@ -101,8 +101,13 @@ func (c *Client) AddAppointment(a *Appointment, s *Service, company *Company, b 
 		EmployeeID:       a.Employee.ID,
 		IsCancelled:      a.IsCancelled,
 		StartTime:        a.StartTime,
-		Price:            &a.Payment.Price,
-		Currency:         &a.Payment.Currency,
+	}
+
+	if a.Payment != nil {
+		if a.Payment.Price != 0 && a.Payment.Currency != "" {
+			ca.Price = &a.Payment.Price
+			ca.Currency = &a.Payment.Currency
+		}
 	}
 
 	c.Appointments.Add(ca)

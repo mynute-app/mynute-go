@@ -41,7 +41,7 @@ func Connect() *Database {
 
 	if app_env == "test" {
 		dbName = os.Getenv("POSTGRES_DB_TEST")
-		LogLevel = logger.Warn
+		LogLevel = logger.Info
 	} else if app_env == "dev" {
 		dbName = os.Getenv("POSTGRES_DB_DEV")
 		LogLevel = logger.Info

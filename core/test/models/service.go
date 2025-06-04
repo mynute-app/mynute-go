@@ -9,10 +9,10 @@ import (
 )
 
 type Service struct {
-	Created    DTO.Service
-	Company    *Company
-	Employees  []*Employee
-	Branches   []*Branch
+	Created   DTO.Service
+	Company   *Company
+	Employees []*Employee
+	Branches  []*Branch
 }
 
 func (s *Service) Create(status int, x_auth_token string, x_company_id *string) error {
@@ -60,6 +60,9 @@ func (s *Service) Update(status int, changes map[string]any, x_auth_token string
 		ParseResponse(&s.Created).
 		Error; err != nil {
 		return fmt.Errorf("failed to update service: %w", err)
+	}
+	if err := ValidateUpdateChanges("Service", s.Created, changes); err != nil {
+		return err
 	}
 	return nil
 }

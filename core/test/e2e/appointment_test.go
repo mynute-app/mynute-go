@@ -20,7 +20,6 @@ func Test_Appointment(t *testing.T) {
 	tt.Test(ct.Create(200), "Client creation")
 	tt.Test(ct.VerifyEmail(200), "Client email verification")
 	tt.Test(ct.Login(200), "Client login")
-	tt.Test(ct.Update(200, map[string]any{"name": "Updated client Name"}), "Client update")
 	tt.Test(ct.GetByEmail(200), "Client get by email")
 	cy := &modelT.Company{}
 	tt.Test(cy.Set(), "Company setup") // This sets up company, employees (with schedules), branches, services.

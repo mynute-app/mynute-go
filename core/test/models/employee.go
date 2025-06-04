@@ -79,6 +79,9 @@ func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x
 		Error; err != nil {
 		return fmt.Errorf("failed to update employee: %w", err)
 	}
+	if err := ValidateUpdateChanges("Employee", e.Created, changes); err != nil {
+		return err
+	}
 	return nil
 }
 

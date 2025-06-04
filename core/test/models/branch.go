@@ -10,10 +10,10 @@ import (
 )
 
 type Branch struct {
-	Created    model.Branch
-	Company    *Company
-	Services   []*Service
-	Employees  []*Employee
+	Created   model.Branch
+	Company   *Company
+	Services  []*Service
+	Employees []*Employee
 }
 
 func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) error {
@@ -61,6 +61,15 @@ func (b *Branch) Update(status int, changes map[string]any, x_auth_token string,
 		Send(changes).
 		ParseResponse(&b.Created).Error; err != nil {
 		return fmt.Errorf("failed to update branch: %w", err)
+	}
+	mappy, err := lib.StructToMap(b.Created)
+	if err != nil {
+		return fmt.Errorf("failed to convert client struct to map: %w", err)
+	}
+	for key, value := range changes {
+		if mappy[key] != value {
+			return fmt.Errorf("branch %s was not updated: expected %s but got %s", key, value, mappy[key])
+		}
 	}
 	return nil
 }

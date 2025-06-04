@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -45,4 +46,19 @@ func ResolveStruct(v any) (reflect.Value, error) {
 	}
 
 	return val, errors.New("interface is not a struct or slice")
+}
+
+func StructToMap(v any) (map[string]any, error) {
+	mapV := make(map[string]any)
+
+	vByte, err := json.Marshal(v); 
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal struct: %w", err)
+	}
+
+	if err := json.Unmarshal(vByte, &mapV); err != nil {
+		return nil, err
+	}
+
+	return mapV, nil
 }

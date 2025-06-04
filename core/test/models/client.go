@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
+	"reflect"
 )
 
 type Client struct {
@@ -57,6 +58,10 @@ func (u *Client) Update(s int, changes map[string]any) error {
 		Error; err != nil {
 		return fmt.Errorf("failed to update client: %w", err)
 	}
+	if err := ValidateUpdateChanges("Client", u.Created, changes); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -120,5 +125,30 @@ func (u *Client) Login(s int) error {
 	if err := u.GetByEmail(200); err != nil {
 		return fmt.Errorf("failed to get client by email after login: %w", err)
 	}
+	return nil
+}
+
+func ValidateUpdateChanges(modelName string, v any, changes map[string]any) error {
+	mappy, err := lib.StructToMap(v)
+	if err != nil {
+		return fmt.Errorf("failed to convert %s struct to map: %w", modelName, err)
+	}
+
+	for key, expected := range changes {
+		// Se o expected for struct, transforma em map
+		if reflect.TypeOf(expected).Kind() == reflect.Struct {
+			expected, err = lib.StructToMap(expected)
+			if err != nil {
+				return fmt.Errorf("failed to convert expected value for key '%s' to map: %w", key, err)
+			}
+		}
+
+		actual := mappy[key]
+
+		if !reflect.DeepEqual(actual, expected) {
+			return fmt.Errorf("%s %s was not updated: expected '%#v' but got '%#v'", modelName, key, expected, actual)
+		}
+	}
+
 	return nil
 }

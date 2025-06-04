@@ -14,9 +14,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 // CreateClient creates an client
@@ -192,7 +190,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Summary		Get client by ID
 //	@Description	Retrieve an client by its ID
 //	@Tags			Client
-// 	@Security		ApiKeyAuth
+//	@Security		ApiKeyAuth
 //	@Param			Authorization	header		string	true	"X-Auth-Token"
 //	@Param			id				path		string	true	"Client ID"
 //	@Produce		json
@@ -278,33 +276,16 @@ func GetClientAppointments(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	var client model.Client
 
-	if id == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'id' at params"))
-	}
-
-	changes := make(map[string]any)
-	if err := c.BodyParser(&changes); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	tx, end, err := database.ContextTransaction(c)
-	defer end()
-	if err != nil {
+	if err := UpdateOneById(c, &client); err != nil {
 		return err
 	}
 
-	if err := tx.
-		Model(&model.Client{}).
-		Where("id = ?", id).
-		Omit(clause.Associations).
-		Updates(changes).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
 	}
-
-	var client model.Client
-	client.ID = uuid.MustParse(id)
 
 	if err := client.GetFullClient(tx); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
