@@ -66,8 +66,8 @@ func (cas *ClientAppointments) Scan(value any) error {
 }
 
 func (cas *ClientAppointments) Add(ca *ClientAppointment) {
-	if cas == nil {
-		cas = &ClientAppointments{}
+	if *cas == nil {
+		*cas = make(ClientAppointments, 0, 1)
 	}
 	*cas = append(*cas, ca)
 }

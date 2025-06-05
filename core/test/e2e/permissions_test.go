@@ -51,14 +51,14 @@ func Test_Setup_Permissions_Instance(t *testing.T) {
 	permissions_test_instance.company1 = companies[0]
 	permissions_test_instance.company2 = companies[1]
 
-	company_1_employee_number := 4
-	company_2_employee_number := 3
+	company_1_employee_number := 3
+	company_2_employee_number := 2
 	company_1_branch_number := 3
 	company_2_branch_number := 2
-	company_1_service_number := 22
-	company_2_service_number := 6
+	company_1_service_number := 4
+	company_2_service_number := 3
 	permissions_test_instance.company1 = &modelT.Company{}
-	tt.Test(permissions_test_instance.company1.SetupRandomized(company_1_employee_number, company_1_branch_number, company_1_service_number), "Setting up company 1 randomly") // owner, 4 employees, 3 branches, 22 services
+	tt.Test(permissions_test_instance.company1.SetupRandomized(company_1_employee_number, company_1_branch_number, company_1_service_number), "Setting up company 1 randomly") // owner, 4 employees, 3 branches, 12 services
 	permissions_test_instance.company2 = &modelT.Company{}
 	tt.Test(permissions_test_instance.company2.SetupRandomized(company_2_employee_number, company_2_branch_number, company_2_service_number), "Setting up company 2 randomly") // owner, 3 employees, 2 branches, 6 services
 	permissions_test_instance.client1 = &modelT.Client{}

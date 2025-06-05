@@ -33,7 +33,7 @@ type ClientMeta struct {
 // Updated Client model
 type Client struct {
 	ClientMeta
-	Appointments mJSON.ClientAppointments `gorm:"type:jsonb" json:"appointments"`
+	Appointments *mJSON.ClientAppointments `gorm:"type:jsonb" json:"appointments"`
 }
 
 func (Client) TableName() string  { return "public.clients" }
@@ -84,7 +84,7 @@ func (c *Client) GetFullClient(tx *gorm.DB) error {
 
 func (c *Client) AddAppointment(a *Appointment, s *Service, company *Company, b *Branch, e *Employee) {
 	if c.Appointments == nil {
-		c.Appointments = mJSON.ClientAppointments{}
+		c.Appointments = &mJSON.ClientAppointments{}
 	}
 
 	ca := &mJSON.ClientAppointment{

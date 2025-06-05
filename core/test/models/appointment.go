@@ -41,16 +41,16 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	}
 	http.Send(A)
 	http.ParseResponse(&a.Created)
-	if err := b.GetById(200, x_auth_token, x_company_id); err != nil {
+	if err := b.GetById(200, cy.Owner.X_Auth_Token, x_company_id); err != nil {
 		return err
 	}
 	if err := e.GetById(200, nil, x_company_id); err != nil {
 		return err
 	}
-	if err := s.GetById(200, x_auth_token, x_company_id); err != nil {
+	if err := s.GetById(200, cy.Owner.X_Auth_Token, x_company_id); err != nil {
 		return err
 	}
-	if err := cy.GetById(200, x_auth_token, x_company_id); err != nil {
+	if err := cy.GetById(200, cy.Owner.X_Auth_Token, x_company_id); err != nil {
 		return err
 	}
 	if err := ct.GetByEmail(200); err != nil {
@@ -65,9 +65,6 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal appointment: %w", err)
 	}
-	ct.Created.Appointments.Add(&ClientAppointment)
-	e.Created.Appointments = append(e.Created.Appointments, a.Created)
-	b.Created.Appointments = append(b.Created.Appointments, a.Created)
 	return nil
 }
 

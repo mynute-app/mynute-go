@@ -38,7 +38,7 @@ func CreateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	client.Appointments = mJSON.ClientAppointments{}
+	client.Appointments = &mJSON.ClientAppointments{}
 	if err := tx.Model(&model.Client{}).Create(&client).Error; err != nil {
 		return err
 	}
