@@ -2,6 +2,7 @@ package modelT
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
@@ -9,7 +10,7 @@ import (
 )
 
 type Service struct {
-	Created   DTO.Service
+	Created   model.Service
 	Company   *Company
 	Employees []*Employee
 	Branches  []*Branch

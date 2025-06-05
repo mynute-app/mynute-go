@@ -18,7 +18,7 @@ import (
 )
 
 type Company struct {
-	Created   model.CompanyMerged
+	Created   *model.CompanyMerged
 	Owner     *Employee
 	Employees []*Employee
 	Branches  []*Branch
@@ -397,6 +397,11 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 		if assignedCount == 0 && numBranchesToAssign > 0 {
 			fmt.Printf("Warning: Employee %s was intended to be assigned %d branches, but 0 were assigned. Valid branches: %d. This might be due to previous errors or lack of valid branches.\n", employee.Created.Email, numBranchesToAssign, len(validBranches))
 		}
+		if employee.Created.ID != uuid.Nil { // Apenas se o funcionário foi criado corretamente
+			if err := employee.GetById(200, nil, nil); err != nil {
+				return fmt.Errorf("failed to refresh employee %s after branch assignment: %v", employee.Created.Email, err)
+			}
+		}
 	}
 	return nil
 }
@@ -467,6 +472,11 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 		}
 		if assignedCount == 0 && numServicesToAssign > 0 {
 			fmt.Printf("Warning: Employee %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", employee.Created.Email, numServicesToAssign, len(validServices))
+		}
+		if employee.Created.ID != uuid.Nil {
+			if err := employee.GetById(200, nil, nil); err != nil {
+				return fmt.Errorf("failed to refresh employee %s after service assignment: %v", employee.Created.Email, err)
+			}
 		}
 	}
 	return nil
@@ -544,6 +554,11 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 		if assignedCount == 0 && numServicesToAssign > 0 {
 			fmt.Printf("Warning: Branch %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", branch.Created.Name, numServicesToAssign, len(validServices))
 		}
+		if branch.Created.ID != uuid.Nil {
+			if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to refresh branch %s after service assignment: %v", branch.Created.Name, err)
+			}
+		}
 	}
 	return nil
 }
@@ -560,31 +575,45 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 		return fmt.Errorf("no services to reference for work schedule assignment")
 	}
 
-	validBranches := []*Branch{}
-	for _, b := range c.Branches {
-		if b.Created.ID != uuid.Nil {
-			validBranches = append(validBranches, b)
-		}
-	}
-
-	if len(validBranches) == 0 {
-		return fmt.Errorf("no valid branches found for work schedule assignment")
-	}
-
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil { // No need to check Auth_token here, Update uses Company token.
 			return fmt.Errorf("skipping schedule assignment for employee %d (%s): ID nil", i, employee.Created.Email)
 		}
 
 		fmt.Println("👀 Employee services:", employee.Created.Services)
+		fmt.Println("👀 Employee branches:", employee.Created.Branches)
 
-		scheduleModel := GenerateRandomModelWorkSchedule(validBranches, employee)
-		fmt.Printf("Generated work schedule for employee %d (%s), referencing %d valid branch(es)", i, employee.Created.Email, len(validBranches))
+		if len(employee.Created.Branches) == 0 {
+			fmt.Printf("Skipping work schedule for employee %d (%s): Not assigned to any branches.\n", i, employee.Created.Email)
+			continue // Pula para o próximo funcionário
+		}
+		if len(employee.Created.Services) == 0 {
+			fmt.Printf("Skipping work schedule for employee %d (%s): Does not offer any services.\n", i, employee.Created.Email)
+			continue // Pula para o próximo funcionário
+		}
+
+		validEmployeeBranches := []*Branch{}
+		for _, mb := range employee.Created.Branches {
+			for _, mbT := range employee.Branches {
+				if mbT.Created.ID == mb.ID {
+					validEmployeeBranches = append(validEmployeeBranches, mbT)
+				}
+			}
+		}
+
+		// Make sure Employee.Branches matches Employee.Created.Branches
+		if len(validEmployeeBranches) != len(employee.Created.Branches) {
+			return fmt.Errorf("employee %d (%s) has %d branches, but only %d valid branches found", i, employee.Created.Email, len(employee.Created.Branches), len(validEmployeeBranches))
+		} else if len(validEmployeeBranches) != len(employee.Branches) {
+			return fmt.Errorf("employee %d (%s) has %d branches, but only %d valid branches found", i, employee.Created.Email, len(employee.Branches), len(validEmployeeBranches))
+		}
+
+		scheduleModel := GenerateRandomModelWorkSchedule(employee.Branches, employee)
+		fmt.Printf("Generated work schedule for employee %d (%s), referencing %d valid branch(es)", i, employee.Created.Email, len(validEmployeeBranches))
 
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
 		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{scheduleModel}, nil, nil); err != nil {
-			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v",
-				i, employee.Created.Email, err)
+			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v", i, employee.Created.Email, err)
 		}
 		fmt.Printf("Successfully updated work schedule for employee %d (%s)", i, employee.Created.Email)
 	}
@@ -743,7 +772,7 @@ func (c *Company) Create(status int) error {
 	owner.Password = ownerPswd
 	c.Owner = &Employee{
 		Company: c,
-		Created: owner,
+		Created: &owner,
 	}
 	if err := c.Owner.VerifyEmail(200, nil); err != nil {
 		return fmt.Errorf("failed to verify owner email: %w", err)

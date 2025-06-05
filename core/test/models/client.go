@@ -11,7 +11,7 @@ import (
 )
 
 type Client struct {
-	Created      model.Client
+	Created      *model.Client
 	X_Auth_Token string
 }
 

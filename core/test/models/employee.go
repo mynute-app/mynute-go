@@ -16,7 +16,7 @@ import (
 type Employee struct {
 	X_Auth_Token string
 	Company      *Company
-	Created      model.Employee
+	Created      *model.Employee
 	Services     []*Service
 	Branches     []*Branch
 }
