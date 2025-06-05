@@ -12,23 +12,29 @@ import (
 func Test_Service(t *testing.T) {
 	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
-	client := &modelT.Client{}
+
 	tt := handlerT.NewTestErrorHandler(t)
-	tt.Test(client.Set(), "Client setup") // This sets up client, company, branches, and services.
+
+	client := &modelT.Client{}
+	tt.Describe("Client setup").Test(client.Set()) // Sets up client, company, branches, and services
+
 	company := &modelT.Company{}
-	tt.Test(company.Set(), "Company setup")
-	service := &modelT.Service{}
-	service.Company = company
-	tt.Test(service.Create(200, company.Owner.X_Auth_Token, nil), "Service creation")
-	tt.Test(service.Update(200, map[string]any{
+	tt.Describe("Company setup").Test(company.Set())
+
+	service := &modelT.Service{Company: company}
+	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Service update").Test(service.Update(200, map[string]any{
 		"name": lib.GenerateRandomName("Updated Service"),
-	}, company.Owner.X_Auth_Token, nil), "Service update")
-	tt.Test(service.GetById(200, company.Owner.X_Auth_Token, nil), "Service get by ID")
-	tt.Test(service.GetByName(200, company.Owner.X_Auth_Token, nil), "Service get by name")
-	branch := &modelT.Branch{}
-	branch.Company = company
-	tt.Test(branch.Create(200, company.Owner.X_Auth_Token, nil), "Branch creation")
-	tt.Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil), "Branch add service")
-	tt.Test(service.Delete(200, company.Owner.X_Auth_Token, nil), "Service deletion")
-	tt.Test(branch.Delete(200, company.Owner.X_Auth_Token, nil), "Branch deletion")
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Service get by ID").Test(service.GetById(200, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Service get by name").Test(service.GetByName(200, company.Owner.X_Auth_Token, nil))
+
+	branch := &modelT.Branch{Company: company}
+	tt.Describe("Branch creation").Test(branch.Create(200, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Branch add service").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Service deletion").Test(service.Delete(200, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
 }

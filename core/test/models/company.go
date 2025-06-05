@@ -140,20 +140,84 @@ func (c *Company) Set() error {
 
 // --- Randomized Company Setup Method ---
 
-// SetupRandomized replaces the static Set method.
+// CreateCompanyRandomly replaces the static Set method.
 // It creates the Company, owner, and then generates the specified number
 // of employees, branches, and services, linking them randomly.
-func (c *Company) SetupRandomized(numEmployees, numBranches, numServices int) error {
+func (c *Company) CreateCompanyRandomly(numEmployees, numBranches, numServices int) error {
 	if os.Getenv("APP_ENV") == "prod" { // Make sure it never runs in production
 		panic("Cannot run tests in production environment. Set APP_ENV to 'test' or 'dev'")
 	}
 
 	fmt.Printf("Setting up randomized Company with %d employees, %d branches, %d services", numEmployees, numBranches, numServices)
 
+	if c.Created != nil && c.Created.ID != uuid.Nil {
+		return fmt.Errorf("this function should not be called if the company has already been created")
+	}
+
 	//  --- Creating company ---
 
 	if err := c.Create(200); err != nil {
 		return err
+	}
+
+	// --- Generating Employees, Branches, and Services ---
+
+	if err := c.GenerateEmployees(numEmployees); err != nil {
+		return err
+	}
+
+	if err := c.GenerateBranches(numBranches); err != nil {
+		return err
+	}
+
+	if err := c.GenerateServices(numServices); err != nil {
+		return err
+	}
+
+	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
+		return err
+	}
+
+	// --- Random Relationship Assignments ---
+
+	if err := c.RandomlyAssignServicesToEmployees(); err != nil {
+		return err
+	}
+
+	if err := c.RandomlyAssignServicesToBranches(); err != nil {
+		return err
+	}
+
+	if err := c.RandomlyAssignEmployeesToBranches(); err != nil {
+		return err
+	}
+
+	if err := c.RandomlyAssignWorkScheduleToEmployees(); err != nil {
+		return err
+	}
+
+	fmt.Println("Randomized Company setup completed")
+	return nil
+}
+
+// AddRandomizedEntitiesToCompany adds randomized employees, branches, and services to an existing company.
+// It assumes the company has already been created and has a valid owner.
+// This function is used to extend an existing company with additional randomized entities.
+func (c *Company) AddRandomizedEntitiesToCompany(numEmployees, numBranches, numServices int) error {
+	if os.Getenv("APP_ENV") == "prod" { // Make sure it never runs in production
+		panic("Cannot run tests in production environment. Set APP_ENV to 'test' or 'dev'")
+	}
+
+	if c.Created == nil || c.Created.ID == uuid.Nil {
+		return fmt.Errorf("this function should not be called if the company has not been created yet")
+	}
+
+	if c.Owner == nil || c.Owner.X_Auth_Token == "" {
+		return fmt.Errorf("company owner is not set or has no Auth Token")
+	}
+
+	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
+		return fmt.Errorf("it looks like the company doesn't exist: %v", err)
 	}
 
 	// --- Generating Employees, Branches, and Services ---

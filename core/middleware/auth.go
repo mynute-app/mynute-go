@@ -74,12 +74,15 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	var user any
+	var userIs string
 	var schema string
 	if claim.CompanyID == uuid.Nil {
-		user = &model.Client{}
+		userIs = "client"
+		user = &model.Client{ClientMeta: model.ClientMeta{BaseModel: model.BaseModel{ID: claim.ID}}}
 		schema = "public"
 	} else {
-		user = &model.Employee{}
+		userIs = "employee"
+		user = &model.Employee{BaseModel: model.BaseModel{ID: claim.ID}}
 		schema = "company"
 	}
 
@@ -87,9 +90,9 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	if err := change_schema(schema); err != nil {
 		return err
 	}
-	if err := tx.Model(user).Preload(clause.Associations).Where("id = ?", claim.ID).Take(user).Error; err != nil {
+	if err := tx.Model(user).Preload(clause.Associations).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Auth.Unauthorized
+			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))
 		}
 		log.Printf("tx Error fetching subject %s: %v", claim.ID, err)
 		return lib.Error.General.AuthError.WithError(err)

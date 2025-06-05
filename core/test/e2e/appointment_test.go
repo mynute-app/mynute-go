@@ -12,77 +12,86 @@ import (
 )
 
 func Test_Appointment(t *testing.T) {
-	var err error
 	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 	tt := handlerT.NewTestErrorHandler(t)
+
 	ct := &modelT.Client{}
-	tt.Test(ct.Create(200), "Client creation")
-	tt.Test(ct.VerifyEmail(200), "Client email verification")
-	tt.Test(ct.Login(200), "Client login")
-	tt.Test(ct.GetByEmail(200), "Client get by email")
 	cy := &modelT.Company{}
-	tt.Test(cy.Set(), "Company setup") // This sets up company, employees (with schedules), branches, services.
+
+	tt.Describe("Client creation").Test(ct.Create(200))
+	tt.Describe("Client email verification").Test(ct.VerifyEmail(200))
+	tt.Describe("Client login").Test(ct.Login(200))
+	tt.Describe("Client get by email").Test(ct.GetByEmail(200))
+	tt.Describe("Company setup").Test(cy.Set())
 
 	baseEmployee := cy.Owner
-
 	a := []*modelT.Appointment{}
 
-	// --- Test Case 0: Successful creation by client ---
+	// --- Test Case 0 ---
 	a = append(a, &modelT.Appointment{})
-	// Find a valid slot for the base employee. Using time.Local for preferred location.
 	slot0, found0, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
-	tt.Test(err, "Finding valid appointment slot for base employee")
+	tt.Describe("Finding valid appointment slot for base employee - slot0").Test(err)
 	if !found0 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
-		t.Fatalf("Test setup failed: Could not find any valid appointment slot for employee %s for test case a[0]", baseEmployee.Created.ID)
+		t.Fatalf("Setup failed: No valid appointment slot for test case a[0]")
 	}
-	// Retrieve the actual Branch and Service objects based on IDs from slot0
-	branchForSlot0, err := utilsT.GetBranchByID(cy, slot0.BranchID)
-	tt.Test(err, "Getting branch for slot 0")
-	serviceForSlot0, err := utilsT.GetServiceByID(cy, slot0.ServiceID)
-	tt.Test(err, "Getting service for slot 0")
-	tt.Test(a[0].Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct), "Creating appointment a[0]")
 
-	// --- Test Case 1: Another successful creation by client ---
-	// The employee's appointments list (baseEmployee.Created.Appointments) should have been updated by a[0].Create(),
-	// so findValidAppointmentSlot should now find the *next* available slot.
+	branch0, err := utilsT.GetBranchByID(cy, slot0.BranchID)
+	tt.Describe("Getting branch for slot0").Test(err)
+	service0, err := utilsT.GetServiceByID(cy, slot0.ServiceID)
+	tt.Describe("Getting service for slot0").Test(err)
+
+	tt.Describe("Creating appointment a[0]").Test(
+		a[0].Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branch0, baseEmployee, service0, cy, ct),
+	)
+
+	// --- Test Case 1 ---
 	slot1, found1, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
-	tt.Test(err, "Finding valid appointment slot for base employee")
+	tt.Describe("Finding valid appointment slot for base employee - slot1").Test(err)
 	if !found1 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
-		t.Fatalf("Test setup failed: Could not find a second valid appointment slot for employee %s for test case a[1]", baseEmployee.Created.ID)
+		t.Fatalf("Setup failed: No valid appointment slot for test case a[1]")
 	}
-	branchForSlot1, err := utilsT.GetBranchByID(cy, slot1.BranchID)
-	tt.Test(err, "Getting branch for slot 1")
-	serviceForSlot1, err := utilsT.GetServiceByID(cy, slot1.ServiceID)
-	tt.Test(err, "Getting service for slot 1")
+
+	branch1, err := utilsT.GetBranchByID(cy, slot1.BranchID)
+	tt.Describe("Getting branch for slot1").Test(err)
+	service1, err := utilsT.GetServiceByID(cy, slot1.ServiceID)
+	tt.Describe("Getting service for slot1").Test(err)
+
 	var a1 modelT.Appointment
-	tt.Test(a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, branchForSlot1, baseEmployee, serviceForSlot1, cy, ct), "Creating appointment a[1]")
+	tt.Describe("Creating appointment a[1]").Test(
+		a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, branch1, baseEmployee, service1, cy, ct),
+	)
 	a = append(a, &a1)
-	// --- Test Case 2: Successful creation by company owner ---
+
+	// --- Test Case 2 ---
 	slot2, found2, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
-	tt.Test(err, "Finding valid appointment slot for base employee")
+	tt.Describe("Finding valid appointment slot for base employee - slot2").Test(err)
 	if !found2 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
-		t.Fatalf("Test setup failed: Could not find a third valid appointment slot for employee %s for test case a[2]", baseEmployee.Created.ID)
+		t.Fatalf("Setup failed: No valid appointment slot for test case a[2]")
 	}
-	branchForSlot2, err := utilsT.GetBranchByID(cy, slot2.BranchID)
-	tt.Test(err, "Getting branch for slot 2")
-	serviceForSlot2, err := utilsT.GetServiceByID(cy, slot2.ServiceID)
-	tt.Test(err, "Getting service for slot 2")
+
+	branch2, err := utilsT.GetBranchByID(cy, slot2.BranchID)
+	tt.Describe("Getting branch for slot2").Test(err)
+	service2, err := utilsT.GetServiceByID(cy, slot2.ServiceID)
+	tt.Describe("Getting service for slot2").Test(err)
+
 	var a2 modelT.Appointment
-	tt.Test(a2.Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, branchForSlot2, baseEmployee, serviceForSlot2, cy, ct), "Creating appointment a[2]")
+	tt.Describe("Creating appointment a[2]").Test(
+		a2.Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, branch2, baseEmployee, service2, cy, ct),
+	)
 	a = append(a, &a2)
-	// --- Test Case 3: Attempt to create conflicting appointment (expects 400) ---
-	// This test uses the details of the first successfully created appointment (a[0]) to force a conflict.
+
+	// --- Test Case 3 ---
 	if a[0].Created.ID == uuid.Nil {
-		t.Fatalf("Prerequisite failed for Test Case 3: a[0].Created appointment is nil. Cannot test conflict.")
+		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
-	// The start time for the conflict is the same as a[0]'s start time.
-	startTimeForConflict := a[0].Created.StartTime.Format(time.RFC3339)
-	// The branch, employee, service must be the same as a[0] to ensure a direct conflict.
-	// branchForSlot0, baseEmployee, serviceForSlot0 are already the correct objects.
+	startTimeConflict := a[0].Created.StartTime.Format(time.RFC3339)
+
 	var a3 modelT.Appointment
-	tt.Test(a3.Create(409, ct.X_Auth_Token, nil, &startTimeForConflict, branchForSlot0, baseEmployee, serviceForSlot0, cy, ct), "Creating appointment a[3]")
+	tt.Describe("Creating conflicting appointment a[3]").Test(
+		a3.Create(409, ct.X_Auth_Token, nil, &startTimeConflict, branch0, baseEmployee, service0, cy, ct),
+	)
 }

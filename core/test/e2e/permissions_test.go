@@ -5,7 +5,6 @@ import (
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 	utilsT "agenda-kaki-go/core/test/utils"
-	"fmt"
 	"testing"
 )
 
@@ -24,62 +23,36 @@ type permissions_test struct {
 var permissions_test_instance *permissions_test
 
 func load_permissions_test_instance(t *testing.T) {
-	if permissions_test_instance != nil && permissions_test_instance.server != nil {
-		return
+	if permissions_test_instance == nil {
+		Test_Setup_Permissions_Instance(t)
 	}
-	Test_Setup_Permissions_Instance(t)
+	return
 }
-
 func Test_Setup_Permissions_Instance(t *testing.T) {
-	if permissions_test_instance != nil {
-		return
-	}
-	permissions_test_instance = &permissions_test{}
 	tt := handlerT.NewTestErrorHandler(t)
 
-	companies, err := utilsT.CreateCompaniesRandomly(2)
-	if err != nil {
-		t.Fatal("Failed to create companies:", err)
-	}
-
+	permissions_test_instance = &permissions_test{}
 	permissions_test_instance.server = core.NewServer().Run("parallel")
-
 	if permissions_test_instance.server == nil {
 		t.Fatal("Failed to start the server")
 	}
 
+	companies, err := utilsT.CreateCompaniesRandomly(2)
+	tt.Describe("Creating companies randomly").Test(err)
+
 	permissions_test_instance.company1 = companies[0]
 	permissions_test_instance.company2 = companies[1]
 
-	company_1_employee_number := 3
-	company_2_employee_number := 2
-	company_1_branch_number := 3
-	company_2_branch_number := 2
-	company_1_service_number := 4
-	company_2_service_number := 3
-	permissions_test_instance.company1 = &modelT.Company{}
-	tt.Test(permissions_test_instance.company1.SetupRandomized(company_1_employee_number, company_1_branch_number, company_1_service_number), "Setting up company 1 randomly") // owner, 4 employees, 3 branches, 12 services
-	permissions_test_instance.company2 = &modelT.Company{}
-	tt.Test(permissions_test_instance.company2.SetupRandomized(company_2_employee_number, company_2_branch_number, company_2_service_number), "Setting up company 2 randomly") // owner, 3 employees, 2 branches, 6 services
 	permissions_test_instance.client1 = &modelT.Client{}
-	tt.Test(permissions_test_instance.client1.Set(), "Setting up client 1")
+	tt.Describe("Setting up client 1").Test(permissions_test_instance.client1.Set())
+
 	permissions_test_instance.client2 = &modelT.Client{}
-	tt.Test(permissions_test_instance.client2.Set(), "Setting up client 2")
+	tt.Describe("Setting up client 2").Test(permissions_test_instance.client2.Set())
 
 	permissions_test_instance.company1_employee1 = permissions_test_instance.company1.Employees[1]
 	permissions_test_instance.company1_employee2 = permissions_test_instance.company1.Employees[2]
 	permissions_test_instance.company2_employee1 = permissions_test_instance.company2.Employees[1]
 	permissions_test_instance.company2_employee2 = permissions_test_instance.company2.Employees[2]
-
-	if permissions_test_instance.company1_employee1.X_Auth_Token == "" {
-		t.Fatal("Company 1 Employee 1 auth token is missing")
-	} else if permissions_test_instance.company1_employee2.X_Auth_Token == "" {
-		t.Fatal("Company 1 Employee 2 auth token is missing")
-	} else if permissions_test_instance.company2_employee1.X_Auth_Token == "" {
-		t.Fatal("Company 2 Employee 1 auth token is missing")
-	} else if permissions_test_instance.company2_employee2.X_Auth_Token == "" {
-		t.Fatal("Company 2 Employee 2 auth token is missing")
-	}
 }
 
 func Test_Owner_x_Appointments(t *testing.T) {
@@ -90,154 +63,118 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	client2 := permissions_test_instance.client2
 	company1 := permissions_test_instance.company1
 	company2 := permissions_test_instance.company2
-	company1_owner := permissions_test_instance.company1.Owner
-	company2_owner := permissions_test_instance.company2.Owner
-	company1_employee1 := permissions_test_instance.company1.Employees[1]
-	company1_employee2 := permissions_test_instance.company1.Employees[2]
-	company2_employee1 := permissions_test_instance.company2.Employees[1]
-	company2_employee2 := permissions_test_instance.company2.Employees[2]
+	company1_owner := company1.Owner
+	company2_owner := company2.Owner
+	company1_employee1 := company1.Employees[1]
+	company1_employee2 := company1.Employees[2]
+	company2_employee1 := company2.Employees[1]
+	company2_employee2 := company2.Employees[2]
 
-	fmt.Println("--- Testing Owner x Appointment Interactions ---")
+	tt.Describe("Company1 Owner creates appointment for employee1 and client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Owner creating appointment for company1_employee1 and client1 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee1 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner creates appointment for employee1 and client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Owner creating appointment for company1_employee1 and client2 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee1 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner creates appointment for employee2 and client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Owner creating appointment for company1_employee2 and client1 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee2 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner creates appointment for employee2 and client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Owner creating appointment for company1_employee2 and client2 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee2 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company2 Owner creates appointment for employee1 and client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Owner creating appointment for company2_employee1 and client1 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee1 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company2 Owner creates appointment for employee1 and client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Owner creating appointment for company2_employee1 and client2 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee1 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company2 Owner creates appointment for employee2 and client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Owner creating appointment for company2_employee2 and client1 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee2 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company2 Owner creates appointment for employee2 and client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Owner creating appointment for company2_employee2 and client2 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee2 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner gets appointment from company1").
+		Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
 
-	fmt.Println("---> Company1 Owner trying to get an appointment of Employee 1 from Company 1 : GET /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil), "Getting appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner gets appointment from company2").
+		Test(utilsT.GetAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
 
-	fmt.Println("---> Company1 Owner trying to get an appointment of Employee 1 from Company 2 : GET /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.GetAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil), "Getting appointment of Employee 1 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner reschedules appointment from company1").
+		Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
 
-	fmt.Println("---> Company1 Owner trying to reschedule an appointment of Employee 1 from Company 1 : PATCH /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token), "Rescheduling appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner reschedules appointment from company2").
+		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company1, company2_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
 
-	fmt.Println("---> Company1 Owner trying to reschedule an appointment of Employee 1 from Company 2 : PATCH /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company1, company2_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token), "Rescheduling appointment of Employee 1 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner cancels appointment from company1").
+		Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
 
-	fmt.Println("---> Company1 Owner trying to cancel an appointment of Employee 1 from Company 1 : DELETE /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token), "Canceling appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
-
-	fmt.Println("---> Company1 Owner trying to cancel an appointment of Employee 1 from Company 2 : DELETE /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.CancelAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token), "Canceling appointment of Employee 1 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Company1 Owner cancels appointment from company2").
+		Test(utilsT.CancelAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
 }
 
 func Test_Employee_x_Appointments(t *testing.T) {
 	load_permissions_test_instance(t)
+	tt := handlerT.NewTestErrorHandler(t)
 
 	client1 := permissions_test_instance.client1
 	client2 := permissions_test_instance.client2
 	company1 := permissions_test_instance.company1
 	company2 := permissions_test_instance.company2
-	company1_employee1 := permissions_test_instance.company1.Employees[1]
-	company1_employee2 := permissions_test_instance.company1.Employees[2]
-	company2_employee1 := permissions_test_instance.company2.Employees[1]
-	company2_employee2 := permissions_test_instance.company2.Employees[2]
+	company1_employee1 := company1.Employees[1]
+	company1_employee2 := company1.Employees[2]
+	company2_employee1 := company2.Employees[1]
+	company2_employee2 := company2.Employees[2]
 
-	tt := handlerT.NewTestErrorHandler(t)
+	tt.Describe("Employee1 from company1 creates appointment for client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("--- Testing Employee x Appointment Interactions ---")
+	tt.Describe("Employee1 from company1 creates appointment for client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Employee 1 creating appointment for client1 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee1 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee2 from company2 creates appointment for client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company1 Employee 1 creating appointment for client2 at company1 and company1.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee1 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee2 from company2 creates appointment for client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Employee 2 creating appointment for client1 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee2 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to create for another employee in company1").
+		Test(utilsT.CreateAppointmentRandomly(403, company1, client1, company1_employee2, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
 
-	fmt.Println("---> Company2 Employee 2 creating appointment for client2 at company2 and company2.Created.ID.String() : POST /appointment => HTTP 200")
-	tt.Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee2 and client2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to create for employee2 in company2").
+		Test(utilsT.CreateAppointmentRandomly(403, company2, client1, company2_employee2, company1_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	fmt.Println("---> Company 1 Employee 1 trying to create an appointment for Employee 2 from Company 1 : POST /appointment => HTTP 403")
-	tt.Test(utilsT.CreateAppointmentRandomly(403, company1, client1, company1_employee2, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil), "Creating appointment for company1_employee2 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to get appointment from employee2 in company2").
+		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
 
-	fmt.Println("---> Company 1 Employee 1 trying to create an appointment for Employee 2 from Company 2 : POST /appointment => HTTP 403")
-	tt.Test(utilsT.CreateAppointmentRandomly(403, company2, client1, company2_employee2, company1_employee1.X_Auth_Token, company2.Created.ID.String(), nil), "Creating appointment for company2_employee2 and client1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company2 tries to get appointment from employee2 in company2").
+		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company2_employee1.X_Auth_Token, nil))
 
-	fmt.Println("---> Company 1 Employee 1 trying to get an appointment of Employee 2 from Company 2 : GET /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_employee1.X_Auth_Token, nil), "Getting appointment of Employee 2 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 gets their own appointment").
+		Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
 
-	fmt.Println("---> Company 2 Employee 1 trying to get an appointment of Employee 2 from Company 2 : GET /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company2_employee1.X_Auth_Token, nil), "Getting appointment of Employee 2 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 reschedules their own appointment").
+		Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
 
-	fmt.Println("---> Company 1 Employee 1 trying to get an appointment of Employee 1 from Company 1 : GET /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token, nil), "Getting appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to reschedule another employee's appointment in company1").
+		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee2, company1, company1_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
 
-	fmt.Println("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 1 from Company 1 : PATCH /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token), "Rescheduling appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to reschedule appointment from company2").
+		Test(utilsT.RescheduleAppointmentRandomly(403, company2_employee2, company1, company2_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
 
-	fmt.Println("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 2 from Company 1 : PATCH /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee2, company1, company1_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token), "Rescheduling appointment of Employee 2 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 cancels their own appointment").
+		Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
 
-	fmt.Println("---> Company 1 Employee 1 trying to reschedule an appointment of Employee 2 from Company 2 : PATCH /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.RescheduleAppointmentRandomly(403, company2_employee2, company1, company2_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token), "Rescheduling appointment of Employee 2 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to cancel another employee's appointment in company1").
+		Test(utilsT.CancelAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
 
-	fmt.Println("---> Company 1 Employee 1 trying to cancel an appointment of Employee 1 from Company 1 : DELETE /appointment/{id} => HTTP 200")
-	tt.Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token), "Canceling appointment of Employee 1 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
-
-	fmt.Println("---> Company 1 Employee 1 trying to cancel an appointment of Employee 2 from Company 1 : DELETE /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.CancelAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token), "Canceling appointment of Employee 2 from Company 1")
-	fmt.Println("---------------------- x ----------------------")
-
-	fmt.Println("---> Company 1 Employee 1 trying to cancel an appointment of Employee 2 from Company 2 : DELETE /appointment/{id} => HTTP 403")
-	tt.Test(utilsT.CancelAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token), "Canceling appointment of Employee 2 from Company 2")
-	fmt.Println("---------------------- x ----------------------")
+	tt.Describe("Employee1 from company1 tries to cancel appointment from company2").
+		Test(utilsT.CancelAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
 }
 
-func Test_Cleanup_Environment(t *testing.T) {
-	if permissions_test_instance == nil || permissions_test_instance.server == nil {
-		Test_Setup_Permissions_Instance(t)
+func Test_Shutdown_Permissions_Instance(t *testing.T) {
+	if permissions_test_instance != nil {
+		permissions_test_instance.server.Shutdown()
+		permissions_test_instance = nil
 	}
-	fmt.Println("--- Cleaning up environment ---")
-	permissions_test_instance.server.Shutdown()
-	fmt.Println("Environment cleaned up successfully")
 }

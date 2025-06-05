@@ -12,14 +12,22 @@ import (
 func Test_Employee(t *testing.T) {
 	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
-	company := &modelT.Company{}
+
 	tt := handlerT.NewTestErrorHandler(t)
-	tt.Test(company.Set(), "Company setup") // This sets up company, employees (with schedules), branches, services.
+	company := &modelT.Company{}
+
+	tt.Describe("Company setup").Test(company.Set()) // Cria company, employees, branches, services
+
 	employee := company.Employees[0]
-	tt.Test(employee.GetById(200, nil, nil), "Employee get by ID")
-	tt.Test(employee.GetByEmail(200, nil, nil), "Employee get by email")
-	tt.Test(employee.Update(200, map[string]any{"name": "Updated Employee Name xD"}, nil, nil), "Employee update")
-	tt.Test(employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{
+
+	tt.Describe("Employee get by ID").Test(employee.GetById(200, nil, nil))
+	tt.Describe("Employee get by email").Test(employee.GetByEmail(200, nil, nil))
+
+	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
+		"name": "Updated Employee Name xD",
+	}, nil, nil))
+
+	tt.Describe("Employee update work schedule").Test(employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{
 		{
 			Monday: []mJSON.WorkRange{
 				{Start: "08:00", End: "12:00", BranchID: company.Branches[0].Created.ID},
@@ -39,6 +47,7 @@ func Test_Employee(t *testing.T) {
 			},
 			Sunday: []mJSON.WorkRange{},
 		},
-	}, nil, nil), "Employee update work schedule")
-	tt.Test(employee.Delete(200, nil, nil), "Employee deletion")
+	}, nil, nil))
+
+	tt.Describe("Employee deletion").Test(employee.Delete(200, nil, nil))
 }
