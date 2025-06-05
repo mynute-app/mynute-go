@@ -26,7 +26,6 @@ func load_permissions_test_instance(t *testing.T) {
 	if permissions_test_instance == nil {
 		Test_Setup_Permissions_Instance(t)
 	}
-	return
 }
 func Test_Setup_Permissions_Instance(t *testing.T) {
 	tt := handlerT.NewTestErrorHandler(t)
