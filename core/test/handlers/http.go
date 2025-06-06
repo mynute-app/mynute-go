@@ -31,35 +31,19 @@ type httpActions struct {
 	httpRes         *http.Response
 	reqHeaders      http.Header // Store headers before sending the request
 	rawResponseBody []byte      // Store the raw response body
+	log_level       string      // 'silent' or 'verbose'
 }
 
 func NewHttpClient() *httpActions {
+	log_level := os.Getenv("HTTP_TEST_LOG_LEVEL")
+	if log_level == "" {
+		log_level = "silent" // Default log level
+	}
 	return &httpActions{
 		ResBody:    make(map[string]any),
 		ResHeaders: make(map[string][]string),
+		log_level:  log_level,
 	}
-}
-
-func (h *httpActions) Clone() *httpActions {
-	// Create a new instance of httpActions
-	newH := &httpActions{
-		Error:           nil,
-		Status:          0,
-		ResBody:         make(map[string]any),
-		ResHeaders:      make(map[string][]string),
-		reqHeaders:      make(http.Header),
-		rawResponseBody: make([]byte, len(h.rawResponseBody)),
-	}
-
-	// Copy the raw response body
-	copy(newH.rawResponseBody, h.rawResponseBody)
-
-	// Copy the headers
-	for key, values := range h.reqHeaders {
-		newH.reqHeaders[key] = values
-	}
-
-	return newH
 }
 
 func (h *httpActions) URL(url string) *httpActions {
@@ -120,11 +104,12 @@ func (h *httpActions) Send(body any) *httpActions {
 	}
 	h.ResBody = nil
 	h.ResHeaders = nil
-	fmt.Printf("\n--------------- NEW REQUEST ---------------\n")
-	fmt.Printf("\n>>>>>>>>>> Sending %s request to %s <<<<<<<<<<\n", h.method, h.url)
-	fmt.Printf("\n>>>>>>>>>> Request body: %+v\n", body)
-	fmt.Printf("\n>>>>>>>>>> Request headers: %+v\n\n", h.reqHeaders)
-
+	if h.log_level == "verbose" {
+		fmt.Printf("\n--------------- NEW REQUEST ---------------\n")
+		fmt.Printf("\n>>>>>>>>>> Sending %s request to %s <<<<<<<<<<\n", h.method, h.url)
+		fmt.Printf("\n>>>>>>>>>> Request body: %+v\n", body)
+		fmt.Printf("\n>>>>>>>>>> Request headers: %+v\n\n", h.reqHeaders)
+	}
 
 	bodyBuffer := bytes.NewBuffer(bodyBytes)
 
@@ -170,9 +155,11 @@ func (h *httpActions) Send(body any) *httpActions {
 		}
 	}
 
-	fmt.Printf("\n>>>>>>>>>> Response body: %+v\n", h.ResBody)
-	fmt.Printf("\n>>>>>>>>>> Response headers: %+v\n", h.ResHeaders)
-	fmt.Printf("\n---------------- x ----------------\n")
+	if h.log_level == "verbose" {
+		fmt.Printf("\n>>>>>>>>>> Response body: %+v\n", h.ResBody)
+		fmt.Printf("\n>>>>>>>>>> Response headers: %+v\n", h.ResHeaders)
+		fmt.Printf("\n---------------- x ----------------\n")
+	}
 
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
 		return h.set_error(fmt.Sprintf("expected status code: %d | received status code: %d \n", h.expectedStatus, res.StatusCode))
@@ -217,7 +204,6 @@ func (h *httpActions) ParseResponse(to any) *httpActions {
 
 	return h
 }
-
 
 func (h *httpActions) parseFiles(files Files) ([]byte, error) {
 	if len(files) == 0 {

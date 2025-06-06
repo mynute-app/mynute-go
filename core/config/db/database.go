@@ -35,6 +35,7 @@ func Connect() *Database {
 	dbName := os.Getenv("POSTGRES_DB")
 	port := os.Getenv("POSTGRES_PORT")
 	app_env := os.Getenv("APP_ENV")
+	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")
 	sslmode := "disable" // You can modify this based on your setup
 	timeZone := "UTC"    // Default timezone
 	LogLevel := logger.Warn
@@ -44,9 +45,22 @@ func Connect() *Database {
 		LogLevel = logger.Info
 	} else if app_env == "dev" {
 		dbName = os.Getenv("POSTGRES_DB_DEV")
-		LogLevel = logger.Info
+		LogLevel = logger.Warn
 	} else if app_env != "prod" {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
+	}
+	
+	if db_log_level == "info" {
+		LogLevel = logger.Info
+	} else if db_log_level == "error" {
+		LogLevel = logger.Error
+	} else if db_log_level == "silent" {
+		LogLevel = logger.Silent
+	}  else if db_log_level == "warn" {
+		LogLevel = logger.Warn
+	} else {
+		log.Printf("Unknown env POSTGRES_LOG_LEVEL: %s, defaulting to Warn level", db_log_level)
+		LogLevel = logger.Warn
 	}
 
 	log.Printf("Running in %s environment. Database: %s\n", app_env, dbName)

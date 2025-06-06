@@ -10,6 +10,7 @@ import (
 	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"strings"
@@ -148,7 +149,7 @@ func (c *Company) CreateCompanyRandomly(numEmployees, numBranches, numServices i
 		panic("Cannot run tests in production environment. Set APP_ENV to 'test' or 'dev'")
 	}
 
-	fmt.Printf("Setting up randomized Company with %d employees, %d branches, %d services", numEmployees, numBranches, numServices)
+	log.Printf("Setting up randomized Company with %d employees, %d branches, %d services", numEmployees, numBranches, numServices)
 
 	if c.Created != nil && c.Created.ID != uuid.Nil {
 		return fmt.Errorf("this function should not be called if the company has already been created")
@@ -196,7 +197,7 @@ func (c *Company) CreateCompanyRandomly(numEmployees, numBranches, numServices i
 		return err
 	}
 
-	fmt.Println("Randomized Company setup completed")
+	log.Println("Randomized Company setup completed")
 	return nil
 }
 
@@ -256,7 +257,7 @@ func (c *Company) AddRandomizedEntitiesToCompany(numEmployees, numBranches, numS
 		return err
 	}
 
-	fmt.Println("Randomized Company setup completed")
+	log.Println("Randomized Company setup completed")
 	return nil
 }
 
@@ -264,7 +265,7 @@ func (c *Company) AddRandomizedEntitiesToCompany(numEmployees, numBranches, numS
 
 // GenerateEmployees creates n *additional* employees (owner already exists).
 func (c *Company) GenerateEmployees(n int) error {
-	fmt.Printf("Generating %d employees for Company ID %s", n, c.Created.ID)
+	log.Printf("Generating %d employees for Company ID %s", n, c.Created.ID)
 
 	if n <= 0 {
 		return fmt.Errorf("employee generation failed: n must be greater than 0")
@@ -285,9 +286,6 @@ func (c *Company) GenerateEmployees(n int) error {
 			return fmt.Errorf("failed to create employee %d/%d or retrieve ID", i+1, n)
 		}
 
-		createdCount++
-		fmt.Printf("Generated employee %d/%d: ID %s, Email %s", i+1, n, employee.Created.ID, employee.Created.Email)
-
 		if err := employee.VerifyEmail(200, nil); err != nil {
 			return err
 		}
@@ -298,7 +296,7 @@ func (c *Company) GenerateEmployees(n int) error {
 		if employee.X_Auth_Token == "" {
 			return fmt.Errorf("failed to login employee %d/%d or retrieve Auth Token", i+1, n)
 		}
-
+		createdCount++
 		c.Employees = append(c.Employees, employee)
 	}
 	if createdCount != n {
@@ -307,14 +305,12 @@ func (c *Company) GenerateEmployees(n int) error {
 	if len(c.Employees) != initialEmployeeCount+createdCount {
 		return fmt.Errorf("company employee slice length (%d) does not match expected count (%d)", len(c.Employees), initialEmployeeCount+createdCount)
 	}
-	fmt.Printf("Generated %d employees. Initial count was %d", createdCount, initialEmployeeCount)
-	fmt.Printf("Total employees after generation: %d", len(c.Employees))
 	return nil
 }
 
 // GenerateBranches creates n branches for the Company.
 func (c *Company) GenerateBranches(n int) error {
-	fmt.Printf("Generating %d branches for Company ID %s", n, c.Created.ID)
+	log.Printf("Generating %d branches for Company ID %s", n, c.Created.ID)
 
 	if n <= 0 {
 		return fmt.Errorf("branch generation failed: n must be greater than 0")
@@ -335,7 +331,6 @@ func (c *Company) GenerateBranches(n int) error {
 			return fmt.Errorf("failed to create branch %d/%d or retrieve ID", i+1, n)
 		}
 		createdCount++
-		fmt.Printf("Generated branch %d/%d: ID %s, Name %s", i+1, n, branch.Created.ID, branch.Created.Name)
 		c.Branches = append(c.Branches, branch)
 	}
 	if createdCount != n {
@@ -344,14 +339,12 @@ func (c *Company) GenerateBranches(n int) error {
 	if len(c.Branches) != initialBranchCount+createdCount {
 		return fmt.Errorf("company branch slice length (%d) does not match expected count (%d)", len(c.Branches), initialBranchCount+createdCount)
 	}
-	fmt.Printf("Generated %d branches. Initial count was %d", createdCount, initialBranchCount)
-	fmt.Printf("Total branches after generation: %d", len(c.Branches))
 	return nil
 }
 
 // GenerateServices creates n services for the Company.
 func (c *Company) GenerateServices(n int) error {
-	fmt.Printf("Generating %d services for Company ID %s", n, c.Created.ID)
+	log.Printf("Generating %d services for Company ID %s", n, c.Created.ID)
 
 	if n <= 0 {
 		return fmt.Errorf("service generation failed: n must be greater than 0, Company ID must not be nil, and Auth Token must not be empty")
@@ -372,7 +365,6 @@ func (c *Company) GenerateServices(n int) error {
 			return fmt.Errorf("failed to create service %d/%d or retrieve ID", i+1, n)
 		}
 		createdCount++
-		fmt.Printf("Generated service %d/%d: ID %s, Name %s", i+1, n, service.Created.ID, service.Created.Name)
 		c.Services = append(c.Services, service)
 	}
 	if createdCount != n {
@@ -381,8 +373,6 @@ func (c *Company) GenerateServices(n int) error {
 	if len(c.Services) != initialServiceCount+createdCount {
 		return fmt.Errorf("Company service slice length (%d) does not match expected count (%d)", len(c.Services), initialServiceCount+createdCount)
 	}
-	fmt.Printf("Generated %d services. Initial count was %d", createdCount, initialServiceCount)
-	fmt.Printf("Total services after generation: %d", len(c.Services))
 	return nil
 }
 
@@ -390,12 +380,13 @@ func (c *Company) GenerateServices(n int) error {
 
 // RandomlyAssignEmployeesToBranches assigns each employee to 1 to N random branches.
 func (c *Company) RandomlyAssignEmployeesToBranches() error {
+	log.Println("Randomly assigning employees to branches...")
 	if len(c.Employees) == 0 {
-		fmt.Println("Warning: No employees to assign branches to in RandomlyAssignEmployeesToBranches.")
+		log.Println("Warning: No employees to assign branches to in RandomlyAssignEmployeesToBranches.")
 		return nil
 	}
 	if len(c.Branches) == 0 {
-		fmt.Println("Warning: No branches available in the company to assign to employees in RandomlyAssignEmployeesToBranches.")
+		log.Println("Warning: No branches available in the company to assign to employees in RandomlyAssignEmployeesToBranches.")
 		return nil // Não é um erro se não houver filiais, mas os funcionários não serão atribuídos.
 	}
 
@@ -414,7 +405,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil {
-			fmt.Printf("Skipping branch assignment for employee (index %d, email: %s): Employee ID is nil\n", i, employee.Created.Email)
+			log.Printf("Skipping branch assignment for employee (index %d, email: %s): Employee ID is nil\n", i, employee.Created.Email)
 			continue // Pular este funcionário se o ID for nulo
 		}
 
@@ -446,10 +437,6 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 			actualBranchIndexInValidBranches := shuffledIndices[k]
 			branchToAssign := validBranches[actualBranchIndexInValidBranches]
 
-			fmt.Printf("Assigning employee %d (%s, ID: %s) to branch (Name: %s, ID: %s)\n",
-				i, employee.Created.Email, employee.Created.ID,
-				branchToAssign.Created.Name, branchToAssign.Created.ID)
-
 			// Usar token do proprietário para privilégio ao atribuir funcionários a filiais
 			if err := employee.AddBranch(200, branchToAssign, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %d (%s, ID: %s) to branch (Name: %s, ID: %s): %v",
@@ -459,12 +446,7 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 			assignedCount++
 		}
 		if assignedCount == 0 && numBranchesToAssign > 0 {
-			fmt.Printf("Warning: Employee %s was intended to be assigned %d branches, but 0 were assigned. Valid branches: %d. This might be due to previous errors or lack of valid branches.\n", employee.Created.Email, numBranchesToAssign, len(validBranches))
-		}
-		if employee.Created.ID != uuid.Nil { // Apenas se o funcionário foi criado corretamente
-			if err := employee.GetById(200, nil, nil); err != nil {
-				return fmt.Errorf("failed to refresh employee %s after branch assignment: %v", employee.Created.Email, err)
-			}
+			return fmt.Errorf("employee %s was intended to be assigned %d branches, but 0 were assigned. Valid branches: %d. This might be due to previous errors or lack of valid branches", employee.Created.Email, numBranchesToAssign, len(validBranches))
 		}
 	}
 	return nil
@@ -472,12 +454,13 @@ func (c *Company) RandomlyAssignEmployeesToBranches() error {
 
 // RandomlyAssignServicesToEmployees assigns each employee 1 to N random services.
 func (c *Company) RandomlyAssignServicesToEmployees() error {
+	log.Println("Randomly assigning services to employees...")
 	if len(c.Employees) == 0 {
-		fmt.Println("Warning: No employees to assign services to in RandomlyAssignServicesToEmployees.")
+		log.Println("Warning: No employees to assign services to in RandomlyAssignServicesToEmployees.")
 		return nil
 	}
 	if len(c.Services) == 0 {
-		fmt.Println("Warning: No services available in the company to assign to employees in RandomlyAssignServicesToEmployees.")
+		log.Println("Warning: No services available in the company to assign to employees in RandomlyAssignServicesToEmployees.")
 		return nil
 	}
 
@@ -494,7 +477,7 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 
 	for i, employee := range c.Employees {
 		if employee.Created.ID == uuid.Nil || employee.X_Auth_Token == "" {
-			fmt.Printf("Skipping service assignment for employee (index %d, email: %s): Employee ID nil or not logged in\n", i, employee.Created.Email)
+			log.Printf("Skipping service assignment for employee (index %d, email: %s): Employee ID nil or not logged in\n", i, employee.Created.Email)
 			continue
 		}
 
@@ -522,10 +505,6 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 			actualServiceIndexInValidServices := shuffledIndices[k]
 			serviceToAssign := validServices[actualServiceIndexInValidServices]
 
-			fmt.Printf("Assigning service (Name: %s, ID: %s) to employee %d (%s, ID: %s)\n",
-				serviceToAssign.Created.Name, serviceToAssign.Created.ID,
-				i, employee.Created.Email, employee.Created.ID)
-
 			// Usar Employee.AddService, o token do funcionário é usado (passando nil para X_Auth_Token em AddService)
 			if err := employee.AddService(200, serviceToAssign, nil, nil); err != nil {
 				return fmt.Errorf("failed to assign service (Name: %s, ID: %s) to employee %d (%s, ID: %s): %v",
@@ -535,12 +514,7 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 			assignedCount++
 		}
 		if assignedCount == 0 && numServicesToAssign > 0 {
-			fmt.Printf("Warning: Employee %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", employee.Created.Email, numServicesToAssign, len(validServices))
-		}
-		if employee.Created.ID != uuid.Nil {
-			if err := employee.GetById(200, nil, nil); err != nil {
-				return fmt.Errorf("failed to refresh employee %s after service assignment: %v", employee.Created.Email, err)
-			}
+			log.Printf("Warning: Employee %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", employee.Created.Email, numServicesToAssign, len(validServices))
 		}
 	}
 	return nil
@@ -549,11 +523,11 @@ func (c *Company) RandomlyAssignServicesToEmployees() error {
 // RandomlyAssignServicesToBranches assigns each branch 1 to N random services.
 func (c *Company) RandomlyAssignServicesToBranches() error {
 	if len(c.Branches) == 0 {
-		fmt.Println("Warning: No branches to assign services to in RandomlyAssignServicesToBranches.")
+		log.Println("Warning: No branches to assign services to in RandomlyAssignServicesToBranches.")
 		return nil
 	}
 	if len(c.Services) == 0 {
-		fmt.Println("Warning: No services available in the company to assign to branches in RandomlyAssignServicesToBranches.")
+		log.Println("Warning: No services available in the company to assign to branches in RandomlyAssignServicesToBranches.")
 		return nil
 	}
 
@@ -604,10 +578,6 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 			actualServiceIndexInValidServices := shuffledIndices[k]
 			serviceToAssign := validServices[actualServiceIndexInValidServices]
 
-			fmt.Printf("Assigning service (Name: %s, ID: %s) to branch %d (%s, ID: %s)\n",
-				serviceToAssign.Created.Name, serviceToAssign.Created.ID,
-				i, branch.Created.Name, branch.Created.ID)
-
 			if err := branch.AddService(200, serviceToAssign, c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign service (Name: %s, ID: %s) to branch %d (%s, ID: %s): %v",
 					serviceToAssign.Created.Name, serviceToAssign.Created.ID,
@@ -616,12 +586,7 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 			assignedCount++
 		}
 		if assignedCount == 0 && numServicesToAssign > 0 {
-			fmt.Printf("Warning: Branch %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d.\n", branch.Created.Name, numServicesToAssign, len(validServices))
-		}
-		if branch.Created.ID != uuid.Nil {
-			if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to refresh branch %s after service assignment: %v", branch.Created.Name, err)
-			}
+			return fmt.Errorf("branch %s was intended to be assigned %d services, but 0 were assigned. Valid services: %d", branch.Created.Name, numServicesToAssign, len(validServices))
 		}
 	}
 	return nil
@@ -631,6 +596,7 @@ func (c *Company) RandomlyAssignServicesToBranches() error {
 
 // RandomlyAssignWorkSchedules assigns a generated work schedule to each employee.
 func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
+	log.Println("Randomly assigning work schedules to employees...")
 	if len(c.Employees) == 0 {
 		return fmt.Errorf("no employees to assign work schedules")
 	} else if len(c.Branches) == 0 {
@@ -644,15 +610,12 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 			return fmt.Errorf("skipping schedule assignment for employee %d (%s): ID nil", i, employee.Created.Email)
 		}
 
-		fmt.Println("👀 Employee services:", employee.Created.Services)
-		fmt.Println("👀 Employee branches:", employee.Created.Branches)
-
 		if len(employee.Created.Branches) == 0 {
-			fmt.Printf("Skipping work schedule for employee %d (%s): Not assigned to any branches.\n", i, employee.Created.Email)
+			log.Printf("Skipping work schedule for employee %d (%s): Not assigned to any branches.\n", i, employee.Created.Email)
 			continue // Pula para o próximo funcionário
 		}
 		if len(employee.Created.Services) == 0 {
-			fmt.Printf("Skipping work schedule for employee %d (%s): Does not offer any services.\n", i, employee.Created.Email)
+			log.Printf("Skipping work schedule for employee %d (%s): Does not offer any services.\n", i, employee.Created.Email)
 			continue // Pula para o próximo funcionário
 		}
 
@@ -673,13 +636,11 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 		}
 
 		scheduleModel := GenerateRandomModelWorkSchedule(employee.Branches, employee)
-		fmt.Printf("Generated work schedule for employee %d (%s), referencing %d valid branch(es)", i, employee.Created.Email, len(validEmployeeBranches))
 
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
 		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{scheduleModel}, nil, nil); err != nil {
 			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v", i, employee.Created.Email, err)
 		}
-		fmt.Printf("Successfully updated work schedule for employee %d (%s)", i, employee.Created.Email)
 	}
 	return nil
 }
@@ -720,8 +681,6 @@ func generateRangesForDayModel(validBranches []*Branch, employee *Employee, rand
 	for r := range numRanges {
 		// Use global rand.Intn()
 		targetBranchHelper := validBranches[rand.Intn(len(validBranches))]
-
-		fmt.Println("🏢 Branch services:", targetBranchHelper.Services)
 
 		startHourLower := 7
 		if r > 0 {
@@ -785,8 +744,6 @@ func generateRangesForDayModel(validBranches []*Branch, employee *Employee, rand
 		}
 
 		commonServices := intersectUUIDs(employeeServices, branchServices)
-
-		fmt.Println("🔀 Intersected services:", commonServices)
 
 		if len(commonServices) == 0 {
 			continue // pula esse range se não houver serviços em comum

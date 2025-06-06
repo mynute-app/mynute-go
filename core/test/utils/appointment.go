@@ -26,7 +26,7 @@ func FindValidAppointmentSlotV2(employee *modelT.Employee, preferredLocation *ti
 		return nil, false, fmt.Errorf("preferredLocation is nil; timezone must be explicitly passed")
 	}
 
-	fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
+	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
 
 	workSchedule := employee.Created.WorkSchedule
 	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{

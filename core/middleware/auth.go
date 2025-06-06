@@ -271,7 +271,7 @@ forLoop: // Label is optional but can improve readability
 	PolicyEngine := handler.NewPolicyEngine(tx)
 
 	for _, policy := range policies {
-		log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
+		// log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
 		decision := PolicyEngine.CanAccess(
 			subject_data,  // The subject (user) data
 			resource_data, // The data fetched (or empty map)
@@ -283,27 +283,17 @@ forLoop: // Label is optional but can improve readability
 		)
 
 		if decision.Error != nil {
-			log.Printf("ERROR: Policy '%s' evaluation failed: %v", policy.Name, decision.Error)
-			// Provide more specific error details if possible
 			detailedErr := fmt.Errorf("policy '%s' evaluation error: %w", policy.Name, decision.Error)
 			return lib.Error.General.AuthError.WithError(detailedErr)
 		} else if !decision.Allowed {
-			// Denied access
-			log.Printf("INFO: Access denied by policy '%s'. Reason: %s", policy.Name, decision.Reason)
-			// Create structured error for potential upstream logging/handling
 			deniedErr := fmt.Errorf("policy '%s' denied access", policy.Name)
 			detailedReason := fmt.Errorf("%w. Reason: %s", deniedErr, decision.Reason) // Wrap reason
 			return lib.Error.Auth.Unauthorized.WithError(detailedReason)
 		}
-		// If allowed by this policy, continue (implicitly, maybe next policy needs check - currently loop allows if ANY policy permits)
-		// TODO: Consider if ALL policies must pass, or just one. Current logic allows if *any* policy evaluates to allowed.
-		// If you need ALL policies to pass, you might need different logic (e.g., track if any deny, and only allow if none deny)
-		// For now, assume any allowing policy is sufficient.
-		log.Printf("DEBUG: Policy '%s' allowed access.", policy.Name)
 	}
 
 	// If loop finished and no policy explicitly denied (and no errors occurred), access is granted
-	log.Printf("INFO: Access granted for Endpoint %s %s (Subject: %s)", method, routePath, claim.ID)
+	// log.Printf("INFO: Access granted for Endpoint %s %s (Subject: %s)", method, routePath, claim.ID)
 	return c.Next()
 }
 

@@ -152,17 +152,32 @@ func Test_Employee_x_Appointments(t *testing.T) {
 	tt.Describe("Employee1 from company1 creates appointment for client2").
 		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
 
+	tt.Describe("Employee2 from company1 creates appointment for client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee2, company1_employee2.X_Auth_Token, company1.Created.ID.String(), nil))
+	
+	tt.Describe("Employee2 from company1 creates appointment for client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee2, company1_employee2.X_Auth_Token, company1.Created.ID.String(), nil))
+
+	tt.Describe("Employee1 from company2 creates appointment for client1").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee1, company2_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+
+	tt.Describe("Employee1 from company2 creates appointment for client2").
+		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee1, company2_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+
 	tt.Describe("Employee2 from company2 creates appointment for client1").
 		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
 
 	tt.Describe("Employee2 from company2 creates appointment for client2").
 		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	tt.Describe("Employee1 from company1 tries to create for another employee in company1").
+	tt.Describe("Employee1 from company1 creates appointment for employee2 in company1").
 		Test(utilsT.CreateAppointmentRandomly(403, company1, client1, company1_employee2, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
 
 	tt.Describe("Employee1 from company1 tries to create for employee2 in company2").
 		Test(utilsT.CreateAppointmentRandomly(403, company2, client1, company2_employee2, company1_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+
+	tt.Describe("Employee1 from company1 tries to get appointment from employee2 in company1").
+		Test(utilsT.GetAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
 
 	tt.Describe("Employee1 from company1 tries to get appointment from employee2 in company2").
 		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_employee1.X_Auth_Token, nil))

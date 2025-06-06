@@ -3,7 +3,6 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -94,12 +93,6 @@ func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading company: %w", err))
 	}
 	client.AddAppointment(a, a.Service, &company, a.Branch, a.Employee)
-	jsonVal, err := json.Marshal(client.Appointments)
-	if err != nil {
-		fmt.Println("Marshal Error:", err)
-	} else {
-		fmt.Println("Appointments JSON to be saved:", string(jsonVal))
-	}
 	if err := tx.Save(&client).Error; err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("updating client: %w", err))
 	}
