@@ -93,23 +93,44 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	tt.Describe("Company2 Owner creates appointment for employee2 and client2").
 		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
 
-	tt.Describe("Company1 Owner gets appointment from company1").
+	tt.Describe("Company1 Owner creates appointment for employee1 and client2 but using company2 ID").
+		Test(utilsT.CreateAppointmentRandomly(403, company2, client2, company1_employee1, company1_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+
+	tt.Describe("Company2 Owner creates appointment for employee2 and client2 but using company1 ID").
+		Test(utilsT.CreateAppointmentRandomly(403, company1, client2, company2_employee2, company2_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+
+	tt.Describe("Company1 Owner gets appointment of employee1 from company1").
 		Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner gets appointment from company2").
+	tt.Describe("Company1 Owner gets appointment of employee1 from company1 but using company2 ID").
+		Test(utilsT.GetAppointment(403, company1_employee1.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Owner gets appointment of employee1 from company2").
 		Test(utilsT.GetAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner reschedules appointment from company1").
+	tt.Describe("Company2 Owner gets appointment of employee2 from company2 but using company1 ID").
+		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+
+	tt.Describe("Company2 Owner gets appointment of employee2 from company1").
+		Test(utilsT.GetAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company2_owner.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Owner reschedules appointment of employee1 from company1").
 		Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
 
-	tt.Describe("Company1 Owner reschedules appointment from company2").
+	tt.Describe("Company1 Owner reschedules appointment of employee1 from company2").
 		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company1, company2_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
 
-	tt.Describe("Company1 Owner cancels appointment from company1").
+	tt.Describe("Company1 Owner reschedules appointment of employee1 from company1 but using company2 ID").
+		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company2, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
+
+	tt.Describe("Company1 Owner cancels appointment of employee1 from company1").
 		Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
 
-	tt.Describe("Company1 Owner cancels appointment from company2").
+	tt.Describe("Company1 Owner cancels appointment of employee1 from company2").
 		Test(utilsT.CancelAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
+
+	tt.Describe("Company1 Owner cancels appointment of employee1 from company1 but using company2 ID").
+		Test(utilsT.CancelAppointment(403, company1_employee1.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token))
 }
 
 func Test_Employee_x_Appointments(t *testing.T) {
