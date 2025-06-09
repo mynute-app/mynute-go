@@ -26,11 +26,11 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Company setup").Test(cy.Set())
 
 	baseEmployee := cy.Owner
-	a := []*modelT.Appointment{}
+	Appointments := []*modelT.Appointment{}
 
 	// --- Test Case 0 ---
-	a = append(a, &modelT.Appointment{})
-	slot0, found0, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
+	var a0 modelT.Appointment
+	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot0").Test(err)
 	if !found0 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
@@ -43,11 +43,14 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Getting service for slot0").Test(err)
 
 	tt.Describe("Creating appointment a[0]").Test(
-		a[0].Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branch0, baseEmployee, service0, cy, ct),
+		a0.Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branch0, baseEmployee, service0, cy, ct),
 	)
 
+	Appointments = append(Appointments, &a0)
+
 	// --- Test Case 1 ---
-	slot1, found1, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
+	var a1 modelT.Appointment
+	slot1, found1, err := a1.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot1").Test(err)
 	if !found1 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
@@ -58,15 +61,14 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Getting branch for slot1").Test(err)
 	service1, err := utilsT.GetServiceByID(cy, slot1.ServiceID)
 	tt.Describe("Getting service for slot1").Test(err)
-
-	var a1 modelT.Appointment
 	tt.Describe("Creating appointment a[1]").Test(
 		a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, branch1, baseEmployee, service1, cy, ct),
 	)
-	a = append(a, &a1)
+	Appointments = append(Appointments, &a1)
 
 	// --- Test Case 2 ---
-	slot2, found2, err := utilsT.FindValidAppointmentSlotV2(baseEmployee, time.Local)
+	var a2 modelT.Appointment
+	slot2, found2, err := a2.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot2").Test(err)
 	if !found2 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
@@ -77,18 +79,16 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Getting branch for slot2").Test(err)
 	service2, err := utilsT.GetServiceByID(cy, slot2.ServiceID)
 	tt.Describe("Getting service for slot2").Test(err)
-
-	var a2 modelT.Appointment
 	tt.Describe("Creating appointment a[2]").Test(
 		a2.Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, branch2, baseEmployee, service2, cy, ct),
 	)
-	a = append(a, &a2)
+	Appointments = append(Appointments, &a2)
 
 	// --- Test Case 3 ---
-	if a[0].Created.ID == uuid.Nil {
+	if Appointments[0].Created.ID == uuid.Nil {
 		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
-	startTimeConflict := a[0].Created.StartTime.Format(time.RFC3339)
+	startTimeConflict := Appointments[0].Created.StartTime.Format(time.RFC3339)
 
 	var a3 modelT.Appointment
 	tt.Describe("Creating conflicting appointment a[3]").Test(

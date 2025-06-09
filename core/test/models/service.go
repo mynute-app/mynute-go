@@ -10,7 +10,7 @@ import (
 )
 
 type Service struct {
-	Created   model.Service
+	Created   *model.Service
 	Company   *Company
 	Employees []*Employee
 	Branches  []*Branch

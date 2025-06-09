@@ -61,7 +61,9 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	client1 := permissions_test_instance.client1
 	client2 := permissions_test_instance.client2
 	company1 := permissions_test_instance.company1
+	c1ID := company1.Created.ID.String()
 	company2 := permissions_test_instance.company2
+	c2ID := company2.Created.ID.String()
 	company1_owner := company1.Owner
 	company2_owner := company2.Owner
 	company1_employee1 := company1.Employees[1]
@@ -69,68 +71,81 @@ func Test_Owner_x_Appointments(t *testing.T) {
 	company2_employee1 := company2.Employees[1]
 	company2_employee2 := company2.Employees[2]
 
+	var a_cy1_e1_ct1 modelT.Appointment
 	tt.Describe("Company1 Owner creates appointment for employee1 and client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+		Test(a_cy1_e1_ct1.CreateRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, c1ID))
 
+	var a_cy1_e1_ct2 modelT.Appointment
 	tt.Describe("Company1 Owner creates appointment for employee1 and client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+		Test(a_cy1_e1_ct2.CreateRandomly(200, company1, client2, company1_employee1, company1_owner.X_Auth_Token, c1ID))
 
+	var a_cy1_e2_ct1 modelT.Appointment
 	tt.Describe("Company1 Owner creates appointment for employee2 and client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+		Test(a_cy1_e2_ct1.CreateRandomly(200, company1, client1, company1_employee2, company1_owner.X_Auth_Token, c1ID))
 
+	var a_cy1_e2_ct2 modelT.Appointment
 	tt.Describe("Company1 Owner creates appointment for employee2 and client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee2, company1_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+		Test(a_cy1_e2_ct2.CreateRandomly(200, company1, client2, company1_employee2, company1_owner.X_Auth_Token, c1ID))
 
+	var a_cy2_e1_ct1 modelT.Appointment
 	tt.Describe("Company2 Owner creates appointment for employee1 and client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+		Test(a_cy2_e1_ct1.CreateRandomly(200, company2, client1, company2_employee1, company2_owner.X_Auth_Token, c2ID))
 
+	var a_cy2_e1_ct2 modelT.Appointment
 	tt.Describe("Company2 Owner creates appointment for employee1 and client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee1, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+		Test(a_cy2_e1_ct2.CreateRandomly(200, company2, client2, company2_employee1, company2_owner.X_Auth_Token, c2ID))
 
+	var a_cy2_e2_ct1 modelT.Appointment
 	tt.Describe("Company2 Owner creates appointment for employee2 and client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+		Test(a_cy2_e2_ct1.CreateRandomly(200, company2, client1, company2_employee2, company2_owner.X_Auth_Token, c2ID))
 
+	var a_cy2_e2_ct2 modelT.Appointment
 	tt.Describe("Company2 Owner creates appointment for employee2 and client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+		Test(a_cy2_e2_ct2.CreateRandomly(200, company2, client2, company2_employee2, company2_owner.X_Auth_Token, c2ID))
 
-	tt.Describe("Company1 Owner creates appointment for employee1 and client2 but using company2 ID").
-		Test(utilsT.CreateAppointmentRandomly(403, company2, client2, company1_employee1, company1_owner.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_fail modelT.Appointment
+	tt.Describe("Company1 owner unauthorized to create appointment for employee1 and client2 using company2 ID").
+		Test(a_fail.CreateRandomly(403, company2, client2, company1_employee1, company1_owner.X_Auth_Token, c2ID))
 
-	tt.Describe("Company2 Owner creates appointment for employee2 and client2 but using company1 ID").
-		Test(utilsT.CreateAppointmentRandomly(403, company1, client2, company2_employee2, company2_owner.X_Auth_Token, company1.Created.ID.String(), nil))
+	tt.Describe("Company2 owner unauthorized to create appointment for employee2 and client2 using company1 ID").
+		Test(a_fail.CreateRandomly(403, company1, client2, company2_employee2, company2_owner.X_Auth_Token, c1ID))
 
 	tt.Describe("Company1 Owner gets appointment of employee1 from company1").
-		Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+		Test(a_cy1_e1_ct1.GetById(200, company1.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner gets appointment of employee1 from company1 but using company2 ID").
-		Test(utilsT.GetAppointment(403, company1_employee1.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+	tt.Describe("Company1 Owner unauthorized to get appointment of employee1 from company1 using company2 ID as header").
+		Test(a_cy1_e1_ct1.GetById(403, company1.Owner.X_Auth_Token, &c2ID))
 
-	tt.Describe("Company1 Owner gets appointment of employee1 from company2").
-		Test(utilsT.GetAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+	tt.Describe("Company1 Owner unauthorized to get appointment of employee1 from company2").
+		Test(a_cy2_e1_ct1.GetById(403, company1.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Company2 Owner gets appointment of employee2 from company2 but using company1 ID").
-		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token, nil))
+	tt.Describe("Company2 Owner unauthorized to get appointment of employee2 from company2 using company1 ID as header").
+		Test(a_cy2_e2_ct1.GetById(403, company2.Owner.X_Auth_Token, &c1ID))
 
-	tt.Describe("Company2 Owner gets appointment of employee2 from company1").
-		Test(utilsT.GetAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company2_owner.X_Auth_Token, nil))
+	tt.Describe("Company2 Owner unauthorized to get appointment of employee2 from company1").
+		Test(a_cy1_e2_ct1.GetById(403, company2.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Company1 Owner reschedules appointment of employee1 from company1").
-		Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
+		Test(a_cy1_e1_ct1.RescheduleRandomly(200, company1.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner reschedules appointment of employee1 from company2").
-		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company1, company2_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
+	tt.Describe("Company1 Owner unauthorized to reschedule appointment of employee1 from company2").
+		Test(a_cy2_e1_ct1.RescheduleRandomly(403, company1.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner reschedules appointment of employee1 from company1 but using company2 ID").
-		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee1, company2, company1_employee1.Created.Appointments[0].ID.String(), company1_owner.X_Auth_Token))
+	tt.Describe("Company1 Owner unauthorized to reschedule appointment of employee1 from company1 using company2 ID").
+		Test(a_cy1_e1_ct1.RescheduleRandomly(403, company1.Owner.X_Auth_Token, &c2ID))
 
-	tt.Describe("Company1 Owner cancels appointment of employee1 from company1").
-		Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
+	tt.Describe("Company1 Owner unauthorized to cancel appointment of employee1 from company2").
+		Test(a_cy2_e1_ct1.Cancel(403, company1.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Company1 Owner cancels appointment of employee1 from company2").
-		Test(utilsT.CancelAppointment(403, company2_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_owner.X_Auth_Token))
+	tt.Describe("Company1 Owner unauthorized to cancel appointment of employee1 from company1 using company2 ID").
+		Test(a_cy2_e1_ct1.Cancel(403, company1.Owner.X_Auth_Token, &c2ID))
 
-	tt.Describe("Company1 Owner cancels appointment of employee1 from company1 but using company2 ID").
-		Test(utilsT.CancelAppointment(403, company1_employee1.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_owner.X_Auth_Token))
+	tt.Describe("Company1 Owner cancels appointment of employee1 from company1 with client 2").
+		Test(a_cy1_e1_ct2.Cancel(200, company1.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Owner creates appointment for employee1 and client1 in company1").
+		Test(a_cy1_e1_ct1.CreateRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, c1ID))
+
 }
 
 func Test_Employee_x_Appointments(t *testing.T) {
@@ -140,71 +155,103 @@ func Test_Employee_x_Appointments(t *testing.T) {
 	client1 := permissions_test_instance.client1
 	client2 := permissions_test_instance.client2
 	company1 := permissions_test_instance.company1
+	c1ID := company1.Created.ID.String()
 	company2 := permissions_test_instance.company2
+	c2ID := company2.Created.ID.String()
 	company1_employee1 := company1.Employees[1]
 	company1_employee2 := company1.Employees[2]
 	company2_employee1 := company2.Employees[1]
 	company2_employee2 := company2.Employees[2]
 
-	tt.Describe("Employee1 from company1 creates appointment for client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
+	var a_cy1_e1_ct1 modelT.Appointment
+	tt.Describe("Company1 Employee1 creates appointment for client1").
+		Test(a_cy1_e1_ct1.CreateRandomly(200, company1, client1, company1_employee1, company1_employee1.X_Auth_Token, c1ID))
 
-	tt.Describe("Employee1 from company1 creates appointment for client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee1, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
+	var a_cy1_e1_ct2 modelT.Appointment
+	tt.Describe("Company1 Employee1 creates appointment for client2").
+		Test(a_cy1_e1_ct2.CreateRandomly(200, company1, client2, company1_employee1, company1_employee1.X_Auth_Token, c1ID))
 
-	tt.Describe("Employee2 from company1 creates appointment for client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client1, company1_employee2, company1_employee2.X_Auth_Token, company1.Created.ID.String(), nil))
-	
-	tt.Describe("Employee2 from company1 creates appointment for client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company1, client2, company1_employee2, company1_employee2.X_Auth_Token, company1.Created.ID.String(), nil))
+	var a_cy1_e2_ct1 modelT.Appointment
+	tt.Describe("Company1 Employee2 creates appointment for client1").
+		Test(a_cy1_e2_ct1.CreateRandomly(200, company1, client1, company1_employee2, company1_employee2.X_Auth_Token, c1ID))
 
-	tt.Describe("Employee1 from company2 creates appointment for client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee1, company2_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_cy1_e2_ct2 modelT.Appointment
+	tt.Describe("Company1 Employee2 creates appointment for client2").
+		Test(a_cy1_e2_ct2.CreateRandomly(200, company1, client2, company1_employee2, company1_employee2.X_Auth_Token, c1ID))
 
-	tt.Describe("Employee1 from company2 creates appointment for client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee1, company2_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_cy2_e1_ct1 modelT.Appointment
+	tt.Describe("Company2 Employee1 creates appointment for client1").
+		Test(a_cy2_e1_ct1.CreateRandomly(200, company2, client1, company2_employee1, company2_employee1.X_Auth_Token, c2ID))
 
-	tt.Describe("Employee2 from company2 creates appointment for client1").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client1, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_cy2_e1_ct2 modelT.Appointment
+	tt.Describe("Company2 Employee1 creates appointment for client2").
+		Test(a_cy2_e1_ct2.CreateRandomly(200, company2, client2, company2_employee1, company2_employee1.X_Auth_Token, c2ID))
 
-	tt.Describe("Employee2 from company2 creates appointment for client2").
-		Test(utilsT.CreateAppointmentRandomly(200, company2, client2, company2_employee2, company2_employee2.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_cy2_e2_ct1 modelT.Appointment
+	tt.Describe("Company2 Employee2 creates appointment for client1").
+		Test(a_cy2_e2_ct1.CreateRandomly(200, company2, client1, company2_employee2, company2_employee2.X_Auth_Token, c2ID))
 
-	tt.Describe("Employee1 from company1 creates appointment for employee2 in company1").
-		Test(utilsT.CreateAppointmentRandomly(403, company1, client1, company1_employee2, company1_employee1.X_Auth_Token, company1.Created.ID.String(), nil))
+	var a_cy2_e2_ct2 modelT.Appointment
+	tt.Describe("Company2 Employee2 creates appointment for client2").
+		Test(a_cy2_e2_ct2.CreateRandomly(200, company2, client2, company2_employee2, company2_employee2.X_Auth_Token, c2ID))
 
-	tt.Describe("Employee1 from company1 tries to create for employee2 in company2").
-		Test(utilsT.CreateAppointmentRandomly(403, company2, client1, company2_employee2, company1_employee1.X_Auth_Token, company2.Created.ID.String(), nil))
+	var a_fail modelT.Appointment
+	tt.Describe("Company1 Employee1 unauthorized to create appointment for employee2 in company1").
+		Test(a_fail.CreateRandomly(403, company1, client1, company1_employee2, company1_employee1.X_Auth_Token, c1ID))
 
-	tt.Describe("Employee1 from company1 tries to get appointment from employee2 in company1").
-		Test(utilsT.GetAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
+	tt.Describe("Company1 Employee1 unauthorized to create appointment for employee2 in company2").
+		Test(a_fail.CreateRandomly(403, company2, client1, company2_employee2, company1_employee1.X_Auth_Token, c2ID))
 
-	tt.Describe("Employee1 from company1 tries to get appointment from employee2 in company2").
-		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company2.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
+	tt.Describe("Company1 Employee1 gets their own appointment").
+		Test(a_cy1_e1_ct1.GetById(200, company1_employee1.X_Auth_Token, nil))
 
-	tt.Describe("Employee1 from company2 tries to get appointment from employee2 in company2").
-		Test(utilsT.GetAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company2_employee1.X_Auth_Token, nil))
+	tt.Describe("Company1 Employee1 unauthorized to get their own appointment using company2 ID").
+		Test(a_cy1_e1_ct1.GetById(403, company1_employee1.X_Auth_Token, &c2ID))
 
-	tt.Describe("Employee1 from company1 gets their own appointment").
-		Test(utilsT.GetAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token, nil))
+	tt.Describe("Company1 Employee1 unauthorized to get appointment from employee2 in company1").
+		Test(a_cy1_e2_ct1.GetById(403, company1_employee1.X_Auth_Token, nil))
 
-	tt.Describe("Employee1 from company1 reschedules their own appointment").
-		Test(utilsT.RescheduleAppointmentRandomly(200, company1_employee1, company1, company1_employee1.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 unauthorized to get appointment from employee2 in company2").
+		Test(a_cy2_e2_ct1.GetById(403, company1_employee1.X_Auth_Token, nil))
 
-	tt.Describe("Employee1 from company1 tries to reschedule another employee's appointment in company1").
-		Test(utilsT.RescheduleAppointmentRandomly(403, company1_employee2, company1, company1_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 unauthorized to get appointment from employee2 in company1 using company2 ID").
+		Test(a_cy1_e2_ct1.GetById(403, company1_employee1.X_Auth_Token, &c2ID))
 
-	tt.Describe("Employee1 from company1 tries to reschedule appointment from company2").
-		Test(utilsT.RescheduleAppointmentRandomly(403, company2_employee2, company1, company2_employee2.Created.Appointments[0].ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 unauthorized to get appointment from employee2 in company2 using company1 ID").
+		Test(a_cy2_e2_ct1.GetById(403, company1_employee1.X_Auth_Token, &c1ID))
 
-	tt.Describe("Employee1 from company1 cancels their own appointment").
-		Test(utilsT.CancelAppointment(200, company1_employee1.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 reschedules their own appointment").
+		Test(a_cy1_e1_ct1.RescheduleRandomly(200, company1_employee1.X_Auth_Token, nil))
 
-	tt.Describe("Employee1 from company1 tries to cancel another employee's appointment in company1").
-		Test(utilsT.CancelAppointment(403, company1_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 unauthorized to reschedule their own appointment using company2 ID").
+		Test(a_cy1_e1_ct1.RescheduleRandomly(403, company1_employee1.X_Auth_Token, &c2ID))
 
-	tt.Describe("Employee1 from company1 tries to cancel appointment from company2").
-		Test(utilsT.CancelAppointment(403, company2_employee2.Created.Appointments[0].ID.String(), company1.Created.ID.String(), company1_employee1.X_Auth_Token))
+	tt.Describe("Company1 Employee1 unauthorized to reschedule appointment of employee2 in company1").
+		Test(a_cy1_e2_ct1.RescheduleRandomly(403, company1_employee1.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Employee1 unauthorized to reschedule appointment of employee2 in company1 using company2 ID").
+		Test(a_cy1_e2_ct1.RescheduleRandomly(403, company2_employee2.X_Auth_Token, &c2ID))
+
+	tt.Describe("Company1 Employee1 unauthorized to cancel appointment of employee2 in company1").
+		Test(a_cy1_e2_ct1.Cancel(403, company1_employee1.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Employee1 unauthorized to cancel appointment of employee2 in company2").
+		Test(a_cy2_e2_ct1.Cancel(403, company1_employee1.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Employee1 unauthorized to cancel appointment of employee2 in company1 using company2 ID").
+		Test(a_cy1_e2_ct1.Cancel(403, company2_employee2.X_Auth_Token, &c2ID))
+
+	tt.Describe("Company1 Employee1 unauthorized to cancel appointment of employee2 in company2 using company1 ID").
+		Test(a_cy2_e2_ct1.Cancel(403, company1_employee1.X_Auth_Token, &c1ID))
+
+	tt.Describe("Company1 Employee1 unauthorized to cancel appointment of employee2 in company2 using company2 ID").
+		Test(a_cy2_e2_ct1.Cancel(403, company1_employee1.X_Auth_Token, &c2ID))
+
+	tt.Describe("Company1 Employee1 cancels their own appointment").
+		Test(a_cy1_e1_ct1.Cancel(200, company1_employee1.X_Auth_Token, nil))
+
+	tt.Describe("Company1 Employee1 creates appointment for client1 in company1").
+		Test(a_cy1_e1_ct1.CreateRandomly(200, company1, client1, company1_employee1, company1_employee1.X_Auth_Token, c1ID))
 }
 
 func Test_Shutdown_Permissions_Instance(t *testing.T) {

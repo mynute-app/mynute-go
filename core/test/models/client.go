@@ -12,6 +12,7 @@ import (
 
 type Client struct {
 	Created      *model.Client
+	Appointments []*Appointment
 	X_Auth_Token string
 }
 

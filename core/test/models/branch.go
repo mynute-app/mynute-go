@@ -10,10 +10,11 @@ import (
 )
 
 type Branch struct {
-	Created   *model.Branch
-	Company   *Company
-	Services  []*Service
-	Employees []*Employee
+	Created      *model.Branch
+	Company      *Company
+	Services     []*Service
+	Employees    []*Employee
+	Appointments []*Appointment
 }
 
 func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) error {

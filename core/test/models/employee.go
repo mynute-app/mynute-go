@@ -14,11 +14,12 @@ import (
 )
 
 type Employee struct {
-	X_Auth_Token string
-	Company      *Company
 	Created      *model.Employee
+	Company      *Company
 	Services     []*Service
 	Branches     []*Branch
+	Appointments []*Appointment
+	X_Auth_Token string
 }
 
 func (e *Employee) Create(s int, x_auth_token *string, x_company_id *string) error {
@@ -361,31 +362,6 @@ func get_x_company_id(priority *string, secundary *string) (string, error) {
 		return *secundary, nil
 	}
 	return "", fmt.Errorf("no company ID provided")
-}
-
-// Helper to parse HH:MM or HH:MM:SS time string into a full time.Time on a specific date/location
-func parseTimeWithLocation(targetDate time.Time, timeStr string, loc *time.Location) (time.Time, error) {
-	layout := "15:04" // Default HH:MM
-	colonCount := 0
-	for _, r := range timeStr {
-		if r == ':' {
-			colonCount++
-		}
-	}
-	if colonCount == 2 { // Detect HH:MM:SS
-		layout = "15:04:05"
-	}
-
-	parsedTime, err := time.ParseInLocation(layout, timeStr, loc)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse time string '%s' with layout '%s': %w", timeStr, layout, err)
-	}
-	// Combine the date part from targetDate with the time parts from parsedTime
-	return time.Date(
-		targetDate.Year(), targetDate.Month(), targetDate.Day(),
-		parsedTime.Hour(), parsedTime.Minute(), parsedTime.Second(), 0, // Nanoseconds set to 0
-		loc,
-	), nil
 }
 
 func ValidateWorkSchedule(ws mJSON.WorkSchedule, employee *Employee, company *Company) error {
