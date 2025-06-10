@@ -21,23 +21,17 @@ type CreateCompany struct {
 // @description	Company Full DTO
 // @name			CompanyFullDTO
 // @tag.name		company.full.dto
-type Company struct {
-	ID         uuid.UUID            `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
-	LegalName  string               `json:"legal_name" example:"Your Company Legal Name"`
-	TradeName  string               `json:"trading_name" example:"Your Company Trading Name"`
-	TaxID      string               `json:"tax_id" example:"00000000000000"`
-	Employees  []*EmployeePopulated `json:"employees"`
-	Branches   []*BranchPopulated   `json:"branches"`
-	Services   []*ServicePopulated  `json:"services"`
-	Sectors    []*Sector            `json:"sectors"`
-	Subdomains []*Subdomain         `json:"subdomains"`
-	Design     mJSON.DesignConfig   `json:"design"`
+type CompanyFull struct {
+	CompanyBase
+	Employees []*EmployeeBase `json:"employees"`
+	Branches  []*BranchBase   `json:"branches"`
+	Services  []*ServiceBase  `json:"services"`
 }
 
-// @description	Company DTO Populated
-// @name			CompanyPopulatedDTO
-// @tag.name		company_populated.dto
-type CompanyPublic struct {
+// @description	Company Base DTO
+// @name			CompanyBaseDTO
+// @tag.name		company.base.dto
+type CompanyBase struct {
 	ID         uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
 	LegalName  string             `json:"legal_name" example:"Your Company Legal Name"`
 	TradeName  string             `json:"trading_name" example:"Your Company Trading Name"`

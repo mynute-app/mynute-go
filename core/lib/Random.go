@@ -9,15 +9,26 @@ import (
 
 var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// Helper function to generate a random name
+func GenerateRandomIntFromRange(min, max int) int {
+	if min >= max {
+		panic("min must be less than max")
+	}
+	return rnd.Intn(max-min) + min
+}
+
+// Generates a random name with the format: "Test <str> <random_number>"
 func GenerateRandomName(str string) string {
 	return fmt.Sprintf("Test %v %d", str, rand.Intn(100000))
 }
 
+// Generates a random phone number in the format: +XXXXXXXXXXX
+// where X is a digit (0-9) and the total length is 12 characters.
 func GenerateRandomPhoneNumber() string {
 	return fmt.Sprintf("+%v", GenerateRandomStrNumber(11))
 }
 
+// Creates a random string of a specified length.
+// The string will consist of lowercase and uppercase letters, as well as digits.
 func GenerateRandomString(length int) string {
 	// Define the character set to be used for generating the random string
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -34,15 +45,16 @@ func GenerateRandomString(length int) string {
 	return string(randomString)
 }
 
+// Creates a random email address based on the provided name.
+// The email will be in the format: test_<name>_email_<random_number>@gmail.com
 func GenerateRandomEmail(name string) string {
 	provider := "@gmail.com"
 	nick := fmt.Sprintf("test_%s_email_%v", name, GenerateRandomInt(5))
 	return fmt.Sprintf("%v%v", nick, provider)
 }
 
+// Generates a random integer of a specified length.
 func GenerateRandomInt(length int) int {
-	// Create a new random source
-
 	// Define the lower and upper bounds based on the desired length
 	lowerBound := int(math.Pow10(length - 1)) // 10^(n-1)
 	upperBound := int(math.Pow10(length)) - 1 // 10^n - 1

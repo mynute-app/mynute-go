@@ -33,7 +33,7 @@ func CreateBranch(c *fiber.Ctx) error {
 	if err := Create(c, &branch); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -58,7 +58,7 @@ func GetBranchById(c *fiber.Ctx) error {
 	if err := GetOneBy("id", c, &branch); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -83,7 +83,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 	if err := GetOneBy("name", c, &branch); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -112,7 +112,7 @@ func UpdateBranchById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -221,7 +221,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 	if err := branch.AddService(tx, &service); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -269,7 +269,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	if err := branch.RemoveService(tx, &service); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.Branch{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil

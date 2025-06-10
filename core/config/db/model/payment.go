@@ -16,9 +16,9 @@ const (
 
 type Payment struct {
 	BaseModel
-	Amount uint `gorm:"type:numeric(12,2);not null"`
-	// ISO 4217 currency code (e.g., "USD", "EUR")
-	Currency string `gorm:"type:varchar(3);not null;index"`
+	
+	Price    int64  `gorm:"not null" json:"price"`
+	Currency string `gorm:"type:varchar(3);not null;default:'BRL'" json:"currency"` // Default currency is BRL
 
 	// Status
 	Status PaymentStatus `gorm:"type:varchar(20);not null;index;default:'PENDING'"`
@@ -45,5 +45,5 @@ type Payment struct {
 	FailedAt    *time.Time // When the payment transitioned to FAILED
 }
 
-func (Payment) TableName() string { return "payments" }
+func (Payment) TableName() string  { return "payments" }
 func (Payment) SchemaType() string { return "company" }

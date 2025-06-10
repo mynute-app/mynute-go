@@ -433,11 +433,25 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Children: []ConditionNode{
 			company_membership_access_check, // Must be in the same company
 			{
-				Leaf: &ConditionLeaf{
-					Attribute:         "subject.id",
-					Operator:          "Equals",
-					ResourceAttribute: "resource.employee_id", // Assumes context provides resource.employee_id from the resource
-					Description:       "Subject ID must match the resource's employee ID",
+				Description: "Employee ID Match Check",
+				LogicType:   "OR",
+				Children: []ConditionNode{
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "resource.employee_id", // Assumes context provides resource.employee_id from the resource
+							Description:       "Subject ID must match the resource's employee ID",
+						},
+					},
+					{
+						Leaf: &ConditionLeaf{
+							Attribute:         "subject.id",
+							Operator:          "Equals",
+							ResourceAttribute: "body.employee_id", // Assumes context provides employee_id from the body
+							Description:       "Subject ID must match the body employee_id",
+						},
+					},
 				},
 			},
 		},
@@ -592,7 +606,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 								company_owner_check,                          // Owner can create in any branch of their company
 								company_general_manager_check,                // GM can create in any branch of their company
 								company_branch_manager_assigned_branch_check, // BM can create *for their assigned branch* (checks resource.branch_id)
-								company_employee_assigned_employee_check,     // Employee can create *for themselves* (checks resource.employee_id from body)
+								company_employee_assigned_employee_check,     // Employee can create *for themselves*
 							},
 						},
 					},

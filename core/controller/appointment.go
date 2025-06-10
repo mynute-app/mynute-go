@@ -111,12 +111,12 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment update can not have pre defined ID"))
 	}
 
-	tx.Model(&model.Appointment{}).Where("id = ?", appointment_id).Updates(updated_appointment)
+	tx.Model(appointment).Where("id = ?", appointment_id).Updates(updated_appointment)
 	if tx.Error != nil {
 		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
-	tx.Model(&model.Appointment{}).Where("id = ?", appointment_id).First(&appointment)
+	tx.Model(appointment).Where("id = ?", appointment_id).First(&appointment)
 	if tx.Error != nil {
 		if tx.Error == gorm.ErrRecordNotFound {
 			return lib.Error.Appointment.NotFound

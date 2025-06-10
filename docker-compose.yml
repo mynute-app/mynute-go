@@ -8,7 +8,7 @@
 services:
   postgres:
     container_name: postgresdb-kaki
-    image: postgres:17.0
+    image: postgres:17.5
     restart: always
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
@@ -75,7 +75,7 @@ services:
 
   pgadmin:
     container_name: pgadmin4-kaki
-    image: dpage/pgadmin4:9
+    image: dpage/pgadmin4:9.4
     restart: always
     volumes:
       - ./pgadmin-data:/var/lib/pgadmin
@@ -106,7 +106,7 @@ services:
 
   prometheus:
     container_name: prometheus-kaki
-    image: prom/prometheus
+    image: prom/prometheus:v3.4.1
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -118,7 +118,7 @@ services:
       - kaki-network
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:12.0.1
     container_name: grafana-kaki
     restart: always
     volumes:
@@ -137,7 +137,7 @@ services:
     user: root
     restart: always
     container_name: loki-kaki
-    image: grafana/loki:2.9.4
+    image: grafana/loki:3.5.1
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yaml
