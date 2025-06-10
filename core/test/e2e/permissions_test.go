@@ -144,7 +144,7 @@ func Test_Owner_x_Appointments(t *testing.T) {
 		Test(a_cy1_e1_ct2.Cancel(200, company1.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Company1 Owner creates appointment for employee1 and client1 in company1").
-		Test(a_cy1_e1_ct1.CreateRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, c1ID))
+		Test(a_cy1_e1_ct2.CreateRandomly(200, company1, client1, company1_employee1, company1_owner.X_Auth_Token, c1ID))
 
 }
 

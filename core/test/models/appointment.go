@@ -24,6 +24,16 @@ type Appointment struct {
 	Service  *Service
 }
 
+func (a *Appointment) Reset() *Appointment {
+	a.Created = nil
+	a.Employee = nil
+	a.Company = nil
+	a.Client = nil
+	a.Branch = nil
+	a.Service = nil
+	return a
+}
+
 func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee, token, company_id string) error {
 	if a.Created != nil {
 		return fmt.Errorf("appointment already created, cannot create again")
@@ -73,6 +83,10 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 		}).
 		ParseResponse(&a.Created).Error; err != nil {
 		return fmt.Errorf("failed to create appointment: %w", err)
+	}
+	if a.Created.ID == uuid.Nil && s != 200 && s != 201 {
+		a.Reset()
+		return nil
 	}
 	if err := ct.GetByEmail(200); err != nil {
 		return err
@@ -216,8 +230,6 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	return nil
 }
 
-
-
 func (a *Appointment) GetById(s int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := a.Created.CompanyID.String()
 	cID, err := get_x_company_id(x_company_id, &companyIDStr)
@@ -252,6 +264,9 @@ func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) e
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to cancel appointment %s: %w", a.Created.ID.String(), err)
 	}
+	if s >= 400 {
+		return nil
+	}
 	// Delete appointment from Employee, Branch and Client
 	for i, appt := range a.Employee.Appointments {
 		if appt.Created.ID == a.Created.ID {
@@ -271,13 +286,7 @@ func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) e
 			break
 		}
 	}
-	a.Created = nil // Clear the created appointment
-	// Clear references to Employee, Branch, and Client
-	a.Employee = nil
-	a.Branch = nil
-	a.Client = nil
-	a.Service = nil // Clear the service reference as well
-	a.Company = nil // Clear the company reference as well
+	a.Reset() // Reset the Appointment struct after cancellation
 	return nil
 }
 
