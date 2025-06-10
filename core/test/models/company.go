@@ -637,6 +637,18 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 
 		scheduleModel := GenerateRandomModelWorkSchedule(employee.Branches, employee)
 
+		scheduleCreationAttempts := 1
+
+		for {
+			if !scheduleModel.IsEmpty() {
+				break
+			} else if scheduleCreationAttempts > 5 {
+				return fmt.Errorf("failed to generate a valid work schedule for employee %d (%s) after %d attempts", i, employee.Created.Email, scheduleCreationAttempts)
+			}
+			scheduleModel = GenerateRandomModelWorkSchedule(validEmployeeBranches, employee)
+			scheduleCreationAttempts++
+		}
+		
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
 		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{scheduleModel}, nil, nil); err != nil {
 			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v", i, employee.Created.Email, err)

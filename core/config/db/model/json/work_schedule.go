@@ -43,7 +43,15 @@ func (ws *WorkSchedule) Scan(value any) error {
 
 func (ws *WorkSchedule) IsEmpty() bool {
 	if ws == nil {
-		return true
+		ws = &WorkSchedule{
+			Monday:    []WorkRange{},
+			Tuesday:   []WorkRange{},
+			Wednesday: []WorkRange{},
+			Thursday:  []WorkRange{},
+			Friday:    []WorkRange{},
+			Saturday:  []WorkRange{},
+			Sunday:    []WorkRange{},
+		}
 	}
 	return len(ws.Monday) == 0 && len(ws.Tuesday) == 0 && len(ws.Wednesday) == 0 &&
 		len(ws.Thursday) == 0 && len(ws.Friday) == 0 && len(ws.Saturday) == 0 &&
