@@ -1,26 +1,38 @@
 package controller
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/db"
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/model"
+	"errors"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"time"
+	"gorm.io/gorm"
 )
 
 func GetScheduleOptions(c *fiber.Ctx) error {
-	get := c.Query("get")
-
-	companyID, err := GetCompanyIDFromContext(c)
+	tx, end, err := database.ContextTransaction(c)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "invalid company context"})
+		return err
 	}
+	defer end()
 
 	var (
 		branchID, employeeID, serviceID *uuid.UUID
 		weekday                         *time.Weekday
 		timeStr                         *string
+		get                             string
 	)
+
+	if val := c.Query("get"); val != "" {
+		get = val
+	} else {
+		return lib.Error.General.BadRequest.WithError(errors.New("missing 'get' parameter"))
+	}
 
 	if val := c.Query("branch_id"); val != "" {
 		if id, err := uuid.Parse(val); err == nil {
@@ -44,69 +56,144 @@ func GetScheduleOptions(c *fiber.Ctx) error {
 			weekday = &d
 			timeStr = &s
 		} else {
-			return c.Status(400).JSON(fiber.Map{"error": "invalid start_time, must be RFC3339"})
+			return lib.Error.General.BadRequest.WithError(err)
 		}
 	}
 
 	switch get {
 	case "services":
-		result, err := filterServices(companyID, branchID, employeeID, weekday, timeStr)
+		result, err := filterServices(branchID, employeeID, weekday, timeStr)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			return err
 		}
-		return c.JSON(result)
+		lib.ResponseFactory(c).SendDTO(200, &result, &[]DTO.Service{})
 
 	case "employees":
-		result, err := filterEmployees(companyID, branchID, serviceID, weekday, timeStr)
+		result, err := filterEmployees(branchID, serviceID, weekday, timeStr)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			return err
 		}
-		return c.JSON(result)
+		lib.ResponseFactory(c).SendDTO(200, &result, &[]DTO.Employee{})
 
 	case "branches":
-		result, err := filterBranches(companyID, employeeID, serviceID)
+		result, err := filterBranches(employeeID, serviceID, weekday, timeStr)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			return err
 		}
-		return c.JSON(result)
+		lib.ResponseFactory(c).SendDTO(200, &result, &[]DTO.Branch{})
+	case "start_time":
+		result, err := filterStartTime(branchID, employeeID, serviceID, weekday, timeStr)
+		if err != nil {
+			return err
+		}
+		lib.ResponseFactory(c).Send(200, &result)
 
 	default:
-		return c.Status(400).JSON(fiber.Map{"error": "invalid 'get' parameter"})
+		return lib.Error.General.BadRequest.WithError(
+			errors.New("invalid 'get' parameter, must be one of: services, employees, branches or start_time"),
+		)
 	}
+
+	return nil
+}
+
+type MyScheduleFilter struct {
+	DB  *gorm.DB
+	Ctx *fiber.Ctx
+	BranchID  *uuid.UUID
+	EmployeeID *uuid.UUID
+	ServiceID  *uuid.UUID
+	Weekday    *time.Weekday
+	TimeStr    *string
+	
+}
+
+func NewScheduleFilter(c *fiber.Ctx) (*MyScheduleFilter, error) {
+	tx, end, err := database.ContextTransaction(c)
+	if err != nil {
+		return nil, err
+	}
+	defer end()
+
+	var (
+		branchID, employeeID, serviceID *uuid.UUID
+		weekday                         *time.Weekday
+		timeStr                         *string
+		get                             string
+	)
+
+	if val := c.Query("get"); val != "" {
+		get = val
+	} else {
+		return nil, lib.Error.General.BadRequest.WithError(errors.New("missing 'get' parameter"))
+	}
+
+	if val := c.Query("branch_id"); val != "" {
+		if id, err := uuid.Parse(val); err == nil {
+			branchID = &id
+		}
+	}
+	if val := c.Query("employee_id"); val != "" {
+		if id, err := uuid.Parse(val); err == nil {
+			employeeID = &id
+		}
+	}
+	if val := c.Query("service_id"); val != "" {
+		if id, err := uuid.Parse(val); err == nil {
+			serviceID = &id
+		}
+	}
+	if val := c.Query("start_time"); val != "" {
+		if parsed, err := time.Parse(time.RFC3339, val); err == nil {
+			d := parsed.Weekday()
+			s := parsed.Format("15:04")
+			weekday = &d
+			timeStr = &s
+		} else {
+			return nil, lib.Error.General.BadRequest.WithError(err)
+		}
+	}
+
+	return &MyScheduleFilter{
+		DB:         tx,
+		Ctx:        c,
+		BranchID:   branchID,
+		EmployeeID: employeeID,
+		ServiceID:  serviceID,
+		Weekday:    weekday,
+		TimeStr:    timeStr,
+	}, nil
 }
 
 func filterServices(
-	companyID uuid.UUID,
 	branchID, employeeID *uuid.UUID,
 	weekday *time.Weekday,
 	timeStr *string,
 ) ([]model.Service, error) {
 	conn := db.Conn
 	serviceMap := make(map[uuid.UUID]model.Service)
-
+	var all []model.Service
 	if branchID == nil && employeeID == nil && weekday == nil && timeStr == nil {
-		var all []model.Service
 		if err := conn.Where("company_id = ?", companyID).Find(&all).Error; err != nil {
-			return nil, err
+			return nil, lib.Error.General.InternalError.WithError(err)
 		}
 		return all, nil
 	}
 
 	if branchID != nil && employeeID == nil && weekday == nil {
-		var services []model.Service
 		err := conn.Joins("JOIN branch_services bs ON bs.service_id = services.id").
-			Where("bs.branch_id = ?", *branchID).Find(&services).Error
+			Where("bs.branch_id = ?", *branchID).Find(&all).Error
 		if err != nil {
-			return nil, err
+			return nil, lib.Error.General.InternalError.WithError(err)
 		}
-		return services, nil
+		return all, nil
 	}
 
 	if branchID != nil && employeeID != nil && weekday == nil {
 		var emp model.Employee
 		if err := conn.Preload("Services").Preload("Branches").
 			First(&emp, "id = ?", *employeeID).Error; err != nil {
-			return nil, err
+			return nil, lib.Error.General.InternalError.WithError(err)
 		}
 		for _, s := range emp.Services {
 			for _, b := range emp.Branches {
@@ -124,7 +211,7 @@ func filterServices(
 			Preload("Services").
 			Find(&emps).Error
 		if err != nil {
-			return nil, err
+			return nil, lib.Error.General.InternalError.WithError(err)
 		}
 		for _, emp := range emps {
 			ranges := emp.WorkSchedule.GetRangesForDay(*weekday)
@@ -200,7 +287,6 @@ func filterServices(
 }
 
 func filterEmployees(
-	companyID uuid.UUID,
 	branchID, serviceID *uuid.UUID,
 	weekday *time.Weekday,
 	timeStr *string,
@@ -248,7 +334,6 @@ func filterEmployees(
 }
 
 func filterBranches(
-	companyID uuid.UUID,
 	employeeID, serviceID *uuid.UUID,
 ) ([]model.Branch, error) {
 	conn := db.Conn

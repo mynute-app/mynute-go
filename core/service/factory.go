@@ -13,7 +13,7 @@ func Factory(c *fiber.Ctx) *service {
 	tx, err := lib.Session(c)
 	service := &service{
 		Context: c,
-		err:     err,
+		Error:   err,
 		MyGorm:  handler.MyGormWrapper(tx),
 	}
 	return service
@@ -22,8 +22,7 @@ func Factory(c *fiber.Ctx) *service {
 type service struct {
 	Context *fiber.Ctx
 	MyGorm  *handler.Gorm
-	err     error
-	MyModel any
+	Error   error
 }
 
 func (s *service) get_param(param string) (string, error) {
@@ -38,110 +37,111 @@ func (s *service) get_param(param string) (string, error) {
 	return cleanedParamVal, nil
 }
 
-func (s *service) Model(model any) *service {
-	s.MyModel = model
+func (s *service) GetAll(model any) *service {
+	if s.Error != nil {
+		return s
+	}
+	if err := s.MyGorm.GetAll(model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
+	}
 	return s
 }
 
-func (s *service) GetAll() error {
-	if s.err != nil {
-		return s.err
-	}
-	if err := s.MyGorm.GetAll(s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
-	}
-	return nil
-}
-
-func (s *service) GetBy(param string) error {
-	if s.err != nil {
-		return s.err
+func (s *service) GetBy(param string, model any) *service {
+	if s.Error != nil {
+		return s
 	}
 	if param == "" {
-		return s.GetAll()
+		return s.GetAll(model)
 	}
 	val, err := s.get_param(param)
 	if err != nil {
-		return err
+		s.Error = err
+		return s
 	}
-	if err := s.MyGorm.GetOneBy(param, val, s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.GetOneBy(param, val, model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
-	return nil
+	return s
 }
 
-func (s *service) ForceGetBy(param string) error {
-	if s.err != nil {
-		return s.err
+func (s *service) ForceGetBy(param string, model any) *service {
+	if s.Error != nil {
+		return s
 	}
 	if param == "" {
-		return s.GetAll()
+		return s.GetAll(model)
 	}
 	val, err := s.get_param(param)
 	if err != nil {
-		return err
+		s.Error = err
+		return s
 	}
-	if err := s.MyGorm.ForceGetOneBy(param, val, s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.ForceGetOneBy(param, val, model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
-	return nil
+	return s
 }
 
-func (s *service) Create() error {
-	if s.err != nil {
-		return s.err
+func (s *service) Create(model any) *service {
+	if s.Error != nil {
+		return s
 	}
-	if err := s.MyGorm.Create(s.MyModel); err != nil {
-		return err
+	if err := s.MyGorm.Create(model); err != nil {
+		s.Error = err
 	}
-	return nil
+	return s
 }
 
-func (s *service) UpdateOneById() error {
-	if s.err != nil {
-		return s.err
+func (s *service) UpdateOneById(model any) *service {
+	if s.Error != nil {
+		return s
 	}
 	val, err := s.get_param("id")
 	if err != nil {
-		return err
+		s.Error = err
+		return s
 	}
 	changes := make(map[string]any)
 	if err := s.Context.BodyParser(&changes); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+		s.Error = lib.Error.General.InternalError.WithError(err)
+		return s
 	}
-	if err := s.MyGorm.UpdateOneById(val, s.MyModel, changes); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.UpdateOneById(val, model, changes); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
+		return s
 	}
-	if err := s.MyGorm.GetOneBy("id", val, s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.GetOneBy("id", val, model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
+		return s
 	}
-	return nil
+	return s
 }
 
-func (s *service) DeleteOneById() error {
-	if s.err != nil {
-		return s.err
+func (s *service) DeleteOneById(model any) *service {
+	if s.Error != nil {
+		return s
 	}
 	val, err := s.get_param("id")
 	if err != nil {
-		return err
+		return s
 	}
-	if err := s.MyGorm.DeleteOneById(val, s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.DeleteOneById(val, model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
-	return nil
+	return s
 }
 
-func (s *service) ForceDeleteOneById() error {
-	if s.err != nil {
-		return s.err
+func (s *service) ForceDeleteOneById(model any) *service {
+	if s.Error != nil {
+		return s
 	}
 	val, err := s.get_param("id")
 	if err != nil {
-		return err
+		return s
 	}
-	if err := s.MyGorm.ForceDeleteOneById(val, s.MyModel); err != nil {
-		return lib.Error.General.RecordNotFound.WithError(err)
+	if err := s.MyGorm.ForceDeleteOneById(val, model); err != nil {
+		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
-	return nil
+	return s
 }

@@ -14,8 +14,8 @@ func Create(c *fiber.Ctx, model any) error {
 	if err := c.BodyParser(model); err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
-	Service := service.Factory(c).Model(model)
-	if err := Service.Create(); err != nil {
+	Service := service.Factory(c)
+	if err := Service.Create(model).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 	HasID := func (model any) (uuid.UUID, bool) {
@@ -40,17 +40,17 @@ func Create(c *fiber.Ctx, model any) error {
 }
 
 func GetOneBy(param string, c *fiber.Ctx, model any) error {
-	Service := service.Factory(c).Model(model)
-	if err := Service.GetBy(param); err != nil {
+	Service := service.Factory(c)
+	if err := Service.GetBy(param, model).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func UpdateOneById(c *fiber.Ctx, model any) error {
-	return service.Factory(c).Model(model).UpdateOneById()
+	return service.Factory(c).UpdateOneById(model).Error
 }
 
 func DeleteOneById(c *fiber.Ctx, model any) error {
-	return service.Factory(c).Model(model).DeleteOneById()
+	return service.Factory(c).DeleteOneById(model).Error
 }
