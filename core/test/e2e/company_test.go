@@ -3,7 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib/FileBytes"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 	"testing"

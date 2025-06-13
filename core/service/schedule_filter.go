@@ -84,6 +84,13 @@ func (s *service) ScheduleFilter() *schedule_filter {
 
 // GetScheduleOptions returns available scheduling options based on the provided query parameters.
 //
+// Input parameters are:
+// - branch_id: UUID of the branch to filter by.
+// - employee_id: UUID of the employee to filter by.
+// - service_id: UUID of the service to filter by.
+// - weekday: Day of the week to filter by (e.g., "Monday").
+// - start_time: Time in RFC3339 format to filter by (e.g., "2023-10-01T10:00:00Z").
+// - get: Specifies the type of data to retrieve (e.g., "services", "branches", "employees", "time_slots").
 // The response may include services, employees, or available time slots, depending on the filters used.
 // Behavior rules:
 // - If GET is "services":
