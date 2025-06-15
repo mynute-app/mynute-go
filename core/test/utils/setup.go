@@ -24,9 +24,9 @@ func CreateCompaniesRandomly(CompaniesToCreate int) ([]*modelT.Company, error) {
 			branches = 2  // Fixed number of branches for test environment
 			services = 2  // Fixed number of services for test environment
 		} else if app_env == "dev" {
-			employees = lib.GenerateRandomIntFromRange(1, 48) // Random From 1 to 48 per company
-			branches = lib.GenerateRandomIntFromRange(1, 24)   // Random From 1 to 24 per company
-			services = lib.GenerateRandomIntFromRange(1, 72)   // Random From 1 to 72 per company
+			employees = lib.GenerateRandomIntFromRange(1, 8) // Random From 1 to 8 per company
+			branches = lib.GenerateRandomIntFromRange(1, 4)   // Random From 1 to 4 per company
+			services = lib.GenerateRandomIntFromRange(1, 12)   // Random From 1 to 12 per company
 		}
 		if err := company.CreateCompanyRandomly(employees, branches, services); err != nil {
 			return nil, err
