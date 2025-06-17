@@ -77,5 +77,6 @@ func Test_Company(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Reset colors").Test(company.ChangeColors(200, mJSON.Colors{}, company.Owner.X_Auth_Token, nil))
+
 	tt.Describe("Company deletion").Test(company.Delete(200, company.Owner.X_Auth_Token, nil))
 }

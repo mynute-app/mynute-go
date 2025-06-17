@@ -112,6 +112,10 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("CompanyID") {
+		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	}
+
 	if tx.Statement.Changed("History") {
 		return lib.Error.Appointment.HistoryManualUpdateForbidden
 	}

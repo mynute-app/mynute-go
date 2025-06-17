@@ -108,7 +108,7 @@ func (s *service) UpdateOneById(model any) *service {
 		return s
 	}
 	if err := s.MyGorm.UpdateOneById(val, model, changes); err != nil {
-		s.Error = lib.Error.General.RecordNotFound.WithError(err)
+		s.Error = lib.Error.General.UpdatedError.WithError(err)
 		return s
 	}
 	if err := s.MyGorm.GetOneBy("id", val, model); err != nil {

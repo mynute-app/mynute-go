@@ -3,6 +3,7 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -101,4 +102,11 @@ func (b *Branch) GetAddress() string {
 	parts = append(parts, b.Neighborhood, b.City, b.State)
 
 	return strings.Join(parts, ", ")
+}
+
+func (Branch) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("CompanyID") {
+		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	}
+	return nil
 }

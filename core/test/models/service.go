@@ -62,8 +62,10 @@ func (s *Service) Update(status int, changes map[string]any, x_auth_token string
 		Error; err != nil {
 		return fmt.Errorf("failed to update service: %w", err)
 	}
-	if err := ValidateUpdateChanges("Service", s.Created, changes); err != nil {
-		return err
+	if status > 200 && status < 300 {
+		if err := ValidateUpdateChanges("Service", s.Created, changes); err != nil {
+			return err
+		}
 	}
 	return nil
 }

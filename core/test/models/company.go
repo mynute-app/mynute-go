@@ -901,8 +901,10 @@ func (c *Company) Update(status int, changes map[string]any, x_auth_token string
 		ParseResponse(&c.Created).Error; err != nil {
 		return fmt.Errorf("failed to update company: %w", err)
 	}
-	if err := ValidateUpdateChanges("Company", c.Created, changes); err != nil {
-		return err
+	if status > 200 && status < 300 {
+		if err := ValidateUpdateChanges("Company", c.Created, changes); err != nil {
+			return err
+		}
 	}
 
 	return nil

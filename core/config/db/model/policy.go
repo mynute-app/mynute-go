@@ -53,7 +53,7 @@ type ConditionNode struct {
 
 // --- ConditionLeaf (Represents a single atomic check) ---
 type ConditionLeaf struct {
-	Attribute string `json:"attribute"` // The primary attribute (e.g., "subject.role_id")
+	Attribute string `json:"attribute"` // The primary attribute (e.g., "subject.role_id"/"resource.employee_id/"path.employee_id"/"body.employee_id"/"query.employee_id"/"header.employee_id")
 	// The comparison operator
 	// Equals - "==", NotEquals - "!=", IsNull - "== null", IsNotNull - "!= null"
 	Operator    string `json:"operator"`

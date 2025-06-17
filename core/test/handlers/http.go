@@ -162,7 +162,7 @@ func (h *httpActions) Send(body any) *httpActions {
 	}
 
 	if h.expectedStatus != 0 && res.StatusCode != h.expectedStatus {
-		return h.set_error(fmt.Sprintf("expected status code: %d | received status code: %d \n", h.expectedStatus, res.StatusCode))
+		return h.set_error(fmt.Sprintf("expected status code: %d | received status code: %d \n response: %+v", h.expectedStatus, res.StatusCode, h.ResBody))
 	}
 
 	h.Status = res.StatusCode
