@@ -60,6 +60,8 @@ func WorksRangeIndexes(table string) map[string]string {
 }
 
 func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
+	wr.UTC_with_Zero_YMD_Date()
+
 	if wr.StartTime.Equal(wr.EndTime) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be equal to end time"))
 	}
@@ -79,14 +81,6 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 	if !branch.HasEmployee(tx, wr.EmployeeID) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not belong to branch %s", wr.EmployeeID, wr.BranchID))
 	}
-
-	loc := &wr.TimeZone
-	wrStart := time.Date(0, 1, 1, wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, loc)
-	wrEnd := time.Date(0, 1, 1, wr.EndTime.Hour(), wr.EndTime.Minute(), wr.EndTime.Second(), 0, loc)
-
-	// Converte para UTC
-	wr.StartTime = wrStart.UTC()
-	wr.EndTime = wrEnd.UTC()
 
 	if wr.StartTime.Before(branch.StartTime) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be before branch start time %s", wr.StartTime, branch.StartTime))
@@ -110,6 +104,27 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	return nil
+}
+
+func (wr *WorkRange) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
+		wr.UTC_with_Zero_YMD_Date()
+		if wr.StartTime.Equal(wr.EndTime) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be equal to end time"))
+		} else if wr.StartTime.After(wr.EndTime) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be after end time"))
+		}
+	}
+	return nil
+}
+
+func (wr *WorkRange) UTC_with_Zero_YMD_Date() {
+	loc := &wr.TimeZone
+	start := time.Date(0, 1, 1, wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, loc)
+	end := time.Date(0, 1, 1, wr.EndTime.Hour(), wr.EndTime.Minute(), wr.EndTime.Second(), 0, loc)
+
+	wr.StartTime = start.UTC()
+	wr.EndTime = end.UTC()
 }
 
 func (wr *WorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {

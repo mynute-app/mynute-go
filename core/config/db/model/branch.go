@@ -47,9 +47,7 @@ type ServiceDensity struct {
 }
 
 func (b *Branch) BeforeCreate(tx *gorm.DB) error {
-	if err := b.TimeToUTC(); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to convert branch times to UTC: %w", err))
-	}
+	b.UTC_with_Zero_YMD_Date()
 	return nil
 }
 
@@ -58,21 +56,23 @@ func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		if err := b.TimeToUTC(); err != nil {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to convert branch times to UTC: %w", err))
+		b.UTC_with_Zero_YMD_Date()
+		if b.StartTime.Equal(b.EndTime) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch start time cannot be equal to end time"))
+		} else if b.StartTime.Before(b.EndTime) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch start time cannot be before end time"))
 		}
 	}
 	return nil
 }
 
-func (b *Branch) TimeToUTC() error {
+func (b *Branch) UTC_with_Zero_YMD_Date() {
 	loc := &b.TimeZone
 	start := time.Date(0, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
 	end := time.Date(0, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
 
 	b.StartTime = start.UTC()
 	b.EndTime = end.UTC()
-	return nil
 }
 
 func (b *Branch) AddService(tx *gorm.DB, service *Service) error {
