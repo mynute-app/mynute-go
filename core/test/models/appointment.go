@@ -308,15 +308,15 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 
 	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
 
-	workSchedule := employee.Created.WorkSchedule
-	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{
-		time.Sunday:    workSchedule.Sunday,
-		time.Monday:    workSchedule.Monday,
-		time.Tuesday:   workSchedule.Tuesday,
-		time.Wednesday: workSchedule.Wednesday,
-		time.Thursday:  workSchedule.Thursday,
-		time.Friday:    workSchedule.Friday,
-		time.Saturday:  workSchedule.Saturday,
+
+	weekdaySchedules := map[time.Weekday][]*model.WorkRange{
+		time.Sunday:    employee.Created.GetWorkRangeForDay(time.Sunday),
+		time.Monday:    employee.Created.GetWorkRangeForDay(time.Monday),
+		time.Tuesday:   employee.Created.GetWorkRangeForDay(time.Tuesday),
+		time.Wednesday: employee.Created.GetWorkRangeForDay(time.Wednesday),
+		time.Thursday:  employee.Created.GetWorkRangeForDay(time.Thursday),
+		time.Friday:    employee.Created.GetWorkRangeForDay(time.Friday),
+		time.Saturday:  employee.Created.GetWorkRangeForDay(time.Saturday),
 	}
 
 	now := time.Now().In(preferredLocation)
@@ -348,8 +348,8 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 				branchCache[wr.BranchID.String()] = branch
 			}
 			branchID := branch.ID.String()
-			for _, wrSrvcID := range wr.Services {
-				sID := wrSrvcID.String()
+			for _, wrSrvc := range wr.Services {
+				sID := wrSrvc.ID.String()
 				service, ok := serviceCache[sID]
 				if !ok {
 					var serviceModel model.Service
@@ -367,11 +367,11 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 					serviceCache[sID] = service
 				}
 				duration := time.Duration(service.Duration) * time.Minute
-				startTime, err := parseTimeWithLocation(currentDate, wr.Start, preferredLocation)
+				startTime, err := parseTimeWithLocation(currentDate, wr.StartTime.String(), preferredLocation)
 				if err != nil {
 					return nil, false, fmt.Errorf("failed to parse start time for work range #%d: %w", iWr, err)
 				}
-				endTime, err := parseTimeWithLocation(currentDate, wr.End, preferredLocation)
+				endTime, err := parseTimeWithLocation(currentDate, wr.EndTime.String(), preferredLocation)
 				if err != nil || !startTime.Before(endTime) {
 					return nil, false, fmt.Errorf("invalid time range for work range #%d: %w", iWr, err)
 				}

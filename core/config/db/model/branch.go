@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -15,6 +16,9 @@ import (
 // Branch model
 type Branch struct {
 	BaseModel
+	StartTime      time.Time          `json:"start_time" gorm:"type:time;not null"`
+	EndTime        time.Time          `json:"end_time" gorm:"type:time;not null"`
+	TimeZone       time.Location      `json:"timezone" gorm:"not null"` // Timezone in IANA format, e.g., "America/New_York"
 	Name           string             `gorm:"not null" json:"name"`
 	Street         string             `gorm:"not null" json:"street"`
 	Number         string             `gorm:"not null" json:"number"`
@@ -40,6 +44,35 @@ func (Branch) SchemaType() string { return "company" }
 type ServiceDensity struct {
 	ServiceID           uuid.UUID `json:"service_id"`
 	MaxSchedulesOverlap uint      `json:"max_schedules_overlap"`
+}
+
+func (b *Branch) BeforeCreate(tx *gorm.DB) error {
+	if err := b.TimeToUTC(); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to convert branch times to UTC: %w", err))
+	}
+	return nil
+}
+
+func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("CompanyID") {
+		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	}
+	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
+		if err := b.TimeToUTC(); err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to convert branch times to UTC: %w", err))
+		}
+	}
+	return nil
+}
+
+func (b *Branch) TimeToUTC() error {
+	loc := &b.TimeZone
+	start := time.Date(0, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
+	end := time.Date(0, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
+
+	b.StartTime = start.UTC()
+	b.EndTime = end.UTC()
+	return nil
 }
 
 func (b *Branch) AddService(tx *gorm.DB, service *Service) error {
@@ -104,9 +137,20 @@ func (b *Branch) GetAddress() string {
 	return strings.Join(parts, ", ")
 }
 
-func (Branch) BeforeUpdate(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("CompanyID") {
-		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+func (b *Branch) HasEmployee(tx *gorm.DB, employeeID uuid.UUID) bool {
+	var count int64
+	// Check if the employee exists in the branch
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE branch_id = ? AND employee_id = ?", b.ID, employeeID).Scan(&count).Error; err != nil {
+		return false // Error occurred, assume employee does not exist
 	}
-	return nil
+	return count > 0
+}
+
+func (b *Branch) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
+	var count int64
+	// Check if the service exists in the branch
+	if err := tx.Raw("SELECT COUNT(*) FROM branch_services WHERE branch_id = ? AND service_id = ?", b.ID, serviceID).Scan(&count).Error; err != nil {
+		return false // Error occurred, assume service does not exist
+	}
+	return count > 0
 }

@@ -227,7 +227,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 	// 2. Generate slots for each employee
 	for _, emp := range employees {
 		// ***** FIX IS HERE: The unused 'dayOfWeek' variable was removed. *****
-		workRanges := emp.WorkSchedule.GetRangesForDay(targetDate.Weekday())
+		workRanges := emp.GetWorkRangeForDay(targetDate.Weekday())
 
 		for _, wr := range workRanges {
 			// If a branch is filtered, only consider work ranges for that branch
@@ -235,8 +235,8 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 				continue
 			}
 
-			start, _ := time.ParseInLocation("15:04", wr.Start, loc)
-			end, _ := time.ParseInLocation("15:04", wr.End, loc)
+			start, _ := time.ParseInLocation("15:04", wr.StartTime.String(), loc)
+			end, _ := time.ParseInLocation("15:04", wr.EndTime.String(), loc)
 
 			slotStart := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), start.Hour(), start.Minute(), 0, 0, loc)
 			slotEndBoundary := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), end.Hour(), end.Minute(), 0, 0, loc)

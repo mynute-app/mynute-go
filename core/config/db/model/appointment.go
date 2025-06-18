@@ -14,23 +14,24 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID             uuid.UUID  `gorm:"type:uuid;not null" json:"service_id"`
-	EmployeeID            uuid.UUID  `gorm:"type:uuid;not null" json:"employee_id"`
-	ClientID              uuid.UUID  `gorm:"type:uuid;not null;index" json:"client_id"`
-	BranchID              uuid.UUID  `gorm:"type:uuid;not null" json:"branch_id"`
-	PaymentID             *uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
-	CompanyID             uuid.UUID  `gorm:"type:uuid;not null;index" json:"company_id"`
-	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
-	StartTime             time.Time  `gorm:"not null" json:"start_time"`
-	EndTime               time.Time  `gorm:"not null" json:"end_time"`
-	ActualStartTime       time.Time  `json:"actual_start_time"`
-	ActualEndTime         time.Time  `json:"actual_end_time"`
-	CancelTime            time.Time  `json:"cancel_time"`
-	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
-	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`
-	IsCancelledByClient   bool       `gorm:"default:false" json:"is_cancelled_by_client"`
-	IsCancelledByEmployee bool       `gorm:"default:false" json:"is_cancelled_by_employee"`
-	IsConfirmedByClient   bool       `gorm:"default:false" json:"is_confirmed_by_client"`
+	ServiceID             uuid.UUID     `gorm:"type:uuid;not null" json:"service_id"`
+	EmployeeID            uuid.UUID     `gorm:"type:uuid;not null" json:"employee_id"`
+	ClientID              uuid.UUID     `gorm:"type:uuid;not null;index" json:"client_id"`
+	BranchID              uuid.UUID     `gorm:"type:uuid;not null" json:"branch_id"`
+	PaymentID             *uuid.UUID    `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
+	CompanyID             uuid.UUID     `gorm:"type:uuid;not null;index" json:"company_id"`
+	CancelledEmployeeID   *uuid.UUID    `gorm:"type:uuid" json:"cancelled_employee_id"`
+	StartTime             time.Time     `json:"start_time" gorm:"type:time;not null"`
+	EndTime               time.Time     `json:"end_time" gorm:"type:time;not null"`
+	TimeZone              time.Location `json:"timezone" gorm:"not null"` // Timezone in IANA format, e.g., "America/New_York"
+	ActualStartTime       time.Time     `json:"actual_start_time"`
+	ActualEndTime         time.Time     `json:"actual_end_time"`
+	CancelTime            time.Time     `json:"cancel_time"`
+	IsFulfilled           bool          `gorm:"default:false" json:"is_fulfilled"`
+	IsCancelled           bool          `gorm:"default:false" json:"is_cancelled"`
+	IsCancelledByClient   bool          `gorm:"default:false" json:"is_cancelled_by_client"`
+	IsCancelledByEmployee bool          `gorm:"default:false" json:"is_cancelled_by_employee"`
+	IsConfirmedByClient   bool          `gorm:"default:false" json:"is_confirmed_by_client"`
 }
 
 // This is the foreign key struct for the Appointment model at company schema level.
@@ -302,12 +303,12 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	// 4. Check Employee Availability (Work Schedule)
-	if a.Employee.WorkSchedule.IsEmpty() {
+	if len(a.Employee.WorkSchedule) == 0 {
 		return lib.Error.Employee.NoWorkScheduleForDay
 	}
 	weekday := a.StartTime.Weekday()
-	workRanges := a.Employee.WorkSchedule.GetRangesForDay(weekday) // Use helper if available
-
+	workRanges := a.Employee.GetWorkRangeForDay(weekday) // Use helper if available
+	
 	if len(workRanges) == 0 {
 		return lib.Error.Employee.NoWorkScheduleForDay
 	}
@@ -321,11 +322,11 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 
 		// Use layout matching your "15:30:00" format
 		layout := "2006-01-02 15:04"
-		scheduleStart, errStart := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.Start), a.StartTime.Location())
-		scheduleEnd, errEnd := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.End), a.StartTime.Location())
+		scheduleStart, errStart := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.StartTime), a.StartTime.Location())
+		scheduleEnd, errEnd := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.EndTime), a.StartTime.Location())
 
 		if errStart != nil || errEnd != nil {
-			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("invalid work schedule format parse for employee %s with range %s-%s. start time error: %v / end time error: %v", a.EmployeeID, wr.Start, wr.End, errStart, errEnd))
+			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("invalid work schedule format parse for employee %s with range %s-%s. start time error: %v / end time error: %v", a.EmployeeID, wr.StartTime, wr.EndTime, errStart, errEnd))
 		}
 		if !scheduleEnd.After(scheduleStart) {
 			continue
