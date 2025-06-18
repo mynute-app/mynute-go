@@ -20,6 +20,8 @@ func Test_Company(t *testing.T) {
 
 	tt.Describe("Company creation").Test(company.Create(200))
 
+	should_not_create_tax_id := lib.GenerateRandomStrNumber(14)
+
 	tt.Describe("Company creation with duplicate subdomain").Test(
 		handlerT.NewHttpClient().
 			Method("POST").
@@ -28,7 +30,7 @@ func Test_Company(t *testing.T) {
 			Send(DTO.CreateCompany{
 				LegalName:      lib.GenerateRandomName("Company Legal Name"),
 				TradeName:      lib.GenerateRandomName("Company Trade Name"),
-				TaxID:          lib.GenerateRandomStrNumber(14),
+				TaxID:          should_not_create_tax_id,
 				OwnerName:      lib.GenerateRandomName("Owner Name"),
 				OwnerSurname:   lib.GenerateRandomName("Owner Surname"),
 				OwnerEmail:     lib.GenerateRandomEmail("owner"),
@@ -36,6 +38,12 @@ func Test_Company(t *testing.T) {
 				OwnerPassword:  "Pswrd123!",
 				StartSubdomain: company.Created.Subdomains[0].Name,
 			}).Error)
+
+	tt.Describe("Check if company was not created due to duplicate subdomain").Test(handlerT.NewHttpClient().
+		Method("GET").
+		URL("/company/tax_id/"+should_not_create_tax_id).
+		ExpectedStatus(404).
+		Send(nil).Error)
 
 	tt.Describe("Company update design config").Test(company.Update(200, map[string]any{
 		"design": mJSON.DesignConfig{

@@ -64,6 +64,9 @@ func ErrorV13(logger *slog.Logger) fiber.ErrorHandler {
 	loki := &myLogger.Loki{}
 
 	return func(c *fiber.Ctx, err error) error {
+		if err == nil {
+			return nil
+		}
 		status := fiber.StatusInternalServerError
 		var responseBody []byte
 
