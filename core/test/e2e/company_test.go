@@ -2,8 +2,10 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib/FileBytes"
+	"agenda-kaki-go/core/lib"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 	"testing"
@@ -17,6 +19,31 @@ func Test_Company(t *testing.T) {
 	company := &modelT.Company{}
 
 	tt.Describe("Company creation").Test(company.Create(200))
+
+	should_not_create_tax_id := lib.GenerateRandomStrNumber(14)
+
+	tt.Describe("Company creation with duplicate subdomain").Test(
+		handlerT.NewHttpClient().
+			Method("POST").
+			URL("/Company").
+			ExpectedStatus(400).
+			Send(DTO.CreateCompany{
+				LegalName:      lib.GenerateRandomName("Company Legal Name"),
+				TradeName:      lib.GenerateRandomName("Company Trade Name"),
+				TaxID:          should_not_create_tax_id,
+				OwnerName:      lib.GenerateRandomName("Owner Name"),
+				OwnerSurname:   lib.GenerateRandomName("Owner Surname"),
+				OwnerEmail:     lib.GenerateRandomEmail("owner"),
+				OwnerPhone:     lib.GenerateRandomPhoneNumber(),
+				OwnerPassword:  "Pswrd123!",
+				StartSubdomain: company.Created.Subdomains[0].Name,
+			}).Error)
+
+	tt.Describe("Check if company was not created due to duplicate subdomain").Test(handlerT.NewHttpClient().
+		Method("GET").
+		URL("/company/tax_id/"+should_not_create_tax_id+"/exists").
+		ExpectedStatus(404).
+		Send(nil).Error)
 
 	tt.Describe("Company update design config").Test(company.Update(200, map[string]any{
 		"design": mJSON.DesignConfig{
@@ -77,5 +104,6 @@ func Test_Company(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Reset colors").Test(company.ChangeColors(200, mJSON.Colors{}, company.Owner.X_Auth_Token, nil))
+
 	tt.Describe("Company deletion").Test(company.Delete(200, company.Owner.X_Auth_Token, nil))
 }

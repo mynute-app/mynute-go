@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // CreateCompany creates a company
@@ -68,6 +69,9 @@ func CreateCompany(c *fiber.Ctx) error {
 	domain.CompanyID = company.ID
 
 	if err := company.AddSubdomain(tx, &domain); err != nil {
+		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
+			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
+		}
 		return err
 	}
 
@@ -81,10 +85,16 @@ func CreateCompany(c *fiber.Ctx) error {
 	owner.CompanyID = company.ID
 
 	if err := company.CreateOwner(tx, &owner); err != nil {
+		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
+			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
+		}
 		return err
 	}
 
 	if fullCompany, err := company.GetFullCompany(tx); err != nil {
+		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
+			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
+		}
 		return err
 	} else {
 		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.CompanyFull{}); err != nil {
@@ -178,6 +188,40 @@ func GetCompanyByName(c *fiber.Ctx) error {
 	return nil
 }
 
+// CheckIfCompanyExistsByTaxID checks if a company exists by its tax ID
+//
+//	@Summary		Check if company exists by tax ID
+//	@Description	Check if a company exists by its tax identification number
+//	@Tags			Company
+//	@Param			tax_id	path	string	true	"Company Tax ID"
+//	@Produce		json
+//	@Success		200	{object}	bool
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/company/tax_id/{tax_id}/exists [get]
+func CheckIfCompanyExistsByTaxID(c *fiber.Ctx) error {
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	tax_id := c.Params("tax_id")
+
+	if tax_id == "" {
+		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
+	}
+
+	var company model.Company
+
+	if err := tx.First(&company, "tax_id = ?", tax_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.ResponseFactory(c).Send(404, nil)
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).Send(200, nil)
+}
+
 // GetCompanyByTaxId retrieves a company by tax ID
 //
 //	@Summary		Get company by tax ID
@@ -202,7 +246,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
 	}
 
-	if err := tx.Where("tax_id = ?", tax_id).First(&company).Error; err != nil {
+	if err := tx.First(&company, "tax_id = ?", tax_id).Error; err != nil {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
@@ -562,6 +606,7 @@ func Company(Gorm *handler.Gorm) {
 		CreateCompany,
 		GetCompanyById,
 		GetCompanyByName,
+		CheckIfCompanyExistsByTaxID,
 		GetCompanyByTaxId,
 		GetCompanyBySubdomain,
 		UpdateCompanyImages,

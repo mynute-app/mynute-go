@@ -3,6 +3,7 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
+	"errors"
 	"fmt"
 	"time"
 
@@ -33,7 +34,7 @@ type Employee struct {
 	Roles            []*Role            `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 }
 
-func (Employee) TableName() string { return "employees" }
+func (Employee) TableName() string  { return "employees" }
 func (Employee) SchemaType() string { return "company" }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
@@ -59,6 +60,9 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("CompanyID") {
+		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	}
 	if e.Password != "" {
 		db_e := &Employee{}
 		tx.First(db_e, e.ID)

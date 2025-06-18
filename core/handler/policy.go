@@ -35,7 +35,7 @@ const indentStep = "  "
 // considering context from the request path, body, and query parameters.
 // subject: Information about the entity performing the action.
 // resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
-// path: Data extracted from URL path parameters.
+// path: Data extracted from URL path parameters. /employee_id/{id}
 // body: Data parsed from the request body.
 // query: Data extracted from URL query string parameters.
 // headers: Data extracted from request headers.

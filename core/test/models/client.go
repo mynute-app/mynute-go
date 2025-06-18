@@ -59,8 +59,10 @@ func (u *Client) Update(s int, changes map[string]any) error {
 		Error; err != nil {
 		return fmt.Errorf("failed to update client: %w", err)
 	}
-	if err := ValidateUpdateChanges("Client", u.Created, changes); err != nil {
-		return err
+	if s > 200 && s < 300 {
+		if err := ValidateUpdateChanges("Client", u.Created, changes); err != nil {
+			return err
+		}
 	}
 
 	return nil

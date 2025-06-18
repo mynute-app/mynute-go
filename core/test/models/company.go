@@ -6,7 +6,7 @@ import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/lib/FileBytes"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
@@ -648,7 +648,7 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 			scheduleModel = GenerateRandomModelWorkSchedule(validEmployeeBranches, employee)
 			scheduleCreationAttempts++
 		}
-		
+
 		// Call Employee.Update using owner's token (c.X_Auth_Token is implicitly used in helper via employee.Company.X_Auth_Token)
 		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{scheduleModel}, nil, nil); err != nil {
 			return fmt.Errorf("failed to update work schedule for employee %d (%s) via API: %v", i, employee.Created.Email, err)
@@ -901,8 +901,10 @@ func (c *Company) Update(status int, changes map[string]any, x_auth_token string
 		ParseResponse(&c.Created).Error; err != nil {
 		return fmt.Errorf("failed to update company: %w", err)
 	}
-	if err := ValidateUpdateChanges("Company", c.Created, changes); err != nil {
-		return err
+	if status > 200 && status < 300 {
+		if err := ValidateUpdateChanges("Company", c.Created, changes); err != nil {
+			return err
+		}
 	}
 
 	return nil

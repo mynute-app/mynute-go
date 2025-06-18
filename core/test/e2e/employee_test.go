@@ -7,6 +7,8 @@ import (
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func Test_Employee(t *testing.T) {
@@ -48,6 +50,10 @@ func Test_Employee(t *testing.T) {
 			Sunday: []mJSON.WorkRange{},
 		},
 	}, nil, nil))
+
+	tt.Describe("Changing employee company_id").Test(employee.Update(400, map[string]any{
+		"company_id": uuid.New().String(),
+	}, &company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Employee deletion").Test(employee.Delete(200, nil, nil))
 }

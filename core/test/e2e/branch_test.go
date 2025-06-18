@@ -6,6 +6,8 @@ import (
 	modelT "agenda-kaki-go/core/test/models"
 
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func Test_Branch(t *testing.T) {
@@ -33,7 +35,12 @@ func Test_Branch(t *testing.T) {
 
 	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
-	tt.Describe("Adding branch to company").Test(company.Owner.AddBranch(200, branch, nil, nil))
+	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
 	tt.Describe("Getting company by ID").Test(company.GetById(200, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Changing branch company_id").Test(branch.Update(400, map[string]any{
+		"company_id": uuid.New().String(),
+	}, company.Owner.X_Auth_Token, nil))
+
 	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
 }

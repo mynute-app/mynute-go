@@ -249,6 +249,12 @@ var GetCompanyByName = &EndPoint{
 	ControllerName:   "GetCompanyByName",
 	Description:      "View company by name",
 }
+var CheckIfCompanyExistsByTaxID = &EndPoint{
+	Path:             "/company/tax_id/:tax_id/exists",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "CheckIfCompanyExistsByTaxID",
+	Description:      "Check if company exists by tax ID",
+}
 var GetCompanyByTaxId = &EndPoint{
 	Path:             "/company/tax_id/:tax_id",
 	Method:           namespace.ViewActionMethod,
@@ -589,6 +595,7 @@ var endpoints = []*EndPoint{
 	GetCompanyById,
 	GetCompanyByName,
 	GetCompanyByTaxId,
+	CheckIfCompanyExistsByTaxID,
 	GetCompanyBySubdomain,
 	UpdateCompanyById,
 	DeleteCompanyById,
