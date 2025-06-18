@@ -49,14 +49,14 @@ func Connect() *Database {
 	} else if app_env != "prod" {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
-	
+
 	if db_log_level == "info" {
 		LogLevel = logger.Info
 	} else if db_log_level == "error" {
 		LogLevel = logger.Error
 	} else if db_log_level == "silent" {
 		LogLevel = logger.Silent
-	}  else if db_log_level == "warn" {
+	} else if db_log_level == "warn" {
 		LogLevel = logger.Warn
 	} else {
 		log.Printf("Unknown env POSTGRES_LOG_LEVEL: %s, defaulting to Warn level", db_log_level)
@@ -111,9 +111,10 @@ func Connect() *Database {
 
 	return dbWrapper
 }
+
 // Seed the database with initial data
 func (db *Database) InitialSeed() {
-	tx, end, err := Transaction(db.Gorm)
+	tx, end, _, err := Transaction(db.Gorm)
 	defer end()
 	if err != nil {
 		panic(err)
@@ -360,12 +361,26 @@ func DeferCallback(tx *gorm.DB) func() {
 	}
 }
 
-func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
+func Rollback(tx *gorm.DB) func(err error) error {
+	return func(err error) error {
+		if err != nil {
+			if rollbackErr := tx.Rollback().Error; rollbackErr != nil {
+				log.Printf("Rollback failed: %v", rollbackErr)
+				return lib.Error.General.DatabaseError.WithError(rollbackErr).WithError(err)
+			}
+			log.Printf("Transaction rolled back due to error: %v", err)
+			return err
+		}
+		return nil
+	}
+}
+
+func Transaction(db *gorm.DB) (*gorm.DB, func(), func(err error) error, error) {
 	tx := db.Begin()
 	if tx.Error != nil {
-		return nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
+		return nil, nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
 	}
-	return tx, DeferCallback(tx), nil
+	return tx, DeferCallback(tx), Rollback(tx), nil
 }
 
 /*
@@ -373,19 +388,23 @@ func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
  Recomended when you need to perform multiple database operations dependant of each other.
  * @return *gorm.DB - The transaction session
  * @return func() - The function to end the transaction
+ * @return func(err error) - The function to rollback the transaction in case of an error. This function is supposed to be used when you're performing multiple important database operations that changes the database in a single transaction, for example: CREATE and UPDATE, or CREATE and DELETE, or UPDATE and DELETE, etc.
  * @return error - The error if any
 */
 // @example
-//	tx, end, err := database.ContextTransaction(c)
+//	tx, end, rollback, err := database.ContextTransaction(c)
 //	defer end()
 //	if err != nil {
 //		return err
 //	}
+//  if err := tx.Model(&model.Client{}).Create(&client).Error; err != nil {
+//		return rollback(err)
+//	}
 //	// Then use the transaction session (tx) for your database operations
-func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
+func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(), func(err error) error, error) {
 	session, err := lib.Session(c)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	return Transaction(session)
 }
