@@ -343,8 +343,9 @@ func Defer(tx *gorm.DB) {
 	} else {
 		// Commit and log error if commit fails
 		if err := tx.Commit().Error; err != nil {
-			_ = tx.Rollback()
-			log.Printf("Commit failed, transaction rolled back: %v", err)
+			if err.Error() != "sql: transaction has already been committed or rolled back" {
+				_ = tx.Rollback()
+			}
 		}
 	}
 }

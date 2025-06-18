@@ -122,7 +122,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 			log.Println("No request body found")
 		}
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
-		log.Println("Multipart form data not supported in this context, skipping body parsing")
+		// log.Println("Multipart form data not supported in this context, skipping body parsing")
 		// Note: If you need to handle multipart/form-data, you would need to parse it differently.
 		// Fiber provides methods for handling multipart forms, but this is not implemented here.
 		// You might want to return an error or handle it as needed.
