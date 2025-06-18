@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/lib/Logger"
 	"encoding/json"
@@ -105,6 +106,13 @@ func ErrorV13(logger *slog.Logger) fiber.ErrorHandler {
 
 			if err := loki.LogV13(resLabels, resBody); err != nil {
 				logger.Error("Failed to log critical error to Loki", slog.String("error", err.Error()))
+			}
+		}
+
+		tx, _, _ := database.ContextTransaction(c)
+		if tx != nil {
+			if err := tx.Rollback().Error; err != nil {
+				logger.Error("Failed to rollback transaction", slog.String("error", err.Error()))
 			}
 		}
 

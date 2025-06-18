@@ -133,7 +133,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
-	tx, end, _, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err

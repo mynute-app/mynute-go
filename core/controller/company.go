@@ -29,14 +29,14 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func CreateCompany(c *fiber.Ctx) error {
-	tx, end, rollback, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
-		return rollback(err)
+		return err
 	}
 	var body DTO.CreateCompany
 	if err := c.BodyParser(&body); err != nil {
-		return rollback(err)
+		return err
 	}
 	if err := lib.ValidatorV10.Struct(body); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
@@ -60,7 +60,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	company.TaxID = body.TaxID
 
 	if err := company.Create(tx); err != nil {
-		return rollback(err)
+		return err
 	}
 
 	var domain model.Subdomain
@@ -68,7 +68,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	domain.CompanyID = company.ID
 
 	if err := company.AddSubdomain(tx, &domain); err != nil {
-		return rollback(err)
+		return err
 	}
 
 	var owner model.Employee
@@ -81,11 +81,11 @@ func CreateCompany(c *fiber.Ctx) error {
 	owner.CompanyID = company.ID
 
 	if err := company.CreateOwner(tx, &owner); err != nil {
-		return rollback(err)
+		return err
 	}
 
 	if fullCompany, err := company.GetFullCompany(tx); err != nil {
-		return rollback(err)
+		return err
 	} else {
 		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.CompanyFull{}); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
@@ -334,16 +334,16 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	tx, end, rollback, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
-		return rollback(err)
+		return err
 	}
 
 	company.ID = company_uuid
 
 	if err := company.Delete(tx); err != nil {
-		return rollback(err)
+		return lib.Error.Company.NotFound.WithError(err)
 	}
 
 	return nil
@@ -367,7 +367,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
-	tx, end, rollback, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -376,7 +376,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 	var company model.Company
 	id := c.Params("id")
 	if err := tx.First(&company, "id = ?", id).Error; err != nil {
-		return rollback(lib.Error.Company.NotFound.WithError(err))
+		return lib.Error.Company.NotFound.WithError(err)
 	}
 
 	// Upload e atualização dos campos
@@ -402,21 +402,21 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		if err != nil {
 			continue
 		}
-		opened_file, err := file.Open()
+		f, err := file.Open()
 		if err != nil {
-			return rollback(err)
+			return err
 		}
 
 		newFile := make([]byte, file.Size)
-		_, err = opened_file.Read(newFile)
-		opened_file.Close()
+		_, err = f.Read(newFile)
+		f.Close()
 		if err != nil {
-			return rollback(lib.Error.General.InternalError.WithError(err))
+			return lib.Error.General.InternalError.WithError(err)
 		}
 
 		url, err := company.Design.SaveImage(company.TableName(), company.ID.String(), *target, file.Filename, newFile)
 		if err != nil {
-			return rollback(lib.Error.General.InternalError.WithError(err))
+			return lib.Error.General.InternalError.WithError(err)
 		}
 
 		uploadedFilesURL = append(uploadedFilesURL, url)
@@ -425,7 +425,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Save(&company).Error; err != nil {
-		return rollback(lib.Error.General.InternalError.WithError(err))
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
@@ -444,7 +444,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
-	tx, end, rollback, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -453,7 +453,7 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 	var company model.Company
 	id := c.Params("id")
 	if err := tx.First(&company, "id = ?", id).Error; err != nil {
-		return rollback(lib.Error.Company.NotFound.WithError(err))
+		return lib.Error.Company.NotFound.WithError(err)
 	}
 
 	imageType := c.Params("image_type")
@@ -470,13 +470,13 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 	}
 
 	if err := company.Design.DeleteImage(company.TableName(), id, *target); err != nil {
-		return rollback(lib.Error.General.InternalError.WithError(err))
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	*target = ""
 
 	if err := tx.Save(&company).Error; err != nil {
-		return rollback(err)
+		return err
 	}
 
 	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
@@ -499,7 +499,7 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company/{id}/design/colors [put]
 func UpdateCompanyColors(c *fiber.Ctx) error {
-	tx, end, rollback, err := database.ContextTransaction(c)
+	tx, end, err := database.ContextTransaction(c)
 	defer end()
 	if err != nil {
 		return err
@@ -508,12 +508,12 @@ func UpdateCompanyColors(c *fiber.Ctx) error {
 	var company model.Company
 	id := c.Params("id")
 	if err := tx.First(&company, "id = ?", id).Error; err != nil {
-		return rollback(lib.Error.Company.NotFound.WithError(err))
+		return lib.Error.Company.NotFound.WithError(err)
 	}
 
 	var colors mJSON.Colors
 	if err := c.BodyParser(&colors); err != nil {
-		return rollback(lib.Error.General.BadRequest.WithError(err))
+		return lib.Error.General.BadRequest.WithError(err)
 	}
 
 	ValidateHexColor := func(color string) error {
@@ -532,24 +532,24 @@ func UpdateCompanyColors(c *fiber.Ctx) error {
 	}
 
 	if err := ValidateHexColor(colors.Primary); err != nil {
-		return rollback(lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid primary color: %s", colors.Primary)))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid primary color: %s", colors.Primary))
 	}
 	company.Design.Colors.Primary = colors.Primary
 	if err := ValidateHexColor(colors.Secondary); err != nil {
-		return rollback(lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid secondary color: %s", colors.Secondary)))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid secondary color: %s", colors.Secondary))
 	}
 	company.Design.Colors.Secondary = colors.Secondary
 	if err := ValidateHexColor(colors.Tertiary); err != nil {
-		return rollback(lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tertiary color: %s", colors.Tertiary)))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tertiary color: %s", colors.Tertiary))
 	}
 	company.Design.Colors.Tertiary = colors.Tertiary
 	if err := ValidateHexColor(colors.Quaternary); err != nil {
-		return rollback(lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid quaternary color: %s", colors.Quaternary)))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid quaternary color: %s", colors.Quaternary))
 	}
 	company.Design.Colors.Quaternary = colors.Quaternary
 
 	if err := tx.Save(&company).Error; err != nil {
-		return rollback(lib.Error.General.InternalError.WithError(err))
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Colors, &dJSON.Colors{})
