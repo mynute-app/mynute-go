@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type Weekday uint8
@@ -86,14 +85,8 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not belong to branch %s", wr.EmployeeID, wr.BranchID))
 	}
 
-	if wr.StartTime.Before(branch.StartTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be before branch start time %s", wr.StartTime, branch.StartTime))
-	} else if wr.StartTime.After(branch.EndTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be after branch end time %s", wr.StartTime, branch.EndTime))
-	} else if wr.EndTime.Before(branch.StartTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be before branch start time %s", wr.EndTime, branch.StartTime))
-	} else if wr.EndTime.After(branch.EndTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be after branch end time %s", wr.EndTime, branch.EndTime))
+	if err := branch.ValidateWorkRangeTime(wr); err != nil {
+		return err
 	}
 
 	if len(wr.Services) > 0 {
@@ -144,6 +137,38 @@ func (wr *WorkRange) BeforeUpdate(tx *gorm.DB) error {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be after end time"))
 		}
 	}
+
+	if tx.Statement.Changed("EmployeeID") {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID cannot be changed after creation"))
+	} else if tx.Statement.Changed("BranchID") {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID cannot be changed after creation"))
+	}
+
+	var employee *Employee
+	if err := tx.First(&employee, "id = ?", wr.EmployeeID.String()).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee with ID %s not found", wr.EmployeeID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var branch *Branch
+	if err := tx.First(&branch, "id = ?", wr.BranchID.String()).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s not found", wr.BranchID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if tx.Statement.Changed("Weekday") || tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
+		if err := employee.HasOverlappingWorkRange(tx, wr); err != nil {
+			return err
+		}
+		if err := branch.ValidateWorkRangeTime(wr); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -196,17 +221,24 @@ func (wr *WorkRange) AddServices(tx *gorm.DB, services ...*Service) error {
 		wr.Services = make([]*Service, 0)
 	}
 	var employee *Employee
-	if err := tx.Association(clause.Associations).Find(&employee, "id = ?", wr.EmployeeID); err != nil {
+	if err := tx.Find(&employee, "id = ?", wr.EmployeeID).Error; err != nil {
 		return fmt.Errorf("error finding employee with ID %s: %w", wr.EmployeeID, err)
 	}
 	if !employee.HasBranch(tx, wr.BranchID) {
 		return fmt.Errorf("employee %s does not belong to branch %s", employee.ID, wr.BranchID)
+	}
+	var branch *Branch
+	if err := tx.Find(&branch, "id = ?", wr.BranchID).Error; err != nil {
+		return fmt.Errorf("error finding branch with ID %s: %w", wr.BranchID, err)
 	}
 	for _, service := range services {
 		if service != nil && !wr.HasService(tx, service.ID) {
 			// Check if the employee has the service
 			if !employee.HasService(tx, service.ID) {
 				return fmt.Errorf("employee %s does not have service %s", employee.ID, service.ID)
+			}
+			if !branch.HasService(tx, service.ID) {
+				return fmt.Errorf("branch %s does not have service %s", branch.ID, service.ID)
 			}
 			if err := tx.Model(wr).Association("Services").Append(service); err != nil {
 				return fmt.Errorf("error adding service %s to work range: %w", service.ID, err)

@@ -154,3 +154,16 @@ func (b *Branch) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 	}
 	return count > 0
 }
+
+func (b *Branch) ValidateWorkRangeTime(wr *WorkRange) error {
+	if wr.StartTime.Before(b.StartTime) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be before branch start time %s", wr.StartTime, b.StartTime))
+	} else if wr.StartTime.After(b.EndTime) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be after branch end time %s", wr.StartTime, b.EndTime))
+	} else if wr.EndTime.Before(b.StartTime) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be before branch start time %s", wr.EndTime, b.StartTime))
+	} else if wr.EndTime.After(b.EndTime) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be after branch end time %s", wr.EndTime, b.EndTime))
+	}
+	return nil
+}
