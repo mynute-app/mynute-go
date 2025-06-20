@@ -191,7 +191,7 @@ func (e *Employee) HashPassword() error {
 // 	return nil // All validations passed
 // }
 
-func (e *Employee) GetWorkRangeForDay(day time.Weekday) ([]*WorkRange) {
+func (e *Employee) GetWorkRangeForDay(day time.Weekday) []*WorkRange {
 	var WorkRanges []*WorkRange
 	if len(e.WorkSchedule) == 0 {
 		return WorkRanges
@@ -202,6 +202,24 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) ([]*WorkRange) {
 		}
 	}
 	return WorkRanges
+}
+
+func (e *Employee) HasOverlappingWorkRange(tx *gorm.DB, wr *WorkRange) error {
+	var emp_work_schedule []WorkRange
+	if err := tx.Find(&emp_work_schedule, "employee_id = ? AND weekday = ?", e.ID, wr.Weekday).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	// Check for overlapping work ranges
+	for _, existing := range emp_work_schedule {
+		if existing.Overlaps(wr) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", wr.StartTime, wr.EndTime, existing.ID, existing.StartTime, existing.EndTime))
+		}
+	}
+
+	return nil
 }
 
 func (e *Employee) AddWorkRange(tx *gorm.DB, wr *WorkRange) error {
@@ -291,7 +309,7 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 func (e *Employee) HasBranch(tx *gorm.DB, branchID uuid.UUID) bool {
 	var count int64
 	// Check if the employee exists in the branch
-	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", e.ID, branchID).Count(&count).Error; err != nil {
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", e.ID, branchID).Scan(&count).Error; err != nil {
 		return false // Error occurred, assume employee does not exist in the branch
 	}
 	return count > 0

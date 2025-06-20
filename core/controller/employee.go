@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -37,6 +38,58 @@ func CreateEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	if err := Create(c, &employee); err != nil {
 		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+// CreateWorkSchedule creates a work schedule for an employee
+//
+//	@Summary		Create work schedule
+//	@Description	Create a work schedule for an employee
+//	@Tags			WorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil	"Unauthorized"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Accept			json
+//	@Produce		json
+//	@Param			work_schedule	body		DTO.CreateWorkSchedule	true	"Work Schedule"
+//	@Success		201		{object}	model.WorkSchedule
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/employee/{id}/work_schedule [post]
+func CreateWorkSchedule(c *fiber.Ctx) error {
+	var WorkSchedule []model.WorkRange
+
+	if err := c.BodyParser(&WorkSchedule); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
+	}
+
+	employee_id := c.Params("id")
+
+	for _, wr := range WorkSchedule {
+		if wr.EmployeeID.String() != employee_id {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID in work range does not match employee ID in path parameter"))
+		}
+	}
+
+	tx, end, err := database.ContextTransaction(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	defer end()
+
+	var employee model.Employee
+	employee.ID = uuid.MustParse(employee_id)
+
+	for _, wr := range WorkSchedule {
+		if err := employee.AddWorkRange(tx, &wr); err != nil {
+			return err
+		}
 	}
 
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {

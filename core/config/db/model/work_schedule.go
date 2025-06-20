@@ -70,6 +70,10 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be after end time"))
 	}
 
+	if wr.Weekday < 0 || wr.Weekday > 6 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d, must be between 0 (Sunday) and 6 (Saturday)", wr.Weekday))
+	}
+
 	var branch *Branch
 	if err := tx.First(&branch, "id = ?", wr.BranchID.String()).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -95,12 +99,37 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 	if len(wr.Services) > 0 {
 		for _, service := range wr.Services {
 			if service == nil {
-				continue
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("service cannot be nil"))
 			}
 			if !branch.HasService(tx, service.ID) {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s does not have service %s", wr.BranchID, service.ID))
 			}
 		}
+	}
+
+	var employee *Employee
+	if err := tx.First(&employee, "id = ?", wr.EmployeeID.String()).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee with ID %s not found", wr.EmployeeID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if !employee.HasBranch(tx, wr.BranchID) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not belong to branch %s", wr.EmployeeID, wr.BranchID))
+	}
+
+	for _, service := range wr.Services {
+		if service == nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("service cannot be nil"))
+		}
+		if !employee.HasService(tx, service.ID) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", wr.EmployeeID, service.ID))
+		}
+	}
+
+	if err := employee.HasOverlappingWorkRange(tx, wr); err != nil {
+		return err
 	}
 
 	return nil
@@ -133,6 +162,33 @@ func (wr *WorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 		return false // Error occurred, assume service does not exist
 	}
 	return count > 0
+}
+
+func (wr *WorkRange) Overlaps(other *WorkRange) bool {
+	if wr.Weekday != other.Weekday {
+		return false // Different weekdays or branches, no overlap
+	}
+
+	// Check if the time ranges overlap considering the time zone
+	wrStart := wr.StartTime.In(&wr.TimeZone)
+	wrEnd := wr.EndTime.In(&wr.TimeZone)
+	otherStart := other.StartTime.In(&other.TimeZone)
+	otherEnd := other.EndTime.In(&other.TimeZone)
+
+	wrStart_before_or_equal_otherStart := wrStart.Before(otherStart) || wrStart.Equal(otherStart) // |<wrStart> <otherStart> || <wrStart otherStart>|
+	wrEnd_after_or_equal_otherEnd := wrEnd.After(otherEnd) || wrEnd.Equal(otherEnd)               // |<wrEnd> <otherEnd> || <wrEnd otherEnd>|
+	otherStart_before_or_equal_wrStart := otherStart.Before(wrStart) || otherStart.Equal(wrStart) // |<otherStart> <wrStart> || <otherStart wrStart>|
+	otherEnd_after_or_equal_wrEnd := otherEnd.After(wrEnd) || otherEnd.Equal(wrEnd)               // |<otherEnd> <wrEnd> || <otherEnd wrEnd>|
+
+	wr_equals_other := wrStart.Equal(otherStart) && wrEnd.Equal(otherEnd)                          // |<wrStart wrEnd> <otherStart otherEnd>|
+	wr_contains_other_fully := wrStart_before_or_equal_otherStart && wrEnd_after_or_equal_otherEnd // |<wrStart> <otherStart> <otherEnd> <wrEnd>|
+	other_contains_wr_fully := otherStart_before_or_equal_wrStart && otherEnd_after_or_equal_wrEnd // |<otherStart> <wrStart> <wrEnd> <otherEnd>|
+	wr_contains_other_start := wrStart_before_or_equal_otherStart && otherEnd_after_or_equal_wrEnd // |<wrStart> <otherStart> <wrEnd> <otherEnd>|
+	other_contains_wr_start := otherStart_before_or_equal_wrStart && wrEnd_after_or_equal_otherEnd // |<otherStart> <wrStart> <otherEnd> <wrEnd>|
+
+	isContained := wr_equals_other || wr_contains_other_fully || other_contains_wr_fully || wr_contains_other_start || other_contains_wr_start
+
+	return isContained
 }
 
 func (wr *WorkRange) AddServices(tx *gorm.DB, services ...*Service) error {
