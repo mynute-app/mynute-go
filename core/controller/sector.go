@@ -21,7 +21,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			sector	body		DTO.Sector	true	"sector"
-//	@Success		201		{object}	DTO.Sector
+//	@Success		200		{object}	DTO.Sector
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/sector [post]
 func CreateSector(c *fiber.Ctx) error {

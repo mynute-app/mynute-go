@@ -18,7 +18,7 @@ func Create(c *fiber.Ctx, model any) error {
 	if err := Service.Create(model).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
-	HasID := func (model any) (uuid.UUID, bool) {
+	HasID := func(model any) (uuid.UUID, bool) {
 		val := reflect.ValueOf(model)
 		if val.Kind() == reflect.Ptr {
 			val = val.Elem()

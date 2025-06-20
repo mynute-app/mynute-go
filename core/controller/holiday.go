@@ -21,7 +21,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			holiday	body		DTO.Holidays	true	"Holiday"
-//	@Success		201		{object}	DTO.Holidays
+//	@Success		200		{object}	DTO.Holidays
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/holidays [post]
 func CreateHoliday(c *fiber.Ctx) error {

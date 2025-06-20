@@ -22,7 +22,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.CreateService	true	"Service"
-//	@Success		201		{object}	DTO.Service
+//	@Success		200		{object}	DTO.Service
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service [post]
 func CreateService(c *fiber.Ctx) error {

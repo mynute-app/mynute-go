@@ -1,6 +1,7 @@
 package service
 
 import (
+	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"fmt"
@@ -10,11 +11,12 @@ import (
 )
 
 func Factory(c *fiber.Ctx) *service {
-	tx, err := lib.Session(c)
+	tx, end, err := database.ContextTransaction(c)
 	service := &service{
 		Context: c,
 		Error:   err,
 		MyGorm:  handler.MyGormWrapper(tx),
+		DeferDB: end,
 	}
 	return service
 }
@@ -22,6 +24,7 @@ func Factory(c *fiber.Ctx) *service {
 type service struct {
 	Context *fiber.Ctx
 	MyGorm  *handler.Gorm
+	DeferDB func()
 	Error   error
 }
 

@@ -222,24 +222,6 @@ func (e *Employee) HasOverlappingWorkRange(tx *gorm.DB, wr *WorkRange) error {
 	return nil
 }
 
-func (e *Employee) AddWorkRange(tx *gorm.DB, wr *WorkRange) error {
-	if wr.EmployeeID != e.ID {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID"))
-	}
-
-	if err := tx.Create(wr).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := tx.Preload(clause.Associations).First(&e, "id = ?", e.ID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	return nil
-}
-
 func (e *Employee) RemoveWorkRange(tx *gorm.DB, wr *WorkRange) error {
 	if wr.EmployeeID != e.ID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID"))
@@ -255,6 +237,59 @@ func (e *Employee) RemoveWorkRange(tx *gorm.DB, wr *WorkRange) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+	return nil
+}
+
+func (e *Employee) AddServicesToWorkRange(tx *gorm.DB, wr_id string, services []Service) error {
+	if len(services) == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no services provided to add to work range"))
+	}
+
+	var wr WorkRange
+	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.ID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.ID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if wr.EmployeeID != e.ID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID"))
+	}
+
+	var branch Branch
+	if err := tx.First(&branch, "id = ?", wr.BranchID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("branch not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	for _, service := range services {
+		if !branch.HasService(tx, service.ID) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s does not offer service %s", branch.ID, service.ID))
+		}
+		if err := tx.Exec("INSERT INTO work_schedule_services (work_range_id, service_id) VALUES (?, ?)", wr.ID, service.ID).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	return nil
+}
+
+func (e *Employee) RemoveServiceFromWorkRange(tx *gorm.DB, wr_id string, service_id string) error {
+	var wr WorkRange
+	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.ID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.ID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Exec("DELETE FROM work_schedule_services WHERE work_range_id = ? AND service_id = ?", wr.ID, service_id).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	return nil
 }
 

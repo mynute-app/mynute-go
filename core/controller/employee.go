@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -38,58 +39,6 @@ func CreateEmployee(c *fiber.Ctx) error {
 	var employee model.Employee
 	if err := Create(c, &employee); err != nil {
 		return err
-	}
-
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return nil
-}
-
-// CreateWorkSchedule creates a work schedule for an employee
-//
-//	@Summary		Create work schedule
-//	@Description	Create a work schedule for an employee
-//	@Tags			WorkSchedule
-//	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil	"Unauthorized"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Accept			json
-//	@Produce		json
-//	@Param			work_schedule	body		DTO.CreateWorkSchedule	true	"Work Schedule"
-//	@Success		201		{object}	model.WorkSchedule
-//	@Failure		400		{object}	lib.ErrorResponse
-//	@Router			/employee/{id}/work_schedule [post]
-func CreateWorkSchedule(c *fiber.Ctx) error {
-	var WorkSchedule []model.WorkRange
-
-	if err := c.BodyParser(&WorkSchedule); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
-	}
-
-	employee_id := c.Params("id")
-
-	for _, wr := range WorkSchedule {
-		if wr.EmployeeID.String() != employee_id {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID in work range does not match employee ID in path parameter"))
-		}
-	}
-
-	tx, end, err := database.ContextTransaction(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	defer end()
-
-	var employee model.Employee
-	employee.ID = uuid.MustParse(employee_id)
-
-	for _, wr := range WorkSchedule {
-		if err := employee.AddWorkRange(tx, &wr); err != nil {
-			return err
-		}
 	}
 
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -302,6 +251,267 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Router			/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Employee{})
+}
+
+// CreateWorkSchedule creates a work schedule for an employee
+//
+//	@Summary		Create work schedule
+//	@Description	Create a work schedule for an employee
+//	@Tags			WorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil	"Unauthorized"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Accept			json
+//	@Param			work_schedule	body		DTO.CreateWorkSchedule	true	"Work Schedule"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Success		200		{object}	DTO.EmployeeFull
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/employee/{id}/work_schedule [post]
+func CreateWorkSchedule(c *fiber.Ctx) error {
+	var WorkRanges []model.WorkRange
+
+	if err := c.BodyParser(&WorkRanges); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	employee_id := c.Params("id")
+
+	Service := service.Factory(c)
+
+	for i, wr := range WorkRanges {
+		if wr.EmployeeID.String() != employee_id {
+			Service.MyGorm.DB.Rollback()
+			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, wr.EmployeeID.String(), employee_id))
+		}
+		if err := Service.Create(&wr).Error; err != nil {
+			Service.MyGorm.DB.Rollback()
+			return lib.Error.General.CreatedError.WithError(err)
+		}
+	}
+
+	var employee model.Employee
+	if err := Service.MyGorm.DB.
+		Preload(clause.Associations).
+		First(&employee, "id = ?", employee_id).Error; err != nil {
+		Service.MyGorm.DB.Rollback()
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+// DeleteWorkRange deletes a work schedule for an employee
+//
+//	@Summary		Delete work schedule
+//	@Description	Delete a work schedule for an employee
+//	@Tags			WorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil	"Unauthorized"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Employee
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			employee/{id}/work_schedule/{work_range_id} [delete]
+func DeleteWorkRange(c *fiber.Ctx) error {
+	employee_id := c.Params("id")
+	work_range_id := c.Params("work_range_id")
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var employee model.Employee
+	if err := tx.First(&employee, "id = ?", employee_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Employee.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var work_schedule model.WorkRange
+	if err := tx.First(&work_schedule, "id = ?", work_range_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := employee.RemoveWorkRange(tx, &work_schedule); err != nil {
+		return err
+	}
+
+	if err := tx.Delete(&work_schedule).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Preload(clause.Associations).First(&employee, "id = ?", employee_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+// UpdateWorkRange updates a work range for an employee
+//
+//	@Summary		Update work range
+//	@Description	Update a work range for an employee
+//	@Tags			WorkRange
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Accept			json
+//	@Produce		json
+//	@Param			work_range	body		DTO.UpdateWorkRange	true	"Work Range"
+//	@Success		200		{object}	DTO.EmployeeFull
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/employee/{id}/work_range/{work_range_id} [patch]
+func UpdateWorkRange(c *fiber.Ctx) error {
+	employee_id := c.Params("id")
+	work_range_id := c.Params("work_range_id")
+
+	var work_range model.WorkRange
+	if err := json.Unmarshal(c.Request().Body(), &work_range); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.First(&work_range, "id = ?", work_range_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if work_range.EmployeeID.String() != employee_id {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID from path"))
+	}
+
+	if err := UpdateOneById(c, &work_range); err != nil {
+		return err
+	}
+
+	var employee model.Employee
+	if err := tx.Preload(clause.Associations).First(&employee, "id = ?", employee_id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+// AddEmployeeWorkRangeServices adds services to employee's work range
+//
+//	@Summary		Add services to employee's work range
+//	@Description	Add services to an employee's work range
+//	@Tags			WorkRange
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Accept			json
+//	@Produce		json
+//	@Param			services	body		[]DTO.Services	true	"Services"
+//	@Success		200	{object}	DTO.EmployeeFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
+func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	work_range_id := c.Params("work_range_id")
+
+	var services []model.Service
+	if err := c.BodyParser(&services); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var employee model.Employee
+	employee.ID = uuid.MustParse(employee_id)
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	if err := employee.AddServicesToWorkRange(tx, work_range_id, services); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// RemoveEmployeeWorkRangeService removes a service from employee's work range
+//
+//	@Summary		Remove service from employee's work range
+//	@Description	Remove a service from an employee's work range
+//	@Tags			WorkRange
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//  @Param 			service_id	path		string	true	"Service ID"
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	DTO.EmployeeFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
+func RemoveEmployeeWorkRangeService(c *fiber.Ctx) error {
+	employee_id := c.Params("employee_id")
+	work_range_id := c.Params("work_range_id")
+	service_id := c.Params("service_id")
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var employee model.Employee
+	employee.ID = uuid.MustParse(employee_id)
+	if err := employee.RemoveServiceFromWorkRange(tx, work_range_id, service_id); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // AddEmployeeService adds a service to an employee

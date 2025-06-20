@@ -367,6 +367,51 @@ var UpdateEmployeeById = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
+var AddEmployeeWorkSchedule = &EndPoint{
+	Path:             "/employee/:id/work_schedule",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "AddEmployeeWorkSchedule",
+	Description:      "Add work schedule to employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var RemoveEmployeeWorkRange = &EndPoint{
+	Path:             "/employee/:id/work_schedule/:work_range_id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "RemoveEmployeeWorkSchedule",
+	Description:      "Remove work schedule from employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var UpdateEmployeeWorkRange = &EndPoint{
+	Path:             "/employee/:id/work_schedule/:work_range_id",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateEmployeeWorkSchedule",
+	Description:      "Update work schedule for employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var AddEmployeeWorkRangeServices = &EndPoint{
+	Path:             "/employee/:id/work_schedule/:work_range_id/service",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "AddEmployeeWorkRangeServices",
+	Description:      "Add services to work range for a employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var RemoveEmployeeWorkRangeService = &EndPoint{
+	Path:             "/employee/:id/work_schedule/:work_range_id/service/:service_id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "RemoveEmployeeWorkRangeService",
+	Description:      "Remove service from work range for a employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
 var DeleteEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
 	Method:           namespace.DeleteActionMethod,
