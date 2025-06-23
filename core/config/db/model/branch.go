@@ -18,7 +18,7 @@ type Branch struct {
 	BaseModel
 	StartTime      time.Time          `json:"start_time" gorm:"type:time;not null"`
 	EndTime        time.Time          `json:"end_time" gorm:"type:time;not null"`
-	TimeZone       time.Location      `json:"timezone" gorm:"not null"` // Timezone in IANA format, e.g., "America/New_York"
+	TimeZone       string             `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name           string             `gorm:"not null" json:"name"`
 	Street         string             `gorm:"not null" json:"street"`
 	Number         string             `gorm:"not null" json:"number"`
@@ -47,7 +47,9 @@ type ServiceDensity struct {
 }
 
 func (b *Branch) BeforeCreate(tx *gorm.DB) error {
-	b.UTC_with_Zero_YMD_Date()
+	if err := b.UTC_with_Zero_YMD_Date(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -56,7 +58,9 @@ func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		b.UTC_with_Zero_YMD_Date()
+		if err := b.UTC_with_Zero_YMD_Date(); err != nil {
+			return err
+		}
 		if b.StartTime.Equal(b.EndTime) {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch start time cannot be equal to end time"))
 		} else if b.StartTime.Before(b.EndTime) {
@@ -66,13 +70,25 @@ func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
-func (b *Branch) UTC_with_Zero_YMD_Date() {
-	loc := &b.TimeZone
+func (b *Branch) GetTimeZone() (*time.Location, error) {
+	loc, err := time.LoadLocation(b.TimeZone)
+	if err != nil {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
+	}
+	return loc, nil
+}
+
+func (b *Branch) UTC_with_Zero_YMD_Date() error {
+	loc, err := time.LoadLocation(b.TimeZone)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
+	}
 	start := time.Date(0, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
 	end := time.Date(0, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
 
 	b.StartTime = start.UTC()
 	b.EndTime = end.UTC()
+	return nil
 }
 
 func (b *Branch) AddService(tx *gorm.DB, service *Service) error {

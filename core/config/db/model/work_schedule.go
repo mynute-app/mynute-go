@@ -23,26 +23,22 @@ const (
 
 type WorkRange struct {
 	BaseModel
-	Weekday    time.Weekday  `json:"weekday" gorm:"not null"` // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-	StartTime  time.Time     `json:"start_time" gorm:"type:time;not null"`
-	EndTime    time.Time     `json:"end_time" gorm:"type:time;not null"`
-	TimeZone   time.Location `json:"timezone" gorm:"not null"` // Timezone in IANA format, e.g., "America/New_York"
-	EmployeeID uuid.UUID     `json:"employee_id" gorm:"type:uuid;not null;index:idx_employee_id,unique"`
-	Employee   Employee      `json:"employee" gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	BranchID   uuid.UUID     `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id,unique"`
-	Branch     Branch        `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Services   []*Service    `json:"services" gorm:"many2many:work_schedule_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Weekday    time.Weekday `json:"weekday" gorm:"not null"` // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+	StartTime  time.Time    `json:"start_time" gorm:"type:time;not null"`
+	EndTime    time.Time    `json:"end_time" gorm:"type:time;not null"`
+	TimeZone   string       `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	EmployeeID uuid.UUID    `json:"employee_id" gorm:"type:uuid;not null;index:idx_employee_id,unique"`
+	Employee   Employee     `json:"employee" gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	BranchID   uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id,unique"`
+	Branch     Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Services   []*Service   `json:"services" gorm:"many2many:work_schedule_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
-var WorksRangeTableName = "work_ranges"
+const WorksRangeTableName = "work_ranges"
 
-func (WorkRange) TableName() string {
-	return WorksRangeTableName
-}
-
-func (WorkRange) Indexes() map[string]string {
-	return WorksRangeIndexes(WorksRangeTableName)
-}
+func (WorkRange) TableName() string { return WorksRangeTableName }
+func (WorkRange) SchemaType() string { return "tenant" }
+func (WorkRange) Indexes() map[string]string { return WorksRangeIndexes(WorksRangeTableName) }
 
 func WorksRangeIndexes(table string) map[string]string {
 	return map[string]string{
@@ -59,7 +55,9 @@ func WorksRangeIndexes(table string) map[string]string {
 }
 
 func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
-	wr.UTC_with_Zero_YMD_Date()
+	if err := wr.UTC_with_Zero_YMD_Date(); err != nil {
+		return err
+	}
 
 	if wr.StartTime.Equal(wr.EndTime) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be equal to end time"))
@@ -130,7 +128,9 @@ func (wr *WorkRange) BeforeCreate(tx *gorm.DB) error {
 
 func (wr *WorkRange) BeforeUpdate(tx *gorm.DB) error {
 	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		wr.UTC_with_Zero_YMD_Date()
+		if err := wr.UTC_with_Zero_YMD_Date(); err != nil {
+			return err
+		}
 		if wr.StartTime.Equal(wr.EndTime) {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be equal to end time"))
 		} else if wr.StartTime.After(wr.EndTime) {
@@ -172,13 +172,25 @@ func (wr *WorkRange) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
-func (wr *WorkRange) UTC_with_Zero_YMD_Date() {
-	loc := &wr.TimeZone
+func (wr *WorkRange) GetTimeZone() (*time.Location, error) {
+	loc, err := time.LoadLocation(wr.TimeZone)
+	if err != nil {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", wr.TimeZone, err))
+	}
+	return loc, nil
+}
+
+func (wr *WorkRange) UTC_with_Zero_YMD_Date() error {
+	loc, err := wr.GetTimeZone()
+	if err != nil {
+		return err
+	}
 	start := time.Date(0, 1, 1, wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, loc)
 	end := time.Date(0, 1, 1, wr.EndTime.Hour(), wr.EndTime.Minute(), wr.EndTime.Second(), 0, loc)
 
 	wr.StartTime = start.UTC()
 	wr.EndTime = end.UTC()
+	return nil
 }
 
 func (wr *WorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
@@ -189,16 +201,23 @@ func (wr *WorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 	return count > 0
 }
 
-func (wr *WorkRange) Overlaps(other *WorkRange) bool {
+func (wr *WorkRange) Overlaps(other *WorkRange) (bool, error) {
 	if wr.Weekday != other.Weekday {
-		return false // Different weekdays or branches, no overlap
+		return false, nil // Different weekdays or branches, no overlap
 	}
-
+	wr_loc, err := wr.GetTimeZone()
+	if err != nil {
+		return false, err
+	}
+	other_loc, err := other.GetTimeZone()
+	if err != nil {
+		return false, err
+	}
 	// Check if the time ranges overlap considering the time zone
-	wrStart := wr.StartTime.In(&wr.TimeZone)
-	wrEnd := wr.EndTime.In(&wr.TimeZone)
-	otherStart := other.StartTime.In(&other.TimeZone)
-	otherEnd := other.EndTime.In(&other.TimeZone)
+	wrStart := wr.StartTime.In(wr_loc)
+	wrEnd := wr.EndTime.In(wr_loc)
+	otherStart := other.StartTime.In(other_loc)
+	otherEnd := other.EndTime.In(other_loc)
 
 	wrStart_before_or_equal_otherStart := wrStart.Before(otherStart) || wrStart.Equal(otherStart) // |<wrStart> <otherStart> || <wrStart otherStart>|
 	wrEnd_after_or_equal_otherEnd := wrEnd.After(otherEnd) || wrEnd.Equal(otherEnd)               // |<wrEnd> <otherEnd> || <wrEnd otherEnd>|
@@ -213,7 +232,7 @@ func (wr *WorkRange) Overlaps(other *WorkRange) bool {
 
 	isContained := wr_equals_other || wr_contains_other_fully || other_contains_wr_fully || wr_contains_other_start || other_contains_wr_start
 
-	return isContained
+	return isContained, nil
 }
 
 func (wr *WorkRange) AddServices(tx *gorm.DB, services ...*Service) error {

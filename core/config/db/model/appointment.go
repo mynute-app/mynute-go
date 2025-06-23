@@ -14,24 +14,24 @@ import (
 )
 
 type AppointmentBase struct {
-	ServiceID             uuid.UUID     `gorm:"type:uuid;not null" json:"service_id"`
-	EmployeeID            uuid.UUID     `gorm:"type:uuid;not null" json:"employee_id"`
-	ClientID              uuid.UUID     `gorm:"type:uuid;not null;index" json:"client_id"`
-	BranchID              uuid.UUID     `gorm:"type:uuid;not null" json:"branch_id"`
-	PaymentID             *uuid.UUID    `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
-	CompanyID             uuid.UUID     `gorm:"type:uuid;not null;index" json:"company_id"`
-	CancelledEmployeeID   *uuid.UUID    `gorm:"type:uuid" json:"cancelled_employee_id"`
-	StartTime             time.Time     `json:"start_time" gorm:"type:time;not null"`
-	EndTime               time.Time     `json:"end_time" gorm:"type:time;not null"`
-	TimeZone              time.Location `json:"timezone" gorm:"not null"` // Timezone in IANA format, e.g., "America/New_York"
-	ActualStartTime       time.Time     `json:"actual_start_time"`
-	ActualEndTime         time.Time     `json:"actual_end_time"`
-	CancelTime            time.Time     `json:"cancel_time"`
-	IsFulfilled           bool          `gorm:"default:false" json:"is_fulfilled"`
-	IsCancelled           bool          `gorm:"default:false" json:"is_cancelled"`
-	IsCancelledByClient   bool          `gorm:"default:false" json:"is_cancelled_by_client"`
-	IsCancelledByEmployee bool          `gorm:"default:false" json:"is_cancelled_by_employee"`
-	IsConfirmedByClient   bool          `gorm:"default:false" json:"is_confirmed_by_client"`
+	ServiceID             uuid.UUID  `gorm:"type:uuid;not null" json:"service_id"`
+	EmployeeID            uuid.UUID  `gorm:"type:uuid;not null" json:"employee_id"`
+	ClientID              uuid.UUID  `gorm:"type:uuid;not null;index" json:"client_id"`
+	BranchID              uuid.UUID  `gorm:"type:uuid;not null" json:"branch_id"`
+	PaymentID             *uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
+	CompanyID             uuid.UUID  `gorm:"type:uuid;not null;index" json:"company_id"`
+	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
+	StartTime             time.Time  `json:"start_time" gorm:"type:time;not null"`
+	EndTime               time.Time  `json:"end_time" gorm:"type:time;not null"`
+	TimeZone              string     `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	ActualStartTime       time.Time  `json:"actual_start_time"`
+	ActualEndTime         time.Time  `json:"actual_end_time"`
+	CancelTime            time.Time  `json:"cancel_time"`
+	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
+	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`
+	IsCancelledByClient   bool       `gorm:"default:false" json:"is_cancelled_by_client"`
+	IsCancelledByEmployee bool       `gorm:"default:false" json:"is_cancelled_by_employee"`
+	IsConfirmedByClient   bool       `gorm:"default:false" json:"is_confirmed_by_client"`
 }
 
 // This is the foreign key struct for the Appointment model at company schema level.
@@ -56,7 +56,7 @@ type Appointment struct {
 	AppointmentJson
 }
 
-var AppointmentTableName = "appointments"
+const AppointmentTableName = "appointments"
 
 func (Appointment) TableName() string { return AppointmentTableName }
 
@@ -308,7 +308,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 	weekday := a.StartTime.Weekday()
 	workRanges := a.Employee.GetWorkRangeForDay(weekday) // Use helper if available
-	
+
 	if len(workRanges) == 0 {
 		return lib.Error.Employee.NoWorkScheduleForDay
 	}

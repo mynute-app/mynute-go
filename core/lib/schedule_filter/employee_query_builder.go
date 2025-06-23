@@ -1,22 +1,18 @@
-// filter/employee_query_builder.go
-package schedule_filter
+package ScheduleFilter
 
 import (
 	"fmt"
-	"strings"
 
-	"agenda-kaki-go/core/config/db/model"
+	"agenda-kaki-go/core/config/db/model" // Assuming model.WorkRange is here
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// employeeQueryBuilder constructs a GORM query to find employees based on various criteria.
 type employeeQueryBuilder struct {
 	query *gorm.DB
 }
 
-// newEmployeeQueryBuilder initializes a new builder.
 func newEmployeeQueryBuilder(tx *gorm.DB) *employeeQueryBuilder {
 	return &employeeQueryBuilder{
 		query: tx.Model(&model.Employee{}),
@@ -40,67 +36,52 @@ func (b *employeeQueryBuilder) providesService(id uuid.UUID) *employeeQueryBuild
 	return b
 }
 
-// availableOn adds conditions for employee work schedules stored in JSONB.
+// availableOn filters employees based on their work schedules and the provided time parameters.
 func (b *employeeQueryBuilder) availableOn(params *ScheduleQueryParams) *employeeQueryBuilder {
-	// If both are nil, do nothing.
-	if params.Weekday == nil && params.StartTime == nil {
+	if params.OriginalStartTime == nil {
 		return b
 	}
 
-	var jsonClauses []string
-	var args []any
+	workRangeSubQuery := b.query.Session(&gorm.Session{NewDB: true}).Model(&model.WorkRange{})
 
-	if params.Weekday != nil && params.StartTime != nil {
-		// Filter by a specific day and time.
-		dayKey := strings.ToLower(*params.Weekday)
-		timeStr := params.StartTime.Format("15:04")
+	if params.IsSpecificDateQuery && params.QueryTimeOfDay != nil {
+		// Specific date (weekday) and specific time of day
+		// params.QueryTimeOfDay is already normalized (0000-01-01 HH:MM:SS UTC)
+		// We query the TIME columns WorkRange.StartTime and WorkRange.EndTime
+		workRangeSubQuery = workRangeSubQuery.Where("work_ranges.weekday = ?", params.QueryWeekday).
+			Where("work_ranges.start_time <= ?", *params.QueryTimeOfDay). // GORM should handle time comparison
+			Where("work_ranges.end_time > ?", *params.QueryTimeOfDay)   // Assuming end_time is exclusive upper bound for a start
 
-		// This complex clause checks if an element exists in the JSON array for the given day
-		// where the provided time is within the start/end range of the work shift.
-		jsonClauses = append(jsonClauses, `jsonb_path_exists(work_schedule, '$.??[*] ? (@.start <= ? && @.end > ?)')`)
-		args = append(args, dayKey, timeStr, timeStr)
-	} else if params.Weekday != nil {
-		// Filter by any availability on a given day.
-		dayKey := strings.ToLower(*params.Weekday)
-		// Checks if the JSON array for the given day exists and is not empty.
-		jsonClauses = append(jsonClauses, `jsonb_array_length(work_schedule -> ?) > 0`)
-		args = append(args, dayKey)
-	} else if params.StartTime != nil {
-		// Filter by a specific time on ANY day of the week.
-		timeStr := params.StartTime.Format("15:04")
-		// This is the most complex query. It checks all weekday arrays.
-		jsonClauses = append(jsonClauses, `(
-            jsonb_path_exists(work_schedule, '$.monday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.tuesday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.wednesday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.thursday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.friday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.saturday[*] ? (@.start <= ? && @.end > ?)') OR
-            jsonb_path_exists(work_schedule, '$.sunday[*] ? (@.start <= ? && @.end > ?)')
-        )`)
-		// Add the time argument 7 times
-		for i := 0; i < 7; i++ {
-			args = append(args, timeStr, timeStr)
-		}
+	} else if params.IsTimeOfDayQuery && params.QueryTimeOfDay != nil {
+		// Specific time of day, any working day
+		workRangeSubQuery = workRangeSubQuery.Where("work_ranges.start_time <= ?", *params.QueryTimeOfDay).
+			Where("work_ranges.end_time > ?", *params.QueryTimeOfDay)
+
+	} else if params.IsSpecificDateQuery {
+        // Specific date (weekday), any time during their shift on that day
+        workRangeSubQuery = workRangeSubQuery.Where("work_ranges.weekday = ?", params.QueryWeekday)
+    } else {
+		return b // No further availability filter from OriginalStartTime
 	}
 
-	if len(jsonClauses) > 0 {
-		b.query = b.query.Where(strings.Join(jsonClauses, " AND "), args...)
-	}
+    if params.BranchID != nil { // If filtering by branch, ensure work range is for that branch
+        workRangeSubQuery = workRangeSubQuery.Where("work_ranges.branch_id = ?", *params.BranchID)
+    }
 
+	b.query = b.query.Where("employees.id IN (?)", workRangeSubQuery.Select("employee_id").Distinct())
 	return b
 }
 
-// getEmployees executes the query and returns a slice of employees.
 func (b *employeeQueryBuilder) getEmployees() ([]*model.Employee, error) {
 	var employees []*model.Employee
-	if err := b.query.Distinct().Find(&employees).Error; err != nil {
+	// Consider preloading relevant associations if needed by the caller, e.g., WorkRanges
+	// For example: .Preload("WorkRanges")
+	if err := b.query.Preload("WorkSchedule").Distinct().Find(&employees).Error; err != nil {
 		return nil, fmt.Errorf("failed to get employees: %w", err)
 	}
 	return employees, nil
 }
 
-// getEmployeeIDs executes the query and returns only the employee IDs.
 func (b *employeeQueryBuilder) getEmployeeIDs() ([]uuid.UUID, error) {
 	var ids []uuid.UUID
 	err := b.query.Distinct().Pluck("employees.id", &ids).Error

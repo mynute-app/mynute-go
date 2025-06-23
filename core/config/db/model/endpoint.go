@@ -244,16 +244,16 @@ var GetCompanyById = &EndPoint{
 	Resource:         CompanyResource,
 }
 var GetCompanyByName = &EndPoint{
-	Path:             "/company/name/:name",
-	Method:           namespace.ViewActionMethod,
-	ControllerName:   "GetCompanyByName",
-	Description:      "View company by name",
+	Path:           "/company/name/:name",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetCompanyByName",
+	Description:    "View company by name",
 }
 var CheckIfCompanyExistsByTaxID = &EndPoint{
-	Path:             "/company/tax_id/:tax_id/exists",
-	Method:           namespace.ViewActionMethod,
-	ControllerName:   "CheckIfCompanyExistsByTaxID",
-	Description:      "Check if company exists by tax ID",
+	Path:           "/company/tax_id/:tax_id/exists",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "CheckIfCompanyExistsByTaxID",
+	Description:    "Check if company exists by tax ID",
 }
 var GetCompanyByTaxId = &EndPoint{
 	Path:             "/company/tax_id/:tax_id",
@@ -607,6 +607,15 @@ var DeleteServiceById = &EndPoint{
 	Resource:         ServiceResource,
 }
 
+var GetScheduleOptions = &EndPoint{
+	Path:           "/schedule/options",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "GetScheduleOptions",
+	Description:    "Get schedule options",
+	NeedsCompanyId: true,
+	Resource:       CompanyResource,
+}
+
 // --- Combine all Endpoints into a slice for seeding --- //
 var endpoints = []*EndPoint{
 	// Appointment
@@ -677,6 +686,8 @@ var endpoints = []*EndPoint{
 	GetServiceByName,
 	UpdateServiceById,
 	DeleteServiceById,
+	// Schedule
+	GetScheduleOptions,
 }
 
 type EndpointCfg struct {

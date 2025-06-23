@@ -58,9 +58,6 @@ func Connect() *Database {
 		LogLevel = logger.Silent
 	} else if db_log_level == "warn" {
 		LogLevel = logger.Warn
-	} else {
-		log.Printf("Unknown env POSTGRES_LOG_LEVEL: %s, defaulting to Warn level", db_log_level)
-		LogLevel = logger.Warn
 	}
 
 	log.Printf("Running in %s environment. Database: %s\n", app_env, dbName)

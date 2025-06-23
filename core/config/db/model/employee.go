@@ -214,7 +214,11 @@ func (e *Employee) HasOverlappingWorkRange(tx *gorm.DB, wr *WorkRange) error {
 
 	// Check for overlapping work ranges
 	for _, existing := range emp_work_schedule {
-		if existing.Overlaps(wr) {
+		overlaps, err := existing.Overlaps(wr)
+		if err != nil {
+			return err
+		}
+		if overlaps {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", wr.StartTime, wr.EndTime, existing.ID, existing.StartTime, existing.EndTime))
 		}
 	}

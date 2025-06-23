@@ -30,6 +30,7 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 var TenantModels = []any{
+	&WorkRange{},
 	&Appointment{},
 	&AppointmentArchive{},
 	&Branch{},
@@ -62,7 +63,7 @@ func GetModelFromTableName(tableName string) (any, string, error) {
 				return model, model.SchemaType(), nil
 			}
 		} else {
-			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName()", rawModel))
+			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName() or SchemaType()", rawModel))
 		}
 	}
 	for _, rawModel := range GeneralModels {
@@ -71,7 +72,7 @@ func GetModelFromTableName(tableName string) (any, string, error) {
 				return model, model.SchemaType(), nil
 			}
 		} else {
-			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName()", rawModel))
+			return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model %T does not implement TableName() or SchemaType()", rawModel))
 		}
 	}
 	return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model not found for table name: %s", tableName))

@@ -25,6 +25,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Holiday(Gorm)
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
+	controller.Schedule(Gorm)
 
 	r := App.Group("/")
 

@@ -1,5 +1,4 @@
-// filter/schedule_params.go
-package schedule_filter
+package ScheduleFilter
 
 import (
 	"fmt"
@@ -11,15 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// GetType defines the valid types for the 'get' parameter.
 type GetType string
 
 const (
-	GetServices   GetType = "services"
-	GetBranches   GetType = "branches"
-	GetEmployees  GetType = "employees"
-	GetTimeSlots  GetType = "time_slots"
-	GetInvalid    GetType = "invalid"
+	GetServices  GetType = "services"
+	GetBranches  GetType = "branches"
+	GetEmployees GetType = "employees"
+	GetTimeSlots GetType = "time_slots"
+	// GetInvalid GetType = "invalid" // Not explicitly used if validation is thorough
 )
 
 // ScheduleQueryParams holds all the validated and parsed input parameters for schedule filtering.
@@ -27,16 +25,22 @@ type ScheduleQueryParams struct {
 	BranchID   *uuid.UUID
 	EmployeeID *uuid.UUID
 	ServiceID  *uuid.UUID
-	Weekday    *string
-	StartTime  *time.Time
 	Get        GetType
+
+	// OriginalStartTime is the raw input from the query.
+	OriginalStartTime *time.Time
+
+	// Derived fields for easier processing
+	IsSpecificDateQuery bool         // True if OriginalStartTime has a non-generic date.
+	IsTimeOfDayQuery    bool         // True if OriginalStartTime implies time-of-day only (e.g., year is 1).
+	QueryDate           *time.Time   // If IsSpecificDateQuery, this is the date part (time at 00:00:00).
+	QueryTimeOfDay      *time.Time   // If OriginalStartTime is present, this is its time component (date part normalized to 0001-01-01).
+	QueryWeekday        time.Weekday // If IsSpecificDateQuery, this is the weekday.
 }
 
-// NewScheduleQueryParams creates and validates a new params object from raw string inputs.
-func NewScheduleQueryParams(get, branchIDStr, employeeIDStr, serviceIDStr, weekday, timeStr string) (*ScheduleQueryParams, error) {
+func NewScheduleQueryParams(get, branchIDStr, employeeIDStr, serviceIDStr, timeStr string) (*ScheduleQueryParams, error) {
 	p := &ScheduleQueryParams{}
 
-	// Validate and set 'get' parameter
 	switch GetType(strings.ToLower(get)) {
 	case GetServices:
 		p.Get = GetServices
@@ -66,20 +70,31 @@ func NewScheduleQueryParams(get, branchIDStr, employeeIDStr, serviceIDStr, weekd
 			return nil, err
 		}
 	}
+
 	if timeStr != "" {
-		if p.StartTime, err = parseTime(timeStr); err != nil {
+		parsedTime, err := parseTime(timeStr)
+		if err != nil {
 			return nil, err
 		}
+		p.OriginalStartTime = &parsedTime
+		if parsedTime.Year() == 1 && parsedTime.Month() == 1 && parsedTime.Day() == 1 {
+			p.IsTimeOfDayQuery = true
+			normalizedTimeOfDayUTC := time.Date(0, time.January, 1, parsedTime.Hour(), parsedTime.Minute(), parsedTime.Second(), parsedTime.Nanosecond(), time.UTC)
+			p.QueryTimeOfDay = &normalizedTimeOfDayUTC
+		} else {
+			p.IsSpecificDateQuery = true
+			p.QueryWeekday = parsedTime.Weekday()
+			datePart := time.Date(parsedTime.Year(), parsedTime.Month(), parsedTime.Day(), 0, 0, 0, 0, parsedTime.Location())
+			p.QueryDate = &datePart
+
+			normalizedTimeOfDayUTC := time.Date(0, time.January, 1, parsedTime.Hour(), parsedTime.Minute(), parsedTime.Second(), parsedTime.Nanosecond(), time.UTC)
+			p.QueryTimeOfDay = &normalizedTimeOfDayUTC
+		}
 	}
-	if weekday != "" {
-		// Normalize weekday to lowercase for consistency in JSON queries
-		lowerWeekday := strings.ToLower(weekday)
-		p.Weekday = &lowerWeekday
-	}
+
 	return p, nil
 }
 
-// Helper functions for parsing
 func parseUUID(idStr, fieldName string) (*uuid.UUID, error) {
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -88,17 +103,19 @@ func parseUUID(idStr, fieldName string) (*uuid.UUID, error) {
 	return &id, nil
 }
 
-func parseTime(timeStr string) (*time.Time, error) {
+func parseTime(timeStr string) (time.Time, error) {
 	t, err := time.Parse(time.RFC3339, timeStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid time format, expected RFC3339: %w", err)
+		// Attempt to parse if only time is provided, assuming a zero date
+		// This is tricky because RFC3339 expects a full date-time.
+		// The convention "0001-01-01THH:MM:SSZ" handles the "time-of-day" intent.
+		return time.Time{}, fmt.Errorf("invalid time format for start_time, expected RFC3339 (e.g., \"2023-10-26T10:00:00Z\" or \"0001-01-01T10:00:00Z\"): %w", err)
 	}
-	return &t, nil
+	return t, nil
 }
 
-// allExceptGetAreNil checks if all filter parameters (other than 'get') are nil.
 func (p *ScheduleQueryParams) allExceptGetAreNil() bool {
-	return p.BranchID == nil && p.EmployeeID == nil && p.ServiceID == nil && p.Weekday == nil && p.StartTime == nil
+	return p.BranchID == nil && p.EmployeeID == nil && p.ServiceID == nil && p.OriginalStartTime == nil
 }
 
 func (p *ScheduleQueryParams) toLibError(err error) error {
