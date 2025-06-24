@@ -30,3 +30,7 @@ type ServiceBase struct {
 	Price       int32     `json:"price" example:"150"`
 	Duration    uint      `json:"duration" example:"60"`
 }
+
+type ServiceID struct {
+	ID uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+}

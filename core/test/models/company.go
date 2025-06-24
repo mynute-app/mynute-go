@@ -14,6 +14,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -97,36 +98,141 @@ func (c *Company) Set() error {
 				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
 			}
 		}
-		if err := employee.UpdateWorkSchedule(200, []mJSON.WorkSchedule{
-			{
-				Monday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+		if err := employee.UpdateWorkSchedule(200, DTO.CreateWorkSchedule{
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    1,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Tuesday: []mJSON.WorkRange{
-					{Start: "09:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "18:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    1,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Wednesday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    2,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Thursday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    2,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Friday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    3,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Saturday: []mJSON.WorkRange{
-					{Start: "08:00", End: "12:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
-					{Start: "13:00", End: "17:00", BranchID: c.Branches[0].Created.ID, Services: []uuid.UUID{c.Services[0].Created.ID}},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    3,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
 				},
-				Sunday: []mJSON.WorkRange{},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    4,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    4,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    5,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    5,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    6,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
+			},
+			DTO.CreateWorkRange{
+				EmployeeID: employee.Created.ID.String(),
+				BranchID:   c.Branches[0].Created.ID.String(),
+				Weekday:    6,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   c.Branches[0].Created.TimeZone,
+				Services: []DTO.Service{
+					{ServiceBase: DTO.ServiceBase{ID: c.Services[0].Created.ID}},
+				},
 			},
 		}, nil, nil); err != nil {
-			return err
+			return fmt.Errorf("failed to update work schedule for employee %s: %v", employee.Created.Email, err)
 		}
 	}
 
@@ -657,6 +763,105 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 	return nil
 }
 
+func GenerateRandomWorkRanges(validBranches []*Branch, employee *Employee) []*DTO.CreateWorkRange {
+	var WorkRanges []*DTO.CreateWorkRange
+
+	// Range from 0 to 6 days (Sunday to Saturday)
+	for day := 0; day < 7; day++ {
+		
+	}
+
+}
+
+func generateWorkRangesForDay(validBranches []*Branch, employee *Employee, weekday model.Weekday, timeZone string, workProbability float32) []*DTO.CreateWorkRange {
+	if rand.Float32() > workProbability || len(validBranches) == 0 {
+		return nil
+	}
+
+	var ranges []*DTO.CreateWorkRange
+	numRanges := 1 + rand.Intn(2)
+	lastEndTimeStr := "00:00"
+
+	for r := 0; r < numRanges; r++ {
+		branch := validBranches[rand.Intn(len(validBranches))]
+		startHourLower := 7
+
+		if r > 0 {
+			var hourPart, minutePart int
+			fmt.Sscanf(lastEndTimeStr, "%02d:%02d", &hourPart, &minutePart)
+			startHourLower = hourPart
+			if minutePart > 0 {
+				startHourLower++
+			}
+			startHourLower++
+			if startHourLower < 13 && hourPart >= 12 {
+				startHourLower = 13
+			}
+		}
+		if startHourLower > 19 {
+			continue
+		}
+
+		startHour := startHourLower + rand.Intn(2)
+		startTimeStr := fmt.Sprintf("%02d:%02d", startHour, 0)
+
+		if r > 0 && startTimeStr <= lastEndTimeStr {
+			startHour++
+			if startHour > 20 {
+				continue
+			}
+			startTimeStr = fmt.Sprintf("%02d:%02d", startHour, 0)
+		}
+
+		durationHours := 2 + rand.Intn(4)
+		endHour := min(startHour+durationHours, 22)
+		endTimeStr := fmt.Sprintf("%02d:%02d", endHour, 0)
+
+		if endTimeStr <= startTimeStr {
+			endHour++
+			if endHour > 22 {
+				endTimeStr = "23:30"
+			} else {
+				endTimeStr = fmt.Sprintf("%02d:%02d", endHour, 0)
+			}
+		}
+
+		loc, _ := time.LoadLocation(timeZone)
+		startTime := time.Date(1, 1, 1, startHour, 0, 0, 0, loc).UTC()
+		endTime := time.Date(1, 1, 1, endHour, 0, 0, 0, loc).UTC()
+		finalStartTimeStr := startTime.Format("15:04")
+		finalEndTimeStr := endTime.Format("15:04")
+
+		employeeServices := map[uuid.UUID]bool{}
+		for _, s := range employee.Created.Services {
+			employeeServices[s.ID] = true
+		}
+		var commonServices []DTO.ServiceID
+		for _, s := range branch.Services {
+			if _, ok := employeeServices[s.Created.ID]; ok {
+				commonServices = append(commonServices, DTO.ServiceID{ID: s.Created.ID})
+			}
+		}
+		if len(commonServices) == 0 {
+			continue
+		}
+
+		ranges = append(ranges, &DTO.CreateWorkRange{
+			Weekday:    uint8(weekday),
+			StartTime:  finalStartTimeStr,
+			EndTime:    finalEndTimeStr,
+			TimeZone:   timeZone,
+			EmployeeID: employee.Created.ID.String(),
+			BranchID:   branch.Created.ID.String(),
+			Services:   commonServices,
+		})
+		lastEndTimeStr = endTimeStr
+	}
+
+	return ranges
+}
+
+// @deprecated
 // GenerateRandomModelWorkSchedule creates a *mJSON.WorkSchedule* struct
 func GenerateRandomModelWorkSchedule(validBranches []*Branch, employee *Employee) mJSON.WorkSchedule {
 	schedule := mJSON.WorkSchedule{}
@@ -678,6 +883,7 @@ func GenerateRandomModelWorkSchedule(validBranches []*Branch, employee *Employee
 	return schedule
 }
 
+// @deprecated
 // Helper for GenerateRandomModelWorkSchedule, returns []mJSON.WorkRange
 func generateRangesForDayModel(validBranches []*Branch, employee *Employee, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
 	// Use global rand.Float32() - auto-seeded

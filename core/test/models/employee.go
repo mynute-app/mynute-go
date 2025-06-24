@@ -3,7 +3,6 @@ package modelT
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
@@ -85,7 +84,7 @@ func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x
 	return nil
 }
 
-func (e *Employee) UpdateWorkSchedule(s int, workSchedule []mJSON.WorkSchedule, x_auth_token *string, x_company_id *string) error {
+func (e *Employee) UpdateWorkSchedule(s int, workSchedule DTO.CreateWorkSchedule, x_auth_token *string, x_company_id *string) error {
 	if workSchedule == nil {
 		return fmt.Errorf("work schedule cannot be nil")
 	}
@@ -101,13 +100,12 @@ func (e *Employee) UpdateWorkSchedule(s int, workSchedule []mJSON.WorkSchedule, 
 	var emp *model.Employee
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL(fmt.Sprintf("/employee/%s", e.Created.ID.String())).
+		URL(fmt.Sprintf("/employee/%s/work_schedule", e.Created.ID.String())).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, t).
-		Send(map[string]any{"work_schedule": workSchedule}).
-		ParseResponse(&emp).
-		Error; err != nil {
+		Send(workSchedule).
+		ParseResponse(&emp).Error; err != nil {
 		return fmt.Errorf("failed to update employee work schedule: %w", err)
 	}
 
@@ -362,125 +360,3 @@ func get_x_company_id(priority *string, secundary *string) (string, error) {
 	}
 	return "", fmt.Errorf("no company ID provided")
 }
-
-// func ValidateWorkSchedule(ws mJSON.WorkSchedule, employee *Employee, company *Company) error {
-// 	preferredLocation := time.UTC
-
-// 	workSchedule := employee.Created.WorkSchedule
-// 	weekdaySchedules := map[time.Weekday][]mJSON.WorkRange{
-// 		time.Sunday:    workSchedule.Sunday,
-// 		time.Monday:    workSchedule.Monday,
-// 		time.Tuesday:   workSchedule.Tuesday,
-// 		time.Wednesday: workSchedule.Wednesday,
-// 		time.Thursday:  workSchedule.Thursday,
-// 		time.Friday:    workSchedule.Friday,
-// 		time.Saturday:  workSchedule.Saturday,
-// 	}
-
-// 	now := time.Now().In(preferredLocation)
-// 	searchStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, preferredLocation)
-
-// 	branchCache := make(map[string]*model.Branch)
-// 	serviceCache := make(map[string]*model.Service)
-
-// 	httpClient := handler.NewHttpClient().
-// 		Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
-// 		Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token)
-
-// 	for dayOffset := range 8 {
-// 		currentDate := searchStart.AddDate(0, 0, dayOffset)
-// 		currentWeekday := currentDate.Weekday()
-// 		workRanges := weekdaySchedules[currentWeekday]
-
-// 		for iWr, wr := range workRanges {
-// 			if wr.Start == "" || wr.End == "" || wr.BranchID == uuid.Nil {
-// 				return fmt.Errorf("work range %d has invalid data (Start, End, or BranchID missing)", iWr)
-// 			}
-
-// 			branchID := wr.BranchID.String()
-// 			branch, ok := branchCache[branchID]
-// 			if !ok {
-// 				var b model.Branch
-// 				if err := httpClient.
-// 					Method("GET").
-// 					URL("/branch/" + branchID).
-// 					ExpectedStatus(200).
-// 					Send(nil).
-// 					ParseResponse(&b).Error; err != nil {
-// 					return fmt.Errorf("failed to get branch %s: %w", branchID, err)
-// 				}
-// 				branchCache[branchID] = &b
-// 				branch = &b
-// 			}
-
-// 			// Check if employee is assigned to the branch
-// 			assignedToBranch := false
-// 			for _, e := range branch.Employees {
-// 				if e.ID == employee.Created.ID {
-// 					assignedToBranch = true
-// 					break
-// 				}
-// 			}
-
-// 			if !assignedToBranch {
-// 				return fmt.Errorf("employee %s is not assigned to branch %s.\nEmployee.Branches: %+v\nBranches.Employees: %+v", employee.Created.ID, branchID, employee.Created.Branches, branch.Employees)
-// 			}
-
-// 			startTime, err := parseTimeWithLocation(currentDate, wr.Start, preferredLocation)
-// 			if err != nil {
-// 				return fmt.Errorf("failed to parse start time for work range #%d: %w", iWr, err)
-// 			}
-// 			endTime, err := parseTimeWithLocation(currentDate, wr.End, preferredLocation)
-// 			if err != nil || !startTime.Before(endTime) {
-// 				return fmt.Errorf("invalid time range for work range #%d: %w", iWr, err)
-// 			}
-
-// 			for _, serviceID := range wr.Services {
-// 				if serviceID == uuid.Nil {
-// 					return fmt.Errorf("work range %d has a nil service ID", iWr)
-// 				}
-// 				sID := serviceID.String()
-
-// 				service, ok := serviceCache[sID]
-// 				if !ok {
-// 					var s model.Service
-// 					if err := httpClient.
-// 						Method("GET").
-// 						URL("/service/" + sID).
-// 						ExpectedStatus(200).
-// 						Send(nil).
-// 						ParseResponse(&s).Error; err != nil {
-// 						return fmt.Errorf("failed to get service %s: %w", sID, err)
-// 					}
-// 					serviceCache[sID] = &s
-// 					service = &s
-// 				}
-
-// 				// Check if employee is assigned to the service
-// 				assignedToService := false
-// 				for _, e := range service.Employees {
-// 					if e.ID == employee.Created.ID {
-// 						assignedToService = true
-// 						break
-// 					}
-// 				}
-// 				if !assignedToService {
-// 					return fmt.Errorf("employee %s is not assigned to service %s", employee.Created.ID, sID)
-// 				}
-
-// 				// Check if branch is assigned to the service
-// 				serviceAvailableAtBranch := false
-// 				for _, s := range branch.Services {
-// 					if s.ID == serviceID {
-// 						serviceAvailableAtBranch = true
-// 						break
-// 					}
-// 				}
-// 				if !serviceAvailableAtBranch {
-// 					return fmt.Errorf("service %s is not available at branch %s", sID, branchID)
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
