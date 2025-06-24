@@ -15,6 +15,7 @@ func Create(c *fiber.Ctx, model any) error {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 	Service := service.Factory(c)
+	defer Service.DeferDB()
 	if err := Service.Create(model).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
@@ -41,6 +42,7 @@ func Create(c *fiber.Ctx, model any) error {
 
 func GetOneBy(param string, c *fiber.Ctx, model any) error {
 	Service := service.Factory(c)
+	defer Service.DeferDB()
 	if err := Service.GetBy(param, model).Error; err != nil {
 		return err
 	}
@@ -48,9 +50,13 @@ func GetOneBy(param string, c *fiber.Ctx, model any) error {
 }
 
 func UpdateOneById(c *fiber.Ctx, model any) error {
-	return service.Factory(c).UpdateOneById(model).Error
+	Service := service.Factory(c)
+	defer Service.DeferDB()
+	return Service.UpdateOneById(model).Error
 }
 
 func DeleteOneById(c *fiber.Ctx, model any) error {
-	return service.Factory(c).DeleteOneById(model).Error
+	Service := service.Factory(c)
+	defer Service.DeferDB()
+	return Service.DeleteOneById(model).Error
 }

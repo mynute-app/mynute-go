@@ -83,8 +83,8 @@ func (b *Branch) UTC_with_Zero_YMD_Date() error {
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
 	}
-	start := time.Date(0, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
-	end := time.Date(0, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
+	start := time.Date(1, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
+	end := time.Date(1, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
 
 	b.StartTime = start.UTC()
 	b.EndTime = end.UTC()

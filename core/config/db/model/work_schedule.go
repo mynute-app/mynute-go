@@ -36,8 +36,8 @@ type WorkRange struct {
 
 const WorksRangeTableName = "work_ranges"
 
-func (WorkRange) TableName() string { return WorksRangeTableName }
-func (WorkRange) SchemaType() string { return "tenant" }
+func (WorkRange) TableName() string          { return WorksRangeTableName }
+func (WorkRange) SchemaType() string         { return "tenant" }
 func (WorkRange) Indexes() map[string]string { return WorksRangeIndexes(WorksRangeTableName) }
 
 func WorksRangeIndexes(table string) map[string]string {
@@ -185,8 +185,8 @@ func (wr *WorkRange) UTC_with_Zero_YMD_Date() error {
 	if err != nil {
 		return err
 	}
-	start := time.Date(0, 1, 1, wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, loc)
-	end := time.Date(0, 1, 1, wr.EndTime.Hour(), wr.EndTime.Minute(), wr.EndTime.Second(), 0, loc)
+	start := time.Date(1, 1, 1, wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, loc)
+	end := time.Date(1, 1, 1, wr.EndTime.Hour(), wr.EndTime.Minute(), wr.EndTime.Second(), 0, loc)
 
 	wr.StartTime = start.UTC()
 	wr.EndTime = end.UTC()

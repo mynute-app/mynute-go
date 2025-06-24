@@ -278,6 +278,7 @@ func CreateWorkSchedule(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
 
 	Service := service.Factory(c)
+	defer Service.DeferDB()
 
 	for i, wr := range WorkRanges {
 		if wr.EmployeeID.String() != employee_id {
