@@ -16,25 +16,24 @@ import (
 // Branch model
 type Branch struct {
 	BaseModel
-	StartTime      time.Time          `json:"start_time" gorm:"type:time;not null"`
-	EndTime        time.Time          `json:"end_time" gorm:"type:time;not null"`
-	TimeZone       string             `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	Name           string             `gorm:"not null" json:"name"`
-	Street         string             `gorm:"not null" json:"street"`
-	Number         string             `gorm:"not null" json:"number"`
-	Complement     string             `json:"complement"`
-	Neighborhood   string             `gorm:"not null" json:"neighborhood"`
-	ZipCode        string             `gorm:"not null" json:"zip_code"`
-	City           string             `gorm:"not null" json:"city"`
-	State          string             `gorm:"not null" json:"state"`
-	Country        string             `gorm:"not null" json:"country"`
-	CompanyID      uuid.UUID          `gorm:"not null;index" json:"company_id"`
-	Employees      []*Employee        `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
-	Services       []*Service         `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
-	Appointments   []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
-	ServiceDensity []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
-	BranchDensity  uint               `gorm:"not null;default:1" json:"branch_density"`
-	Design         mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
+	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
+	TimeZone           string             `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	Name               string             `gorm:"not null" json:"name"`
+	Street             string             `gorm:"not null" json:"street"`
+	Number             string             `gorm:"not null" json:"number"`
+	Complement         string             `json:"complement"`
+	Neighborhood       string             `gorm:"not null" json:"neighborhood"`
+	ZipCode            string             `gorm:"not null" json:"zip_code"`
+	City               string             `gorm:"not null" json:"city"`
+	State              string             `gorm:"not null" json:"state"`
+	Country            string             `gorm:"not null" json:"country"`
+	CompanyID          uuid.UUID          `gorm:"not null;index" json:"company_id"`
+	Employees          []*Employee        `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
+	Services           []*Service         `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
+	Appointments       []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
+	ServiceDensity     []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
+	BranchDensity      uint               `gorm:"not null;default:1" json:"branch_density"`
+	Design             mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
 func (Branch) TableName() string { return "branches" }
@@ -47,25 +46,12 @@ type ServiceDensity struct {
 }
 
 func (b *Branch) BeforeCreate(tx *gorm.DB) error {
-	if err := b.UTC_with_Zero_YMD_Date(); err != nil {
-		return err
-	}
 	return nil
 }
 
 func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 	if tx.Statement.Changed("CompanyID") {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
-	}
-	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		if err := b.UTC_with_Zero_YMD_Date(); err != nil {
-			return err
-		}
-		if b.StartTime.Equal(b.EndTime) {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch start time cannot be equal to end time"))
-		} else if b.StartTime.Before(b.EndTime) {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch start time cannot be before end time"))
-		}
 	}
 	return nil
 }
@@ -76,19 +62,6 @@ func (b *Branch) GetTimeZone() (*time.Location, error) {
 		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
 	}
 	return loc, nil
-}
-
-func (b *Branch) UTC_with_Zero_YMD_Date() error {
-	loc, err := time.LoadLocation(b.TimeZone)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
-	}
-	start := time.Date(1, 1, 1, b.StartTime.Hour(), b.StartTime.Minute(), b.StartTime.Second(), 0, loc)
-	end := time.Date(1, 1, 1, b.EndTime.Hour(), b.EndTime.Minute(), b.EndTime.Second(), 0, loc)
-
-	b.StartTime = start.UTC()
-	b.EndTime = end.UTC()
-	return nil
 }
 
 func (b *Branch) AddService(tx *gorm.DB, service *Service) error {
@@ -171,15 +144,58 @@ func (b *Branch) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 	return count > 0
 }
 
-func (b *Branch) ValidateWorkRangeTime(wr *WorkRange) error {
-	if wr.StartTime.Before(b.StartTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be before branch start time %s", wr.StartTime, b.StartTime))
-	} else if wr.StartTime.After(b.EndTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time %s cannot be after branch end time %s", wr.StartTime, b.EndTime))
-	} else if wr.EndTime.Before(b.StartTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be before branch start time %s", wr.EndTime, b.StartTime))
-	} else if wr.EndTime.After(b.EndTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range end time %s cannot be after branch end time %s", wr.EndTime, b.EndTime))
+func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
+	if ewr.BranchID != b.ID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range branch ID %s does not match branch ID %s", ewr.BranchID, b.ID))
 	}
+
+	var bwrs []BranchWorkRange
+	if err := tx.Find(&bwrs, "branch_id = ? AND weekday = ?", b.ID, ewr.Weekday).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to retrieve branch work schedule: %w", err))
+	}
+
+	if len(bwrs) == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no branch work schedule found for branch ID %s and weekday %d", b.ID, ewr.Weekday))
+	}
+
+	for _, bws := range bwrs {
+		if bws.Weekday == ewr.Weekday {
+			// Check if the employee work range is inside the branch work range
+			ewrStartTimeAfterOrEqual := ewr.StartTime.After(bws.StartTime) || ewr.StartTime.Equal(bws.StartTime)
+			ewrEndTimeBeforeOrEqual := ewr.EndTime.Before(bws.EndTime) || ewr.EndTime.Equal(bws.EndTime)
+			if ewrStartTimeAfterOrEqual && ewrEndTimeBeforeOrEqual {
+				return nil // Valid range
+			}
+		}
+	}
+
+	return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range %s-%s is not within any branch work range for weekday %d", ewr.StartTime, ewr.EndTime, ewr.Weekday))
+}
+
+func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRange) error {
+	var existing []BranchWorkRange
+
+	err := tx.
+		Find(&existing, "branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).Error
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to fetch existing work ranges: %w", err))
+	}
+
+	for _, r := range existing {
+		overlap, err := newRange.Overlaps(&r)
+		if err != nil {
+			return err
+		}
+		if overlap {
+			loc, _ := time.LoadLocation(r.TimeZone)
+			start := r.StartTime.In(loc).Format("15:04")
+			end := r.EndTime.In(loc).Format("15:04")
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf(
+				"branch already has a work range on %s from %s to %s that overlaps the new range %s-%s",
+				r.Weekday.String(), start, end, newRange.StartTime, newRange.EndTime,
+			))
+		}
+	}
+
 	return nil
 }

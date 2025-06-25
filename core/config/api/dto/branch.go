@@ -2,9 +2,13 @@ package DTO
 
 import "github.com/google/uuid"
 
+// @description	Branch Create DTO
+// @name			BranchCreateDTO
+// @tag.name		branch.create.dto
 type CreateBranch struct {
 	CompanyID    uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	Name         string    `json:"name" example:"Main Branch"`
+	
 	Street       string    `gorm:"not null" json:"street" example:"123 Main St"`
 	Number       string    `gorm:"not null" json:"number" example:"456"`
 	Complement   string    `json:"complement" example:"Suite 100"`
@@ -15,15 +19,18 @@ type CreateBranch struct {
 	Country      string    `gorm:"not null" json:"country" example:"USA"`
 }
 
+// @description	Branch Update DTO
+// @name			BranchUpdateDTO
+// @tag.name		branch.update.dto
 type UpdateBranch struct {
 	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	Name      string    `json:"name" example:"Main Branch Updated"`
 	Street    string    `gorm:"not null" json:"street" example:"556 Main St"`
 }
 
-// @description	Company Full DTO
-// @name			CompanyFullDTO
-// @tag.name		company.full.dto
+// @description	Branch Full DTO
+// @name			BranchFullDTO
+// @tag.name		branch.full.dto
 type BranchFull struct {
 	BranchBase
 	Employees      []*EmployeeBase `json:"employees"`
@@ -33,9 +40,9 @@ type BranchFull struct {
 	BranchDensity  uint                 `json:"branch_density"`
 }
 
-// @description	Company Base DTO
-// @name			CompanyBaseDTO
-// @tag.name		company.base.dto
+// @description	Branch Base DTO
+// @name			BranchBaseDTO
+// @tag.name		branch.base.dto
 type BranchBase struct {
 	ID           uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
 	CompanyID    uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`

@@ -3,7 +3,7 @@ package ScheduleFilter
 import (
 	"fmt"
 
-	"agenda-kaki-go/core/config/db/model" // Assuming model.WorkRange is here
+	"agenda-kaki-go/core/config/db/model" // Assuming model.EmployeeWorkRange is here
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -42,31 +42,31 @@ func (b *employeeQueryBuilder) availableOn(params *ScheduleQueryParams) *employe
 		return b
 	}
 
-	workRangeSubQuery := b.query.Session(&gorm.Session{NewDB: true}).Model(&model.WorkRange{})
+	workRangeSubQuery := b.query.Session(&gorm.Session{NewDB: true}).Model(&model.EmployeeWorkRange{})
 
 	if params.IsSpecificDateQuery && params.QueryTimeOfDay != nil {
 		// Specific date (weekday) and specific time of day
 		// params.QueryTimeOfDay is already normalized (0000-01-01 HH:MM:SS UTC)
-		// We query the TIME columns WorkRange.StartTime and WorkRange.EndTime
-		workRangeSubQuery = workRangeSubQuery.Where("work_ranges.weekday = ?", params.QueryWeekday).
-			Where("work_ranges.start_time <= ?", *params.QueryTimeOfDay). // GORM should handle time comparison
-			Where("work_ranges.end_time > ?", *params.QueryTimeOfDay)   // Assuming end_time is exclusive upper bound for a start
+		// We query the TIME columns EmployeeWorkRange.StartTime and EmployeeWorkRange.EndTime
+		workRangeSubQuery = workRangeSubQuery.Where("employee_work_ranges.weekday = ?", params.QueryWeekday).
+			Where("employee_work_ranges.start_time <= ?", *params.QueryTimeOfDay). // GORM should handle time comparison
+			Where("employee_work_ranges.end_time > ?", *params.QueryTimeOfDay)     // Assuming end_time is exclusive upper bound for a start
 
 	} else if params.IsTimeOfDayQuery && params.QueryTimeOfDay != nil {
 		// Specific time of day, any working day
-		workRangeSubQuery = workRangeSubQuery.Where("work_ranges.start_time <= ?", *params.QueryTimeOfDay).
-			Where("work_ranges.end_time > ?", *params.QueryTimeOfDay)
+		workRangeSubQuery = workRangeSubQuery.Where("employee_work_ranges.start_time <= ?", *params.QueryTimeOfDay).
+			Where("employee_work_ranges.end_time > ?", *params.QueryTimeOfDay)
 
 	} else if params.IsSpecificDateQuery {
-        // Specific date (weekday), any time during their shift on that day
-        workRangeSubQuery = workRangeSubQuery.Where("work_ranges.weekday = ?", params.QueryWeekday)
-    } else {
+		// Specific date (weekday), any time during their shift on that day
+		workRangeSubQuery = workRangeSubQuery.Where("employee_work_ranges.weekday = ?", params.QueryWeekday)
+	} else {
 		return b // No further availability filter from OriginalStartTime
 	}
 
-    if params.BranchID != nil { // If filtering by branch, ensure work range is for that branch
-        workRangeSubQuery = workRangeSubQuery.Where("work_ranges.branch_id = ?", *params.BranchID)
-    }
+	if params.BranchID != nil { // If filtering by branch, ensure work range is for that branch
+		workRangeSubQuery = workRangeSubQuery.Where("employee_work_ranges.branch_id = ?", *params.BranchID)
+	}
 
 	b.query = b.query.Where("employees.id IN (?)", workRangeSubQuery.Select("employee_id").Distinct())
 	return b
@@ -76,7 +76,7 @@ func (b *employeeQueryBuilder) getEmployees() ([]*model.Employee, error) {
 	var employees []*model.Employee
 	// Consider preloading relevant associations if needed by the caller, e.g., WorkRanges
 	// For example: .Preload("WorkRanges")
-	if err := b.query.Preload("WorkSchedule").Distinct().Find(&employees).Error; err != nil {
+	if err := b.query.Preload("EmployeeWorkSchedule").Distinct().Find(&employees).Error; err != nil {
 		return nil, fmt.Errorf("failed to get employees: %w", err)
 	}
 	return employees, nil

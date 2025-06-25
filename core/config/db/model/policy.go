@@ -826,6 +826,89 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		}),
 	}
 
+	var AllowCreateBranchWorkSchedule = &PolicyRule{
+		Name:        "SDP: CanCreateBranchWorkSchedule",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to create work schedules for a branch.",
+		Effect:      "Allow",
+		EndPointID:  CreateBranchWorkSchedule.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Create Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can manage work schedules in any branch
+				company_branch_manager_assigned_branch_check, // BM can manage work schedules in their own branch
+			},
+		}),
+	}
+
+	var AllowGetBranchWorkRangeById = &PolicyRule{
+		Name:        "SDP: CanViewBranchWorkRangeById",
+		Description: "Allows company members to view branch work schedules by ID.",
+		Effect:      "Allow",
+		EndPointID:  GetBranchWorkRange.ID,
+		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view work schedules
+	}
+
+	var AllowDeleteBranchWorkRangeById = &PolicyRule{
+		Name:        "SDP: CanDeleteBranchWorkRangeById",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to delete branch work schedules.",
+		Effect:      "Allow",
+		EndPointID:  DeleteBranchWorkRange.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Delete Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can delete work ranges in any branch
+				company_branch_manager_assigned_branch_check, // BM can delete work ranges in their own branch
+			},
+		}),
+	}
+
+	var AllowUpdateBranchWorkRangeById = &PolicyRule{
+		Name:        "SDP: CanUpdateBranchWorkRangeById",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to update branch work schedules.",
+		Effect:      "Allow",
+		EndPointID:  UpdateBranchWorkRange.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Update Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can update work ranges in any branch
+				company_branch_manager_assigned_branch_check, // BM can update work ranges in their own branch
+			},
+		}),
+	}
+
+	var AllowAddBranchWorkRangeService = &PolicyRule{
+		Name:        "SDP: CanAddBranchWorkRangeService",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to add services to a branch work range.",
+		Effect:      "Allow",
+		EndPointID:  AddBranchWorkRangeServices.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Add Service Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can add services in any branch
+				company_branch_manager_assigned_branch_check, // BM can add services in their own branch
+			},
+		}),
+	}
+
+	var AllowDeleteBranchWorkRangeService = &PolicyRule{
+		Name:        "SDP: CanDeleteBranchWorkRangeService",
+		Description: "Allows company Owner, General Manager or assigned Branch Manager to remove services from a branch work range.",
+		Effect:      "Allow",
+		EndPointID:  DeleteBranchWorkRangeService.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Remove Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can remove work ranges in any branch
+				company_branch_manager_assigned_branch_check, // BM can remove work ranges in their own branch
+			},
+		}),
+	}
+
 	// --- Client Policies ---
 
 	var AllowGetClientByEmail = &PolicyRule{
@@ -939,6 +1022,46 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Effect:      "Allow",
 		EndPointID:  UpdateEmployeeById.ID,
 		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check),
+	}
+
+	var AllowCreateEmployeeWorkSchedule = &PolicyRule{
+		Name:        "SDP: CanCreateEmployeeWorkSchedule",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to create their own work schedules.",
+		Effect:      "Allow",
+		EndPointID:  AddEmployeeWorkSchedule.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can create own schedule
+	}
+
+	var AllowUpdateEmployeeWorkRange = &PolicyRule{
+		Name:        "SDP: CanUpdateEmployeeWorkRange",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to update their own work ranges.",
+		Effect:      "Allow",
+		EndPointID:  UpdateEmployeeWorkRange.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can update own work range
+	}
+
+	var AllowDeleteEmployeeWorkRange = &PolicyRule{
+		Name:        "SDP: CanDeleteEmployeeWorkRange",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to remove their own work ranges.",
+		Effect:      "Allow",
+		EndPointID:  DeleteEmployeeWorkRange.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can remove own work range
+	}
+
+	var AllowAddEmployeeWorkRangeServices = &PolicyRule{
+		Name:        "SDP: CanAddEmployeeWorkRangeServices",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to add services to their work ranges.",
+		Effect:      "Allow",
+		EndPointID:  AddEmployeeWorkRangeServices.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can add services to own work range
+	}
+
+	var AllowDeleteEmployeeWorkRangeService = &PolicyRule{
+		Name:        "SDP: CanDeleteEmployeeWorkRangeService",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to remove services from their work ranges.",
+		Effect:      "Allow",
+		EndPointID:  DeleteEmployeeWorkRangeService.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can remove services from own work range
 	}
 
 	var AllowDeleteEmployeeById = &PolicyRule{
@@ -1117,6 +1240,12 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetEmployeeServicesByBranchId,
 		AllowAddServiceToBranch,
 		AllowRemoveServiceFromBranch,
+		AllowCreateBranchWorkSchedule,
+		AllowDeleteBranchWorkRangeById,
+		AllowUpdateBranchWorkRangeById,
+		AllowGetBranchWorkRangeById,
+		AllowAddBranchWorkRangeService,
+		AllowDeleteBranchWorkRangeService,
 
 		// Clients (Self-Management focused)
 		AllowGetClientByEmail,
@@ -1142,6 +1271,11 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowRemoveServiceFromEmployee,
 		AllowAddBranchToEmployee,
 		AllowRemoveBranchFromEmployee,
+		AllowCreateEmployeeWorkSchedule,
+		AllowUpdateEmployeeWorkRange,
+		AllowDeleteEmployeeWorkRange,
+		AllowAddEmployeeWorkRangeServices,
+		AllowDeleteEmployeeWorkRangeService,
 
 		// Holidays
 		AllowCreateHoliday,

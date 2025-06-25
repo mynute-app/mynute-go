@@ -30,7 +30,8 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 var TenantModels = []any{
-	&WorkRange{},
+	&EmployeeWorkRange{},
+	&BranchWorkRange{},
 	&Appointment{},
 	&AppointmentArchive{},
 	&Branch{},

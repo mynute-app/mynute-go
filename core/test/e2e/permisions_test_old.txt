@@ -799,7 +799,7 @@
 // 	// 	employee1Service0 := employee1.services[0].created.ID.String() // Assume service access
 // 	// 	var employee1StartTime string
 // 	// 	// Find start time for employee1
-// 	// 	schedule1 := employee1.created.WorkSchedule
+// 	// 	schedule1 := employee1.created.EmployeeWorkSchedule
 // 	// 	days1 := [][]mJSON.WorkRange{schedule1.Monday, schedule1.Tuesday, schedule1.Wednesday, schedule1.Thursday, schedule1.Friday, schedule1.Saturday, schedule1.Sunday}
 // 	// 	foundTime1 := false
 // 	// 	for _, day := range days1 {

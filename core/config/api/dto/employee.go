@@ -27,17 +27,17 @@ type CreateEmployee struct {
 	Password  string    `json:"password" example:"1SecurePswd!"`
 }
 
-// type WorkSchedule struct {
-// 	Monday    []WorkRange `json:"monday"`
-// 	Tuesday   []WorkRange `json:"tuesday"`
-// 	Wednesday []WorkRange `json:"wednesday"`
-// 	Thursday  []WorkRange `json:"thursday"`
-// 	Friday    []WorkRange `json:"friday"`
-// 	Saturday  []WorkRange `json:"saturday"`
-// 	Sunday    []WorkRange `json:"sunday"`
+// type EmployeeWorkSchedule struct {
+// 	Monday    []EmployeeWorkRange `json:"monday"`
+// 	Tuesday   []EmployeeWorkRange `json:"tuesday"`
+// 	Wednesday []EmployeeWorkRange `json:"wednesday"`
+// 	Thursday  []EmployeeWorkRange `json:"thursday"`
+// 	Friday    []EmployeeWorkRange `json:"friday"`
+// 	Saturday  []EmployeeWorkRange `json:"saturday"`
+// 	Sunday    []EmployeeWorkRange `json:"sunday"`
 // }
 
-// type WorkRange struct {
+// type EmployeeWorkRange struct {
 // 	Start    string      `json:"start"` // Store as "15:30:00"
 // 	End      string      `json:"end"`   // Store as "18:00:00"
 // 	BranchID uuid.UUID   `json:"branch_id"`
@@ -49,12 +49,12 @@ type CreateEmployee struct {
 // @tag.name		employee.full.dto
 type EmployeeFull struct {
 	EmployeeBase
-	Verified     bool            `json:"verified" example:"true"`
-	WorkSchedule []WorkRange     `json:"work_schedule"`
-	Appointments []Appointment   `json:"appointments"`
-	Branches     []BranchBase    `json:"branches"`
-	Services     []ServiceBase   `json:"services"`
-	Roles        []RolePopulated `json:"roles"`
+	Verified             bool                `json:"verified" example:"true"`
+	EmployeeWorkSchedule []EmployeeWorkRange `json:"work_schedule"`
+	Appointments         []Appointment       `json:"appointments"`
+	Branches             []BranchBase        `json:"branches"`
+	Services             []ServiceBase       `json:"services"`
+	Roles                []RolePopulated     `json:"roles"`
 }
 
 // @description	Employee Base DTO

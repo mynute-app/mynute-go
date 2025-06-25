@@ -26,7 +26,7 @@ func (ah *AppointmentHistory) Value() (driver.Value, error) {
 func (ah *AppointmentHistory) Scan(value any) error {
 	bytes, ok := value.([]byte)
 	if !ok {
-		return errors.New("failed to scan WorkSchedule: expected []byte")
+		return errors.New("failed to scan EmployeeWorkSchedule: expected []byte")
 	}
 
 	return json.Unmarshal(bytes, ah)

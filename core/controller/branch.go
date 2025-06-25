@@ -7,10 +7,14 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"agenda-kaki-go/core/service"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CreateBranch creates a branch
@@ -135,6 +139,309 @@ func UpdateBranchById(c *fiber.Ctx) error {
 func DeleteBranchById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Branch{})
 }
+
+// CreateBranchWorkSchedule creates a work schedule for a branch
+//
+//	@Summary		Create work schedule for a branch
+//	@Description	Create a work schedule for a branch
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_schedule	body	DTO.CreateBranchWorkSchedule	true	"Branch Work Schedule"
+//	@Success		200	{object}	DTO.BranchFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/branch/{id}/work_schedule [post]
+func CreateBranchWorkSchedule(c *fiber.Ctx) error {
+	var input DTO.CreateBranchWorkSchedule
+	if err := c.BodyParser(&input); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var schedule []model.BranchWorkRange
+	branchID := c.Params("id")
+
+	for i, bwr := range input.WorkRanges {
+		loc, err := time.LoadLocation(bwr.TimeZone)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone at index %d: %w", i, err))
+		}
+		start, err := time.ParseInLocation("15:04", bwr.StartTime, loc)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time at index %d: %w", i, err))
+		}
+		end, err := time.ParseInLocation("15:04", bwr.EndTime, loc)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_time at index %d: %w", i, err))
+		}
+
+		services := make([]*model.Service, 0, len(bwr.Services))
+		for _, s := range bwr.Services {
+			services = append(services, &model.Service{BaseModel: model.BaseModel{ID: s.ID}})
+		}
+
+		schedule = append(schedule, model.BranchWorkRange{
+			Weekday:   time.Weekday(bwr.Weekday),
+			StartTime: start,
+			EndTime:   end,
+			TimeZone:  bwr.TimeZone,
+			BranchID:  uuid.MustParse(branchID),
+			Services:  services,
+		})
+	}
+
+	Service := service.Factory(c)
+	defer Service.DeferDB()
+
+	for _, wr := range schedule {
+		if err := Service.Create(&wr).Error; err != nil {
+			Service.MyGorm.DB.Rollback()
+			return lib.Error.General.CreatedError.WithError(err)
+		}
+	}
+
+	var branch model.Branch
+	if err := Service.MyGorm.DB.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+}
+
+// GetBranchWorkRange
+//
+//	@Summary		Get branch work range By ID
+//	@Description	Retrieve a branch's work range by its ID
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_range_id	path	string	true	"Work Range ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.BranchWorkRange
+//	@Failure		400	{object}	lib.ErrorResponse
+func GetBranchWorkRange(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var wr model.BranchWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &wr, &DTO.BranchWorkRange{})
+}
+
+
+// UpdateBranchWorkRange updates a work range for a branch
+//
+//	@Summary		Update branch work range
+//	@Description	Update a branch's work range
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_range_id	path	string	true	"Work Range ID"
+//	@Param			work_range		body	DTO.UpdateWorkRange	true	"Work Range"
+//	@Success		200	{object}	DTO.BranchFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/branch/{id}/work_range/{work_range_id} [put]
+func UpdateBranchWorkRange(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var wr model.BranchWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	}
+
+	var input DTO.UpdateWorkRange
+	if err := c.BodyParser(&input); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	loc, err := time.LoadLocation(input.TimeZone)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))
+	}
+	start, _ := time.ParseInLocation("15:04", input.StartTime, loc)
+	end, _ := time.ParseInLocation("15:04", input.EndTime, loc)
+
+	wr.Weekday = time.Weekday(input.Weekday)
+	wr.StartTime = start
+	wr.EndTime = end
+	wr.TimeZone = input.TimeZone
+
+	if err := UpdateOneById(c, &wr); err != nil {
+		return err
+	}
+
+	var branch model.Branch
+	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+}
+
+// DeleteBranchWorkRange deletes a work range for a branch
+//
+//	@Summary		Delete branch work range
+//	@Description	Delete a branch's work range
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_range_id	path	string	true	"Work Range ID"
+//	@Success		200	{object}	DTO.Branch
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/branch/{id}/work_range/{work_range_id} [delete]
+func DeleteBranchWorkRange(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var wr model.BranchWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	}
+
+	if err := tx.Delete(&wr).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var branch model.Branch
+	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+}
+
+// AddBranchWorkRangeServices adds services to a branch's work range
+//
+//	@Summary		Add services to branch work range
+//	@Description	Add services to a branch's work range
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_range_id	path	string	true	"Work Range ID"
+//	@Param			services		body	[]DTO.ServiceID	true	"Services"
+//	@Success		200	{object}	DTO.BranchFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/branch/{id}/work_range/{work_range_id}/services [post]
+func AddBranchWorkRangeServices(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+
+	var serviceIDs []DTO.ServiceID
+	if err := c.BodyParser(&serviceIDs); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var wr model.BranchWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	}
+
+	services := make([]*model.Service, 0, len(serviceIDs))
+	for _, s := range serviceIDs {
+		services = append(services, &model.Service{BaseModel: model.BaseModel{ID: s.ID}})
+	}
+
+	if err := tx.Model(&wr).Association("Services").Append(services); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+// DeleteBranchWorkRangeService removes a service from a branch's work range
+//
+//	@Summary		Remove service from branch work range
+//	@Description	Remove a service from a branch's work range
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Param			work_range_id	path	string	true	"Work Range ID"
+//	@Param			service_id		path	string	true	"Service ID"
+//	@Success		200	{object}	DTO.BranchFull
+//	@Failure		400	{object}	lib.ErrorResponse
+//	@Router			/branch/{id}/work_range/{work_range_id}/service/{service_id} [delete]
+func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+	serviceID := c.Params("service_id")
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
+
+	var wr model.BranchWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	}
+
+	serviceUUID := uuid.MustParse(serviceID)
+	if err := tx.Model(&wr).Association("Services").Delete(&model.Service{BaseModel: model.BaseModel{ID: serviceUUID}}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+
 
 // GetEmployeeServicesByBranchId retrieves all services of an employee included in the branch ID
 //
@@ -287,5 +594,11 @@ func Branch(Gorm *handler.Gorm) {
 		GetEmployeeServicesByBranchId,
 		AddServiceToBranch,
 		RemoveServiceFromBranch,
+		CreateBranchWorkSchedule,
+		GetBranchWorkRange,
+		UpdateBranchWorkRange,
+		DeleteBranchWorkRange,
+		AddBranchWorkRangeServices,
+		DeleteBranchWorkRangeService,
 	})
 }

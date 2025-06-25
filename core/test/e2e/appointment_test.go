@@ -33,7 +33,7 @@ func Test_Appointment(t *testing.T) {
 	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot0").Test(err)
 	if !found0 {
-		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
 		t.Fatalf("Setup failed: No valid appointment slot for test case a[0]")
 	}
 
@@ -53,7 +53,7 @@ func Test_Appointment(t *testing.T) {
 	slot1, found1, err := a1.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot1").Test(err)
 	if !found1 {
-		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
 		t.Fatalf("Setup failed: No valid appointment slot for test case a[1]")
 	}
 
@@ -71,7 +71,7 @@ func Test_Appointment(t *testing.T) {
 	slot2, found2, err := a2.FindValidAppointmentSlot(baseEmployee, time.Local)
 	tt.Describe("Finding valid appointment slot for base employee - slot2").Test(err)
 	if !found2 {
-		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.WorkSchedule)
+		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
 		t.Fatalf("Setup failed: No valid appointment slot for test case a[2]")
 	}
 

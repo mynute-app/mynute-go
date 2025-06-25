@@ -172,6 +172,60 @@ var RemoveServiceFromBranch = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
+var CreateBranchWorkSchedule = &EndPoint{
+	Path:             "/branch/:id/work_schedule",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "CreateBranchWorkSchedule",
+	Description:      "Add work schedule to branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var GetBranchWorkRange = &EndPoint{
+	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetBranchWorkRange",
+	Description:      "View work range by ID",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var UpdateBranchWorkRange = &EndPoint{
+	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateBranchWorkRange",
+	Description:      "Update work range in branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var DeleteBranchWorkRange = &EndPoint{
+	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteBranchWorkRange",
+	Description:      "Remove work range from branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var AddBranchWorkRangeServices = &EndPoint{
+	Path:             "/branch/:id/work_schedule/:work_range_id/services",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "AddBranchWorkRangeServices",
+	Description:      "Add services to work range in branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var DeleteBranchWorkRangeService = &EndPoint{
+	Path:             "/branch/:id/work_schedule/:work_range_id/services/:service_id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteBranchWorkRangeService",
+	Description:      "Remove service from work range in branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
 
 // --- Client Endpoints --- //
 
@@ -376,10 +430,10 @@ var AddEmployeeWorkSchedule = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
-var RemoveEmployeeWorkRange = &EndPoint{
+var DeleteEmployeeWorkRange = &EndPoint{
 	Path:             "/employee/:id/work_schedule/:work_range_id",
 	Method:           namespace.DeleteActionMethod,
-	ControllerName:   "RemoveEmployeeWorkSchedule",
+	ControllerName:   "DeleteEmployeeWorkRange",
 	Description:      "Remove work schedule from employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -387,8 +441,8 @@ var RemoveEmployeeWorkRange = &EndPoint{
 }
 var UpdateEmployeeWorkRange = &EndPoint{
 	Path:             "/employee/:id/work_schedule/:work_range_id",
-	Method:           namespace.PatchActionMethod,
-	ControllerName:   "UpdateEmployeeWorkSchedule",
+	Method:           namespace.PutActionMethod,
+	ControllerName:   "UpdateEmployeeWorkRange",
 	Description:      "Update work schedule for employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -403,10 +457,10 @@ var AddEmployeeWorkRangeServices = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
-var RemoveEmployeeWorkRangeService = &EndPoint{
+var DeleteEmployeeWorkRangeService = &EndPoint{
 	Path:             "/employee/:id/work_schedule/:work_range_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
-	ControllerName:   "RemoveEmployeeWorkRangeService",
+	ControllerName:   "DeleteEmployeeWorkRangeService",
 	Description:      "Remove service from work range for a employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -636,6 +690,12 @@ var endpoints = []*EndPoint{
 	GetEmployeeServicesByBranchId,
 	AddServiceToBranch,
 	RemoveServiceFromBranch,
+	CreateBranchWorkSchedule,
+	GetBranchWorkRange,
+	DeleteBranchWorkRange,
+	UpdateBranchWorkRange,
+	AddBranchWorkRangeServices,
+	DeleteBranchWorkRangeService,
 	// Client
 	CreateClient,
 	LoginClient,
@@ -668,6 +728,11 @@ var endpoints = []*EndPoint{
 	RemoveServiceFromEmployee,
 	AddBranchToEmployee,
 	RemoveBranchFromEmployee,
+	AddEmployeeWorkSchedule,
+	DeleteEmployeeWorkRange,
+	UpdateEmployeeWorkRange,
+	AddEmployeeWorkRangeServices,
+	DeleteEmployeeWorkRangeService,
 	// Holiday
 	CreateHoliday,
 	GetHolidayById,

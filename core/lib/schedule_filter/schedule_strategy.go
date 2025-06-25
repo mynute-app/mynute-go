@@ -165,7 +165,7 @@ func (s *EmployeesStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 	if params.allExceptGetAreNil() {
 		var employees []*model.Employee
 		// Preload standard associations for a general employee list
-		err := s.tx.Preload("Branches").Preload("Services").Preload("WorkSchedule").Find(&employees).Error
+		err := s.tx.Preload("Branches").Preload("Services").Preload("EmployeeWorkSchedule").Find(&employees).Error
 		if err != nil {
 			return nil, lib.Error.General.DatabaseError.WithError(err)
 		}
@@ -183,7 +183,7 @@ func (s *EmployeesStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 		builder.byID(*params.EmployeeID)
 	}
 
-	// .getEmployees() now preloads WorkSchedule
+	// .getEmployees() now preloads EmployeeWorkSchedule
 	employees, err := builder.getEmployees()
 	if err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 		builder.providesService(*params.ServiceID)
 	}
 
-	employees, err := builder.getEmployees() // getEmployees preloads WorkSchedule
+	employees, err := builder.getEmployees() // getEmployees preloads EmployeeWorkSchedule
 	if err != nil {
 		return nil, err // Error already wrapped by builder or database error
 	}
@@ -326,7 +326,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 		currentDayWeekday := currentDayUTC.Weekday()
 
 		for _, emp := range employees {
-			if emp.WorkSchedule == nil {
+			if emp.EmployeeWorkSchedule == nil {
 				continue
 			}
 
@@ -336,7 +336,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 			}
 			slotDuration := time.Duration(slotDurationMinutes) * time.Minute
 
-			for _, wr := range emp.WorkSchedule {
+			for _, wr := range emp.EmployeeWorkSchedule {
 				if wr.Weekday != currentDayWeekday {
 					continue
 				}
@@ -344,7 +344,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 					continue
 				}
 
-				// wr.StartTime and wr.EndTime are 0000-01-01 HH:MM:SS UTC (from WorkRange model's hook)
+				// wr.StartTime and wr.EndTime are 0000-01-01 HH:MM:SS UTC (from EmployeeWorkRange model's hook)
 				// Construct shift start/end for currentDayUTC in UTC.
 				shiftStartTimeUTC := time.Date(currentDayUTC.Year(), currentDayUTC.Month(), currentDayUTC.Day(),
 					wr.StartTime.Hour(), wr.StartTime.Minute(), wr.StartTime.Second(), 0, time.UTC)

@@ -115,7 +115,6 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		body_bytes := c.Request().Body()
 		if len(body_bytes) > 0 {
 			if err := json.Unmarshal(body_bytes, &body_data); err != nil {
-				log.Printf("Error unmarshaling request body: %v", err)
 				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal body error: %w", err))
 			}
 		} else {

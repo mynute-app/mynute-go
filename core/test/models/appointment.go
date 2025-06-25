@@ -308,8 +308,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 
 	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
 
-
-	weekdaySchedules := map[time.Weekday][]*model.WorkRange{
+	weekdaySchedules := map[time.Weekday][]model.EmployeeWorkRange{
 		time.Sunday:    employee.Created.GetWorkRangeForDay(time.Sunday),
 		time.Monday:    employee.Created.GetWorkRangeForDay(time.Monday),
 		time.Tuesday:   employee.Created.GetWorkRangeForDay(time.Tuesday),

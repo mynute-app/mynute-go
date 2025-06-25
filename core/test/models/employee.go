@@ -7,6 +7,8 @@ import (
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type Employee struct {
@@ -84,8 +86,8 @@ func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x
 	return nil
 }
 
-func (e *Employee) UpdateWorkSchedule(s int, workSchedule DTO.CreateWorkSchedule, x_auth_token *string, x_company_id *string) error {
-	if workSchedule == nil {
+func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmployeeWorkSchedule, x_auth_token *string, x_company_id *string) error {
+	if EmployeeWorkSchedule.WorkRanges == nil {
 		return fmt.Errorf("work schedule cannot be nil")
 	}
 	t, err := get_token(x_auth_token, &e.X_Auth_Token)
@@ -98,22 +100,23 @@ func (e *Employee) UpdateWorkSchedule(s int, workSchedule DTO.CreateWorkSchedule
 		return err
 	}
 	var emp *model.Employee
-	if err := handler.NewHttpClient().
-		Method("PATCH").
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
 		URL(fmt.Sprintf("/employee/%s/work_schedule", e.Created.ID.String())).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, t).
-		Send(workSchedule).
+		Send(EmployeeWorkSchedule).
 		ParseResponse(&emp).Error; err != nil {
 		return fmt.Errorf("failed to update employee work schedule: %w", err)
 	}
 
-	// if err := ValidateWorkSchedule(emp.WorkSchedule, e, e.Company); err != nil {
+	// if err := ValidateWorkSchedule(emp.EmployeeWorkSchedule, e, e.Company); err != nil {
 	// 	return fmt.Errorf("invalid work schedule: %w", err)
 	// }
 
-	e.Created.WorkSchedule = emp.WorkSchedule
+	e.Created.EmployeeWorkSchedule = emp.EmployeeWorkSchedule
 
 	return nil
 }
@@ -359,4 +362,119 @@ func get_x_company_id(priority *string, secundary *string) (string, error) {
 		return *secundary, nil
 	}
 	return "", fmt.Errorf("no company ID provided")
+}
+
+func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateEmployeeWorkSchedule {
+	return DTO.CreateEmployeeWorkSchedule{
+		WorkRanges: []DTO.CreateEmployeeWorkRange{
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    1,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    1,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    2,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    2,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    3,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    3,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    4,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    4,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    5,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    5,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    6,
+				StartTime:  "08:00",
+				EndTime:    "12:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+			{
+				EmployeeID: employeeID,
+				BranchID:   branchID,
+				Weekday:    6,
+				StartTime:  "13:00",
+				EndTime:    "17:00",
+				TimeZone:   "America/Sao_Paulo",
+				Services:   servicesID,
+			},
+		},
+	}
 }

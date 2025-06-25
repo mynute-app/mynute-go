@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type WorkSchedule struct {
+type EmployeeWorkSchedule struct {
 	Monday    []WorkRange `json:"monday"`
 	Tuesday   []WorkRange `json:"tuesday"`
 	Wednesday []WorkRange `json:"wednesday"`
@@ -27,23 +27,23 @@ type WorkRange struct {
 }
 
 // Implement driver.Valuer
-func (ws WorkSchedule) Value() (driver.Value, error) {
+func (ws EmployeeWorkSchedule) Value() (driver.Value, error) {
 	return json.Marshal(ws)
 }
 
 // Implement sql.Scanner
-func (ws *WorkSchedule) Scan(value any) error {
+func (ws *EmployeeWorkSchedule) Scan(value any) error {
 	bytes, ok := value.([]byte)
 	if !ok {
-		return errors.New("failed to scan WorkSchedule: expected []byte")
+		return errors.New("failed to scan EmployeeWorkSchedule: expected []byte")
 	}
 
 	return json.Unmarshal(bytes, ws)
 }
 
-func (ws *WorkSchedule) IsEmpty() bool {
+func (ws *EmployeeWorkSchedule) IsEmpty() bool {
 	if ws == nil {
-		ws = &WorkSchedule{
+		ws = &EmployeeWorkSchedule{
 			Monday:    []WorkRange{},
 			Tuesday:   []WorkRange{},
 			Wednesday: []WorkRange{},
@@ -58,7 +58,7 @@ func (ws *WorkSchedule) IsEmpty() bool {
 		len(ws.Sunday) == 0
 }
 
-func (ws *WorkSchedule) GetRangesForDay(day time.Weekday) []WorkRange {
+func (ws *EmployeeWorkSchedule) GetRangesForDay(day time.Weekday) []WorkRange {
 	if ws == nil {
 		return nil
 	}
@@ -82,7 +82,7 @@ func (ws *WorkSchedule) GetRangesForDay(day time.Weekday) []WorkRange {
 	}
 }
 
-func (ws *WorkSchedule) GetAllRanges() []WorkRange {
+func (ws *EmployeeWorkSchedule) GetAllRanges() []WorkRange {
 	if ws == nil {
 		return nil
 	}

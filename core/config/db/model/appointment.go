@@ -303,7 +303,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	// 4. Check Employee Availability (Work Schedule)
-	if len(a.Employee.WorkSchedule) == 0 {
+	if len(a.Employee.EmployeeWorkSchedule) == 0 {
 		return lib.Error.Employee.NoWorkScheduleForDay
 	}
 	weekday := a.StartTime.Weekday()

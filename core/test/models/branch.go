@@ -7,6 +7,8 @@ import (
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type Branch struct {
@@ -153,4 +155,92 @@ func (b *Branch) AddService(status int, service *Service, x_auth_token string, x
 	service.Branches = append(service.Branches, b)
 	b.Services = append(b.Services, service)
 	return nil
+}
+
+func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSchedule, x_auth_token string, x_company_id *string) error {
+	if schedule.WorkRanges == nil {
+		return fmt.Errorf("work schedule cannot be nil")
+	}
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var updated *model.Branch
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(schedule).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to update branch work schedule: %w", err)
+	}
+	b.Created.BranchWorkSchedule = updated.BranchWorkSchedule
+	return nil
+}
+
+func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateBranchWorkSchedule {
+	return DTO.CreateBranchWorkSchedule{
+		WorkRanges: []DTO.CreateBranchWorkRange{
+			{
+				BranchID:  branchID,
+				Weekday:   1,
+				StartTime: "08:00",
+				EndTime:   "20:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday:   2,
+				StartTime: "08:00",
+				EndTime:   "20:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday:   3,
+				StartTime: "08:00",
+				EndTime:   "20:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday:   4,
+				StartTime: "08:00",
+				EndTime:   "20:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday:   5,
+				StartTime: "08:00",
+				EndTime:   "20:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday:   6,
+				StartTime: "09:00",
+				EndTime:   "12:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+			{
+				BranchID:  branchID,
+				Weekday: 0,
+				StartTime: "09:00",
+				EndTime:   "12:00",
+				TimeZone:  "America/Sao_Paulo",
+				Services:  servicesID,
+			},
+		},
+	}
 }
