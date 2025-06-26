@@ -15,11 +15,9 @@ type BranchWorkRange struct {
 	StartTime time.Time    `json:"start_time" gorm:"type:time;not null"`
 	EndTime   time.Time    `json:"end_time" gorm:"type:time;not null"`
 	TimeZone  string       `json:"timezone" gorm:"type:varchar(100);not null"`
-
-	BranchID uuid.UUID `json:"branch_id" gorm:"type:uuid;not null;index"`
-	Branch   Branch    `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-
-	Services []*Service `json:"services" gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
+	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Services  []*Service   `json:"services" gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 const BranchWorkRangeTableName = "branch_work_ranges"
@@ -38,13 +36,33 @@ func BranchWorkRangeIndexes(table string) map[string]string {
 	}
 }
 
+func (bwr *BranchWorkRange) AfterFind(tx *gorm.DB) error {
+	var err error
+
+	bwr.StartTime, err = lib.Utc2LocalTime(bwr.TimeZone, bwr.StartTime)
+	if err != nil {
+		return fmt.Errorf("branch work range (%s) failed to convert start time to local time: %w", bwr.ID, err)
+	}
+
+	bwr.EndTime, err = lib.Utc2LocalTime(bwr.TimeZone, bwr.EndTime)
+	if err != nil {
+		return fmt.Errorf("branch work range (%s) failed to convert end time to local time: %w", bwr.ID, err)
+	}
+
+	return nil
+}
+
 func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
-	if corrected_time, err := lib.UTC_with_Zero_YMD_Date(bwr.TimeZone, bwr.StartTime, bwr.EndTime); err != nil {
-		return err
-	} else {
-		bwr.StartTime = corrected_time.StartTime
-		bwr.EndTime = corrected_time.EndTime
-		bwr.TimeZone = corrected_time.TimeZone
+	var err error
+	bwr.StartTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.StartTime)
+
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", bwr.StartTime, err))
+	}
+
+	bwr.EndTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.EndTime)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", bwr.EndTime, err))
 	}
 	if bwr.StartTime.Equal(bwr.EndTime) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start time cannot be equal to end time"))
@@ -55,6 +73,12 @@ func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
 	if bwr.Weekday < 0 || bwr.Weekday > 6 {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d", bwr.Weekday))
 	}
+
+	if bwr.StartTime.Second() != 0 {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of start time generated a time with seconds, which is not allowed: %d", bwr.StartTime.Second()))
+	} else if bwr.EndTime.Second() != 0 {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of end time generated a time with seconds, which is not allowed: %d", bwr.EndTime.Second()))
+	}
 	return nil
 }
 
@@ -64,12 +88,16 @@ func (bwr *BranchWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	}
 
 	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		if corrected_time, err := lib.UTC_with_Zero_YMD_Date(bwr.TimeZone, bwr.StartTime, bwr.EndTime); err != nil {
-			return err
-		} else {
-			bwr.StartTime = corrected_time.StartTime
-			bwr.EndTime = corrected_time.EndTime
-			bwr.TimeZone = corrected_time.TimeZone
+		var err error
+		bwr.StartTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.StartTime)
+
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", bwr.StartTime, err))
+		}
+
+		bwr.EndTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.EndTime)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", bwr.EndTime, err))
 		}
 
 		if bwr.StartTime.Equal(bwr.EndTime) {

@@ -7,7 +7,6 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 	"fmt"
 	"time"
 
@@ -167,11 +166,11 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone at index %d: %w", i, err))
 		}
-		start, err := time.ParseInLocation("15:04", bwr.StartTime, loc)
+		start, err := lib.ParseTimeHHMMWithDateBase(bwr.StartTime, loc)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time at index %d: %w", i, err))
 		}
-		end, err := time.ParseInLocation("15:04", bwr.EndTime, loc)
+		end, err := lib.ParseTimeHHMMWithDateBase(bwr.EndTime, loc)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_time at index %d: %w", i, err))
 		}
@@ -191,18 +190,21 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		})
 	}
 
-	Service := service.Factory(c)
-	defer Service.DeferDB()
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
 
 	for _, wr := range schedule {
-		if err := Service.Create(&wr).Error; err != nil {
-			Service.MyGorm.DB.Rollback()
+		if err := tx.Create(&wr).Error; err != nil {
+			tx.Rollback()
 			return lib.Error.General.CreatedError.WithError(err)
 		}
 	}
 
 	var branch model.Branch
-	if err := Service.MyGorm.DB.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -242,7 +244,6 @@ func GetBranchWorkRange(c *fiber.Ctx) error {
 
 	return lib.ResponseFactory(c).SendDTO(200, &wr, &DTO.BranchWorkRange{})
 }
-
 
 // UpdateBranchWorkRange updates a work range for a branch
 //
@@ -285,8 +286,14 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))
 	}
-	start, _ := time.ParseInLocation("15:04", input.StartTime, loc)
-	end, _ := time.ParseInLocation("15:04", input.EndTime, loc)
+	start, err := lib.ParseTimeHHMMWithDateBase(input.StartTime, loc)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time: %w", err))
+	}
+	end, err := lib.ParseTimeHHMMWithDateBase(input.EndTime, loc)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time: %w", err))
+	}
 
 	wr.Weekday = time.Weekday(input.Weekday)
 	wr.StartTime = start
@@ -440,8 +447,6 @@ func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 
 	return nil
 }
-
-
 
 // GetEmployeeServicesByBranchId retrieves all services of an employee included in the branch ID
 //

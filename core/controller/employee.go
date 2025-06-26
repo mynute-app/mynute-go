@@ -8,7 +8,6 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
-	"agenda-kaki-go/core/service"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -277,58 +276,61 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 
 	var EmployeeWorkSchedule model.EmployeeWorkSchedule
 
-	for _, wr := range input.WorkRanges {
-		loc, err := time.LoadLocation(wr.TimeZone)
+	for _, ewr := range input.WorkRanges {
+		loc, err := time.LoadLocation(ewr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))
 		}
 
-		start, err := time.ParseInLocation("15:04", wr.StartTime, loc)
+		start, err := lib.ParseTimeHHMMWithDateBase(ewr.StartTime, loc)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time: %w", err))
 		}
-		end, err := time.ParseInLocation("15:04", wr.EndTime, loc)
+		end, err := lib.ParseTimeHHMMWithDateBase(ewr.EndTime, loc)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_time: %w", err))
 		}
 
-		services := make([]*model.Service, 0, len(wr.Services))
-		for _, serviceID := range wr.Services {
+		services := make([]*model.Service, 0, len(ewr.Services))
+		for _, serviceID := range ewr.Services {
 			services = append(services, &model.Service{BaseModel: model.BaseModel{ID: serviceID.ID}})
 		}
 
 		EmployeeWorkSchedule.WorkRanges = append(EmployeeWorkSchedule.WorkRanges, model.EmployeeWorkRange{
-			Weekday:    time.Weekday(wr.Weekday),
+			Weekday:    time.Weekday(ewr.Weekday),
 			StartTime:  start,
 			EndTime:    end,
-			TimeZone:   wr.TimeZone,
-			EmployeeID: wr.EmployeeID,
-			BranchID:   wr.BranchID,
+			TimeZone:   ewr.TimeZone,
+			EmployeeID: ewr.EmployeeID,
+			BranchID:   ewr.BranchID,
 			Services:   services,
 		})
 	}
 
 	employee_id := c.Params("id")
 
-	Service := service.Factory(c)
-	defer Service.DeferDB()
+	tx, end, err := database.ContextTransaction(c)
+	defer end()
+	if err != nil {
+		return err
+	}
 
-	for i, wr := range EmployeeWorkSchedule.WorkRanges {
-		if wr.EmployeeID.String() != employee_id {
-			Service.MyGorm.DB.Rollback()
-			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, wr.EmployeeID.String(), employee_id))
+	for i, ewr := range EmployeeWorkSchedule.WorkRanges {
+		if ewr.EmployeeID.String() != employee_id {
+			tx.Rollback()
+			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, ewr.EmployeeID.String(), employee_id))
 		}
-		if err := Service.Create(&wr).Error; err != nil {
-			Service.MyGorm.DB.Rollback()
+		if err := tx.Create(&ewr).Error; err != nil {
+			tx.Rollback()
 			return lib.Error.General.CreatedError.WithError(err)
 		}
 	}
 
 	var employee model.Employee
-	if err := Service.MyGorm.DB.
+	if err := tx.
 		Preload(clause.Associations).
 		First(&employee, "id = ?", employee_id).Error; err != nil {
-		Service.MyGorm.DB.Rollback()
+		tx.Rollback()
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -451,12 +453,12 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))
 	}
 
-	start, err := time.ParseInLocation("15:04", input.StartTime, loc)
+	start, err := lib.ParseTimeHHMMWithDateBase(input.StartTime, loc)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time: %w", err))
 	}
 
-	end, err := time.ParseInLocation("15:04", input.EndTime, loc)
+	end, err := lib.ParseTimeHHMMWithDateBase(input.EndTime, loc)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_time: %w", err))
 	}

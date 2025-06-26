@@ -31,9 +31,9 @@ type EmployeeWorkRange struct {
 	StartTime  time.Time    `json:"start_time" gorm:"type:time;not null"`
 	EndTime    time.Time    `json:"end_time" gorm:"type:time;not null"`
 	TimeZone   string       `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	EmployeeID uuid.UUID    `json:"employee_id" gorm:"type:uuid;not null;index:idx_employee_id,unique"`
+	EmployeeID uuid.UUID    `json:"employee_id" gorm:"type:uuid;not null;index:idx_employee_id"`
 	Employee   Employee     `json:"employee" gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	BranchID   uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id,unique"`
+	BranchID   uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch     Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Services   []*Service   `json:"services" gorm:"many2many:employee_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
@@ -58,13 +58,33 @@ func WorksRangeIndexes(table string) map[string]string {
 	}
 }
 
+func (ewr *EmployeeWorkRange) AfterFind(tx *gorm.DB) error {
+	var err error
+
+	ewr.StartTime, err = lib.Utc2LocalTime(ewr.TimeZone, ewr.StartTime)
+	if err != nil {
+		return fmt.Errorf("employee work range (%s) failed to convert start time to local time: %w", ewr.ID, err)
+	}
+
+	ewr.EndTime, err = lib.Utc2LocalTime(ewr.TimeZone, ewr.EndTime)
+	if err != nil {
+		return fmt.Errorf("employee work range (%s) failed to convert end time to local time: %w", ewr.ID, err)
+	}
+
+	return nil
+}
+
 func (ewr *EmployeeWorkRange) BeforeCreate(tx *gorm.DB) error {
-	if corrected_time, err := lib.UTC_with_Zero_YMD_Date(ewr.TimeZone, ewr.StartTime, ewr.EndTime); err != nil {
-		return err
-	} else {
-		ewr.StartTime = corrected_time.StartTime
-		ewr.EndTime = corrected_time.EndTime
-		ewr.TimeZone = corrected_time.TimeZone
+	var err error
+	ewr.StartTime, err = lib.LocalTime2UTC(ewr.TimeZone, ewr.StartTime)
+
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
+	}
+
+	ewr.EndTime, err = lib.LocalTime2UTC(ewr.TimeZone, ewr.EndTime)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
 	}
 
 	if ewr.StartTime.Equal(ewr.EndTime) {
@@ -131,17 +151,27 @@ func (ewr *EmployeeWorkRange) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 
+	if ewr.StartTime.Second() != 0 {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of start time generated a time with seconds, which is not allowed: %d", ewr.StartTime.Second()))
+	} else if ewr.EndTime.Second() != 0 {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of end time generated a time with seconds, which is not allowed: %d", ewr.EndTime.Second()))
+	}
+
 	return nil
 }
 
 func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	if tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		if corrected_time, err := lib.UTC_with_Zero_YMD_Date(ewr.TimeZone, ewr.StartTime, ewr.EndTime); err != nil {
-			return err
-		} else {
-			ewr.StartTime = corrected_time.StartTime
-			ewr.EndTime = corrected_time.EndTime
-			ewr.TimeZone = corrected_time.TimeZone
+		var err error
+		ewr.StartTime, err = lib.LocalTime2UTC(ewr.TimeZone, ewr.StartTime)
+
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
+		}
+
+		ewr.EndTime, err = lib.LocalTime2UTC(ewr.TimeZone, ewr.EndTime)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
 		}
 		if ewr.StartTime.Equal(ewr.EndTime) {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range start time cannot be equal to end time"))

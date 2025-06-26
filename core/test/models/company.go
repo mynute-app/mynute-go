@@ -35,6 +35,28 @@ func (c *Company) Set() error {
 		return err
 	}
 	cOwnerToken := c.Owner.X_Auth_Token
+	for range 2 {
+		service := &Service{}
+		service.Company = c
+		if err := service.Create(200, cOwnerToken, nil); err != nil {
+			return err
+		}
+		if err := service.GetById(200, cOwnerToken, nil); err != nil {
+			return err
+		}
+		c.Services = append(c.Services, service)
+	}
+	for range 1 {
+		branch := &Branch{}
+		branch.Company = c
+		if err := branch.Create(200, c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		c.Branches = append(c.Branches, branch)
+	}
 	for range 3 {
 		employee := &Employee{}
 		employee.Company = c
@@ -50,171 +72,41 @@ func (c *Company) Set() error {
 		if err := employee.GetById(200, nil, nil); err != nil {
 			return err
 		}
-		c.Employees = append(c.Employees, employee)
-	}
-
-	for range 2 {
-		service := &Service{}
-		service.Company = c
-		if err := service.Create(200, cOwnerToken, nil); err != nil {
-			return err
-		}
-		if err := service.GetById(200, cOwnerToken, nil); err != nil {
-			return err
-		}
-		c.Services = append(c.Services, service)
-	}
-
-	for range 1 {
-		branch := &Branch{}
-		branch.Company = c
-		if err := branch.Create(200, c.Owner.X_Auth_Token, nil); err != nil {
-			return err
-		}
-		if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
-			return err
-		}
-		c.Branches = append(c.Branches, branch)
-	}
-
-	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
-		return err
-	}
-	for _, branch := range c.Branches {
+		var servicesID []DTO.ServiceID
 		for _, service := range c.Services {
-			if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
+			if err := employee.AddService(200, service, &c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
+			}
+			servicesID = append(servicesID, DTO.ServiceID{ID: service.Created.ID})
+		}
+		for _, branch := range c.Branches {
+			for _, service := range c.Services {
+				if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
+					return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
+				}
+			}
+			branchWorkSchedule := GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
+			if err := branch.CreateWorkSchedule(200, branchWorkSchedule, c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
 			}
 		}
-	}
-	for _, employee := range c.Employees {
 		for _, branch := range c.Branches {
 			if err := employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %s to branch %s: %v", employee.Created.Email, branch.Created.Name, err)
 			}
 		}
-		for _, service := range c.Services {
-			if err := employee.AddService(200, service, &c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
-			}
-		}
-		ServicesID := []DTO.ServiceID{
-			{ID: c.Services[0].Created.ID},
-		}
-		if err := employee.CreateWorkSchedule(200, DTO.CreateEmployeeWorkSchedule{
-			WorkRanges: []DTO.CreateEmployeeWorkRange{
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    1,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    1,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    2,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    2,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    3,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    3,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    4,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    4,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    5,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    5,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    6,
-					StartTime:  "08:00",
-					EndTime:    "12:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-				{
-					EmployeeID: employee.Created.ID,
-					BranchID:   c.Branches[0].Created.ID,
-					Weekday:    6,
-					StartTime:  "13:00",
-					EndTime:    "17:00",
-					TimeZone:   c.Branches[0].Created.TimeZone,
-					Services:   ServicesID,
-				},
-			},
-		}, nil, nil); err != nil {
+
+		employeeID := employee.Created.ID
+		branchID := c.Branches[0].Created.ID
+		employeeWorkSchedule := GetExampleEmployeeWorkSchedule(employeeID, branchID, servicesID)
+		if err := employee.CreateWorkSchedule(200, employeeWorkSchedule, nil, nil); err != nil {
 			return fmt.Errorf("failed to create work schedule for employee %s: %v", employee.Created.Email, err)
 		}
+		c.Employees = append(c.Employees, employee)
+	}
+
+	if err := c.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
+		return err
 	}
 
 	if err := c.UploadImages(200, map[string][]byte{

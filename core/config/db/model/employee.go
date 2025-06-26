@@ -128,7 +128,7 @@ func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkR
 			return err
 		}
 		if overlaps {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", ewr.StartTime, ewr.EndTime, existing.ID, existing.StartTime, existing.EndTime))
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", ewr.StartTime, ewr.EndTime, existing.ID, existing.StartTime, existing.EndTime))
 		}
 	}
 
