@@ -27,15 +27,15 @@ type EmployeeWorkSchedule struct {
 
 type EmployeeWorkRange struct {
 	BaseModel
-	Weekday    time.Weekday `json:"weekday" gorm:"not null"` // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-	StartTime  time.Time    `json:"start_time" gorm:"type:time;not null"`
-	EndTime    time.Time    `json:"end_time" gorm:"type:time;not null"`
-	TimeZone   string       `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	EmployeeID uuid.UUID    `json:"employee_id" gorm:"type:uuid;not null;index:idx_employee_id"`
-	Employee   Employee     `json:"employee" gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	BranchID   uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
-	Branch     Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Services   []*Service   `json:"services" gorm:"many2many:employee_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Weekday    time.Weekday `gorm:"not null" validate:"required" json:"weekday" ` // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+	StartTime  time.Time    `gorm:"type:time" validate:"required" json:"start_time" `
+	EndTime    time.Time    `gorm:"type:time" validate:"required" json:"end_time" `
+	TimeZone   string       `gorm:"type:varchar(100)" validate:"required" json:"timezone"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	EmployeeID uuid.UUID    `gorm:"type:uuid;not null;index:idx_employee_id" validate:"required" json:"employee_id"`
+	Employee   Employee     `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"employee"`
+	BranchID   uuid.UUID    `gorm:"type:uuid;not null;index:idx_branch_id" validate:"required" json:"branch_id"`
+	Branch     Branch       `gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"branch"`
+	Services   []*Service   `gorm:"many2many:employee_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"services"`
 }
 
 const WorksRangeTableName = "employee_work_ranges"

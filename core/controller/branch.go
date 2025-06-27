@@ -200,7 +200,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	}
 
 	for _, wr := range schedule {
-		if err := tx.Create(&wr).Error; err != nil {
+		if err := tx.Omit("Branch").Create(&wr).Error; err != nil {
 			tx.Rollback()
 			return lib.Error.General.CreatedError.WithError(err)
 		}

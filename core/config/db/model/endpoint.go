@@ -12,13 +12,13 @@ var AllowEndpointCreation = false
 
 type EndPoint struct {
 	BaseModel
-	ControllerName   string     `json:"controller_name"`
-	Description      string     `json:"description"`
-	Method           string     `gorm:"type:varchar(10)" json:"method"`
-	Path             string     `json:"path"`
+	ControllerName   string     `gorm:"type:varchar(100)" json:"controller_name"`
+	Description      string     `gorm:"type:text" json:"description"`
+	Method           string     `gorm:"type:varchar(6)" json:"method"`
+	Path             string     `gorm:"type:text" json:"path"`
 	DenyUnauthorized bool       `gorm:"default:false" json:"deny_unauthorized"`
 	NeedsCompanyId   bool       `gorm:"default:false" json:"needs_company_id"`
-	ResourceID       *uuid.UUID `json:"resource_id"`
+	ResourceID       *uuid.UUID `gorm:"type:uuid" json:"resource_id"`
 	Resource         *Resource  `gorm:"foreignKey:ResourceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"resource"`
 }
 

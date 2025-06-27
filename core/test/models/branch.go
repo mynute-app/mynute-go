@@ -41,6 +41,7 @@ func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) e
 			City:         lib.GenerateRandomName("City"),
 			State:        lib.GenerateRandomName("State"),
 			Country:      lib.GenerateRandomName("Country"),
+			TimeZone:     "America/Sao_Paulo",
 		}).
 		ParseResponse(&b.Created).
 		Error; err != nil {
@@ -176,7 +177,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 		Send(schedule).
 		ParseResponse(&updated).
 		Error; err != nil {
-		return fmt.Errorf("failed to update branch work schedule: %w", err)
+		return fmt.Errorf("failed to create branch work schedule: %w", err)
 	}
 	b.Created.BranchWorkSchedule = updated.BranchWorkSchedule
 	return nil
@@ -235,7 +236,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 			},
 			{
 				BranchID:  branchID,
-				Weekday: 0,
+				Weekday:   0,
 				StartTime: "09:00",
 				EndTime:   "12:00",
 				TimeZone:  "America/Sao_Paulo",

@@ -23,7 +23,7 @@ type AppointmentBase struct {
 	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
 	StartTime             time.Time  `json:"start_time" gorm:"type:time;not null"`
 	EndTime               time.Time  `json:"end_time" gorm:"type:time;not null"`
-	TimeZone              string     `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone              string     `json:"timezone" gorm:"type:varchar(100);not null" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	ActualStartTime       time.Time  `json:"actual_start_time"`
 	ActualEndTime         time.Time  `json:"actual_end_time"`
 	CancelTime            time.Time  `json:"cancel_time"`
@@ -101,6 +101,9 @@ func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
+	if err := lib.MyCustomStructValidator(a); err != nil {
+		return err
+	}
 	if !a.History.IsEmpty() {
 		return lib.Error.Appointment.HistoryManualUpdateForbidden
 	}

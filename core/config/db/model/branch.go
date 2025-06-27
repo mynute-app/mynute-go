@@ -17,16 +17,16 @@ import (
 type Branch struct {
 	BaseModel
 	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `json:"timezone" gorm:"type:varchar(100);not null" ` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	Name               string             `gorm:"not null" json:"name"`
-	Street             string             `gorm:"not null" json:"street"`
-	Number             string             `gorm:"not null" json:"number"`
-	Complement         string             `json:"complement"`
-	Neighborhood       string             `gorm:"not null" json:"neighborhood"`
-	ZipCode            string             `gorm:"not null" json:"zip_code"`
-	City               string             `gorm:"not null" json:"city"`
-	State              string             `gorm:"not null" json:"state"`
-	Country            string             `gorm:"not null" json:"country"`
+	TimeZone           string             `gorm:"type:varchar(100)" json:"timezone" validate:"required"`           // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	Name               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"` // Branch name
+	Street             string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"street"`
+	Number             string             `gorm:"type:varchar(100)" validate:"required,min=1,max=10" json:"number"`
+	Complement         string             `gorm:"type:varchar(100)" validate:"max=100" json:"complement"`
+	Neighborhood       string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"neighborhood"`
+	ZipCode            string             `gorm:"type:varchar(100)" validate:"required,min=5,max=8" json:"zip_code"`
+	City               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"city"`
+	State              string             `gorm:"type:varchar(100)" validate:"required,min=2,max=20" json:"state"` // State code (e.g., "NY" for New York, "SP" for São Paulo)
+	Country            string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"country"`
 	CompanyID          uuid.UUID          `gorm:"not null;index" json:"company_id"`
 	Employees          []*Employee        `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
 	Services           []*Service         `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
@@ -46,6 +46,9 @@ type ServiceDensity struct {
 }
 
 func (b *Branch) BeforeCreate(tx *gorm.DB) error {
+	if err := lib.MyCustomStructValidator(b); err != nil {
+		return err
+	}
 	return nil
 }
 

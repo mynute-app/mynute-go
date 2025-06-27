@@ -14,9 +14,9 @@ type BranchWorkRange struct {
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
 	StartTime time.Time    `json:"start_time" gorm:"not null"`
 	EndTime   time.Time    `json:"end_time" gorm:"not null"`
-	TimeZone  string       `json:"timezone" gorm:"type:varchar(100);not null"`
+	TimeZone  string       `json:"timezone" gorm:"type:varchar(100);not null" validate:"required"`
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
-	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 	Services  []*Service   `json:"services" gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
@@ -53,6 +53,9 @@ func (bwr *BranchWorkRange) AfterFind(tx *gorm.DB) error {
 }
 
 func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
+	if err := lib.MyCustomStructValidator(bwr); err != nil {
+		return err
+	}
 	var err error
 
 	bwr.StartTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.StartTime)
@@ -77,7 +80,6 @@ func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
 	} else if bwr.EndTime.Second() != 0 {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of end time generated a time with seconds, which is not allowed: %d", bwr.EndTime.Second()))
 	}
-
 	var branch_time_zone string
 	if err := tx.
 		Model(&Branch{}).

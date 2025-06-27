@@ -17,15 +17,15 @@ type TimeRange struct {
 
 type ClientMeta struct {
 	BaseModel
-	Name             string   `gorm:"type:varchar(100);not null" json:"name"`
-	Surname          string   `gorm:"type:varchar(100)" json:"surname"`
-	Email            string   `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
-	Phone            string   `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
+	Name             string   `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
+	Surname          string   `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"surname"`
+	Email            string   `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
+	Phone            string   `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags             []string `gorm:"type:json" json:"tags"`
-	Password         string   `gorm:"type:varchar(255);not null" json:"password" validate:"required,myPasswordValidation"`
-	ChangePassword   bool     `gorm:"default:false;not null" json:"change_password"`
+	Password         string   `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
+	ChangePassword   bool     `gorm:"default:false" json:"change_password"`
 	VerificationCode string   `gorm:"type:varchar(100)" json:"verification_code"`
-	Verified         bool     `gorm:"default:false;not null" json:"verified"`
+	Verified         bool     `gorm:"default:false" json:"verified"`
 }
 
 // Updated Client model
