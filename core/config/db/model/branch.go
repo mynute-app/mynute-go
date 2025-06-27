@@ -17,7 +17,7 @@ import (
 type Branch struct {
 	BaseModel
 	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `json:"timezone" gorm:"type:varchar(100);not null"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone           string             `json:"timezone" gorm:"type:varchar(100);not null" ` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name               string             `gorm:"not null" json:"name"`
 	Street             string             `gorm:"not null" json:"street"`
 	Number             string             `gorm:"not null" json:"number"`
@@ -59,7 +59,7 @@ func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 func (b *Branch) GetTimeZone() (*time.Location, error) {
 	loc, err := time.LoadLocation(b.TimeZone)
 	if err != nil {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", b.TimeZone, err))
+		return nil, fmt.Errorf("branch (%s) has invalid timezone %s: %w", b.ID, b.TimeZone, err)
 	}
 	return loc, nil
 }
@@ -144,7 +144,6 @@ func (b *Branch) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 	return count > 0
 }
 
-// in model/branch.go
 func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	if ewr.BranchID != b.ID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range branch ID %s does not match branch ID %s", ewr.BranchID, b.ID))
@@ -159,90 +158,55 @@ func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRan
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no branch work schedule found for branch ID %s and weekday %d", b.ID, ewr.Weekday))
 	}
 
-	isWithinAnyBranchRange := false
+	ewrTZ, err := ewr.GetTimeZone()
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range (%s) has invalid time zone %s: %w", ewr.ID, ewr.TimeZone, err))
+	}
+
 	for _, bws := range bwrs { // bws is the Branch Work Schedule
 		if bws.Weekday != ewr.Weekday {
 			continue // Skip if the weekday does not match
 		}
-		// --- NORMALIZE FOR COMPARISON ---
-		// `ewr` (employee) is already in clean UTC from its BeforeCreate hook.
-		// But we will convert it to UTC explicitly for clarity.
-		ewrStartTimeUTC := ewr.StartTime.In(time.UTC)
-		ewrEndTimeUTC := ewr.EndTime.In(time.UTC)
-
-		// `bws` (branch) is in clean Local time from its AfterFind hook.
-		// Convert it to UTC to match the employee's time.
-		bwsStartTimeUTC := bws.StartTime.In(time.UTC)
-		bwsEndTimeUTC := bws.EndTime.In(time.UTC)
-
-		// --- PERFORM THE COMPARISON IN UTC ---
-		// Check if the employee's UTC range is fully contained within the branch's UTC range.
-		isStartValid := ewrStartTimeUTC.Equal(bwsStartTimeUTC) || ewrStartTimeUTC.After(bwsStartTimeUTC)
-		isEndValid := ewrEndTimeUTC.Equal(bwsEndTimeUTC) || ewrEndTimeUTC.Before(bwsEndTimeUTC)
-
-		if isStartValid && isEndValid {
-			isWithinAnyBranchRange = true
-			break // A valid containing schedule was found.
+		bwsTZ, err := lib.GetTimeZone(bws.TimeZone)
+		if err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch work range (%s) has invalid time zone %s: %w", bws.ID, bws.TimeZone, err))
+		}
+		if lib.TimeRangeFullyContained(bws.StartTime, bws.EndTime, bwsTZ, ewr.StartTime, ewr.EndTime, ewrTZ) {
+			return nil
 		}
 	}
 
-	if !isWithinAnyBranchRange {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range is not within any defined branch operating hours for weekday %d", ewr.Weekday))
+	localStartTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.StartTime)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
 	}
-
-	return nil // Success!
+	localEndTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.EndTime)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
+	}
+	return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range (from %s to %s) is not within any defined branch operating hours for weekday %d", localStartTime.Format("15:04"), localEndTime.Format("15:04"), ewr.Weekday))
 }
-
-// func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
-// 	if ewr.BranchID != b.ID {
-// 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range branch ID %s does not match branch ID %s", ewr.BranchID, b.ID))
-// 	}
-
-// 	var bwrs []BranchWorkRange
-// 	if err := tx.Find(&bwrs, "branch_id = ? AND weekday = ?", b.ID, ewr.Weekday).Error; err != nil {
-// 		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to retrieve branch work schedule: %w", err))
-// 	}
-
-// 	if len(bwrs) == 0 {
-// 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no branch work schedule found for branch ID %s and weekday %d", b.ID, ewr.Weekday))
-// 	}
-
-// 	for _, bws := range bwrs {
-// 		if bws.Weekday == ewr.Weekday {
-// 			log.Printf("Branch Work Range %#v ~ %#v compared to Employee Work Range %#v ~ %#v\n", bws.StartTime, bws.EndTime, ewr.StartTime, ewr.EndTime)
-// 			// Check if the employee work range is inside the branch work range
-// 			ewrStartTimeAfterOrEqual := ewr.StartTime.After(bws.StartTime) || ewr.StartTime.Equal(bws.StartTime)
-// 			ewrEndTimeBeforeOrEqual := ewr.EndTime.Before(bws.EndTime) || ewr.EndTime.Equal(bws.EndTime)
-// 			if ewrStartTimeAfterOrEqual && ewrEndTimeBeforeOrEqual {
-// 				return nil // Valid range
-// 			}
-// 		}
-// 	}
-
-// 	return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range %s-%s is not within any branch work range for weekday %d", ewr.StartTime, ewr.EndTime, ewr.Weekday))
-// }
 
 func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRange) error {
 	var existing []BranchWorkRange
 
-	err := tx.
-		Find(&existing, "branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).Error
+	err := tx.Find(&existing, "branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).Error
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to fetch existing work ranges: %w", err))
 	}
 
-	for _, r := range existing {
-		overlap, err := newRange.Overlaps(&r)
+	for _, bwr := range existing {
+		overlap, err := newRange.Overlaps(&bwr)
 		if err != nil {
 			return err
 		}
 		if overlap {
-			loc, _ := time.LoadLocation(r.TimeZone)
-			start := r.StartTime.In(loc).Format("15:04")
-			end := r.EndTime.In(loc).Format("15:04")
+			loc, _ := bwr.GetTimeZone()
+			start := bwr.StartTime.In(loc).Format("15:04")
+			end := bwr.EndTime.In(loc).Format("15:04")
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf(
 				"branch already has a work range on %s from %s to %s that overlaps the new range %s-%s",
-				r.Weekday.String(), start, end, newRange.StartTime, newRange.EndTime,
+				bwr.Weekday.String(), start, end, newRange.StartTime, newRange.EndTime,
 			))
 		}
 	}

@@ -15,8 +15,8 @@ import (
 
 type Employee struct {
 	BaseModel
-	Name                 string              `gorm:"type:varchar(100);not null" json:"name"`
-	Surname              string              `gorm:"type:varchar(100)" json:"surname"`
+	Name                 string              `gorm:"type:varchar(100);not null" json:"name" validate:"required,min=3,max=100"`
+	Surname              string              `gorm:"type:varchar(100)" json:"surname" validate:"max=100"`
 	Email                string              `gorm:"type:varchar(100);not null;uniqueIndex" json:"email" validate:"required,email"`
 	Phone                string              `gorm:"type:varchar(20);not null;uniqueIndex" json:"phone" validate:"required,e164"`
 	Tags                 []string            `gorm:"type:json" json:"tags"`
@@ -37,19 +37,8 @@ func (Employee) TableName() string  { return "employees" }
 func (Employee) SchemaType() string { return "company" }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
-	if err := lib.ValidatorV10.Struct(e); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			BadReq := lib.Error.General.BadRequest
-			for _, fieldErr := range validationErrors {
-				// You can customize the message
-				BadReq.WithError(
-					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-				)
-			}
-			return BadReq
-		} else {
-			return lib.Error.General.InternalError.WithError(err)
-		}
+	if err := lib.MyCustomStructValidator(e); err != nil {
+		return err
 	}
 	if err := e.HashPassword(); err != nil {
 		return err
@@ -128,7 +117,23 @@ func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkR
 			return err
 		}
 		if overlaps {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", ewr.StartTime, ewr.EndTime, existing.ID, existing.StartTime, existing.EndTime))
+			startTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.StartTime)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
+			}
+			endTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.EndTime)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
+			}
+			existingStartTime, err := lib.Utc2LocalTime(existing.TimeZone, existing.StartTime)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid existing start time %s: %w", existing.StartTime, err))
+			}
+			existingEndTime, err := lib.Utc2LocalTime(existing.TimeZone, existing.EndTime)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid existing end time %s: %w", existing.EndTime, err))
+			}
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range to create (%s ~ %s) overlaps with existing range %s (%s ~ %s)", startTime.Format("15:04"), endTime.Format("15:04"), existing.ID, existingStartTime.Format("15:04"), existingEndTime.Format("15:04")))
 		}
 	}
 

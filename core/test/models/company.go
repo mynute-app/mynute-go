@@ -702,7 +702,10 @@ func generateWorkRangesForDay(validBranches []*Branch, employee *Employee, weekd
 			}
 		}
 
-		loc, _ := time.LoadLocation(branch.Created.TimeZone)
+		loc, err := branch.Created.GetTimeZone()
+		if err != nil {
+			panic(err)
+		}
 		startTime := time.Date(1, 1, 1, startHour, 0, 0, 0, loc).UTC()
 		endTime := time.Date(1, 1, 1, endHour, 0, 0, 0, loc).UTC()
 		finalStartTimeStr := startTime.Format("15:04")

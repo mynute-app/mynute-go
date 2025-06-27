@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
@@ -78,4 +79,26 @@ func init() {
 	if err := ValidatorV10.RegisterValidation("mySubdomainValidation", isValidSubdomain); err != nil {
 		panic(err)
 	}
+}
+
+// MyCustomStructValidator validates any struct and returns a formatted error if validation fails.
+// It uses the global ValidatorV10 instance and my custom error-wrapping logic.
+func MyCustomStructValidator(s any) error {
+	if err := ValidatorV10.Struct(s); err != nil {
+		// Check if the error is a set of validation errors.
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			badReqErr := Error.General.BadRequest
+			for _, fieldErr := range validationErrors {
+				badReqErr = badReqErr.WithError(
+					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
+				)
+			}
+			return badReqErr
+		}
+
+		// If it's a different kind of error (e.g., an invalid type was passed),
+		// wrap it as a general internal error.
+		return Error.General.InternalError.WithError(err)
+	}
+	return nil
 }

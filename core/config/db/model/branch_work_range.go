@@ -12,8 +12,8 @@ import (
 type BranchWorkRange struct {
 	BaseModel
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
-	StartTime time.Time    `json:"start_time" gorm:"type:time;not null"`
-	EndTime   time.Time    `json:"end_time" gorm:"type:time;not null"`
+	StartTime time.Time    `json:"start_time" gorm:"not null"`
+	EndTime   time.Time    `json:"end_time" gorm:"not null"`
 	TimeZone  string       `json:"timezone" gorm:"type:varchar(100);not null"`
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -54,12 +54,11 @@ func (bwr *BranchWorkRange) AfterFind(tx *gorm.DB) error {
 
 func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
 	var err error
-	bwr.StartTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.StartTime)
 
+	bwr.StartTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.StartTime)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", bwr.StartTime, err))
 	}
-
 	bwr.EndTime, err = lib.LocalTime2UTC(bwr.TimeZone, bwr.EndTime)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", bwr.EndTime, err))
@@ -73,12 +72,26 @@ func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
 	if bwr.Weekday < 0 || bwr.Weekday > 6 {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d", bwr.Weekday))
 	}
-
 	if bwr.StartTime.Second() != 0 {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of start time generated a time with seconds, which is not allowed: %d", bwr.StartTime.Second()))
 	} else if bwr.EndTime.Second() != 0 {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("parsing of end time generated a time with seconds, which is not allowed: %d", bwr.EndTime.Second()))
 	}
+
+	var branch_time_zone string
+	if err := tx.
+		Model(&Branch{}).
+		Where("id = ?", bwr.BranchID.String()).
+		Select("timezone").
+		Row().Scan(&branch_time_zone); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s not found", bwr.BranchID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	bwr.TimeZone = branch_time_zone
+
 	return nil
 }
 
@@ -128,15 +141,22 @@ func (bwr *BranchWorkRange) Overlaps(other *BranchWorkRange) (bool, error) {
 	if bwr.Weekday != other.Weekday || bwr.BranchID != other.BranchID {
 		return false, nil
 	}
-
-	loc, err := time.LoadLocation(bwr.TimeZone)
+	loc, err := bwr.GetTimeZone()
 	if err != nil {
 		return false, err
 	}
-	loc2, err := time.LoadLocation(other.TimeZone)
+	loc2, err := other.GetTimeZone()
 	if err != nil {
 		return false, err
 	}
 
 	return lib.TimeRangeOverlaps(bwr.StartTime, bwr.EndTime, loc, other.StartTime, other.EndTime, loc2), nil
+}
+
+func (bwr *BranchWorkRange) GetTimeZone() (*time.Location, error) {
+	loc, err := time.LoadLocation(bwr.TimeZone)
+	if err != nil {
+		return nil, fmt.Errorf("branch work range (%s) has invalid timezone %s: %w", bwr.ID, bwr.TimeZone, err)
+	}
+	return loc, nil
 }

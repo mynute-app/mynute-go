@@ -14,6 +14,19 @@ type TimeRangeResult struct {
 	TimeZone  string
 }
 
+func GetTimeZone(tz string) (*time.Location, error) {
+	if tz == "" {
+		return nil, fmt.Errorf("timezone cannot be empty")
+	}
+
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return nil, fmt.Errorf("invalid timezone '%s': %w", tz, err)
+	}
+
+	return loc, nil
+}
+
 // Add this new function alongside your existing DatabaseUtc2LocalTime.
 
 // LocalTime2UTC takes a local time-of-day (represented by a time.Time object)
@@ -27,6 +40,11 @@ func LocalTime2UTC(tz string, localTime time.Time) (time.Time, error) {
 
 	if tz == "" {
 		return time.Time{}, fmt.Errorf("timezone cannot be empty")
+	}
+
+	// Ignore if already in UTC, as this function assumes localTime is in the specified timezone.
+	if localTime.Location() == time.UTC {
+		return localTime, nil
 	}
 
 	loc, err := time.LoadLocation(tz)
@@ -67,12 +85,16 @@ func LocalTime2UTC(tz string, localTime time.Time) (time.Time, error) {
 // in the specified timezone on the conceptual "zero date" (0001-01-01) while
 // avoiding the LTM (Local Mean Time) issues that can occur with historical timezones
 // which is the case for (0001-01-01) date.
-func Utc2LocalTime(tz string, dbTime time.Time) (time.Time, error) {
-	if dbTime.Second() != 0 || dbTime.Nanosecond() != 0 {
-		return time.Time{}, fmt.Errorf("time must have zero seconds and nanoseconds, got %d seconds and %d nanoseconds", dbTime.Second(), dbTime.Nanosecond())
+func Utc2LocalTime(tz string, utcTime time.Time) (time.Time, error) {
+	if utcTime.Second() != 0 || utcTime.Nanosecond() != 0 {
+		return time.Time{}, fmt.Errorf("time must have zero seconds and nanoseconds, got %d seconds and %d nanoseconds", utcTime.Second(), utcTime.Nanosecond())
 	}
 	if tz == "" {
 		return time.Time{}, fmt.Errorf("timezone cannot be empty")
+	}
+	// Ignore if not in UTC, as this function assumes utcTime is in UTC.
+	if utcTime.Location() != time.UTC {
+		return utcTime, nil
 	}
 
 	loc, err := time.LoadLocation(tz)
@@ -89,7 +111,7 @@ func Utc2LocalTime(tz string, dbTime time.Time) (time.Time, error) {
 	// 1. Get a pure UTC instant from the input time to establish a reliable baseline.
 	//    This removes any location info (like the server's time.Local) that the
 	//    database driver might have attached.
-	utcInstant := dbTime.In(time.UTC)
+	utcInstant := utcTime.In(time.UTC)
 
 	// 2. Use a MODERN base date (e.g., year 2000) to perform the timezone conversion.
 	//    This is CRITICAL to get the correct, modern timezone offset.
@@ -120,59 +142,6 @@ func Utc2LocalTime(tz string, dbTime time.Time) (time.Time, error) {
 	return finalLocalTime, nil
 }
 
-func UTC_with_Zero_YMD_Date(tz string, start time.Time, end time.Time) (TimeRangeResult, error) {
-	if tz == "" {
-		return TimeRangeResult{}, fmt.Errorf("timezone cannot be empty")
-	}
-
-	loc, err := time.LoadLocation(tz)
-	if err != nil {
-		return TimeRangeResult{}, fmt.Errorf("invalid timezone: %w", err)
-	}
-
-	CorrectTimeRange := TimeRangeResult{}
-	CorrectTimeRange.TimeZone = tz
-
-	// 1. Take the input time (which represents a UTC instant, regardless of its initial Location)
-	//    and create a canonical UTC time.Time object on the zero date.
-	//    This strips away any arbitrary date (like today's date) or loc (like time.Local)
-	//    that the driver might have added.
-	//    Also, the canonical UTC time.Time created avoid the
-	utcTime := start.In(time.UTC)
-	canonicalUTCStart := time.Date(1, 1, 1, utcTime.Hour(), utcTime.Minute(), utcTime.Second(), utcTime.Nanosecond(), time.UTC)
-
-	// 2. Convert this canonical UTC instant to the target local timezone.
-	//    This is the key conversion. `In()` correctly calculates the local wall-clock time.
-	CorrectTimeRange.StartTime = canonicalUTCStart.In(loc)
-
-	// 3. Repeat for EndTime
-	utcTime = end.In(time.UTC)
-	canonicalUTCEnd := time.Date(1, 1, 1, utcTime.Hour(), utcTime.Minute(), utcTime.Second(), utcTime.Nanosecond(), time.UTC)
-	CorrectTimeRange.EndTime = canonicalUTCEnd.In(loc)
-
-	return CorrectTimeRange, nil
-}
-
-// aplica corretamente o timezone informado sobre os horários e converte para UTC com data base 0001-01-01
-// func UTC_with_Zero_YMD_Date(tz string, start time.Time, end time.Time) (TimeRangeResult, error) {
-// 	if tz == "" {
-// 		return TimeRangeResult{}, fmt.Errorf("timezone cannot be empty")
-// 	}
-// 	location, err := time.LoadLocation(tz)
-// 	if err != nil {
-// 		return TimeRangeResult{}, fmt.Errorf("invalid timezone: %w", err)
-// 	}
-
-// 	startInTZ := time.Date(1, 1, 1, start.Hour(), start.Minute(), start.Second(), 0, location)
-// 	endInTZ := time.Date(1, 1, 1, end.Hour(), end.Minute(), end.Second(), 0, location)
-
-// 	return TimeRangeResult{
-// 		StartTime: startInTZ.UTC(),
-// 		EndTime:   endInTZ.UTC(),
-// 		TimeZone:  tz,
-// 	}, nil
-// }
-
 // OnlyTime extrai apenas a hora do dia em forma de Duration
 func OnlyTime(t time.Time) time.Duration {
 	return time.Duration(t.Hour())*time.Hour +
@@ -185,7 +154,6 @@ func OnlyTime(t time.Time) time.Duration {
 // are considered to be overlapping.
 // It handles both full date-times and time-of-day comparisons, including overnight shifts.
 func TimeRangeOverlaps(aStart, aEnd time.Time, aTZ *time.Location, bStart, bEnd time.Time, bTZ *time.Location) bool {
-	// ... (The defensive .In(aTZ) logic remains the same) ...
 	if aTZ != nil {
 		aStart = aStart.In(aTZ).In(time.UTC)
 		aEnd = aEnd.In(aTZ).In(time.UTC)
@@ -204,38 +172,91 @@ func TimeRangeOverlaps(aStart, aEnd time.Time, aTZ *time.Location, bStart, bEnd 
 		bStartDur := OnlyTime(bStart)
 		bEndDur := OnlyTime(bEnd)
 
-		day := 24 * time.Hour
-		if aEndDur <= aStartDur {
-			aEndDur += day
-		}
-		if bEndDur <= bStartDur {
-			bEndDur += day
-		}
-
-		// This helper function now performs the correct inclusive check
-		doTheyOverlap := func(as, ae, bs, be time.Duration) bool {
-			// They do NOT overlap if A is entirely before B, OR B is entirely before A.
-			// Otherwise, they must overlap.
+		// This helper function performs inclusive check
+		TimeDurationOverlap := func(as, ae, bs, be time.Duration) bool {
+			// They do NOT overlap if A ends before when B starts, OR if B ends
+			// before when A starts. Otherwise, they must overlap.
+			// Therefore, we return the negation of "do not overlap".
 			a_is_before_b := ae <= bs
 			b_is_before_a := be <= as
 			return !(a_is_before_b || b_is_before_a)
 		}
 
-		overlaps := doTheyOverlap(aStartDur, aEndDur, bStartDur, bEndDur)
-		overlaps = overlaps || doTheyOverlap(aStartDur, aEndDur, bStartDur+day, bEndDur+day)
-		overlaps = overlaps || doTheyOverlap(aStartDur+day, aEndDur+day, bStartDur, bEndDur)
+		overlaps := TimeDurationOverlap(aStartDur, aEndDur, bStartDur, bEndDur)
 
 		return overlaps
 	}
 
-	// --- Standard Logic for Full Date-Times (Inclusive) ---
-	// They do NOT overlap if A ends on or before B starts, OR if B ends on or before A starts.
-	// We return the negation of "do not overlap".
-	isABeforeB := aEnd.Before(bStart) || aEnd.Equal(bStart)
-	isBBeforeA := bEnd.Before(aStart) || bEnd.Equal(aStart)
+	// This helper function performs inclusive check
+	TimeRangeOverlap := func(as, ae, bs, be time.Time) bool {
 
-	return !(isABeforeB || isBBeforeA)
+		// --- Standard Logic for Full Date-Times (Inclusive) ---
+		// They do NOT overlap if A ends before when B starts, OR if B ends
+		// before when A starts. Otherwise, they must overlap.
+		// Therefore, we return the negation of "do not overlap".
+		a_is_before_b := ae.Before(bs)
+		b_is_before_a := be.Before(as)
+
+		return !(a_is_before_b || b_is_before_a)
+	}
+
+	overlaps := TimeRangeOverlap(aStart, aEnd, bStart, bEnd)
+	return overlaps
 }
+
+// TimeRangeFullyContained checks if the time range [bStart, bEnd] is fully contained
+// within the time range [aStart, aEnd], supporting both full date-time and time-of-day-only comparisons.
+//
+// The comparison is inclusive, meaning edge-aligned ranges are considered contained.
+// For example, [08:00, 12:00] fully contains [08:00, 12:00].
+//
+// If the times are "time-of-day only" (i.e., Year == 1), it handles overnight shifts correctly.
+// Time zones can be passed to convert inputs before comparing.
+//
+// Parameters:
+//   - aStart, aEnd: Start and end of the containing range
+//   - aTZ: Optional time zone for aStart/aEnd (nil = use time as-is)
+//   - bStart, bEnd: Start and end of the inner (possibly contained) range
+//   - bTZ: Optional time zone for bStart/bEnd (nil = use time as-is)
+//
+// Returns:
+//   - true if [bStart, bEnd] is entirely within [aStart, aEnd] (inclusive), false otherwise.
+func TimeRangeFullyContained(aStart, aEnd time.Time, aTZ *time.Location, bStart, bEnd time.Time, bTZ *time.Location) bool {
+	if aTZ != nil {
+		aStart = aStart.In(aTZ).In(time.UTC)
+		aEnd = aEnd.In(aTZ).In(time.UTC)
+	}
+	if bTZ != nil {
+		bStart = bStart.In(bTZ).In(time.UTC)
+		bEnd = bEnd.In(bTZ).In(time.UTC)
+	}
+
+	isOnlyTime := aStart.Year() == 1 && bStart.Year() == 1
+
+	if isOnlyTime {
+		aStartDur := OnlyTime(aStart)
+		aEndDur := OnlyTime(aEnd)
+		bStartDur := OnlyTime(bStart)
+		bEndDur := OnlyTime(bEnd)
+
+		// Normalize overnight shifts
+		normalize := func(start, end time.Duration) (time.Duration, time.Duration) {
+			if end <= start {
+				end += 24 * time.Hour
+			}
+			return start, end
+		}
+
+		aStartDur, aEndDur = normalize(aStartDur, aEndDur)
+		bStartDur, bEndDur = normalize(bStartDur, bEndDur)
+
+		return bStartDur >= aStartDur && bEndDur <= aEndDur
+	}
+
+	// Full date-time containment (inclusive)
+	return !bStart.Before(aStart) && !bEnd.After(aEnd)
+}
+
 
 // ParseTimeHHMMWithDateBase parses a "HH:MM" string using the given timezone location
 // and returns a time.Time with date 0001-01-01.

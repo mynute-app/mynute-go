@@ -162,6 +162,9 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	branchID := c.Params("id")
 
 	for i, bwr := range input.WorkRanges {
+		if bwr.TimeZone == "" {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing timezone for work range on weekday %d from %s to %s", bwr.Weekday, bwr.StartTime, bwr.EndTime))
+		}
 		loc, err := time.LoadLocation(bwr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone at index %d: %w", i, err))

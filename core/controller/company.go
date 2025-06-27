@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -39,19 +38,8 @@ func CreateCompany(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return err
 	}
-	if err := lib.ValidatorV10.Struct(body); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			BadReq := lib.Error.General.BadRequest
-			for _, fieldErr := range validationErrors {
-				// You can customize the message
-				BadReq = BadReq.WithError(
-					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-				)
-			}
-			return BadReq
-		} else {
-			return lib.Error.General.InternalError.WithError(err)
-		}
+	if err := lib.MyCustomStructValidator(body); err != nil {
+		return err
 	}
 
 	var company model.Company

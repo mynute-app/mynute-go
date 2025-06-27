@@ -277,6 +277,9 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 	var EmployeeWorkSchedule model.EmployeeWorkSchedule
 
 	for _, ewr := range input.WorkRanges {
+		if ewr.TimeZone == "" {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing timezone for work range on weekday %d from %s to %s", ewr.Weekday, ewr.StartTime, ewr.EndTime))
+		}
 		loc, err := time.LoadLocation(ewr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))

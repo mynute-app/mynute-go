@@ -223,7 +223,7 @@ func (s *TimeSlotsStrategy) determineOutputLocation(params *ScheduleQueryParams)
 		// Your model.Branch has TimeZone as time.Location, not *time.Location
 		// Ensure it's properly initialized. If it can be zero, handle that.
 		if branch.TimeZone != "" && branch.TimeZone != "UTC" { // A bit of a hack to check if it's "set"
-			loc, err := time.LoadLocation(branch.TimeZone)
+			loc, err := branch.GetTimeZone() // Assuming GetTimeZone returns *time.Location
 			if err != nil {
 				return nil, params.toLibError(fmt.Errorf("invalid branch timezone %s: %w", branch.TimeZone, err))
 			}

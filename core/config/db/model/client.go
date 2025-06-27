@@ -3,10 +3,8 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
-	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -40,19 +38,8 @@ func (Client) TableName() string  { return "public.clients" }
 func (Client) SchemaType() string { return "public" }
 
 func (c *Client) BeforeCreate(tx *gorm.DB) (err error) {
-	if err := lib.ValidatorV10.Struct(c); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			BadReq := lib.Error.General.BadRequest
-			for _, fieldErr := range validationErrors {
-				// You can customize the message
-				BadReq = BadReq.WithError(
-					fmt.Errorf("field '%s' failed on the '%s' rule", fieldErr.Field(), fieldErr.Tag()),
-				)
-			}
-			return BadReq
-		} else {
-			return lib.Error.General.InternalError.WithError(err)
-		}
+	if err := lib.MyCustomStructValidator(c); err != nil {
+		return err
 	}
 	if err := c.HashPassword(); err != nil {
 		return err

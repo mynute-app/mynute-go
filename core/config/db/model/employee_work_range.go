@@ -225,7 +225,7 @@ func (ewr *EmployeeWorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool 
 func (ewr *EmployeeWorkRange) GetTimeZone() (*time.Location, error) {
 	loc, err := time.LoadLocation(ewr.TimeZone)
 	if err != nil {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone %s: %w", ewr.TimeZone, err))
+		return nil, fmt.Errorf("employee work range (%s) has invalid timezone %s: %w", ewr.ID, ewr.TimeZone, err)
 	}
 	return loc, nil
 }
