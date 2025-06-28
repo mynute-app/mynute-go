@@ -216,7 +216,7 @@ func (s *TimeSlotsStrategy) determineOutputLocation(params *ScheduleQueryParams)
 		var branch model.Branch
 		if err := s.tx.First(&branch, *params.BranchID).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return nil, params.toLibError(fmt.Errorf("branch with ID %s not found for determining timezone", *params.BranchID))
+				return nil, params.toLibError(fmt.Errorf("branch with ID %s not found for determining time_zone", *params.BranchID))
 			}
 			return nil, lib.Error.General.DatabaseError.WithError(err)
 		}
@@ -225,7 +225,7 @@ func (s *TimeSlotsStrategy) determineOutputLocation(params *ScheduleQueryParams)
 		if branch.TimeZone != "" && branch.TimeZone != "UTC" { // A bit of a hack to check if it's "set"
 			loc, err := branch.GetTimeZone() // Assuming GetTimeZone returns *time.Location
 			if err != nil {
-				return nil, params.toLibError(fmt.Errorf("invalid branch timezone %s: %w", branch.TimeZone, err))
+				return nil, params.toLibError(fmt.Errorf("invalid branch time_zone %s: %w", branch.TimeZone, err))
 			}
 			return loc, nil
 		}
@@ -303,7 +303,7 @@ func (s *TimeSlotsStrategy) Fetch(params *ScheduleQueryParams) (any, error) {
 		// The following time condition needs to reliably compare against appointments
 		// which might be stored in their local timezones.
 		// Option A: Convert queryStartDate/EndDate to a range that covers all timezones, then filter in Go (less efficient).
-		// Option B: If DB supports timezone conversion on the fly: WHERE appt.start_time AT TIME ZONE 'UTC' >= queryStartDateUTC
+		// Option B: If DB supports time_zone conversion on the fly: WHERE appt.start_time AT TIME ZONE 'UTC' >= queryStartDateUTC
 		// Option C (Simpler, assuming StartTime field can be compared across timezones by DB, might not be fully accurate without AT TIME ZONE):
 		Where("start_time >= ?", queryStartDate).               // queryStartDate is UTC midnight
 		Where("start_time < ?", queryEndDate.AddDate(0, 0, 1)). // queryEndDate is UTC midnight of next day

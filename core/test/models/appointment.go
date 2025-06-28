@@ -38,7 +38,7 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 	if a.Created != nil {
 		return fmt.Errorf("appointment already created, cannot create again")
 	}
-	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
+	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
 	appointmentSlot, found, err := a.FindValidAppointmentSlot(e, preferredLocation)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 	if err != nil {
 		return err
 	}
-	preferredLocation := time.UTC // Choose your timezone (e.g., UTC)
+	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
 	appointmentSlot, found, err := a.FindValidAppointmentSlot(a.Employee, preferredLocation)
 	if err != nil {
 		return fmt.Errorf("failed to find valid appointment slot: %w", err)
@@ -303,7 +303,7 @@ const (
 
 func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLocation *time.Location) (*FoundAppointmentSlot, bool, error) {
 	if preferredLocation == nil {
-		return nil, false, fmt.Errorf("preferredLocation is nil; timezone must be explicitly passed")
+		return nil, false, fmt.Errorf("preferredLocation is nil; time_zone must be explicitly passed")
 	}
 
 	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())

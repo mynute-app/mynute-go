@@ -102,6 +102,7 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 	return WorkRanges
 }
 
+// ValidateEmployeeWorkRangeTime checks if the employee work range overlaps with existing work ranges for the employee.
 func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	var emp_work_schedule []EmployeeWorkRange
 	if err := tx.Find(&emp_work_schedule, "employee_id = ? AND weekday = ?", e.ID, ewr.Weekday).Error; err != nil {

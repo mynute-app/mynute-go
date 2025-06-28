@@ -21,12 +21,12 @@ type AppointmentBase struct {
 	PaymentID             *uuid.UUID `gorm:"type:uuid;uniqueIndex" json:"payment_id"`
 	CompanyID             uuid.UUID  `gorm:"type:uuid;not null;index" json:"company_id"`
 	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
-	StartTime             time.Time  `json:"start_time" gorm:"type:time;not null"`
-	EndTime               time.Time  `json:"end_time" gorm:"type:time;not null"`
-	TimeZone              string     `json:"timezone" gorm:"type:varchar(100);not null" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	ActualStartTime       time.Time  `json:"actual_start_time"`
-	ActualEndTime         time.Time  `json:"actual_end_time"`
-	CancelTime            time.Time  `json:"cancel_time"`
+	StartTime             time.Time  `gorm:"type:time;not null" json:"start_time"`
+	EndTime               time.Time  `gorm:"type:time;not null" json:"end_time"`
+	TimeZone              string     `gorm:"type:varchar(100);not null" json:"time_zone"  validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	ActualStartTime       time.Time  `gorm:"type:time;not null" json:"actual_start_time"`
+	ActualEndTime         time.Time  `gorm:"type:time;not null" json:"actual_end_time"`
+	CancelTime            time.Time  `gorm:"type:time;not null" json:"cancel_time"`
 	IsFulfilled           bool       `gorm:"default:false" json:"is_fulfilled"`
 	IsCancelled           bool       `gorm:"default:false" json:"is_cancelled"`
 	IsCancelledByClient   bool       `gorm:"default:false" json:"is_cancelled_by_client"`

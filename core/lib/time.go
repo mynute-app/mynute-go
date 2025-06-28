@@ -16,12 +16,12 @@ type TimeRangeResult struct {
 
 func GetTimeZone(tz string) (*time.Location, error) {
 	if tz == "" {
-		return nil, fmt.Errorf("timezone cannot be empty")
+		return nil, fmt.Errorf("time_zone cannot be empty")
 	}
 
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		return nil, fmt.Errorf("invalid timezone '%s': %w", tz, err)
+		return nil, fmt.Errorf("invalid time_zone '%s': %w", tz, err)
 	}
 
 	return loc, nil
@@ -39,17 +39,17 @@ func LocalTime2UTC(tz string, localTime time.Time) (time.Time, error) {
 	}
 
 	if tz == "" {
-		return time.Time{}, fmt.Errorf("timezone cannot be empty")
+		return time.Time{}, fmt.Errorf("time_zone cannot be empty")
 	}
 
-	// Ignore if already in UTC, as this function assumes localTime is in the specified timezone.
+	// Ignore if already in UTC, as this function assumes localTime is in the specified time_zone.
 	if localTime.Location() == time.UTC {
 		return localTime, nil
 	}
 
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid timezone '%s': %w", tz, err)
+		return time.Time{}, fmt.Errorf("invalid time_zone '%s': %w", tz, err)
 	}
 
 	// ========================================================================
@@ -59,7 +59,7 @@ func LocalTime2UTC(tz string, localTime time.Time) (time.Time, error) {
 
 	// 1. Use a MODERN base date to build a clean local timestamp.
 	//    This defensively uses ONLY the Hour and Minute from the input `localTime`,
-	//    cleaning any unwanted seconds. It also ensures the correct modern timezone
+	//    cleaning any unwanted seconds. It also ensures the correct modern time_zone
 	//    offset is used, avoiding historical LMT issues.
 	modernTimestampInLocal := time.Date(2000, 1, 1,
 		localTime.Hour(), localTime.Minute(), 0, 0, // Explicitly set seconds and nanoseconds to 0
@@ -82,7 +82,7 @@ func LocalTime2UTC(tz string, localTime time.Time) (time.Time, error) {
 
 // DUtc2LocalTime takes a time-of-day (represented by a time.Time object) and
 // correctly converts it to the local wall-clock time
-// in the specified timezone on the conceptual "zero date" (0001-01-01) while
+// in the specified time_zone on the conceptual "zero date" (0001-01-01) while
 // avoiding the LTM (Local Mean Time) issues that can occur with historical timezones
 // which is the case for (0001-01-01) date.
 func Utc2LocalTime(tz string, utcTime time.Time) (time.Time, error) {
@@ -90,7 +90,7 @@ func Utc2LocalTime(tz string, utcTime time.Time) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("time must have zero seconds and nanoseconds, got %d seconds and %d nanoseconds", utcTime.Second(), utcTime.Nanosecond())
 	}
 	if tz == "" {
-		return time.Time{}, fmt.Errorf("timezone cannot be empty")
+		return time.Time{}, fmt.Errorf("time_zone cannot be empty")
 	}
 	// Ignore if not in UTC, as this function assumes utcTime is in UTC.
 	if utcTime.Location() != time.UTC {
@@ -99,7 +99,7 @@ func Utc2LocalTime(tz string, utcTime time.Time) (time.Time, error) {
 
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid timezone '%s': %w", tz, err)
+		return time.Time{}, fmt.Errorf("invalid time_zone '%s': %w", tz, err)
 	}
 
 	// ========================================================================
@@ -113,8 +113,8 @@ func Utc2LocalTime(tz string, utcTime time.Time) (time.Time, error) {
 	//    database driver might have attached.
 	utcInstant := utcTime.In(time.UTC)
 
-	// 2. Use a MODERN base date (e.g., year 2000) to perform the timezone conversion.
-	//    This is CRITICAL to get the correct, modern timezone offset.
+	// 2. Use a MODERN base date (e.g., year 2000) to perform the time_zone conversion.
+	//    This is CRITICAL to get the correct, modern time_zone offset.
 	//    WHY: Before standardized timezones (circa 1914 in Brazil), cities used their
 	//    own Local Mean Time (LMT) based on longitude. Go's time library is
 	//    historically accurate. If we ask it to convert a time in the year 1 for
@@ -257,10 +257,13 @@ func TimeRangeFullyContained(aStart, aEnd time.Time, aTZ *time.Location, bStart,
 	return !bStart.Before(aStart) && !bEnd.After(aEnd)
 }
 
-
-// ParseTimeHHMMWithDateBase parses a "HH:MM" string using the given timezone location
+// Parse_HHMM_To_Time parses a "HH:MM" string using the given time_zone location
 // and returns a time.Time with date 0001-01-01.
-func ParseTimeHHMMWithDateBase(input string, loc *time.Location) (time.Time, error) {
+func Parse_HHMM_To_Time(input string, tz string) (time.Time, error) {
+	loc, err := GetTimeZone(tz)
+	if err != nil {
+		return time.Time{}, err
+	}
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
 		return time.Time{}, fmt.Errorf("invalid time format: %s", input)

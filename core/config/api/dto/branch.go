@@ -16,7 +16,7 @@ type CreateBranch struct {
 	City         string    `json:"city" example:"New York"`
 	State        string    `json:"state" example:"NY"`
 	Country      string    `json:"country" example:"USA"`
-	TimeZone     string    `json:"timezone" example:"America/New_York"` // Time zone in IANA format
+	TimeZone     string    `json:"time_zone" example:"America/New_York"` // Time zone in IANA format
 }
 
 // @description	Branch Update DTO

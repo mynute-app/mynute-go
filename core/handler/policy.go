@@ -796,7 +796,7 @@ func toTime(val any) (time.Time, error) {
 		for _, format := range formats {
 			t, err := time.Parse(format, v)
 			if err == nil {
-				// If parsed without timezone, assume UTC
+				// If parsed without time_zone, assume UTC
 				if t.Location() == time.UTC || t.Location() == nil {
 					return t.UTC(), nil
 				}

@@ -162,18 +162,11 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	branchID := c.Params("id")
 
 	for i, bwr := range input.WorkRanges {
-		if bwr.TimeZone == "" {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing timezone for work range on weekday %d from %s to %s", bwr.Weekday, bwr.StartTime, bwr.EndTime))
-		}
-		loc, err := time.LoadLocation(bwr.TimeZone)
-		if err != nil {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone at index %d: %w", i, err))
-		}
-		start, err := lib.ParseTimeHHMMWithDateBase(bwr.StartTime, loc)
+		start, err := lib.Parse_HHMM_To_Time(bwr.StartTime, bwr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time at index %d: %w", i, err))
 		}
-		end, err := lib.ParseTimeHHMMWithDateBase(bwr.EndTime, loc)
+		end, err := lib.Parse_HHMM_To_Time(bwr.EndTime, bwr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_time at index %d: %w", i, err))
 		}
@@ -184,12 +177,14 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		}
 
 		schedule = append(schedule, model.BranchWorkRange{
-			Weekday:   time.Weekday(bwr.Weekday),
-			StartTime: start,
-			EndTime:   end,
-			TimeZone:  bwr.TimeZone,
-			BranchID:  uuid.MustParse(branchID),
-			Services:  services,
+			WorkRangeBase: model.WorkRangeBase{
+				Weekday:   time.Weekday(bwr.Weekday),
+				StartTime: start,
+				EndTime:   end,
+				TimeZone:  bwr.TimeZone,
+				BranchID:  uuid.MustParse(branchID),
+				Services:  services,
+			},
 		})
 	}
 
@@ -200,7 +195,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	}
 
 	for _, wr := range schedule {
-		if err := tx.Omit("Branch").Create(&wr).Error; err != nil {
+		if err := tx.Create(&wr).Error; err != nil {
 			tx.Rollback()
 			return lib.Error.General.CreatedError.WithError(err)
 		}
@@ -284,16 +279,11 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-
-	loc, err := time.LoadLocation(input.TimeZone)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %w", err))
-	}
-	start, err := lib.ParseTimeHHMMWithDateBase(input.StartTime, loc)
+	start, err := lib.Parse_HHMM_To_Time(input.StartTime, input.TimeZone)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time: %w", err))
 	}
-	end, err := lib.ParseTimeHHMMWithDateBase(input.EndTime, loc)
+	end, err := lib.Parse_HHMM_To_Time(input.EndTime, input.TimeZone)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time: %w", err))
 	}

@@ -37,7 +37,7 @@ func Connect() *Database {
 	app_env := os.Getenv("APP_ENV")
 	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")
 	sslmode := "disable" // You can modify this based on your setup
-	timeZone := "UTC"    // Default timezone
+	timeZone := "UTC"    // Default time_zone
 	LogLevel := logger.Warn
 
 	if app_env == "test" {

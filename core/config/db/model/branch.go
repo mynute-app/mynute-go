@@ -17,7 +17,7 @@ import (
 type Branch struct {
 	BaseModel
 	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `gorm:"type:varchar(100)" json:"timezone" validate:"required"`           // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"` // Branch name
 	Street             string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"street"`
 	Number             string             `gorm:"type:varchar(100)" validate:"required,min=1,max=10" json:"number"`
@@ -62,7 +62,7 @@ func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 func (b *Branch) GetTimeZone() (*time.Location, error) {
 	loc, err := time.LoadLocation(b.TimeZone)
 	if err != nil {
-		return nil, fmt.Errorf("branch (%s) has invalid timezone %s: %w", b.ID, b.TimeZone, err)
+		return nil, fmt.Errorf("branch (%s) has invalid time_zone %s: %w", b.ID, b.TimeZone, err)
 	}
 	return loc, nil
 }
@@ -147,6 +147,7 @@ func (b *Branch) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
 	return count > 0
 }
 
+// ValidateEmployeeWorkRangeTime checks if the employee work range is within the branch's operating hours for the specified weekday.
 func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	if ewr.BranchID != b.ID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range branch ID %s does not match branch ID %s", ewr.BranchID, b.ID))
@@ -190,6 +191,7 @@ func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRan
 	return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range (from %s to %s) is not within any defined branch operating hours for weekday %d", localStartTime.Format("15:04"), localEndTime.Format("15:04"), ewr.Weekday))
 }
 
+// ValidateBranchWorkRangeTime checks if the new work range overlaps with existing ones for the branch.
 func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRange) error {
 	var existing []BranchWorkRange
 
@@ -216,3 +218,5 @@ func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRa
 
 	return nil
 }
+
+
