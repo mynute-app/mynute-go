@@ -17,11 +17,10 @@ type WorkRangeBase struct {
 	TimeZone  string       `json:"time_zone" gorm:"type:varchar(100);not null" validate:"required"`
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
-	Services  []*Service   `json:"services" gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (wr *WorkRangeBase) BeforeCreate(tx *gorm.DB) error {
-	if err := lib.MyCustomStructValidator(tx.Statement.Model); err != nil {
+	if err := lib.MyCustomStructValidator(wr); err != nil {
 		return err
 	}
 	if err := wr.ValidateTime(); err != nil {
@@ -99,8 +98,6 @@ func (wr *WorkRangeBase) GetTimeZone() (*time.Location, error) {
 }
 
 // LocalTime2UTC converts the start and end times of the WorkRange from local time to UTC.
-// The use of this function must be extremely careful, it is not recomended to use it before any other function.
-// It is only recommended to use it as the last step of the BeforeCreate and BeforeUpdate hooks.
 // DO NOT EVER USE before the ConvertToBranchTimeZone function.
 func (wr *WorkRangeBase) LocalTime2UTC() error {
 	var err error
@@ -149,7 +146,7 @@ func (wr *WorkRangeBase) Overlaps(other *WorkRangeBase) (bool, error) {
 func (wr *WorkRangeBase) ConvertToBranchTimeZone(tx *gorm.DB) error {
 	var bTZ_str string
 	if err := tx.
-		Table("Branches").
+		Model(&Branch{}).
 		Where("id = ?", wr.BranchID.String()).
 		Select("time_zone").
 		Row().Scan(&bTZ_str); err != nil {

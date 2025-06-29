@@ -183,8 +183,8 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 				EndTime:   end,
 				TimeZone:  bwr.TimeZone,
 				BranchID:  uuid.MustParse(branchID),
-				Services:  services,
 			},
+			Services: services,
 		})
 	}
 
@@ -266,13 +266,13 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return err
 	}
 
-	var wr model.BranchWorkRange
-	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+	var work_range model.BranchWorkRange
+	if err := tx.First(&work_range, "id = ?", workRangeID).Error; err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 
-	if wr.BranchID.String() != branchID {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
+	if work_range.BranchID.String() != branchID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range branch ID does not match with branch ID from path"))
 	}
 
 	var input DTO.UpdateWorkRange
@@ -288,13 +288,16 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time: %w", err))
 	}
 
-	wr.Weekday = time.Weekday(input.Weekday)
-	wr.StartTime = start
-	wr.EndTime = end
-	wr.TimeZone = input.TimeZone
+	work_range.Weekday = time.Weekday(input.Weekday)
+	work_range.StartTime = start
+	work_range.EndTime = end
+	work_range.TimeZone = input.TimeZone
 
-	if err := UpdateOneById(c, &wr); err != nil {
-		return err
+	if err := tx.Save(&work_range).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range (%s) not found", work_range.ID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var branch model.Branch

@@ -27,8 +27,9 @@ type EmployeeWorkSchedule struct {
 
 type EmployeeWorkRange struct {
 	WorkRangeBase
-	EmployeeID uuid.UUID    `gorm:"type:uuid;not null;index:idx_employee_id" validate:"required" json:"employee_id"`
-	Employee   Employee     `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"employee"`
+	EmployeeID uuid.UUID  `gorm:"type:uuid;not null;index:idx_employee_id" validate:"required" json:"employee_id"`
+	Employee   Employee   `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"employee" validate:"-"`
+	Services   []*Service `json:"services" gorm:"many2many:employee_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }
 
 const WorksRangeTableName = "employee_work_ranges"
@@ -56,52 +57,27 @@ func (ewr *EmployeeWorkRange) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 
-	var branch *Branch
-	if err := tx.First(&branch, "id = ?", ewr.BranchID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s not found", ewr.BranchID))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
+	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
+
+	if err := branch.HasEmployee(tx, employee); err != nil {
+		return err
 	}
 
-	if !branch.HasEmployee(tx, ewr.EmployeeID) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not belong to branch %s", ewr.EmployeeID, ewr.BranchID))
+	if err := employee.HasBranch(tx, ewr.BranchID); err != nil {
+		return err
+	}
+
+	if err := branch.HasServices(tx, ewr.Services); err != nil {
+		return err
+	}
+
+	if err := employee.HasServices(tx, ewr.Services); err != nil {
+		return err
 	}
 
 	if err := branch.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
-	}
-
-	if len(ewr.Services) > 0 {
-		for _, service := range ewr.Services {
-			if service == nil {
-				return lib.Error.General.BadRequest.WithError(fmt.Errorf("service cannot be nil"))
-			}
-			if !branch.HasService(tx, service.ID) {
-				return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s does not have service %s", ewr.BranchID, service.ID))
-			}
-		}
-	}
-
-	var employee *Employee
-	if err := tx.First(&employee, "id = ?", ewr.EmployeeID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee with ID %s not found", ewr.EmployeeID))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if !employee.HasBranch(tx, ewr.BranchID) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not belong to branch %s", ewr.EmployeeID, ewr.BranchID))
-	}
-
-	for _, service := range ewr.Services {
-		if service == nil {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("service cannot be nil"))
-		}
-		if !employee.HasService(tx, service.ID) {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", ewr.EmployeeID, service.ID))
-		}
 	}
 
 	if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
@@ -118,42 +94,32 @@ func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 
 	if tx.Statement.Changed("EmployeeID") {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID cannot be changed after creation"))
+	} else if tx.Statement.Changed("BranchID") {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID cannot be changed after creation"))
 	}
 
-	var employee *Employee
-	if err := tx.First(&employee, "id = ?", ewr.EmployeeID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee with ID %s not found", ewr.EmployeeID))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
+	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
+	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
 
-	var branch *Branch
-	if err := tx.First(&branch, "id = ?", ewr.BranchID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s not found", ewr.BranchID))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
+		return err
 	}
-
-	if tx.Statement.Changed("Weekday") || tx.Statement.Changed("StartTime") || tx.Statement.Changed("EndTime") || tx.Statement.Changed("TimeZone") {
-		if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
-			return err
-		}
-		if err := branch.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
-			return err
-		}
+	if err := branch.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (ewr *EmployeeWorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
+func (ewr *EmployeeWorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) error {
 	var count int64
 	if err := tx.Raw("SELECT COUNT(*) FROM work_schedule_services WHERE work_range_id = ? AND service_id = ?", ewr.ID, serviceID).Scan(&count).Error; err != nil {
-		return false // Error occurred, assume service does not exist
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	return count > 0
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range %s does not have service %s", ewr.ID, serviceID))
+	}
+	return nil
 }
 
 func (ewr *EmployeeWorkRange) GetTimeZone() (*time.Location, error) {
@@ -185,25 +151,19 @@ func (ewr *EmployeeWorkRange) AddServices(tx *gorm.DB, services ...*Service) err
 	if ewr.Services == nil {
 		ewr.Services = make([]*Service, 0)
 	}
-	var employee *Employee
-	if err := tx.Find(&employee, "id = ?", ewr.EmployeeID).Error; err != nil {
-		return fmt.Errorf("error finding employee with ID %s: %w", ewr.EmployeeID, err)
-	}
-	if !employee.HasBranch(tx, ewr.BranchID) {
-		return fmt.Errorf("employee %s does not belong to branch %s", employee.ID, ewr.BranchID)
-	}
-	var branch *Branch
-	if err := tx.Find(&branch, "id = ?", ewr.BranchID).Error; err != nil {
-		return fmt.Errorf("error finding branch with ID %s: %w", ewr.BranchID, err)
+	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
+	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
+	if err := employee.HasBranch(tx, ewr.BranchID); err != nil {
+		return err
 	}
 	for _, service := range services {
-		if service != nil && !ewr.HasService(tx, service.ID) {
+		if err := ewr.HasService(tx, service.ID); err != nil {
 			// Check if the employee has the service
-			if !employee.HasService(tx, service.ID) {
-				return fmt.Errorf("employee %s does not have service %s", employee.ID, service.ID)
+			if err := employee.HasService(tx, service); err != nil {
+				return err
 			}
-			if !branch.HasService(tx, service.ID) {
-				return fmt.Errorf("branch %s does not have service %s", branch.ID, service.ID)
+			if err := branch.HasService(tx, service); err != nil {
+				return err
 			}
 			if err := tx.Model(ewr).Association("Services").Append(service); err != nil {
 				return fmt.Errorf("error adding service %s to work range: %w", service.ID, err)

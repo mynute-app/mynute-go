@@ -1,13 +1,13 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
 	"gorm.io/gorm"
 )
 
 type BranchWorkRange struct {
 	WorkRangeBase
+	Services []*Service `gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"services" validate:"-"`
 }
 
 const BranchWorkRangeTableName = "branch_work_ranges"
@@ -37,20 +37,4 @@ func (bwr *BranchWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	}
 
 	return nil
-}
-
-func (bwr *BranchWorkRange) Overlaps(other *BranchWorkRange) (bool, error) {
-	if bwr.Weekday != other.Weekday || bwr.BranchID != other.BranchID {
-		return false, nil
-	}
-	loc, err := bwr.GetTimeZone()
-	if err != nil {
-		return false, err
-	}
-	loc2, err := other.GetTimeZone()
-	if err != nil {
-		return false, err
-	}
-
-	return lib.TimeRangeOverlaps(bwr.StartTime, bwr.EndTime, loc, other.StartTime, other.EndTime, loc2), nil
 }

@@ -466,15 +466,6 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				TimeZone:   "America/Sao_Paulo",
 				Services:   servicesID,
 			},
-			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    6,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
-			},
 		},
 	}
 }

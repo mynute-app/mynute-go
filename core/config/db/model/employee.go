@@ -185,8 +185,8 @@ func (e *Employee) AddServicesToWorkRange(tx *gorm.DB, wr_id string, services []
 	}
 
 	for _, service := range services {
-		if !branch.HasService(tx, service.ID) {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s does not offer service %s", branch.ID, service.ID))
+		if err := branch.HasService(tx, &service); err != nil {
+			return err
 		}
 		if err := tx.Exec("INSERT INTO work_schedule_services (work_range_id, service_id) VALUES (?, ?)", wr.ID, service.ID).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
@@ -212,12 +212,27 @@ func (e *Employee) RemoveServiceFromWorkRange(tx *gorm.DB, wr_id string, service
 	return nil
 }
 
-func (e *Employee) HasService(tx *gorm.DB, serviceID uuid.UUID) bool {
-	var count int64
-	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", e.ID, serviceID).Scan(&count).Error; err != nil {
-		return false // Error occurred, assume service does not exist
+func (e *Employee) HasServices(tx *gorm.DB, services []*Service) error {
+	for _, service := range services {
+		if err := e.HasService(tx, service); err != nil {
+			return err
+		}
 	}
-	return count > 0
+	return nil
+}
+
+func (e *Employee) HasService(tx *gorm.DB, service *Service) error {
+	if service == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("service passed is nil when validating employee (%s) services", e.ID))
+	}
+	var count int64
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", e.ID, service.ID).Scan(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", e.ID, service.ID))
+	}
+	return nil
 }
 
 func (e *Employee) AddService(tx *gorm.DB, service *Service) error {
@@ -228,6 +243,14 @@ func (e *Employee) AddService(tx *gorm.DB, service *Service) error {
 	eID := e.ID.String()
 	sID := service.ID.String()
 
+	// Check if the employee already has the service
+	var count int64
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", eID, sID).Scan(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to check if employee %s has service %s: %w", eID, sID, err))
+	}
+	if count > 0 {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee %s already has service %s", eID, sID))
+	}
 	if err := tx.Exec("INSERT INTO employee_services (employee_id, service_id) VALUES (?, ?)", eID, sID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -248,6 +271,14 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 	eID := e.ID.String()
 	sID := service.ID.String()
 
+	// Check if the employee has the service
+	var count int64
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", eID, sID).Scan(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to check if employee %s has service %s: %w", eID, sID, err))
+	}
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", eID, sID))
+	}
 	if err := tx.Exec("DELETE FROM employee_services WHERE employee_id = ? AND service_id = ?", eID, sID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -260,13 +291,16 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 	return nil
 }
 
-func (e *Employee) HasBranch(tx *gorm.DB, branchID uuid.UUID) bool {
+func (e *Employee) HasBranch(tx *gorm.DB, branchID uuid.UUID) error {
 	var count int64
 	// Check if the employee exists in the branch
 	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", e.ID, branchID).Scan(&count).Error; err != nil {
-		return false // Error occurred, assume employee does not exist in the branch
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	return count > 0
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s not found in branch %s", e.ID, branchID))
+	}
+	return nil
 }
 
 func (e *Employee) AddBranch(tx *gorm.DB, branch *Branch) error {
@@ -277,6 +311,14 @@ func (e *Employee) AddBranch(tx *gorm.DB, branch *Branch) error {
 	eID := e.ID.String()
 	bID := branch.ID.String()
 
+	// Check if the employee already exists in the branch
+	var count int64
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", eID, bID).Scan(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to check if employee %s is already in branch %s: %w", eID, bID, err))
+	}
+	if count > 0 {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee %s already exists in branch %s", eID, bID))
+	}
 	if err := tx.Exec("INSERT INTO employee_branches (employee_id, branch_id) VALUES (?, ?)", eID, bID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -297,6 +339,14 @@ func (e *Employee) RemoveBranch(tx *gorm.DB, branch *Branch) error {
 	eID := e.ID.String()
 	bID := branch.ID.String()
 
+	// Check if the employee exists in the branch
+	var count int64
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", eID, bID).Scan(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to check if employee %s is in branch %s: %w", eID, bID, err))
+	}
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s is not in branch %s", eID, bID))
+	}
 	if err := tx.Exec("DELETE FROM employee_branches WHERE employee_id = ? AND branch_id = ?", eID, bID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}

@@ -298,9 +298,9 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 				EndTime:   end,
 				TimeZone:  ewr.TimeZone,
 				BranchID:  ewr.BranchID,
-				Services:  services,
 			},
 			EmployeeID: ewr.EmployeeID,
+			Services:   services,
 		})
 	}
 
@@ -459,8 +459,11 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 	work_range.EndTime = end
 	work_range.TimeZone = input.TimeZone
 
-	if err := UpdateOneById(c, &work_range); err != nil {
-		return err
+	if err := tx.Save(&work_range).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range (%s) not found", work_range.ID))
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var employee model.Employee
