@@ -112,7 +112,7 @@ func Connect() *Database {
 // Seed the database with initial data
 func (db *Database) InitialSeed() {
 	tx, end, err := Transaction(db.Gorm)
-	defer end()
+	defer end(nil)
 	if err != nil {
 		panic(err)
 	}
@@ -353,9 +353,12 @@ func Defer(tx *gorm.DB) {
  * @param tx *gorm.DB - The transaction session
 */
 // @return func() - The function to be defered
-func DeferCallback(tx *gorm.DB) func() {
-	return func() {
+func DeferCallback(tx *gorm.DB) func(error) {
+	return func(err error) {
 		Defer(tx)
+		if err != nil {
+			Rollback(tx)(err)
+		}
 	}
 }
 
@@ -373,7 +376,7 @@ func Rollback(tx *gorm.DB) func(err error) error {
 	}
 }
 
-func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
+func Transaction(db *gorm.DB) (*gorm.DB, func(error), error) {
 	tx := db.Begin()
 	if tx.Error != nil {
 		return nil, nil, lib.Error.General.DatabaseError.WithError(tx.Error)
@@ -399,7 +402,7 @@ func Transaction(db *gorm.DB) (*gorm.DB, func(), error) {
 //		return rollback(err)
 //	}
 //	// Then use the transaction session (tx) for your database operations
-func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(), error) {
+func ContextTransaction(c *fiber.Ctx) (*gorm.DB, func(error), error) {
 	session, err := lib.Session(c)
 	if err != nil {
 		return nil, nil, err

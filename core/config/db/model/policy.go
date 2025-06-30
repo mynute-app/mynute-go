@@ -909,6 +909,36 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		}),
 	}
 
+	var AllowUpdateBranchImages = &PolicyRule{
+		Name:        "SDP: CanUpdateBranchImages",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to update branch images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateBranchImages.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Update Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can update images in any branch
+				company_branch_manager_assigned_branch_check, // BM can update images in their own branch
+			},
+		}),
+	}
+
+	var AllowDeleteBranchImage = &PolicyRule{
+		Name:        "SDP: CanDeleteBranchImage",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to delete branch images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteBranchImage.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Delete Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can delete images in any branch
+				company_branch_manager_assigned_branch_check, // BM can delete images in their own branch
+			},
+		}),
+	}
+
 	// --- Client Policies ---
 
 	var AllowGetClientByEmail = &PolicyRule{
@@ -950,6 +980,22 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self
 	}
 
+	var AllowUpdateClientImages = &PolicyRule{
+		Name:        "SDP: CanUpdateClientImages",
+		Description: "Allows a client to update their own profile images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateClientImages.ID,
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can update self images (checks subject.id == resource.id)
+	}
+
+	var AllowDeleteClientImage = &PolicyRule{
+		Name:        "SDP: CanDeleteClientImage",
+		Description: "Allows a client to delete their own profile images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteClientImage.ID,
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self images (checks subject.id == resource.id)
+	}
+
 	// --- Company Policies ---
 
 	var AllowGetCompanyById = &PolicyRule{
@@ -974,6 +1020,30 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Effect:      "Allow",
 		EndPointID:  DeleteCompanyById.ID,
 		Conditions:  JsonRawMessage(company_owner_check), // Only Owner of this company
+	}
+
+	var AllowUpdateCompanyImages = &PolicyRule{
+		Name:        "SDP: CanUpdateCompanyImages",
+		Description: "Allows company Owner or General Manager to update company images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateCompanyImages.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+	}
+
+	var AllowDeleteCompanyImage = &PolicyRule{
+		Name:        "SDP: CanDeleteCompanyImage",
+		Description: "Allows company Owner or General Manager to delete company images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteCompanyImage.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
+	}
+
+	var AllowUpdateCompanyColors = &PolicyRule{
+		Name:        "SDP: CanUpdateCompanyColors",
+		Description: "Allows company Owner or General Manager to update company colors.",
+		Effect:      "Allow",
+		EndPointID:  UpdateCompanyColors.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
 	}
 
 	// --- Employee Policies ---
@@ -1072,30 +1142,6 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_manager_check), // Owner, GM, BM can delete
 	}
 
-	var AllowUpdateCompanyImages = &PolicyRule{
-		Name:        "SDP: CanUpdateCompanyImages",
-		Description: "Allows company Owner or General Manager to update company images.",
-		Effect:      "Allow",
-		EndPointID:  UpdateCompanyImages.ID,
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
-	}
-
-	var AllowDeleteCompanyImage = &PolicyRule{
-		Name:        "SDP: CanDeleteCompanyImage",
-		Description: "Allows company Owner or General Manager to delete company images.",
-		Effect:      "Allow",
-		EndPointID:  DeleteCompanyImage.ID,
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
-	}
-
-	var AllowUpdateCompanyColors = &PolicyRule{
-		Name:        "SDP: CanUpdateCompanyColors",
-		Description: "Allows company Owner or General Manager to update company colors.",
-		Effect:      "Allow",
-		EndPointID:  UpdateCompanyColors.ID,
-		Conditions:  JsonRawMessage(company_admin_check), // Only Owner or GM of this company
-	}
-
 	var AllowAddServiceToEmployee = &PolicyRule{
 		Name:        "SDP: CanAddServiceToEmployee",
 		Description: "Allows company managers (Owner, GM, BM) to assign services to employees.",
@@ -1126,6 +1172,22 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Effect:      "Allow",
 		EndPointID:  RemoveBranchFromEmployee.ID,
 		Conditions:  JsonRawMessage(company_admin_or_assigned_branch_manager_check),
+	}
+
+	var AllowUpdateEmployeeImages = &PolicyRule{
+		Name:        "SDP: CanUpdateEmployeeImages",
+		Description: "Allows company Owner, General Manager, or employee himself to update employee images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateEmployeeImages.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check),
+	}
+
+	var AllowDeleteEmployeeImage = &PolicyRule{
+		Name:        "SDP: CanDeleteEmployeeImage",
+		Description: "Allows company Owner, General Manager, or employee himself to delete employee images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteEmployeeImage.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can delete own images
 	}
 
 	// --- Holiday Policies ---
@@ -1240,6 +1302,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetEmployeeServicesByBranchId,
 		AllowAddServiceToBranch,
 		AllowRemoveServiceFromBranch,
+		AllowUpdateBranchImages,
+		AllowDeleteBranchImage,
 		AllowCreateBranchWorkSchedule,
 		AllowDeleteBranchWorkRangeById,
 		AllowUpdateBranchWorkRangeById,
@@ -1252,6 +1316,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowUpdateClientById,
 		AllowDeleteClientById,
 		AllowGetClientById,
+		AllowUpdateClientImages,
+		AllowDeleteClientImage,
 
 		// Company
 		AllowGetCompanyById,
@@ -1276,6 +1342,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowDeleteEmployeeWorkRange,
 		AllowAddEmployeeWorkRangeServices,
 		AllowDeleteEmployeeWorkRangeService,
+		AllowUpdateEmployeeImages,
+		AllowDeleteEmployeeImage,
 
 		// Holidays
 		AllowCreateHoliday,

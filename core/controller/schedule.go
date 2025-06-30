@@ -26,11 +26,12 @@ import (
 // @Failure 500 {object} lib.ErrorResponse "Internal Server Error"
 // @Router /schedule/options [get]
 func GetScheduleOptions(c *fiber.Ctx) error {
+	var err error
 	tx, def, err := database.ContextTransaction(c)
 	if err != nil {
 		return err
 	}
-	defer def()
+	defer def(err)
 
 	sf, err := ScheduleFilter.NewFromContext(tx, c)
 	if err != nil {

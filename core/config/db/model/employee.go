@@ -1,6 +1,7 @@
 package model
 
 import (
+	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
@@ -31,6 +32,7 @@ type Employee struct {
 	Branches             []*Branch           `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
 	Services             []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
 	Roles                []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+	Design               mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
 }
 
 func (Employee) TableName() string  { return "employees" }

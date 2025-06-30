@@ -2,6 +2,7 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	dJSON "agenda-kaki-go/core/config/api/dto/json"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
@@ -139,6 +140,131 @@ func DeleteBranchById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Branch{})
 }
 
+// UpdateBranchImages updates a branch's images
+//
+//	@Summary		Update branch images
+//	@Description	Update a branch's images
+//	@Tags			Branch
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
+//	@Accept			json
+//	@Produce		json
+//	@Param			images			body		DTO.UpdateBranchImages	true	"Branch Images"
+//	@Success		200				{object}	DTO.Branch
+//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Router			/branch/{id}/design/images [patch]
+func UpdateBranchImages(c *fiber.Ctx) error {
+	var err error
+
+	tx, end, err := database.ContextTransaction(c)
+	defer end(err)
+	if err != nil {
+		return err
+	}
+
+	image_type := c.Params("image_type")
+	img_types_allowed := map[string]bool{"picture": true}
+
+	allowed, ok := img_types_allowed[image_type]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+	if !allowed {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+
+	var branch model.Branch
+	id := c.Params("id")
+	if err := tx.First(&branch, "id = ?", id).Error; err != nil {
+		return lib.Error.Company.NotFound.WithError(err)
+	}
+
+	var uploaded_img_types = make([]string, 0)
+
+	defer func() {
+		r := recover()
+		if r != nil || err != nil {
+			for _, img_type := range uploaded_img_types {
+				_ = branch.Design.Images.Delete(img_type, branch.TableName(), branch.ID.String())
+			}
+		}
+	}()
+
+	for img_type := range img_types_allowed {
+		if c.FormValue(img_type) == "" {
+			continue
+		}
+		file, err := c.FormFile(img_type)
+		if err != nil {
+			continue
+		}
+		_, err = branch.Design.Images.Save(img_type, branch.TableName(), branch.ID.String(), file)
+		if err != nil {
+			return err
+		}
+		uploaded_img_types = append(uploaded_img_types, img_type)
+	}
+
+	if err = tx.Save(&branch).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &branch.Design.Images, &dJSON.Images{})
+}
+
+// DeleteBranchImage deletes a branch's image
+//
+//	@Summary		Delete branch image
+//	@Description	Delete a branch's image
+//	@Tags			Branch
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
+//	@Param			image_type		path		string	true	"Image Type"
+//	@Success		200				{object}	DTO.Branch
+//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Router			/branch/{id}/design/images/{image_type} [delete]
+func DeleteBranchImage(c *fiber.Ctx) error {
+	var err error
+	tx, end, err := database.ContextTransaction(c)
+	defer end(err)
+	if err != nil {
+		return err
+	}
+
+	image_type := c.Params("image_type")
+	img_types_allowed := map[string]bool{"picture": true}
+
+	allowed, ok := img_types_allowed[image_type]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+	if !allowed {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+
+	var branch model.Branch
+	id := c.Params("id")
+	if err := tx.First(&branch, "id = ?", id).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find branch (%s): %w", id, err))
+	}
+
+	if err := branch.Design.Images.Delete(image_type, branch.TableName(), id); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Save(&branch).Error; err != nil {
+		return err
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &branch.Design.Images, &dJSON.Images{})
+}
+
 // CreateBranchWorkSchedule creates a work schedule for a branch
 //
 //	@Summary		Create work schedule for a branch
@@ -153,13 +279,15 @@ func DeleteBranchById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/branch/{id}/work_schedule [post]
 func CreateBranchWorkSchedule(c *fiber.Ctx) error {
+	var err error
+
 	var input DTO.CreateBranchWorkSchedule
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var schedule []model.BranchWorkRange
-	branchID := c.Params("id")
+	branch_id := c.Params("id")
 
 	for i, bwr := range input.WorkRanges {
 		start, err := lib.Parse_HHMM_To_Time(bwr.StartTime, bwr.TimeZone)
@@ -182,31 +310,38 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 				StartTime: start,
 				EndTime:   end,
 				TimeZone:  bwr.TimeZone,
-				BranchID:  uuid.MustParse(branchID),
+				BranchID:  uuid.MustParse(branch_id),
 			},
 			Services: services,
 		})
 	}
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
 
 	for _, wr := range schedule {
 		if err := tx.Create(&wr).Error; err != nil {
-			tx.Rollback()
 			return lib.Error.General.CreatedError.WithError(err)
 		}
 	}
 
-	var branch model.Branch
-	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+	var bwr []*model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	var dto []*DTO.BranchWorkRange
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+	return nil
 }
 
 // GetBranchWorkRange
@@ -258,7 +393,7 @@ func GetBranchWorkRange(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id} [put]
 func UpdateBranchWorkRange(c *fiber.Ctx) error {
-	branchID := c.Params("id")
+	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
 	tx, err := lib.Session(c)
@@ -271,7 +406,7 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 
-	if work_range.BranchID.String() != branchID {
+	if work_range.BranchID.String() != branch_id {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range branch ID does not match with branch ID from path"))
 	}
 
@@ -300,12 +435,20 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var branch model.Branch
-	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+	var bwr []*model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	var dto []*DTO.BranchWorkRange
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+	return nil
 }
 
 // DeleteBranchWorkRange deletes a work range for a branch
@@ -322,11 +465,12 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id} [delete]
 func DeleteBranchWorkRange(c *fiber.Ctx) error {
-	branchID := c.Params("id")
+	var err error
+	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -336,7 +480,7 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 
-	if wr.BranchID.String() != branchID {
+	if wr.BranchID.String() != branch_id {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
 	}
 
@@ -344,12 +488,20 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var branch model.Branch
-	if err := tx.Preload(clause.Associations).First(&branch, "id = ?", branchID).Error; err != nil {
+	var bwr []*model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	var dto []*DTO.BranchWorkRange
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{})
+	return nil
 }
 
 // AddBranchWorkRangeServices adds services to a branch's work range
@@ -367,7 +519,8 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/services [post]
 func AddBranchWorkRangeServices(c *fiber.Ctx) error {
-	branchID := c.Params("id")
+	var err error
+	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
 	var serviceIDs []DTO.ServiceID
@@ -376,7 +529,7 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 	}
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -386,7 +539,7 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 
-	if wr.BranchID.String() != branchID {
+	if wr.BranchID.String() != branch_id {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
 	}
 
@@ -396,6 +549,19 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Model(&wr).Association("Services").Append(services); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var bwr []*model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	var dto []*DTO.BranchWorkRange
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -417,12 +583,13 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
-	branchID := c.Params("id")
+	var err error
+	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 	serviceID := c.Params("service_id")
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -432,12 +599,25 @@ func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 
-	if wr.BranchID.String() != branchID {
+	if wr.BranchID.String() != branch_id {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
 	}
 
 	serviceUUID := uuid.MustParse(serviceID)
 	if err := tx.Model(&wr).Association("Services").Delete(&model.Service{BaseModel: model.BaseModel{ID: serviceUUID}}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	var bwr []*model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	var dto []*DTO.BranchWorkRange
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -460,20 +640,19 @@ func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/employee/{employee_id}/services [get]
 func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
-	var employee model.Employee
-	branchID := c.Params("branch_id")
-	employeeID := c.Params("employee_id")
+	branch_id := c.Params("branch_id")
+	employee_id := c.Params("employee_id")
 
 	tx, err := lib.Session(c)
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Verifica se o employee existe
+	var employee model.Employee
+
 	if err := tx.
-		Preload("Services", "branch_id = ?", branchID).
-		Where("id = ?", employeeID).
-		First(&employee).Error; err != nil {
+		Preload("Services", "branch_id = ?", branch_id).
+		First(&employee, "id = ?", employee_id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Employee.NotFound
 		}
@@ -481,7 +660,7 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 	}
 
 	res := &lib.SendResponseStruct{Ctx: c}
-	if err := res.SendDTO(200, &employee.Services, &[]DTO.Service{}); err != nil {
+	if err := res.SendDTO(200, &employee.Services, &[]*DTO.Service{}); err != nil {
 		return err
 	}
 	return nil
@@ -503,6 +682,7 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [post]
 func AddServiceToBranch(c *fiber.Ctx) error {
+	var err error
 	var branch model.Branch
 	var service model.Service
 	branch_id := c.Params("branch_id")
@@ -513,7 +693,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -551,6 +731,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [delete]
 func RemoveServiceFromBranch(c *fiber.Ctx) error {
+	var err error
 	var branch model.Branch
 	var service model.Service
 	branch_id := c.Params("branch_id")
@@ -561,7 +742,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}

@@ -29,8 +29,9 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func CreateCompany(c *fiber.Ctx) error {
+	var err error
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -57,9 +58,6 @@ func CreateCompany(c *fiber.Ctx) error {
 	domain.CompanyID = company.ID
 
 	if err := company.AddSubdomain(tx, &domain); err != nil {
-		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
-			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
-		}
 		return err
 	}
 
@@ -73,16 +71,10 @@ func CreateCompany(c *fiber.Ctx) error {
 	owner.CompanyID = company.ID
 
 	if err := company.CreateOwner(tx, &owner); err != nil {
-		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
-			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
-		}
 		return err
 	}
 
 	if fullCompany, err := company.GetFullCompany(tx); err != nil {
-		if RollbackErr := tx.Rollback().Error; RollbackErr != nil {
-			return lib.Error.General.InternalError.WithError(err).WithError(RollbackErr)
-		}
 		return err
 	} else {
 		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.CompanyFull{}); err != nil {
@@ -357,6 +349,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [delete]
 func DeleteCompanyById(c *fiber.Ctx) error {
+	var err error
 	var company model.Company
 
 	company_id := c.Params("id")
@@ -367,7 +360,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 	}
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -399,10 +392,23 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
+	var err error
+
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
+	}
+
+	image_type := c.Params("image_type")
+	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
+
+	allowed, ok := img_types_allowed[image_type]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+	if !allowed {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
 	}
 
 	var company model.Company
@@ -411,52 +417,33 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	// Upload e atualização dos campos
-	files := map[string]*string{
-		"logo":       &company.Design.Images.Logo.URL,
-		"banner":     &company.Design.Images.Banner.URL,
-		"favicon":    &company.Design.Images.Favicon.URL,
-		"background": &company.Design.Images.Background.URL,
-	}
-
-	var uploadedFilesURL []string
+	var uploaded_img_types = make([]string, 0)
 
 	defer func() {
-		if r := recover(); r != nil || err != nil {
-			for _, url := range uploadedFilesURL {
-				_ = company.Design.DeleteImage("company", company.ID.String(), url)
+		r := recover()
+		if r != nil || err != nil {
+			for _, img_type := range uploaded_img_types {
+				_ = company.Design.Images.Delete(img_type, company.TableName(), company.ID.String())
 			}
 		}
 	}()
 
-	for fieldName, target := range files {
-		file, err := c.FormFile(fieldName)
+	for img_type := range img_types_allowed {
+		if c.FormValue(img_type) == "" {
+			continue
+		}
+		file, err := c.FormFile(img_type)
 		if err != nil {
 			continue
 		}
-		f, err := file.Open()
+		_, err = company.Design.Images.Save(img_type, company.TableName(), company.ID.String(), file)
 		if err != nil {
 			return err
 		}
-
-		newFile := make([]byte, file.Size)
-		_, err = f.Read(newFile)
-		f.Close()
-		if err != nil {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-
-		url, err := company.Design.SaveImage(company.TableName(), company.ID.String(), *target, file.Filename, newFile)
-		if err != nil {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-
-		uploadedFilesURL = append(uploadedFilesURL, url)
-
-		*target = url
+		uploaded_img_types = append(uploaded_img_types, img_type)
 	}
 
-	if err := tx.Save(&company).Error; err != nil {
+	if err = tx.Save(&company).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -476,10 +463,22 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
+	var err error
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
+	}
+
+	image_type := c.Params("image_type")
+	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
+
+	allowed, ok := img_types_allowed[image_type]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
+	}
+	if !allowed {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
 	}
 
 	var company model.Company
@@ -488,30 +487,15 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	imageType := c.Params("image_type")
-	ptrMap := map[string]*string{
-		"logo":       &company.Design.Images.Logo.URL,
-		"banner":     &company.Design.Images.Banner.URL,
-		"favicon":    &company.Design.Images.Favicon.URL,
-		"background": &company.Design.Images.Background.URL,
-	}
-
-	target, ok := ptrMap[imageType]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("unsupported image_type: %s", imageType))
-	}
-
-	if err := company.Design.DeleteImage(company.TableName(), id, *target); err != nil {
+	if err := company.Design.Images.Delete(image_type, company.TableName(), id); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-
-	*target = ""
 
 	if err := tx.Save(&company).Error; err != nil {
 		return err
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &company.Design, &dJSON.Design{})
+	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
 }
 
 // UpdateCompanyColors updates the colors of a company
@@ -531,8 +515,9 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company/{id}/design/colors [put]
 func UpdateCompanyColors(c *fiber.Ctx) error {
+	var err error
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}

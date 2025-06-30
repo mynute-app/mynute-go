@@ -81,19 +81,21 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [patch]
 func UpdateAppointmentByID(c *fiber.Ctx) error {
+	var err error
+
 	appointment_id := c.Params("id")
 	if appointment_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
 	}
 
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
 
 	var appointment model.Appointment
-	if err := database.LockForUpdate(tx, &appointment, "id", appointment_id); err != nil {
+	if err = database.LockForUpdate(tx, &appointment, "id", appointment_id); err != nil {
 		return err
 	}
 
@@ -103,7 +105,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 
 	var updated_appointment model.Appointment
 
-	if err := c.BodyParser(&updated_appointment); err != nil {
+	if err = c.BodyParser(&updated_appointment); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
@@ -126,7 +128,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 
 	res := &lib.SendResponseStruct{Ctx: c}
 
-	if err := res.SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
+	if err = res.SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
@@ -148,6 +150,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
 func CancelAppointmentByID(c *fiber.Ctx) error {
+	var err error
 	appointment_id := c.Params("id")
 	if appointment_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
@@ -159,11 +162,13 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 	var appointment model.Appointment
 	appointment.ID = uuid
 	tx, end, err := database.ContextTransaction(c)
-	defer end()
+	defer end(err)
 	if err != nil {
 		return err
 	}
-	appointment.Cancel(tx)
+	if err := appointment.Cancel(tx); err != nil {
+		return err
+	}
 	return nil
 }
 

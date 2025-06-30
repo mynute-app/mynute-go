@@ -11,6 +11,7 @@ import (
 )
 
 func Factory(c *fiber.Ctx) *service {
+	var err error
 	tx, end, err := database.ContextTransaction(c)
 	service := &service{
 		Context: c,
@@ -24,7 +25,7 @@ func Factory(c *fiber.Ctx) *service {
 type service struct {
 	Context *fiber.Ctx
 	MyGorm  *handler.Gorm
-	DeferDB func()
+	DeferDB func(err error)
 	Error   error
 }
 

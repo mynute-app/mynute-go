@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 
@@ -41,6 +42,18 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Changing branch company_id").Test(branch.Update(400, map[string]any{
 		"company_id": uuid.New().String(),
 	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Upload profile image").Test(branch.UploadImages(200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_1,
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get profile image").Test(branch.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+
+	tt.Describe("Overwrite profile image").Test(branch.UploadImages(200, map[string][]byte{
+		"logo": FileBytes.PNG_FILE_3,
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get overwritten logo image").Test(branch.GetImage(200, branch.Created.Design.Images.Logo.URL, &FileBytes.PNG_FILE_3))
 
 	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
 }

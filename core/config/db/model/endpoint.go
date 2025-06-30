@@ -181,6 +181,24 @@ var CreateBranchWorkSchedule = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
+var UpdateBranchImages = &EndPoint{
+	Path:             "/branch/:id/design/images",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateBranchImages",
+	Description:      "Update branch images",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
+var DeleteBranchImage = &EndPoint{
+	Path:             "/branch/:id/design/images/:image_type",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteBranchImage",
+	Description:      "Delete branch image",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
 var GetBranchWorkRange = &EndPoint{
 	Path:             "/branch/:id/work_schedule/:work_range_id",
 	Method:           namespace.ViewActionMethod,
@@ -277,6 +295,24 @@ var DeleteClientById = &EndPoint{
 	ControllerName:   "DeleteClientById",
 	Description:      "Delete client by ID",
 	DenyUnauthorized: true,
+	Resource:         ClientResource,
+}
+var UpdateClientImages = &EndPoint{
+	Path:             "/client/:id/design/images",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateClientImages",
+	Description:      "Update client design images",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         ClientResource,
+}
+var DeleteClientImage = &EndPoint{
+	Path:             "/client/:id/design/images/:image_type",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteClientImage",
+	Description:      "Delete client design images",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
 	Resource:         ClientResource,
 }
 
@@ -417,6 +453,24 @@ var UpdateEmployeeById = &EndPoint{
 	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateEmployeeById",
 	Description:      "Update employee by ID",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var UpdateEmployeeImages = &EndPoint{
+	Path:             "/employee/:id/design/images",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateEmployeeImages",
+	Description:      "Update employee design images",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
+var DeleteEmployeeImage = &EndPoint{
+	Path:             "/employee/:id/design/images/:image_type",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteEmployeeImage",
+	Description:      "Delete employee image",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,

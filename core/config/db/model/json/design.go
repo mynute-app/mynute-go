@@ -1,10 +1,13 @@
 package mJSON
 
 import (
+	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/lib/Uploader"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"mime/multipart"
 )
 
 type DesignConfig struct {
@@ -20,6 +23,7 @@ type Colors struct {
 }
 
 type Images struct {
+	Profile    Image `json:"profile"`
 	Logo       Image `json:"logo"`
 	Banner     Image `json:"banner"`
 	Background Image `json:"background"`
@@ -48,20 +52,69 @@ func (i *Images) GetImageURL(imageType string) string {
 	}
 }
 
-func (d *DesignConfig) SaveImage(caller_entity, caller_id, oldURL, originalFilename string, newFile []byte) (string, error) {
-	up, err := myUploader.FileUploader(caller_entity, caller_id)
-	if err != nil {
-		return "", err
+func (is *Images) Save(img_type string, caller_entity string, caller_id string, file *multipart.FileHeader) (string, error) {
+	switch img_type {
+	case "profile":
+		return is.Profile.Save(caller_entity, caller_id, file)
+	case "logo":
+		return is.Logo.Save(caller_entity, caller_id, file)
+	case "banner":
+		return is.Banner.Save(caller_entity, caller_id, file)
+	case "background":
+		return is.Background.Save(caller_entity, caller_id, file)
+	case "favicon":
+		return is.Favicon.Save(caller_entity, caller_id, file)
+	default:
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid image type: %s", img_type))
 	}
-	return up.Replace("image", oldURL, newFile, originalFilename)
 }
 
-func (d *DesignConfig) DeleteImage(caller_entity, caller_id, oldURL string) error {
+func (is *Images) Delete(img_type string, caller_entity, caller_id string) error {
 	up, err := myUploader.FileUploader(caller_entity, caller_id)
 	if err != nil {
 		return err
 	}
-	return up.Delete(oldURL)
+	img_types_url := map[string]*string{
+		"profile":    &is.Profile.URL,
+		"logo":       &is.Logo.URL,
+		"banner":     &is.Banner.URL,
+		"favicon":    &is.Favicon.URL,
+		"background": &is.Background.URL,
+	}
+	target, ok := img_types_url[img_type]
+	if !ok {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid image type: %s", img_type))
+	}
+	if err := up.Delete(*target); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	*target = "" // Clear the URL after deletion
+	return nil
+}
+
+func (i *Image) Save(caller_entity, caller_id string, file *multipart.FileHeader) (string, error) {
+	if file == nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("file header passed is nil trying to save image for %s with ID %s", caller_entity, caller_id))
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to open file %s for caller %s with ID %s: %w", file.Filename, caller_entity, caller_id, err))
+	}
+	defer f.Close()
+
+	newFile := make([]byte, file.Size)
+	_, err = f.Read(newFile)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to read file %s for caller %s with ID %s: %w", file.Filename, caller_entity, caller_id, err))
+	}
+
+	up, err := myUploader.FileUploader(caller_entity, caller_id)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to get file uploader for caller %s with ID %s: %w", caller_entity, caller_id, err))
+	}
+
+	return up.Replace("image", i.URL, newFile, file.Filename)
 }
 
 func (d *DesignConfig) Value() (driver.Value, error) {

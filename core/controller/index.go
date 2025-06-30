@@ -11,11 +11,12 @@ import (
 )
 
 func Create(c *fiber.Ctx, model any) error {
+	var err error
 	if err := c.BodyParser(model); err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 	Service := service.Factory(c)
-	defer Service.DeferDB()
+	defer Service.DeferDB(err)
 	if err := Service.Create(model).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
@@ -41,8 +42,9 @@ func Create(c *fiber.Ctx, model any) error {
 }
 
 func GetOneBy(param string, c *fiber.Ctx, model any) error {
+	var err error
 	Service := service.Factory(c)
-	defer Service.DeferDB()
+	defer Service.DeferDB(err)
 	if err := Service.GetBy(param, model).Error; err != nil {
 		return err
 	}
@@ -50,13 +52,15 @@ func GetOneBy(param string, c *fiber.Ctx, model any) error {
 }
 
 func UpdateOneById(c *fiber.Ctx, model any) error {
+	var err error
 	Service := service.Factory(c)
-	defer Service.DeferDB()
+	defer Service.DeferDB(err)
 	return Service.UpdateOneById(model).Error
 }
 
 func DeleteOneById(c *fiber.Ctx, model any) error {
+	var err error
 	Service := service.Factory(c)
-	defer Service.DeferDB()
+	defer Service.DeferDB(err)
 	return Service.DeleteOneById(model).Error
 }

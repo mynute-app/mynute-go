@@ -740,121 +740,121 @@ func generateWorkRangesForDay(validBranches []*Branch, employee *Employee, weekd
 
 // @deprecated
 // GenerateRandomModelWorkSchedule creates a *mJSON.EmployeeWorkSchedule* struct
-func GenerateRandomModelWorkSchedule(validBranches []*Branch, employee *Employee) mJSON.EmployeeWorkSchedule {
-	schedule := mJSON.EmployeeWorkSchedule{}
+// func GenerateRandomModelWorkSchedule(validBranches []*Branch, employee *Employee) mJSON.EmployeeWorkSchedule {
+// 	schedule := mJSON.EmployeeWorkSchedule{}
 
-	randomTimeStringHHMM := func(minHour, maxHour int) string {
-		hour := min(max(minHour+rand.Intn(maxHour-minHour+1), 6), 22) // Ensure hour is between 6 and 22
-		minute := rand.Intn(4) * 15
-		return fmt.Sprintf("%02d:%02d", hour, minute)
-	}
+// 	randomTimeStringHHMM := func(minHour, maxHour int) string {
+// 		hour := min(max(minHour+rand.Intn(maxHour-minHour+1), 6), 22) // Ensure hour is between 6 and 22
+// 		minute := rand.Intn(4) * 15
+// 		return fmt.Sprintf("%02d:%02d", hour, minute)
+// 	}
 
-	schedule.Monday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
-	schedule.Tuesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
-	schedule.Wednesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
-	schedule.Thursday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
-	schedule.Friday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
-	schedule.Saturday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.4)
-	schedule.Sunday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.1)
+// 	schedule.Monday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+// 	schedule.Tuesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+// 	schedule.Wednesday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+// 	schedule.Thursday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+// 	schedule.Friday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.9)
+// 	schedule.Saturday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.4)
+// 	schedule.Sunday = generateRangesForDayModel(validBranches, employee, randomTimeStringHHMM, 0.1)
 
-	return schedule
-}
+// 	return schedule
+// }
 
 // @deprecated
 // Helper for GenerateRandomModelWorkSchedule, returns []mJSON.WorkRange
-func generateRangesForDayModel(validBranches []*Branch, employee *Employee, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
-	// Use global rand.Float32() - auto-seeded
-	if rand.Float32() > workProbability || len(validBranches) == 0 {
-		return []mJSON.WorkRange{}
-	}
+// func generateRangesForDayModel(validBranches []*Branch, employee *Employee, randomTime func(int, int) string, workProbability float32) []mJSON.WorkRange {
+// 	// Use global rand.Float32() - auto-seeded
+// 	if rand.Float32() > workProbability || len(validBranches) == 0 {
+// 		return []mJSON.WorkRange{}
+// 	}
 
-	ranges := []mJSON.WorkRange{}
-	numRanges := 1 + rand.Intn(2) // Use global rand.Intn()
+// 	ranges := []mJSON.WorkRange{}
+// 	numRanges := 1 + rand.Intn(2) // Use global rand.Intn()
 
-	lastEndTimeStr := "00:00"
+// 	lastEndTimeStr := "00:00"
 
-	for r := range numRanges {
-		// Use global rand.Intn()
-		targetBranchHelper := validBranches[rand.Intn(len(validBranches))]
+// 	for r := range numRanges {
+// 		// Use global rand.Intn()
+// 		targetBranchHelper := validBranches[rand.Intn(len(validBranches))]
 
-		startHourLower := 7
-		if r > 0 {
-			hourPart := 0
-			minutePart := 0
-			fmt.Sscanf(lastEndTimeStr, "%02d:%02d", &hourPart, &minutePart) // Ensure Sscanf matches HH:MM
-			startHourLower = hourPart
-			if minutePart > 0 {
-				startHourLower++
-			}
-			startHourLower++ // Buffer hour
-			if startHourLower < 13 && hourPart >= 12 {
-				startHourLower = 13
-			}
-		}
-		if startHourLower > 19 {
-			continue
-		}
+// 		startHourLower := 7
+// 		if r > 0 {
+// 			hourPart := 0
+// 			minutePart := 0
+// 			fmt.Sscanf(lastEndTimeStr, "%02d:%02d", &hourPart, &minutePart) // Ensure Sscanf matches HH:MM
+// 			startHourLower = hourPart
+// 			if minutePart > 0 {
+// 				startHourLower++
+// 			}
+// 			startHourLower++ // Buffer hour
+// 			if startHourLower < 13 && hourPart >= 12 {
+// 				startHourLower = 13
+// 			}
+// 		}
+// 		if startHourLower > 19 {
+// 			continue
+// 		}
 
-		// Use global rand.Intn()
-		startHour := startHourLower + rand.Intn(2)
-		startTime := randomTime(startHour, startHour)
+// 		// Use global rand.Intn()
+// 		startHour := startHourLower + rand.Intn(2)
+// 		startTime := randomTime(startHour, startHour)
 
-		if r > 0 && startTime <= lastEndTimeStr {
-			startHour++
-			if startHour > 20 {
-				continue
-			}
-			startTime = randomTime(startHour, startHour)
-		}
+// 		if r > 0 && startTime <= lastEndTimeStr {
+// 			startHour++
+// 			if startHour > 20 {
+// 				continue
+// 			}
+// 			startTime = randomTime(startHour, startHour)
+// 		}
 
-		// Use global rand.Intn()
-		durationHours := 2 + rand.Intn(4)
-		endHour := min(startHour+durationHours, 22)
-		endTime := randomTime(endHour, endHour)
+// 		// Use global rand.Intn()
+// 		durationHours := 2 + rand.Intn(4)
+// 		endHour := min(startHour+durationHours, 22)
+// 		endTime := randomTime(endHour, endHour)
 
-		if endTime <= startTime {
-			if endHour < 22 {
-				endHour++
-				endTime = randomTime(endHour, endHour)
-			} else {
-				endTime = "23:00"
-			}
-			if endTime <= startTime {
-				endTime = "23:30"
-			}
-		}
+// 		if endTime <= startTime {
+// 			if endHour < 22 {
+// 				endHour++
+// 				endTime = randomTime(endHour, endHour)
+// 			} else {
+// 				endTime = "23:00"
+// 			}
+// 			if endTime <= startTime {
+// 				endTime = "23:30"
+// 			}
+// 		}
 
-		employeeServices := []uuid.UUID{}
-		for _, svc := range employee.Created.Services {
-			if svc.ID != uuid.Nil {
-				employeeServices = append(employeeServices, svc.ID)
-			}
-		}
+// 		employeeServices := []uuid.UUID{}
+// 		for _, svc := range employee.Created.Services {
+// 			if svc.ID != uuid.Nil {
+// 				employeeServices = append(employeeServices, svc.ID)
+// 			}
+// 		}
 
-		branchServices := []uuid.UUID{}
-		for _, svc := range targetBranchHelper.Services {
-			if svc.Created.ID != uuid.Nil {
-				branchServices = append(branchServices, svc.Created.ID)
-			}
-		}
+// 		branchServices := []uuid.UUID{}
+// 		for _, svc := range targetBranchHelper.Services {
+// 			if svc.Created.ID != uuid.Nil {
+// 				branchServices = append(branchServices, svc.Created.ID)
+// 			}
+// 		}
 
-		commonServices := intersectUUIDs(employeeServices, branchServices)
+// 		commonServices := intersectUUIDs(employeeServices, branchServices)
 
-		if len(commonServices) == 0 {
-			continue // pula esse range se não houver serviços em comum
-		}
+// 		if len(commonServices) == 0 {
+// 			continue // pula esse range se não houver serviços em comum
+// 		}
 
-		ranges = append(ranges, mJSON.WorkRange{
-			Start:    startTime,
-			End:      endTime,
-			BranchID: targetBranchHelper.Created.ID,
-			Services: commonServices,
-		})
+// 		ranges = append(ranges, mJSON.WorkRange{
+// 			Start:    startTime,
+// 			End:      endTime,
+// 			BranchID: targetBranchHelper.Created.ID,
+// 			Services: commonServices,
+// 		})
 
-		lastEndTimeStr = endTime
-	}
-	return ranges
-}
+// 		lastEndTimeStr = endTime
+// 	}
+// 	return ranges
+// }
 
 // Creates the company with randomized data
 // verifies the owner,
