@@ -35,6 +35,7 @@ func (c *Company) Set() error {
 		return err
 	}
 	cOwnerToken := c.Owner.X_Auth_Token
+
 	for range 2 {
 		service := &Service{}
 		service.Company = c
@@ -46,6 +47,7 @@ func (c *Company) Set() error {
 		}
 		c.Services = append(c.Services, service)
 	}
+
 	for range 1 {
 		branch := &Branch{}
 		branch.Company = c
@@ -55,8 +57,18 @@ func (c *Company) Set() error {
 		if err := branch.GetById(200, c.Owner.X_Auth_Token, nil); err != nil {
 			return err
 		}
+		for _, service := range c.Services {
+			if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
+				return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
+			}
+		}
+		branchWorkSchedule := GetExampleBranchWorkSchedule(branch.Created.ID, c.Services)
+		if err := branch.CreateWorkSchedule(200, branchWorkSchedule, c.Owner.X_Auth_Token, nil); err != nil {
+			return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
+		}
 		c.Branches = append(c.Branches, branch)
 	}
+
 	for range 3 {
 		employee := &Employee{}
 		employee.Company = c
@@ -72,22 +84,9 @@ func (c *Company) Set() error {
 		if err := employee.GetById(200, nil, nil); err != nil {
 			return err
 		}
-		var servicesID []DTO.ServiceID
 		for _, service := range c.Services {
 			if err := employee.AddService(200, service, &c.Owner.X_Auth_Token, nil); err != nil {
 				return fmt.Errorf("failed to assign employee %s to service %s: %v", employee.Created.Email, service.Created.Name, err)
-			}
-			servicesID = append(servicesID, DTO.ServiceID{ID: service.Created.ID})
-		}
-		for _, branch := range c.Branches {
-			for _, service := range c.Services {
-				if err := branch.AddService(200, service, c.Owner.X_Auth_Token, nil); err != nil {
-					return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
-				}
-			}
-			branchWorkSchedule := GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
-			if err := branch.CreateWorkSchedule(200, branchWorkSchedule, c.Owner.X_Auth_Token, nil); err != nil {
-				return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
 			}
 		}
 		for _, branch := range c.Branches {
@@ -95,10 +94,9 @@ func (c *Company) Set() error {
 				return fmt.Errorf("failed to assign employee %s to branch %s: %v", employee.Created.Email, branch.Created.Name, err)
 			}
 		}
-
 		employeeID := employee.Created.ID
 		branchID := c.Branches[0].Created.ID
-		employeeWorkSchedule := GetExampleEmployeeWorkSchedule(employeeID, branchID, servicesID)
+		employeeWorkSchedule := GetExampleEmployeeWorkSchedule(employeeID, branchID, c.Services)
 		if err := employee.CreateWorkSchedule(200, employeeWorkSchedule, nil, nil); err != nil {
 			return fmt.Errorf("failed to create work schedule for employee %s: %v", employee.Created.Email, err)
 		}

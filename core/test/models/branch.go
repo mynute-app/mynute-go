@@ -183,7 +183,11 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	return nil
 }
 
-func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateBranchWorkSchedule {
+func GetExampleBranchWorkSchedule(branchID uuid.UUID, services []*Service) DTO.CreateBranchWorkSchedule {
+	var servicesID []DTO.ServiceID
+	for _, service := range services {
+		servicesID = append(servicesID, DTO.ServiceID{ID: service.Created.ID})
+	}
 	return DTO.CreateBranchWorkSchedule{
 		WorkRanges: []DTO.CreateBranchWorkRange{
 			{
