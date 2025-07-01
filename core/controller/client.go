@@ -344,16 +344,7 @@ func UpdateClientImages(c *fiber.Ctx) error {
 		return err
 	}
 
-	image_type := c.Params("image_type")
 	img_types_allowed := map[string]bool{"picture": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
 
 	var client model.Client
 	id := c.Params("id")
@@ -394,7 +385,7 @@ func UpdateClientImages(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).SendDTO(200, &client.Design.Images, &dJSON.Images{})
 }
 
-// DeleteClientImages deletes the design images of an client
+// DeleteClientImage deletes the design images of an client
 //
 //	@Summary		Delete client design images
 //	@Description	Delete the design images of an client
@@ -408,7 +399,7 @@ func UpdateClientImages(c *fiber.Ctx) error {
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images/{image_type} [delete]
-func DeleteClientImages(c *fiber.Ctx) error {
+func DeleteClientImage(c *fiber.Ctx) error {
 	var err error
 	tx, end, err := database.ContextTransaction(c)
 	defer end(err)
@@ -455,5 +446,7 @@ func Client(Gorm *handler.Gorm) {
 		GetClientAppointments,
 		UpdateClientById,
 		DeleteClientById,
+		UpdateClientImages,
+		DeleteClientImage,
 	})
 }

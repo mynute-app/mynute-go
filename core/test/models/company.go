@@ -66,6 +66,11 @@ func (c *Company) Set() error {
 		if err := branch.CreateWorkSchedule(200, branchWorkSchedule, c.Owner.X_Auth_Token, nil); err != nil {
 			return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
 		}
+		if err := branch.UploadImages(200, map[string][]byte{
+			"picture": FileBytes.PNG_FILE_1,
+		}, c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
 		c.Branches = append(c.Branches, branch)
 	}
 
@@ -82,6 +87,11 @@ func (c *Company) Set() error {
 			return err
 		}
 		if err := employee.GetById(200, nil, nil); err != nil {
+			return err
+		}
+		if err := employee.UploadImages(200, map[string][]byte{
+			"picture": FileBytes.PNG_FILE_1,
+		}, nil, nil); err != nil {
 			return err
 		}
 		for _, service := range c.Services {
@@ -867,7 +877,7 @@ func (c *Company) Create(status int) error {
 	ownerPswd := "1SecurePswd!"
 	if err := handler.NewHttpClient().
 		Method("POST").
-		URL("/Company").
+		URL("/company").
 		ExpectedStatus(status).
 		Send(DTO.CreateCompany{
 			LegalName:      lib.GenerateRandomName("Company Legal Name"),
@@ -920,7 +930,7 @@ func (c *Company) GetByName(status int, x_auth_token string, x_company_id *strin
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(fmt.Sprintf("/Company/name/%s", c.Created.LegalName)).
+		URL(fmt.Sprintf("/company/name/%s", c.Created.LegalName)).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
@@ -936,7 +946,7 @@ func (c *Company) GetByName(status int, x_auth_token string, x_company_id *strin
 func (c *Company) GetBySubdomain(status int) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(fmt.Sprintf("/Company/subdomain/%s", c.Created.Subdomains[0].Name)).
+		URL(fmt.Sprintf("/company/subdomain/%s", c.Created.Subdomains[0].Name)).
 		ExpectedStatus(status).
 		Send(nil).
 		ParseResponse(&c.Created).
@@ -955,7 +965,7 @@ func (c *Company) GetById(status int, x_auth_token string, x_company_id *string)
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
+		URL(fmt.Sprintf("/company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
@@ -976,7 +986,7 @@ func (c *Company) Update(status int, changes map[string]any, x_auth_token string
 	}
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
+		URL(fmt.Sprintf("/company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
@@ -1001,7 +1011,7 @@ func (c *Company) Delete(status int, x_auth_token string, x_company_id *string) 
 	}
 	if err := handler.NewHttpClient().
 		Method("DELETE").
-		URL(fmt.Sprintf("/Company/%s", c.Created.ID.String())).
+		URL(fmt.Sprintf("/company/%s", c.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
@@ -1030,7 +1040,7 @@ func (c *Company) UploadImages(status int, files map[string][]byte, x_auth_token
 
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL(fmt.Sprintf("/Company/%s/design/images", c.Created.ID.String())).
+		URL(fmt.Sprintf("/company/%s/design/images", c.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).
@@ -1043,8 +1053,8 @@ func (c *Company) UploadImages(status int, files map[string][]byte, x_auth_token
 	return nil
 }
 
-func (c *Company) DeleteImages(status int, images []string, x_auth_token string, x_company_id *string) error {
-	if len(images) == 0 {
+func (c *Company) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+	if len(image_types) == 0 {
 		return fmt.Errorf("no images provided to delete")
 	}
 
@@ -1065,18 +1075,18 @@ func (c *Company) DeleteImages(status int, images []string, x_auth_token string,
 		return fmt.Errorf("failed to prepare delete images request: %w", err)
 	}
 
-	base_url := fmt.Sprintf("/Company/%s/design/images", c.Created.ID.String())
-	for _, field := range images {
-		image_url := base_url + "/" + field
+	base_url := fmt.Sprintf("/company/%s/design/images", c.Created.ID.String())
+	for _, image_type := range image_types {
+		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
 		http.ParseResponse(&c.Created.Design)
 		if http.Error != nil {
-			return fmt.Errorf("failed to delete image %s: %w", field, http.Error)
+			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}
-		url := c.Created.Design.Images.GetImageURL(field)
+		url := c.Created.Design.Images.GetImageURL(image_type)
 		if url != "" {
-			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", field, url)
+			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
 		}
 	}
 	return nil
@@ -1090,7 +1100,7 @@ func (c *Company) ChangeColors(status int, colors mJSON.Colors, x_auth_token str
 	}
 	if err := handler.NewHttpClient().
 		Method("PUT").
-		URL(fmt.Sprintf("/Company/%s/design/colors", c.Created.ID.String())).
+		URL(fmt.Sprintf("/company/%s/design/colors", c.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Header(namespace.HeadersKey.Company, cID).

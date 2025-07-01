@@ -5,6 +5,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type BranchWorkSchedule struct {
+	WorkRanges []BranchWorkRange `json:"branch_work_ranges"`
+}
+
 type BranchWorkRange struct {
 	WorkRangeBase
 	Services []*Service `gorm:"many2many:branch_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"services" validate:"-"`

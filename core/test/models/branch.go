@@ -141,7 +141,7 @@ func (b *Branch) UploadImages(status int, files map[string][]byte, x_auth_token 
 		}
 	}
 
-	companyIDStr := b.Created.ID.String()
+	companyIDStr := b.Company.Created.ID.String()
 	cID, err := get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
@@ -162,12 +162,12 @@ func (b *Branch) UploadImages(status int, files map[string][]byte, x_auth_token 
 	return nil
 }
 
-func (b *Branch) DeleteImages(status int, images []string, x_auth_token string, x_company_id *string) error {
-	if len(images) == 0 {
+func (b *Branch) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+	if len(image_types) == 0 {
 		return fmt.Errorf("no images provided to delete")
 	}
 
-	createdCompanyID := b.Created.ID.String()
+	createdCompanyID := b.Company.Created.ID.String()
 	cID, err := get_x_company_id(x_company_id, &createdCompanyID)
 	if err != nil {
 		return fmt.Errorf("failed to get company ID for deletion: %w", err)
@@ -185,17 +185,17 @@ func (b *Branch) DeleteImages(status int, images []string, x_auth_token string, 
 	}
 
 	base_url := fmt.Sprintf("/branch/%s/design/images", b.Created.ID.String())
-	for _, field := range images {
-		image_url := base_url + "/" + field
+	for _, image_type := range image_types {
+		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
 		http.ParseResponse(&b.Created.Design)
 		if http.Error != nil {
-			return fmt.Errorf("failed to delete image %s: %w", field, http.Error)
+			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}
-		url := b.Created.Design.Images.GetImageURL(field)
+		url := b.Created.Design.Images.GetImageURL(image_type)
 		if url != "" {
-			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", field, url)
+			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
 		}
 	}
 	return nil
@@ -258,7 +258,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	if err != nil {
 		return err
 	}
-	var updated *model.Branch
+	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
@@ -270,7 +270,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 		Error; err != nil {
 		return fmt.Errorf("failed to create branch work schedule: %w", err)
 	}
-	b.Created.BranchWorkSchedule = updated.BranchWorkSchedule
+	b.Created.BranchWorkSchedule = updated.WorkRanges
 	return nil
 }
 

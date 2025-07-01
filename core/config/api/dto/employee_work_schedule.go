@@ -5,8 +5,15 @@ import "github.com/google/uuid"
 // @description represents a work schedule for an employee, which is a collection of work ranges.
 // @name CreateEmployeeWorkSchedule
 // @tag.name dto.workrange.create_work_schedule
+type EmployeeWorkSchedule struct {
+	WorkRanges []EmployeeWorkRange `json:"employee_work_ranges"`
+}
+
+// @description represents the data required to create a work schedule for an employee.
+// @name CreateEmployeeWorkSchedule
+// @tag.name dto.workrange.create_work_schedule
 type CreateEmployeeWorkSchedule struct {
-	WorkRanges []CreateEmployeeWorkRange `json:"employee_work_ranges"`
+	WorkRanges []CreateEmployeeWorkRange `json:"employee_work_ranges"` // List of work ranges for the employee
 }
 
 // @description represents the data required to create a work range for an employee.

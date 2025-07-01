@@ -280,16 +280,7 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 		return err
 	}
 
-	image_type := c.Params("image_type")
 	img_types_allowed := map[string]bool{"picture": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
 
 	var employee model.Employee
 	id := c.Params("id")
@@ -450,16 +441,18 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 		}
 	}
 
-	var ewr []*model.EmployeeWorkRange
+	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&ewr, "employee_id = ?", employee_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.EmployeeWorkRange
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &ewr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -988,6 +981,8 @@ func Employee(Gorm *handler.Gorm) {
 		RemoveBranchFromEmployee,
 		LoginEmployee,
 		VerifyEmployeeEmail,
+		UpdateEmployeeImages,
+		DeleteEmployeeImage,
 		AddEmployeeWorkSchedule,
 		DeleteEmployeeWorkRange,
 		UpdateEmployeeWorkRange,

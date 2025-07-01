@@ -400,16 +400,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 		return err
 	}
 
-	image_type := c.Params("image_type")
 	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
 
 	var company model.Company
 	id := c.Params("id")

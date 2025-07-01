@@ -346,6 +346,80 @@ func (e *Employee) AddRole(s int, role *Role, x_auth_token *string, x_company_id
 	return nil
 }
 
+func (e *Employee) UploadImages(status int, files map[string][]byte, x_auth_token *string, x_company_id *string) error {
+	var fileMap = make(handler.Files)
+	for field, content := range files {
+		fileMap[field] = handler.MyFile{
+			Name:    field + "_" + lib.GenerateRandomString(6) + ".png",
+			Content: content,
+		}
+	}
+
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+
+	if err := handler.NewHttpClient().
+		Method("PATCH").
+		URL(fmt.Sprintf("/employee/%s/design/images", e.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, t).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(fileMap).
+		ParseResponse(&e.Created.Design.Images).
+		Error; err != nil {
+		return fmt.Errorf("failed to upload company images: %w", err)
+	}
+
+	return nil
+}
+
+func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+	if len(image_types) == 0 {
+		return fmt.Errorf("no image types provided to delete")
+	}
+
+	createdEmployeeID := e.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &createdEmployeeID)
+	if err != nil {
+		return fmt.Errorf("failed to get company ID for deletion: %w", err)
+	}
+
+	http := handler.NewHttpClient()
+
+	if err := http.
+		Method("DELETE").
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
+		Error; err != nil {
+		return fmt.Errorf("failed to prepare delete images request: %w", err)
+	}
+
+	base_url := fmt.Sprintf("/employee/%s/design/images", e.Created.ID.String())
+	for _, image_type := range image_types {
+		image_url := base_url + "/" + image_type
+		http.URL(image_url)
+		http.Send(nil)
+		http.ParseResponse(&e.Created.Design)
+		if http.Error != nil {
+			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
+		}
+		url := e.Created.Design.Images.GetImageURL(image_type)
+		if url != "" {
+			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
+		}
+	}
+	return nil
+}
+
 func get_token(priority *string, secundary *string) (string, error) {
 	if priority != nil {
 		return *priority, nil

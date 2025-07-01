@@ -5,6 +5,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handler "agenda-kaki-go/core/test/handlers"
 	"fmt"
 	"reflect"
@@ -24,6 +25,11 @@ func (u *Client) Set() error {
 		return err
 	}
 	if err := u.Login(200); err != nil {
+		return err
+	}
+	if err := u.UploadImages(200, map[string][]byte{
+		"picture": FileBytes.PNG_FILE_1,
+	}, nil); err != nil {
 		return err
 	}
 	return nil
@@ -153,5 +159,72 @@ func ValidateUpdateChanges(modelName string, v any, changes map[string]any) erro
 		}
 	}
 
+	return nil
+}
+
+func (c *Client) UploadImages(status int, files map[string][]byte, x_auth_token *string) error {
+	var fileMap = make(handler.Files)
+	for field, content := range files {
+		fileMap[field] = handler.MyFile{
+			Name:    field + "_" + lib.GenerateRandomString(6) + ".png",
+			Content: content,
+		}
+	}
+
+	t, err := get_token(x_auth_token, &c.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+
+	if err := handler.NewHttpClient().
+		Method("PATCH").
+		URL(fmt.Sprintf("/client/%s/design/images", c.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(fileMap).
+		ParseResponse(&c.Created.Design.Images).
+		Error; err != nil {
+		return fmt.Errorf("failed to upload company images: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Client) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+	if len(image_types) == 0 {
+		return fmt.Errorf("no image types provided to delete")
+	}
+
+	createdEmployeeID := c.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &createdEmployeeID)
+	if err != nil {
+		return fmt.Errorf("failed to get company ID for deletion: %w", err)
+	}
+
+	http := handler.NewHttpClient()
+
+	if err := http.
+		Method("DELETE").
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
+		Error; err != nil {
+		return fmt.Errorf("failed to prepare delete images request: %w", err)
+	}
+
+	base_url := fmt.Sprintf("/client/%s/design/images", c.Created.ID.String())
+	for _, image_type := range image_types {
+		image_url := base_url + "/" + image_type
+		http.URL(image_url)
+		http.Send(nil)
+		http.ParseResponse(&c.Created.Design)
+		if http.Error != nil {
+			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
+		}
+		url := c.Created.Design.Images.GetImageURL(image_type)
+		if url != "" {
+			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
+		}
+	}
 	return nil
 }

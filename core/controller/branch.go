@@ -165,16 +165,7 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 		return err
 	}
 
-	image_type := c.Params("image_type")
 	img_types_allowed := map[string]bool{"picture": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
 
 	var branch model.Branch
 	id := c.Params("id")
@@ -328,16 +319,18 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		}
 	}
 
-	var bwr []*model.BranchWorkRange
+	var bwr []model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.BranchWorkRange
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -776,6 +769,8 @@ func Branch(Gorm *handler.Gorm) {
 		GetEmployeeServicesByBranchId,
 		AddServiceToBranch,
 		RemoveServiceFromBranch,
+		UpdateBranchImages,
+		DeleteBranchImage,
 		CreateBranchWorkSchedule,
 		GetBranchWorkRange,
 		UpdateBranchWorkRange,

@@ -25,7 +25,7 @@ func Test_Company(t *testing.T) {
 	tt.Describe("Company creation with duplicate subdomain").Test(
 		handlerT.NewHttpClient().
 			Method("POST").
-			URL("/Company").
+			URL("/company").
 			ExpectedStatus(400).
 			Send(DTO.CreateCompany{
 				LegalName:      lib.GenerateRandomName("Company Legal Name"),
@@ -41,7 +41,7 @@ func Test_Company(t *testing.T) {
 
 	tt.Describe("Check if company was not created due to duplicate subdomain").Test(handlerT.NewHttpClient().
 		Method("GET").
-		URL("/company/tax_id/"+should_not_create_tax_id+"/exists").
+		URL("/company/tax_id/" + should_not_create_tax_id + "/exists").
 		ExpectedStatus(404).
 		Send(nil).Error)
 
