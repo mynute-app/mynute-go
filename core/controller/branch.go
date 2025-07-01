@@ -159,13 +159,12 @@ func DeleteBranchById(c *fiber.Ctx) error {
 func UpdateBranchImages(c *fiber.Ctx) error {
 	var err error
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	var branch model.Branch
 	id := c.Params("id")
@@ -185,9 +184,6 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 	}()
 
 	for img_type := range img_types_allowed {
-		if c.FormValue(img_type) == "" {
-			continue
-		}
 		file, err := c.FormFile(img_type)
 		if err != nil {
 			continue
@@ -197,6 +193,10 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 			return err
 		}
 		uploaded_img_types = append(uploaded_img_types, img_type)
+	}
+
+	if len(uploaded_img_types) == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no images uploaded"))
 	}
 
 	if err = tx.Save(&branch).Error; err != nil {
@@ -222,14 +222,13 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 //	@Router			/branch/{id}/design/images/{image_type} [delete]
 func DeleteBranchImage(c *fiber.Ctx) error {
 	var err error
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
 	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	allowed, ok := img_types_allowed[image_type]
 	if !ok {
@@ -307,8 +306,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		})
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -462,8 +460,7 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -521,8 +518,7 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -581,8 +577,7 @@ func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 	workRangeID := c.Params("work_range_id")
 	serviceID := c.Params("service_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -685,12 +680,11 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 	} else if service_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
-	if err := tx.Where("id = ?", service_id).First(&service).Error; err != nil {
+	if err := tx.First(&service, "id = ?", service_id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("service not found"))
 		}
@@ -734,8 +728,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	} else if service_id == "" {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing service_id in the url"))
 	}
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}

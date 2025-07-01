@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
+	"bytes"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -99,7 +100,7 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 	if err != nil {
 		return err
 	}
-	var emp *model.Employee
+	var updated *model.EmployeeWorkSchedule
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
@@ -108,7 +109,7 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, t).
 		Send(EmployeeWorkSchedule).
-		ParseResponse(&emp).Error; err != nil {
+		ParseResponse(&updated).Error; err != nil {
 		return fmt.Errorf("failed to update employee work schedule: %w", err)
 	}
 
@@ -116,7 +117,7 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 	// 	return fmt.Errorf("invalid work schedule: %w", err)
 	// }
 
-	e.Created.EmployeeWorkSchedule = emp.EmployeeWorkSchedule
+	e.Created.EmployeeWorkSchedule = updated.WorkRanges
 
 	return nil
 }
@@ -375,9 +376,33 @@ func (e *Employee) UploadImages(status int, files map[string][]byte, x_auth_toke
 		Send(fileMap).
 		ParseResponse(&e.Created.Design.Images).
 		Error; err != nil {
-		return fmt.Errorf("failed to upload company images: %w", err)
+		return fmt.Errorf("failed to upload employee images: %w", err)
 	}
 
+	return nil
+}
+
+func (e *Employee) GetImage(status int, imageURL string, compareImgBytes *[]byte) error {
+	if imageURL == "" {
+		return fmt.Errorf("image URL cannot be empty")
+	}
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.URL(imageURL)
+	http.ExpectedStatus(status)
+	http.Send(nil)
+	// Compare the response bytes with the expected image bytes
+	if compareImgBytes != nil {
+		var response []byte
+		http.ParseResponse(&response)
+		if len(response) == 0 {
+			return fmt.Errorf("received empty response for image (%s)", imageURL)
+		} else if len(response) != len(*compareImgBytes) {
+			return fmt.Errorf("image size mismatch for %s: expected %d bytes, got %d bytes", imageURL, len(*compareImgBytes), len(response))
+		} else if !bytes.Equal(response, *compareImgBytes) {
+			return fmt.Errorf("image content mismatch for %s", imageURL)
+		}
+	}
 	return nil
 }
 

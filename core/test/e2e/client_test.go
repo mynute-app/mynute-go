@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/config/db/model"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 
@@ -28,5 +29,17 @@ func Test_Client(t *testing.T) {
 		"name": "Updated Client Name",
 	}))
 	tt.Describe("Client get by email").Test(client.GetByEmail(200))
+	tt.Describe("Upload profile image").Test(client.UploadImages(200, map[string][]byte{
+		"profile": FileBytes.PNG_FILE_1,
+	}, nil))
+
+	tt.Describe("Get profile image").Test(client.GetImage(200, client.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+
+	tt.Describe("Overwrite profile image").Test(client.UploadImages(200, map[string][]byte{
+		"profile": FileBytes.PNG_FILE_3,
+	}, nil))
+
+	tt.Describe("Get overwritten profile image").Test(client.GetImage(200, client.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+
 	tt.Describe("Client deletion").Test(client.Delete(200))
 }

@@ -74,21 +74,24 @@ func (is *Images) Delete(img_type string, caller_entity, caller_id string) error
 	if err != nil {
 		return err
 	}
-	img_types_url := map[string]*string{
-		"profile":    &is.Profile.URL,
-		"logo":       &is.Logo.URL,
-		"banner":     &is.Banner.URL,
-		"favicon":    &is.Favicon.URL,
-		"background": &is.Background.URL,
+	img_types_url := map[string]*Image{
+		"profile":    &is.Profile,
+		"logo":       &is.Logo,
+		"banner":     &is.Banner,
+		"favicon":    &is.Favicon,
+		"background": &is.Background,
 	}
 	target, ok := img_types_url[img_type]
 	if !ok {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid image type: %s", img_type))
 	}
-	if err := up.Delete(*target); err != nil {
+	if err := up.Delete(target.URL); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	*target = "" // Clear the URL after deletion
+	target.URL = "" // Clear the URL after deletion
+	target.Alt = ""
+	target.Title = ""
+	target.Caption = ""
 	return nil
 }
 
@@ -114,7 +117,15 @@ func (i *Image) Save(caller_entity, caller_id string, file *multipart.FileHeader
 		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to get file uploader for caller %s with ID %s: %w", caller_entity, caller_id, err))
 	}
 
-	return up.Replace("image", i.URL, newFile, file.Filename)
+	newUrl, err := up.Replace("image", i.URL, newFile, file.Filename)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to replace image %s for caller %s with ID %s: %w", i.URL, caller_entity, caller_id, err))
+	}
+	i.URL = newUrl
+	i.Alt = file.Filename
+	i.Title = file.Filename
+	i.Caption = file.Filename
+	return i.URL, nil
 }
 
 func (d *DesignConfig) Value() (driver.Value, error) {

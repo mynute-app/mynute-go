@@ -44,16 +44,16 @@ func Test_Branch(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Upload profile image").Test(branch.UploadImages(200, map[string][]byte{
-		"logo": FileBytes.PNG_FILE_1,
+		"profile": FileBytes.PNG_FILE_1,
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Get profile image").Test(branch.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
 
 	tt.Describe("Overwrite profile image").Test(branch.UploadImages(200, map[string][]byte{
-		"logo": FileBytes.PNG_FILE_3,
+		"profile": FileBytes.PNG_FILE_3,
 	}, company.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Get overwritten logo image").Test(branch.GetImage(200, branch.Created.Design.Images.Logo.URL, &FileBytes.PNG_FILE_3))
+	tt.Describe("Get overwritten profile image").Test(branch.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
 	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
 }

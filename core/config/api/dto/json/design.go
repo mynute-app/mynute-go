@@ -13,6 +13,7 @@ type Colors struct {
 }
 
 type Images struct {
+	Profile    Image `json:"profile"`
 	Logo       Image `json:"logo"`
 	Banner     Image `json:"banner"`
 	Background Image `json:"background"`

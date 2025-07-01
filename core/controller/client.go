@@ -3,7 +3,6 @@ package controller
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
 	dJSON "agenda-kaki-go/core/config/api/dto/json"
-	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/config/db/model"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/config/namespace"
@@ -35,8 +34,7 @@ func CreateClient(c *fiber.Ctx) error {
 	if err := c.BodyParser(&client); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -68,8 +66,7 @@ func LoginClient(c *fiber.Ctx) error {
 		return err
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -125,8 +122,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 		}
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -244,8 +240,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing ID on params route"))
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -338,13 +333,12 @@ func DeleteClientById(c *fiber.Ctx) error {
 func UpdateClientImages(c *fiber.Ctx) error {
 	var err error
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	var client model.Client
 	id := c.Params("id")
@@ -364,9 +358,6 @@ func UpdateClientImages(c *fiber.Ctx) error {
 	}()
 
 	for img_type := range img_types_allowed {
-		if c.FormValue(img_type) == "" {
-			continue
-		}
 		file, err := c.FormFile(img_type)
 		if err != nil {
 			continue
@@ -400,15 +391,13 @@ func UpdateClientImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images/{image_type} [delete]
 func DeleteClientImage(c *fiber.Ctx) error {
-	var err error
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
 	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	allowed, ok := img_types_allowed[image_type]
 	if !ok {

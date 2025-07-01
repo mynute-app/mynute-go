@@ -29,9 +29,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func CreateCompany(c *fiber.Ctx) error {
-	var err error
 	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
 	if err != nil {
 		return err
 	}
@@ -58,6 +56,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	domain.CompanyID = company.ID
 
 	if err := company.AddSubdomain(tx, &domain); err != nil {
+		end(err)
 		return err
 	}
 
@@ -71,16 +70,21 @@ func CreateCompany(c *fiber.Ctx) error {
 	owner.CompanyID = company.ID
 
 	if err := company.CreateOwner(tx, &owner); err != nil {
+		end(err)
 		return err
 	}
 
 	if fullCompany, err := company.GetFullCompany(tx); err != nil {
+		end(err)
 		return err
 	} else {
 		if err := lib.ResponseFactory(c).SendDTO(200, fullCompany, &DTO.CompanyFull{}); err != nil {
+			end(err)
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
+
+	end(nil)
 
 	return nil
 }
@@ -349,7 +353,6 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [delete]
 func DeleteCompanyById(c *fiber.Ctx) error {
-	var err error
 	var company model.Company
 
 	company_id := c.Params("id")
@@ -359,8 +362,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 		return lib.Error.Company.NotFound.WithError(err)
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -392,10 +394,7 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
-	var err error
-
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -420,9 +419,6 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 	}()
 
 	for img_type := range img_types_allowed {
-		if c.FormValue(img_type) == "" {
-			continue
-		}
 		file, err := c.FormFile(img_type)
 		if err != nil {
 			continue
@@ -454,9 +450,7 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
-	var err error
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -506,9 +500,7 @@ func DeleteCompanyImage(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company/{id}/design/colors [put]
 func UpdateCompanyColors(c *fiber.Ctx) error {
-	var err error
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}

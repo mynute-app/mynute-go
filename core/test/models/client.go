@@ -7,6 +7,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handler "agenda-kaki-go/core/test/handlers"
+	"bytes"
 	"fmt"
 	"reflect"
 )
@@ -184,9 +185,33 @@ func (c *Client) UploadImages(status int, files map[string][]byte, x_auth_token 
 		Send(fileMap).
 		ParseResponse(&c.Created.Design.Images).
 		Error; err != nil {
-		return fmt.Errorf("failed to upload company images: %w", err)
+		return fmt.Errorf("failed to upload client images: %w", err)
 	}
 
+	return nil
+}
+
+func (c *Client) GetImage(status int, imageURL string, compareImgBytes *[]byte) error {
+	if imageURL == "" {
+		return fmt.Errorf("image URL cannot be empty")
+	}
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.URL(imageURL)
+	http.ExpectedStatus(status)
+	http.Send(nil)
+	// Compare the response bytes with the expected image bytes
+	if compareImgBytes != nil {
+		var response []byte
+		http.ParseResponse(&response)
+		if len(response) == 0 {
+			return fmt.Errorf("received empty response for image (%s)", imageURL)
+		} else if len(response) != len(*compareImgBytes) {
+			return fmt.Errorf("image size mismatch for %s: expected %d bytes, got %d bytes", imageURL, len(*compareImgBytes), len(response))
+		} else if !bytes.Equal(response, *compareImgBytes) {
+			return fmt.Errorf("image content mismatch for %s", imageURL)
+		}
+	}
 	return nil
 }
 

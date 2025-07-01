@@ -88,8 +88,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("missing appointment's id in the url"))
 	}
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -126,9 +125,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
-	res := &lib.SendResponseStruct{Ctx: c}
-
-	if err = res.SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
+	if err = lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
 
@@ -161,8 +158,7 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 	}
 	var appointment model.Appointment
 	appointment.ID = uuid
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}

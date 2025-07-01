@@ -121,11 +121,10 @@ func LoginEmployee(c *fiber.Ctx) error {
 //	@Failure		404		{object}	nil
 //	@Router			/employee/verify-email/{email}/{code} [post]
 func VerifyEmployeeEmail(c *fiber.Ctx) error {
-	var err error
 	email := c.Params("email")
 	var employee model.Employee
 	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
-	email, err = url.QueryUnescape(email)
+	email, err := url.QueryUnescape(email)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
@@ -137,8 +136,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -272,15 +270,12 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400			{object}	lib.ErrorResponse
 //	@Router			/employee/{id}/design/images [post]
 func UpdateEmployeeImages(c *fiber.Ctx) error {
-	var err error
-
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	var employee model.Employee
 	id := c.Params("id")
@@ -300,9 +295,6 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 	}()
 
 	for img_type := range img_types_allowed {
-		if c.FormValue(img_type) == "" {
-			continue
-		}
 		file, err := c.FormFile(img_type)
 		if err != nil {
 			continue
@@ -337,15 +329,13 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/employee/{id}/design/images/{image_type} [delete]
 func DeleteEmployeeImage(c *fiber.Ctx) error {
-	var err error
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
 	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"picture": true}
+	img_types_allowed := map[string]bool{"profile": true}
 
 	allowed, ok := img_types_allowed[image_type]
 	if !ok {
@@ -388,7 +378,6 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //	@Failure		400		{object}	lib.ErrorResponse
 //	@Router			/employee/{id}/work_schedule [post]
 func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
-	var err error
 	var input DTO.CreateEmployeeWorkSchedule
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -426,8 +415,7 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 
 	employee_id := c.Params("id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -479,8 +467,7 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
 	work_range_id := c.Params("work_range_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -624,7 +611,6 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
 func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	work_range_id := c.Params("work_range_id")
 
@@ -636,8 +622,7 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 	var employee model.Employee
 	employee.ID = uuid.MustParse(employee_id)
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -680,13 +665,11 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //		@Failure		400	{object}	lib.ErrorResponse
 //		@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	work_range_id := c.Params("work_range_id")
 	service_id := c.Params("service_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -731,14 +714,12 @@ func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
 func AddServiceToEmployee(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -778,14 +759,12 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [delete]
 func RemoveServiceFromEmployee(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	service_id := c.Params("service_id")
 	var employee model.Employee
 	var service model.Service
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -825,14 +804,12 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [post]
 func AddBranchToEmployee(c *fiber.Ctx) error {
-	var err error
 	var branch model.Branch
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -872,14 +849,12 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [delete]
 func RemoveBranchFromEmployee(c *fiber.Ctx) error {
-	var err error
 	var branch model.Branch
 	var employee model.Employee
 	branch_id := c.Params("branch_id")
 	employee_id := c.Params("employee_id")
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -904,14 +879,12 @@ func RemoveBranchFromEmployee(c *fiber.Ctx) error {
 }
 
 func AddRoleToEmployee(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	role_id := c.Params("role_id")
 	var employee model.Employee
 	var role model.Role
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
@@ -936,14 +909,12 @@ func AddRoleToEmployee(c *fiber.Ctx) error {
 }
 
 func RemoveRoleFromEmployee(c *fiber.Ctx) error {
-	var err error
 	employee_id := c.Params("employee_id")
 	role_id := c.Params("role_id")
 	var employee model.Employee
 	var role model.Role
 
-	tx, end, err := database.ContextTransaction(c)
-	defer end(err)
+	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}

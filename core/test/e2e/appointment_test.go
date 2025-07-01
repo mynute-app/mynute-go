@@ -25,7 +25,7 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Client get by email").Test(ct.GetByEmail(200))
 	tt.Describe("Company setup").Test(cy.Set())
 
-	baseEmployee := cy.Owner
+	baseEmployee := cy.Employees[1]
 	Appointments := []*modelT.Appointment{}
 
 	// --- Test Case 0 ---
@@ -43,7 +43,7 @@ func Test_Appointment(t *testing.T) {
 	tt.Describe("Getting service for slot0").Test(err)
 
 	tt.Describe("Creating appointment a[0]").Test(
-		a0.Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, branch0, baseEmployee, service0, cy, ct),
+		a0.Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct),
 	)
 
 	Appointments = append(Appointments, &a0)
@@ -62,7 +62,7 @@ func Test_Appointment(t *testing.T) {
 	service1, err := utilsT.GetServiceByID(cy, slot1.ServiceID)
 	tt.Describe("Getting service for slot1").Test(err)
 	tt.Describe("Creating appointment a[1]").Test(
-		a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, branch1, baseEmployee, service1, cy, ct),
+		a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, slot1.TimeZone, branch1, baseEmployee, service1, cy, ct),
 	)
 	Appointments = append(Appointments, &a1)
 
@@ -80,7 +80,7 @@ func Test_Appointment(t *testing.T) {
 	service2, err := utilsT.GetServiceByID(cy, slot2.ServiceID)
 	tt.Describe("Getting service for slot2").Test(err)
 	tt.Describe("Creating appointment a[2]").Test(
-		a2.Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, branch2, baseEmployee, service2, cy, ct),
+		a2.Create(200, cy.Owner.X_Auth_Token, nil, &slot2.StartTimeRFC3339, slot2.TimeZone, branch2, baseEmployee, service2, cy, ct),
 	)
 	Appointments = append(Appointments, &a2)
 
@@ -89,9 +89,10 @@ func Test_Appointment(t *testing.T) {
 		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
 	startTimeConflict := Appointments[0].Created.StartTime.Format(time.RFC3339)
+	timeZoneConflict := Appointments[0].Created.TimeZone
 
 	var a3 modelT.Appointment
 	tt.Describe("Creating conflicting appointment a[3]").Test(
-		a3.Create(409, ct.X_Auth_Token, nil, &startTimeConflict, branch0, baseEmployee, service0, cy, ct),
+		a3.Create(409, ct.X_Auth_Token, nil, &startTimeConflict, timeZoneConflict, branch0, baseEmployee, service0, cy, ct),
 	)
 }

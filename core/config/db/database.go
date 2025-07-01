@@ -328,8 +328,9 @@ func (t *Test) Clear() {
 Handle transaction rollback and commit.
 It should be deferred after starting a transaction.
 */
-func Defer(tx *gorm.DB) {
-	if r := recover(); r != nil {
+func DeferPanic(tx *gorm.DB) {
+	r := recover() // Capture panic if any
+	if r != nil {
 		_ = tx.Rollback()
 		if err, ok := r.(error); ok {
 			log.Printf("ContextTransaction rolled back due to panic: %v", err)
@@ -337,13 +338,6 @@ func Defer(tx *gorm.DB) {
 			log.Println("ContextTransaction rolled back due to unknown panic.")
 		}
 		panic(r) // re-throw
-	} else {
-		// Commit and log error if commit fails
-		if err := tx.Commit().Error; err != nil {
-			if err.Error() != "sql: transaction has already been committed or rolled back" {
-				_ = tx.Rollback()
-			}
-		}
 	}
 }
 
@@ -354,25 +348,38 @@ func Defer(tx *gorm.DB) {
 */
 // @return func() - The function to be defered
 func DeferCallback(tx *gorm.DB) func(error) {
+	DeferError := Rollback(tx)
+	CommitSuccess := Commit(tx)
 	return func(err error) {
-		Defer(tx)
+		DeferPanic(tx)
+		DeferError(err)
+		CommitSuccess(err)
+	}
+}
+
+func Commit(tx *gorm.DB) func(err error) {
+	return func(err error) {
 		if err != nil {
-			Rollback(tx)(err)
+			return
+		}
+		if err := tx.Commit().Error; err != nil {
+			if err.Error() != "sql: transaction has already been committed or rolled back" {
+				_ = tx.Rollback()
+			}
 		}
 	}
 }
 
-func Rollback(tx *gorm.DB) func(err error) error {
-	return func(err error) error {
-		if err != nil {
-			if rollbackErr := tx.Rollback().Error; rollbackErr != nil {
-				log.Printf("Rollback failed: %v", rollbackErr)
-				return lib.Error.General.DatabaseError.WithError(rollbackErr).WithError(err)
-			}
-			log.Printf("Transaction rolled back due to error: %v", err)
-			return err
+func Rollback(tx *gorm.DB) func(err error) {
+	return func(err error) {
+		if err == nil {
+			return // No error, no rollback needed
 		}
-		return nil
+		if rollbackErr := tx.Rollback().Error; rollbackErr != nil {
+			log.Printf("Rollback failed: %v", rollbackErr)
+			return
+		}
+		log.Printf("Transaction rolled back due to error: %v", err)
 	}
 }
 

@@ -303,7 +303,6 @@ var UpdateClientImages = &EndPoint{
 	ControllerName:   "UpdateClientImages",
 	Description:      "Update client design images",
 	DenyUnauthorized: true,
-	NeedsCompanyId:   true,
 	Resource:         ClientResource,
 }
 var DeleteClientImage = &EndPoint{
@@ -312,7 +311,6 @@ var DeleteClientImage = &EndPoint{
 	ControllerName:   "DeleteClientImage",
 	Description:      "Delete client design images",
 	DenyUnauthorized: true,
-	NeedsCompanyId:   true,
 	Resource:         ClientResource,
 }
 

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -177,7 +178,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 	return nil
 }
 
-func (a *Appointment) Create(status int, x_auth_token string, x_company_id *string, startTime *string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
+func (a *Appointment) Create(status int, x_auth_token string, x_company_id *string, startTime *string, tz string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
 	companyIDStr := cy.Created.ID.String()
 	cID, err := get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
@@ -200,9 +201,14 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 		ClientID:   ct.Created.ID,
 		CompanyID:  cy.Created.ID,
 		StartTime:  *startTime,
+		TimeZone:   tz,
 	}
-	http.Send(A)
-	http.ParseResponse(&a.Created)
+	if err := http.Send(A).Error; err != nil {
+		return fmt.Errorf("failed to create appointment: %w", err)
+	}
+	if err := http.ParseResponse(&a.Created).Error; err != nil {
+		return fmt.Errorf("failed to parse appointment response: %w", err)
+	}
 	if err := b.GetById(200, cy.Owner.X_Auth_Token, x_company_id); err != nil {
 		return err
 	}
@@ -294,6 +300,7 @@ type FoundAppointmentSlot struct {
 	StartTimeRFC3339 string
 	BranchID         string
 	ServiceID        string
+	TimeZone         string // Timezone in IANA format, e.g., "America/New_York"
 }
 
 const (
@@ -329,7 +336,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 		currentWeekday := currentDate.Weekday()
 		workRanges := weekdaySchedules[currentWeekday]
 
-		for iWr, wr := range workRanges {
+		for _, wr := range workRanges {
 			branch, ok := branchCache[wr.BranchID.String()]
 			if !ok {
 				var branchModel model.Branch
@@ -366,27 +373,29 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 					serviceCache[sID] = service
 				}
 				duration := time.Duration(service.Duration) * time.Minute
-				startTime, err := parseTimeWithLocation(currentDate, wr.StartTime.String(), preferredLocation)
-				if err != nil {
-					return nil, false, fmt.Errorf("failed to parse start time for work range #%d: %w", iWr, err)
-				}
-				endTime, err := parseTimeWithLocation(currentDate, wr.EndTime.String(), preferredLocation)
-				if err != nil || !startTime.Before(endTime) {
-					return nil, false, fmt.Errorf("invalid time range for work range #%d: %w", iWr, err)
-				}
-				for t := startTime; t.Add(duration).Before(endTime) || t.Add(duration).Equal(endTime); t = t.Add(slotSearchTimeStep) {
-					if t.Before(now) {
+				startTime := wr.StartTime.In(preferredLocation)
+				endTime := wr.EndTime.In(preferredLocation)
+				// startTime, err := parseTimeWithLocation(currentDate, wr.StartTime.String(), wr.TimeZone, preferredLocation)
+				// if err != nil {
+				// 	return nil, false, fmt.Errorf("failed to parse start time for work range #%d: %w", iWr, err)
+				// }
+				// endTime, err := parseTimeWithLocation(currentDate, wr.EndTime.String(), wr.TimeZone, preferredLocation)
+				// if err != nil || !startTime.Before(endTime) {
+				// 	return nil, false, fmt.Errorf("invalid time range for work range #%d: %w", iWr, err)
+				// }
+				for tStart := startTime; tStart.Add(duration).Before(endTime) || tStart.Add(duration).Equal(endTime); tStart = tStart.Add(slotSearchTimeStep) {
+					if tStart.Before(now) {
 						continue
 					}
-					tEnd := t.Add(duration)
+					tEnd := tStart.Add(duration)
 					overlap := false
 					for _, appt := range employee.Created.Appointments {
 						start := appt.StartTime.In(preferredLocation)
-						end := appt.EndTime
+						end := appt.EndTime.In(preferredLocation)
 						if end.IsZero() && appt.Service != nil {
 							end = start.Add(time.Duration(appt.Service.Duration) * time.Minute)
 						}
-						if start.Before(tEnd) && end.After(t) {
+						if start.Before(tEnd) && end.After(tStart) {
 							overlap = true
 							break
 						}
@@ -395,9 +404,10 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 						continue
 					}
 					return &FoundAppointmentSlot{
-						StartTimeRFC3339: t.Format(time.RFC3339),
+						StartTimeRFC3339: tStart.Format(time.RFC3339),
 						BranchID:         branchID,
 						ServiceID:        sID,
+						TimeZone:         preferredLocation.String(),
 					}, true, nil
 				}
 			}
@@ -406,27 +416,47 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s", employee.Created.ID.String())
 }
 
-// Helper to parse HH:MM or HH:MM:SS time string into a full time.Time on a specific date/location
-func parseTimeWithLocation(targetDate time.Time, timeStr string, loc *time.Location) (time.Time, error) {
-	layout := "15:04" // Default HH:MM
-	colonCount := 0
-	for _, r := range timeStr {
-		if r == ':' {
-			colonCount++
+// parseTimeWithLocation parses a time string in "HH:MM" (15:04) or "HH:MM:SS" (15:04:05) format and combines it with a given date.
+// It also supports full time.Time string formats like "YYYY-MM-DD HH:MM:SS -LLLL -LL" (0001-01-01 07:00:00 -0300 -03), extracting only the time part.
+//
+// Parameters:
+// - targetDate: the date to apply the parsed time to.
+// - timeStr: a string representing the time, either in "HH:MM", "HH:MM:SS", or full time.Time.String() format.
+// - loc: the time.Location to apply.
+//
+// Returns:
+// - A time.Time with the date from targetDate and the time from timeStr.
+// - An error if parsing fails.
+func parseTimeWithLocation(targetDate time.Time, timeStr string, original_time_zone string, preferred_time_zone *time.Location) (time.Time, error) {
+	// If the input looks like a full time.Time string, extract just the "HH:MM:SS" part
+	if strings.Contains(timeStr, " ") && strings.Contains(timeStr, "-") && strings.Contains(timeStr, ":") {
+		parts := strings.Fields(timeStr)
+		if len(parts) >= 2 {
+			timeStr = parts[1] // Extract only the time portion, e.g., "07:00:00"
 		}
 	}
-	if colonCount == 2 { // Detect HH:MM:SS
+
+	// Determine the expected layout based on number of colons
+	layout := "15:04"
+	if strings.Count(timeStr, ":") == 2 {
 		layout = "15:04:05"
 	}
 
-	parsedTime, err := time.ParseInLocation(layout, timeStr, loc)
+	time_original_time_zone, err := time.LoadLocation(original_time_zone)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid time zone '%s': %w", time_original_time_zone, err)
+	}
+
+	timeParsed, err := time.ParseInLocation(layout, timeStr, time_original_time_zone)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed to parse time string '%s' with layout '%s': %w", timeStr, layout, err)
 	}
-	// Combine the date part from targetDate with the time parts from parsedTime
+
+	timeInLoc := timeParsed.In(preferred_time_zone)
+
 	return time.Date(
 		targetDate.Year(), targetDate.Month(), targetDate.Day(),
-		parsedTime.Hour(), parsedTime.Minute(), parsedTime.Second(), 0, // Nanoseconds set to 0
-		loc,
+		timeInLoc.Hour(), timeInLoc.Minute(), timeInLoc.Second(), 0,
+		preferred_time_zone,
 	), nil
 }

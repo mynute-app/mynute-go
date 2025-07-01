@@ -13,6 +13,7 @@ type CreateAppointment struct {
 	BranchID   uuid.UUID `json:"branch_id" example:"00000000-0000-0000-0000-000000000000"`
 	CompanyID  uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	StartTime  string    `json:"start_time" example:"2028-01-01T09:00:00Z"`
+	TimeZone   string    `json:"time_zone" example:"America/New_York"` // Timezone in IANA format, e.g., "America/New_York"
 }
 
 type UpdateAppointment struct {
@@ -31,6 +32,7 @@ type Appointment struct {
 	CancelledEmployeeID   uuid.UUID                `json:"cancelled_employee_id" example:"00000000-0000-0000-0000-000000000000"`
 	StartTime             string                   `json:"start_time" example:"2021-01-01T09:00:00Z"`
 	EndTime               string                   `json:"end_time" example:"2021-01-01T10:00:00Z"`
+	TimeZone              string                   `json:"time_zone" example:"America/New_York"`
 	Rescheduled           bool                     `json:"rescheduled" example:"false"`
 	Cancelled             bool                     `json:"cancelled" example:"false"`
 	CancelTime            string                   `json:"cancel_time" example:"2021-01-01T08:00:00Z"`
