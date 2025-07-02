@@ -25,7 +25,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"
-//	@Success		200		{object}	DTO.Company
+//	@Success		200		{object}	DTO.CompanyFull
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/company [post]
 func CreateCompany(c *fiber.Ctx) error {
@@ -96,7 +96,7 @@ func CreateCompany(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Param			id	path	string	true	"Company ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Company
+//	@Success		200	{object}	DTO.CompanyFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [get]
 func GetCompanyById(c *fiber.Ctx) error {
@@ -135,7 +135,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Param			name	path	string	true	"Company Name"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Company
+//	@Success		200	{object}	DTO.CompanyFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/name/{name} [get]
 func GetCompanyByName(c *fiber.Ctx) error {
@@ -213,7 +213,7 @@ func CheckIfCompanyExistsByTaxID(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Param			tax_id	path	string	true	"Company Tax ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Company
+//	@Success		200	{object}	DTO.CompanyFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/tax_id/{tax_id} [get]
 func GetCompanyByTaxId(c *fiber.Ctx) error {
@@ -252,7 +252,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 //	@Tags			Company
 //	@Param			subdomain_name	path	string	true	"Subdomain Name"
 //	@Produce		json
-//	@Success		200	{object}	DTO.CompanyPublic
+//	@Success		200	{object}	DTO.CompanyBase
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/subdomain/{subdomain_name} [get]
 func GetCompanyBySubdomain(c *fiber.Ctx) error {
@@ -308,7 +308,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			company	body		DTO.CreateCompany	true	"Company"
-//	@Success		200		{object}	DTO.Company
+//	@Success		200		{object}	DTO.CompanyFull
 //	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [patch]
 func UpdateCompanyById(c *fiber.Ctx) error {
@@ -349,7 +349,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Company ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Company
+//	@Success		200	{object}	DTO.CompanyFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/company/{id} [delete]
 func DeleteCompanyById(c *fiber.Ctx) error {

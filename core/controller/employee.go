@@ -28,12 +28,12 @@ import (
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
-//	@Success		200			{object}	DTO.Employee
+//	@Success		200			{object}	DTO.EmployeeFull
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee [post]
 func CreateEmployee(c *fiber.Ctx) error {
@@ -54,6 +54,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Summary		Login
 //	@Description	Log in an client
 //	@Tags			Employee
+//	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
@@ -112,6 +113,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 //	@Summary		Verify email
 //	@Description	Verify an employee's email
 //	@Tags			Employee
+//	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
@@ -163,11 +165,11 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
@@ -190,11 +192,11 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
@@ -215,13 +217,13 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
 //	@Param			employee	body		DTO.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200			{object}	DTO.Employee
+//	@Success		200			{object}	DTO.EmployeeFull
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
@@ -242,11 +244,11 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
@@ -260,14 +262,14 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			image		formData	file	true	"Image File"
-//	@Success		200			{object}	DTO.EmployeeImages
-//	@Failure		400			{object}	lib.ErrorResponse
+//	@Param			profile	formData	file	false	"Profile image"
+//	@Success		200		{object}	dJSON.Images
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/design/images [post]
 func UpdateEmployeeImages(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
@@ -288,13 +290,13 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Failure		401				{object}	nil
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID
 //	@Param			id				path		string	true	"Employee ID"
 //	@Param			image_type		path		string	true	"Image Type (logo, banner, favicon, background)"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.Images
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/design/images/{image_type} [delete]
 func DeleteEmployeeImage(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
@@ -314,13 +316,13 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //	@Tags			EmployeeWorkSchedule
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil	"Unauthorized"
+//	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Param			work_schedule	body		DTO.CreateEmployeeWorkSchedule	true	"Work Schedule"
-//	@Param			id				path		string	true	"Employee ID"
-//	@Success		200		{object}	DTO.EmployeeFull
-//	@Failure		400		{object}	lib.ErrorResponse
+//	@Param			id				path		string							true	"Employee ID"
+//	@Success		200				{object}	DTO.EmployeeFull
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/work_schedule [post]
 func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 	var input DTO.CreateEmployeeWorkSchedule
@@ -399,14 +401,14 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 //	@Tags			EmployeeWorkSchedule
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil	"Unauthorized"
+//	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
-//	@Failure		400	{object}	lib.ErrorResponse
-//	@Router			employee/{id}/work_schedule/{work_range_id} [delete]
+//	@Success		200	{object}	DTO.EmployeeFull
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/{id}/work_schedule/{work_range_id} [delete]
 func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 	var err error
 	employee_id := c.Params("id")
@@ -464,15 +466,15 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Tags			EmployeeWorkRange
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			work_range	body		DTO.UpdateWorkRange	true	"Work Range"
-//	@Success		200		{object}	DTO.EmployeeFull
-//	@Failure		400		{object}	lib.ErrorResponse
+//	@Success		200			{object}	DTO.EmployeeFull
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/work_range/{work_range_id} [put]
 func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
@@ -545,15 +547,15 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Tags			EmployeeWorkRange
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Param			employee_id	path		string	true	"Employee ID"
+//	@Failure		401				{object}	nil
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			services	body		[]DTO.ServiceID	true	"Services"
-//	@Success		200	{object}	DTO.EmployeeFull
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Success		200			{object}	DTO.EmployeeFull
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
 func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
@@ -594,21 +596,21 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 
 // DeleteEmployeeWorkRangeService removes a service from employee's work range
 //
-//		@Summary		Remove service from employee's work range
-//		@Description	Remove a service from an employee's work range
-//		@Tags			EmployeeWorkRange
-//		@Security		ApiKeyAuth
-//		@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//		@Failure		401				{object}	nil
-//		@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//		@Param			employee_id	path		string	true	"Employee ID"
-//		@Param			work_range_id	path		string	true	"Work Range ID"
-//	 @Param 			service_id	path		string	true	"Service ID"
-//		@Accept			json
-//		@Produce		json
-//		@Success		200	{object}	DTO.EmployeeFull
-//		@Failure		400	{object}	lib.ErrorResponse
-//		@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
+//	@Summary		Remove service from employee's work range
+//	@Description	Remove a service from an employee's work range
+//	@Tags			EmployeeWorkRange
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
+//	@Param			employee_id		path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Param			service_id		path		string	true	"Service ID"
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	DTO.EmployeeFull
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
 	work_range_id := c.Params("work_range_id")
@@ -648,14 +650,14 @@ func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee_id	path		string	true	"Employee ID"
 //	@Param			service_id	path		string	true	"Service ID"
-//	@Success		200			{object}	DTO.Employee
+//	@Success		200			{object}	DTO.EmployeeFull
 //	@Failure		404			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [post]
 func AddServiceToEmployee(c *fiber.Ctx) error {
@@ -695,12 +697,12 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/service/{service_id} [delete]
 func RemoveServiceFromEmployee(c *fiber.Ctx) error {
@@ -740,12 +742,12 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [post]
 func AddBranchToEmployee(c *fiber.Ctx) error {
@@ -785,12 +787,12 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Employee
+//	@Success		200	{object}	DTO.EmployeeFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/branch/{branch_id} [delete]
 func RemoveBranchFromEmployee(c *fiber.Ctx) error {

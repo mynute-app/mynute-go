@@ -29,7 +29,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			branch	body		DTO.CreateBranch	true	"Branch"
-//	@Success		200		{object}	DTO.Branch
+//	@Success		200		{object}	DTO.BranchFull
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch [post]
 func CreateBranch(c *fiber.Ctx) error {
@@ -54,7 +54,7 @@ func CreateBranch(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Branch ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.BranchFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [get]
 func GetBranchById(c *fiber.Ctx) error {
@@ -79,7 +79,7 @@ func GetBranchById(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			name			path		string	true	"Branch Name"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.BranchFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/name/{name} [get]
 func GetBranchByName(c *fiber.Ctx) error {
@@ -106,7 +106,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id		path		string				true	"Branch ID"
 //	@Param			branch	body		DTO.UpdateBranch	true	"Branch"
-//	@Success		200		{object}	DTO.Branch
+//	@Success		200		{object}	DTO.BranchFull
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [patch]
 func UpdateBranchById(c *fiber.Ctx) error {
@@ -133,7 +133,7 @@ func UpdateBranchById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{id} [delete]
 func DeleteBranchById(c *fiber.Ctx) error {
@@ -152,9 +152,9 @@ func DeleteBranchById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Branch ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			images			body		DTO.UpdateBranchImages	true	"Branch Images"
-//	@Success		200				{object}	DTO.Branch
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Param			profile	formData	file	false	"Profile image"
+//	@Success		200		{object}	dJSON.Images
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images [patch]
 func UpdateBranchImages(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
@@ -179,7 +179,7 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Branch ID"
 //	@Param			image_type		path		string	true	"Image Type"
-//	@Success		200				{object}	DTO.Branch
+//	@Success		200				{object}	dJSON.Images
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images/{image_type} [delete]
 func DeleteBranchImage(c *fiber.Ctx) error {
@@ -199,12 +199,12 @@ func DeleteBranchImage(c *fiber.Ctx) error {
 //	@Description	Create a work schedule for a branch
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			id				path	string	true	"Branch ID"
-//	@Param			work_schedule	body	DTO.CreateBranchWorkSchedule	true	"Branch Work Schedule"
-//	@Success		200	{object}	DTO.BranchFull
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Param			X-Auth-Token	header		string							true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string							true	"X-Company-ID"
+//	@Param			id				path		string							true	"Branch ID"
+//	@Param			work_schedule	body		DTO.CreateBranchWorkSchedule	true	"Branch Work Schedule"
+//	@Success		200				{object}	DTO.BranchFull
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_schedule [post]
 func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	var err error
@@ -285,7 +285,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 //	@Param			work_range_id	path	string	true	"Work Range ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.BranchWorkRange
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 func GetBranchWorkRange(c *fiber.Ctx) error {
 	branchID := c.Params("id")
 	workRangeID := c.Params("work_range_id")
@@ -313,13 +313,13 @@ func GetBranchWorkRange(c *fiber.Ctx) error {
 //	@Description	Update a branch's work range
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			id				path	string	true	"Branch ID"
-//	@Param			work_range_id	path	string	true	"Work Range ID"
-//	@Param			work_range		body	DTO.UpdateWorkRange	true	"Work Range"
-//	@Success		200	{object}	DTO.BranchFull
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Param			X-Auth-Token	header		string				true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string				true	"X-Company-ID"
+//	@Param			id				path		string				true	"Branch ID"
+//	@Param			work_range_id	path		string				true	"Work Range ID"
+//	@Param			work_range		body		DTO.UpdateWorkRange	true	"Work Range"
+//	@Success		200				{object}	DTO.BranchFull
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id} [put]
 func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	branch_id := c.Params("id")
@@ -386,12 +386,12 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 //	@Description	Delete a branch's work range
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			id				path	string	true	"Branch ID"
-//	@Param			work_range_id	path	string	true	"Work Range ID"
-//	@Success		200	{object}	DTO.Branch
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Success		200				{object}	DTO.BranchWorkRange
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id} [delete]
 func DeleteBranchWorkRange(c *fiber.Ctx) error {
 	var err error
@@ -438,13 +438,13 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 //	@Description	Add services to a branch's work range
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			id				path	string	true	"Branch ID"
-//	@Param			work_range_id	path	string	true	"Work Range ID"
-//	@Param			services		body	[]DTO.ServiceID	true	"Services"
-//	@Success		200	{object}	DTO.BranchFull
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Param			X-Auth-Token	header		string			true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string			true	"X-Company-ID"
+//	@Param			id				path		string			true	"Branch ID"
+//	@Param			work_range_id	path		string			true	"Work Range ID"
+//	@Param			services		body		[]DTO.ServiceID	true	"Services"
+//	@Success		200				{object}	DTO.BranchFull
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/services [post]
 func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 	var err error
@@ -501,13 +501,13 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 //	@Description	Remove a service from a branch's work range
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			id				path	string	true	"Branch ID"
-//	@Param			work_range_id	path	string	true	"Work Range ID"
-//	@Param			service_id		path	string	true	"Service ID"
-//	@Success		200	{object}	DTO.BranchFull
-//	@Failure		400	{object}	lib.ErrorResponse
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Param			service_id		path		string	true	"Service ID"
+//	@Success		200				{object}	DTO.BranchFull
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 	var err error
@@ -604,7 +604,7 @@ func GetEmployeeServicesByBranchId(c *fiber.Ctx) error {
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.BranchFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [post]
 func AddServiceToBranch(c *fiber.Ctx) error {
@@ -652,7 +652,7 @@ func AddServiceToBranch(c *fiber.Ctx) error {
 //	@Param			branch_id		path		string	true	"Branch ID"
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Branch
+//	@Success		200	{object}	DTO.BranchFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/service/{service_id} [delete]
 func RemoveServiceFromBranch(c *fiber.Ctx) error {

@@ -61,8 +61,53 @@ definitions:
       start_time:
         example: "2021-01-01T09:00:00Z"
         type: string
+      time_zone:
+        example: America/New_York
+        type: string
     type: object
-  DTO.Branch:
+  DTO.BranchBase:
+    description: Branch Base DTO
+    properties:
+      city:
+        example: New York
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
+        type: string
+      zip_code:
+        example: "10001"
+        type: string
+    type: object
+  DTO.BranchFull:
+    description: Branch Full DTO
     properties:
       appointments:
         items:
@@ -84,7 +129,7 @@ definitions:
         type: string
       employees:
         items:
-          $ref: '#/definitions/DTO.EmployeePopulated'
+          $ref: '#/definitions/DTO.EmployeeBase'
         type: array
       id:
         example: 00000000-0000-0000-0000-000000000000
@@ -104,56 +149,57 @@ definitions:
         type: array
       services:
         items:
-          $ref: '#/definitions/DTO.ServicePopulated'
+          $ref: '#/definitions/DTO.ServiceBase'
         type: array
       state:
         example: NY
         type: string
       street:
         example: 123 Main St
+        type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
         type: string
       zip_code:
         example: "10001"
         type: string
     type: object
-  DTO.BranchPopulated:
+  DTO.BranchWorkRange:
+    description: represents a work range for a branch, including its ID and the data
+      required to create it.
     properties:
-      branch_density:
-        type: integer
-      city:
-        example: New York
-        type: string
-      complement:
-        example: Suite 100
-        type: string
-      country:
-        example: USA
-        type: string
-      id:
+      branch_id:
+        description: Branch ID
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      name:
-        example: Main Branch
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
         type: string
-      neighborhood:
-        example: Downtown
+      id:
+        description: Work range ID
+        example: 00000000-0000-0000-0000-000000000000
         type: string
-      number:
-        example: "456"
-        type: string
-      service_density:
+      services:
+        description: List of services associated with the work range
         items:
-          $ref: '#/definitions/DTO.ServiceDensity'
+          type: object
         type: array
-      state:
-        example: NY
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
         type: string
-      street:
-        example: 123 Main St
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
         type: string
-      zip_code:
-        example: "10001"
-        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
     type: object
   DTO.Client:
     properties:
@@ -176,18 +222,45 @@ definitions:
         example: false
         type: boolean
     type: object
-  DTO.Company:
+  DTO.CompanyBase:
+    description: Company Base DTO
+    properties:
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      id:
+        description: Primary key
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      legal_name:
+        example: Your Company Legal Name
+        type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
+      subdomains:
+        items:
+          $ref: '#/definitions/DTO.Subdomain'
+        type: array
+      tax_id:
+        example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
+        type: string
+    type: object
+  DTO.CompanyFull:
     description: Company Full DTO
     properties:
       branches:
         items:
-          $ref: '#/definitions/DTO.BranchPopulated'
+          $ref: '#/definitions/DTO.BranchBase'
         type: array
       design:
         $ref: '#/definitions/mJSON.DesignConfig'
       employees:
         items:
-          $ref: '#/definitions/DTO.EmployeePopulated'
+          $ref: '#/definitions/DTO.EmployeeBase'
         type: array
       id:
         description: Primary key
@@ -202,34 +275,7 @@ definitions:
         type: array
       services:
         items:
-          $ref: '#/definitions/DTO.ServicePopulated'
-        type: array
-      subdomains:
-        items:
-          $ref: '#/definitions/DTO.Subdomain'
-        type: array
-      tax_id:
-        example: "00000000000000"
-        type: string
-      trading_name:
-        example: Your Company Trading Name
-        type: string
-    type: object
-  DTO.CompanyPublic:
-    description: Company DTO Populated
-    properties:
-      design:
-        $ref: '#/definitions/mJSON.DesignConfig'
-      id:
-        description: Primary key
-        example: 00000000-0000-0000-0000-000000000000
-        type: string
-      legal_name:
-        example: Your Company Legal Name
-        type: string
-      sectors:
-        items:
-          $ref: '#/definitions/DTO.Sector'
+          $ref: '#/definitions/DTO.ServiceBase'
         type: array
       subdomains:
         items:
@@ -262,8 +308,13 @@ definitions:
       start_time:
         example: "2028-01-01T09:00:00Z"
         type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
     type: object
   DTO.CreateBranch:
+    description: Branch Create DTO
     properties:
       city:
         example: New York
@@ -292,9 +343,52 @@ definitions:
       street:
         example: 123 Main St
         type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
+        type: string
       zip_code:
         example: "10001"
         type: string
+    type: object
+  DTO.CreateBranchWorkRange:
+    description: represents the data required to create a work range for a branch.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.CreateBranchWorkSchedule:
+    description: represents the data required to create a work schedule for a branch.
+    properties:
+      branch_work_ranges:
+        items:
+          $ref: '#/definitions/DTO.CreateBranchWorkRange'
+        type: array
     type: object
   DTO.CreateClient:
     properties:
@@ -371,8 +465,50 @@ definitions:
       surname:
         example: Doe
         type: string
-      work_schedule:
-        $ref: '#/definitions/DTO.WorkSchedule'
+    type: object
+  DTO.CreateEmployeeWorkRange:
+    description: represents the data required to create a work range for an employee.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        description: Employee ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.CreateEmployeeWorkSchedule:
+    description: represents the data required to create a work schedule for an employee.
+    properties:
+      employee_work_ranges:
+        description: List of work ranges for the employee
+        items:
+          $ref: '#/definitions/DTO.CreateEmployeeWorkRange'
+        type: array
     type: object
   DTO.CreateService:
     properties:
@@ -392,7 +528,30 @@ definitions:
         example: 150
         type: integer
     type: object
-  DTO.Employee:
+  DTO.EmployeeBase:
+    description: Employee Base DTO
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
+  DTO.EmployeeFull:
+    description: Employee Full DTO
     properties:
       appointments:
         items:
@@ -400,7 +559,7 @@ definitions:
         type: array
       branches:
         items:
-          $ref: '#/definitions/DTO.BranchPopulated'
+          $ref: '#/definitions/DTO.BranchBase'
         type: array
       company_id:
         example: 00000000-0000-0000-0000-000000000000
@@ -423,54 +582,58 @@ definitions:
         type: array
       services:
         items:
-          $ref: '#/definitions/DTO.ServicePopulated'
+          $ref: '#/definitions/DTO.ServiceBase'
         type: array
       surname:
         example: Doe
         type: string
-      tags:
-        example:
-        - '["tag1"'
-        - ' "tag2"]'
-        items:
-          type: string
-        type: array
       verified:
         example: true
         type: boolean
       work_schedule:
-        $ref: '#/definitions/DTO.WorkSchedule'
+        items:
+          $ref: '#/definitions/DTO.EmployeeWorkRange'
+        type: array
     type: object
-  DTO.EmployeePopulated:
+  DTO.EmployeeWorkRange:
+    description: represents a work range for an employee, including its ID and the
+      data required to create it.
     properties:
-      company_id:
+      branch_id:
+        description: Branch ID
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      email:
-        example: john.doe@example.com
+      employee_id:
+        description: Employee ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
         type: string
       id:
+        description: Work range ID
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      name:
-        example: John
-        type: string
-      phone:
-        example: "+15555555555"
-        type: string
-      role:
-        example: client
-        type: string
-      surname:
-        example: Doe
-        type: string
-      tags:
-        example:
-        - '["tag1"'
-        - ' "tag2"]'
+      services:
+        description: List of services associated with the work range
         items:
-          type: string
+          type: object
         type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
     type: object
   DTO.ErrorResponse:
     description: Error Response Model
@@ -551,10 +714,11 @@ definitions:
         type: string
     type: object
   DTO.Service:
+    description: Service Full DTO
     properties:
       branches:
         items:
-          $ref: '#/definitions/DTO.BranchPopulated'
+          $ref: '#/definitions/DTO.BranchBase'
         type: array
       company_id:
         example: "1"
@@ -567,8 +731,30 @@ definitions:
         type: integer
       employees:
         items:
-          $ref: '#/definitions/DTO.EmployeePopulated'
+          $ref: '#/definitions/DTO.EmployeeBase'
         type: array
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
+  DTO.ServiceBase:
+    description: Service Base DTO
+    properties:
+      company_id:
+        example: "1"
+        type: string
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      duration:
+        example: 60
+        type: integer
       id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
@@ -588,23 +774,11 @@ definitions:
         example: 00000000-0000-0000-0000-000000000000
         type: string
     type: object
-  DTO.ServicePopulated:
+  DTO.ServiceID:
     properties:
-      description:
-        example: A 60-minute in-depth business consultation
-        type: string
-      duration:
-        example: 60
-        type: integer
       id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      name:
-        example: Premium Consultation
-        type: string
-      price:
-        example: 150
-        type: integer
     type: object
   DTO.Subdomain:
     properties:
@@ -622,6 +796,7 @@ definitions:
         type: string
     type: object
   DTO.UpdateBranch:
+    description: Branch Update DTO
     properties:
       company_id:
         example: 00000000-0000-0000-0000-000000000000
@@ -642,47 +817,26 @@ definitions:
         example: Clark
         type: string
     type: object
-  DTO.WorkRange:
+  DTO.UpdateWorkRange:
     properties:
-      branch_id:
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
         type: string
-      end:
-        description: Store as "18:00:00"
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
         type: string
-      start:
-        description: Store as "15:30:00"
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
         type: string
-    type: object
-  DTO.WorkSchedule:
-    properties:
-      friday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      monday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      saturday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      sunday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      thursday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      tuesday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
-      wednesday:
-        items:
-          $ref: '#/definitions/DTO.WorkRange'
-        type: array
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
     type: object
   dJSON.AppointmentHistory:
     properties:
@@ -821,6 +975,8 @@ definitions:
         $ref: '#/definitions/dJSON.Image'
       logo:
         $ref: '#/definitions/dJSON.Image'
+      profile:
+        $ref: '#/definitions/dJSON.Image'
     type: object
   mJSON.Colors:
     properties:
@@ -860,6 +1016,8 @@ definitions:
       favicon:
         $ref: '#/definitions/mJSON.Image'
       logo:
+        $ref: '#/definitions/mJSON.Image'
+      profile:
         $ref: '#/definitions/mJSON.Image'
     type: object
 info:
@@ -1049,10 +1207,10 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1136,7 +1294,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1177,7 +1335,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1208,8 +1366,6 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/DTO.Branch'
         "400":
           description: Bad Request
           schema:
@@ -1245,7 +1401,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1289,7 +1445,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1301,6 +1457,298 @@ paths:
       summary: Update branch
       tags:
       - Branch
+  /branch/{id}/design/images:
+    patch:
+      consumes:
+      - application/json
+      description: Update a branch's images
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch images
+      tags:
+      - Branch
+  /branch/{id}/design/images/{image_type}:
+    delete:
+      description: Delete a branch's image
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type
+        in: path
+        name: image_type
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch image
+      tags:
+      - Branch
+  /branch/{id}/work_range/{work_range_id}:
+    delete:
+      description: Delete a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch work range
+      tags:
+      - BranchWorkSchedule
+    put:
+      description: Update a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Work Range
+        in: body
+        name: work_range
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateWorkRange'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_range/{work_range_id}/service/{service_id}:
+    delete:
+      description: Remove a service from a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_range/{work_range_id}/services:
+    post:
+      description: Add services to a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Services
+        in: body
+        name: services
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/DTO.ServiceID'
+          type: array
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add services to branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_schedule:
+    post:
+      description: Create a work schedule for a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Branch Work Schedule
+        in: body
+        name: work_schedule
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateBranchWorkSchedule'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create work schedule for a branch
+      tags:
+      - BranchWorkSchedule
   /branch/name/{name}:
     get:
       description: Retrieve a branch by its name
@@ -1326,7 +1774,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Branch'
+            $ref: '#/definitions/DTO.BranchFull'
         "400":
           description: Bad Request
           schema:
@@ -1390,6 +1838,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete client
+      tags:
+      - Client
+    get:
+      description: Retrieve an client by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get client by ID
       tags:
       - Client
     patch:
@@ -1461,6 +1938,81 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get client appointments
+      tags:
+      - Client
+  /client/{id}/design/images:
+    patch:
+      consumes:
+      - application/json
+      description: Update the design images of an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update client design images
+      tags:
+      - Client
+  /client/{id}/design/images/{image_type}:
+    delete:
+      description: Delete the design images of an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type
+        in: path
+        name: image_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete client design images
       tags:
       - Client
   /client/email/{email}:
@@ -1563,7 +2115,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "400":
           description: Bad Request
           schema:
@@ -1596,7 +2148,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "400":
           description: Bad Request
           schema:
@@ -1622,7 +2174,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "400":
           description: Bad Request
           schema:
@@ -1659,10 +2211,10 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "401":
           description: Unauthorized
         "404":
@@ -1830,7 +2382,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "400":
           description: Bad Request
           schema:
@@ -1853,7 +2405,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.CompanyPublic'
+            $ref: '#/definitions/DTO.CompanyBase'
         "400":
           description: Bad Request
           schema:
@@ -1876,12 +2428,35 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Company'
+            $ref: '#/definitions/DTO.CompanyFull'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
       summary: Get company by tax ID
+      tags:
+      - Company
+  /company/tax_id/{tax_id}/exists:
+    get:
+      description: Check if a company exists by its tax identification number
+      parameters:
+      - description: Company Tax ID
+        in: path
+        name: tax_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Check if company exists by tax ID
       tags:
       - Company
   /employee:
@@ -1912,7 +2487,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -1954,7 +2529,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -1995,7 +2570,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2037,7 +2612,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2080,7 +2655,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "401":
           description: Unauthorized
         "404":
@@ -2092,6 +2667,107 @@ paths:
       summary: Add service to employee
       tags:
       - Employee
+  /employee/{employee_id}/work_range/{work_range_id}/service/{service_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a service from an employee's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from employee's work range
+      tags:
+      - EmployeeWorkRange
+  /employee/{employee_id}/work_range/{work_range_id}/services:
+    post:
+      consumes:
+      - application/json
+      description: Add services to an employee's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Services
+        in: body
+        name: services
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/DTO.ServiceID'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Add services to employee's work range
+      tags:
+      - EmployeeWorkRange
   /employee/{id}:
     delete:
       description: Delete an employee by its ID
@@ -2117,7 +2793,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2153,7 +2829,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2197,7 +2873,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2209,6 +2885,226 @@ paths:
       summary: Update employee
       tags:
       - Employee
+  /employee/{id}/design/images:
+    post:
+      consumes:
+      - application/json
+      description: Update the images of an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update employee images
+      tags:
+      - Employee
+  /employee/{id}/design/images/{image_type}:
+    delete:
+      description: Delete an image of an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type (logo, banner, favicon, background)
+        in: path
+        name: image_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete employee image
+      tags:
+      - Employee
+  /employee/{id}/work_range/{work_range_id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Work Range
+        in: body
+        name: work_range
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateWorkRange'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update work range
+      tags:
+      - EmployeeWorkRange
+  /employee/{id}/work_schedule:
+    post:
+      consumes:
+      - application/json
+      description: Create a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Work Schedule
+        in: body
+        name: work_schedule
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateEmployeeWorkSchedule'
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create work schedule
+      tags:
+      - EmployeeWorkSchedule
+  /employee/{id}/work_schedule/{work_range_id}:
+    delete:
+      description: Delete a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete work schedule
+      tags:
+      - EmployeeWorkSchedule
   /employee/email/{email}:
     get:
       description: Retrieve an employee by its email
@@ -2234,7 +3130,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.Employee'
+            $ref: '#/definitions/DTO.EmployeeFull'
         "400":
           description: Bad Request
           schema:
@@ -2274,6 +3170,8 @@ paths:
             $ref: '#/definitions/DTO.ErrorResponse'
         "401":
           description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Login
       tags:
       - Employee
@@ -2305,6 +3203,8 @@ paths:
           description: OK
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Verify email
       tags:
       - Employee
@@ -2328,8 +3228,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/DTO.Holidays'
         "400":
@@ -2459,6 +3359,46 @@ paths:
       summary: Get holiday by name
       tags:
       - Holidays
+  /schedule/options:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve schedule options based on filters like branch, employee,
+        service, and time.
+      parameters:
+      - description: Filter by branch ID
+        in: query
+        name: branch_id
+        type: string
+      - description: Filter by employee ID
+        in: query
+        name: employee_id
+        type: string
+      - description: Filter by service ID
+        in: query
+        name: service_id
+        type: string
+      - description: 'Specify what to retrieve: ''services'', ''branches'', ''employees'',
+          or ''time_slots'''
+        in: query
+        name: get
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get schedule options
+      tags:
+      - Schedule
   /sector:
     post:
       consumes:
@@ -2479,8 +3419,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/DTO.Sector'
         "400":
@@ -2635,8 +3575,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/DTO.Service'
         "400":
@@ -2777,8 +3717,10 @@ paths:
       - Service
 securityDefinitions:
   ApiKeyAuth:
-    description: 'Enter the token in the format: <token>'
+    description: |-
+      Enter the token in the format: <token>
+      Enter the company ID in the format: <company_id>
     in: header
-    name: X-Auth-Token
+    name: X-Company-ID
     type: apiKey
 swagger: "2.0"

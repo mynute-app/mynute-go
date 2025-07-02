@@ -191,8 +191,8 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an client by its ID
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header		string	true	"X-Auth-Token"
-//	@Param			id				path		string	true	"Client ID"
+//	@Param			Authorization	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -326,7 +326,7 @@ func DeleteClientById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Client ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			client	body		DTO.UpdateClientImages	true	"Client Design Images"
+//	@Param			profile	formData	file	false	"Profile image"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images [patch]
@@ -353,7 +353,7 @@ func UpdateClientImages(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Client ID"
 //	@Param			image_type		path		string	true	"Image Type"
 //	@Produce		json
-//	@Success		200	{object}	nil
+//	@Success		200	{object}	dJSON.Images
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images/{image_type} [delete]
 func DeleteClientImage(c *fiber.Ctx) error {

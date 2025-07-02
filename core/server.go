@@ -74,7 +74,7 @@ func (s *Server) listen() *Server {
 
 // Runs the server in two modes: test and listen
 //
-//	@parallel:		starts the server in a goroutine. This is useful for unit testing.
+//	@parallel:	starts the server in a goroutine. This is useful for unit testing.
 //	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {
 	log.Printf("Starting server in '%s' mode...\n", in)
