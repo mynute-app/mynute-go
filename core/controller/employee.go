@@ -321,7 +321,7 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Param			work_schedule	body		DTO.CreateEmployeeWorkSchedule	true	"Work Schedule"
 //	@Param			id				path		string							true	"Employee ID"
-//	@Success		200				{object}	DTO.EmployeeFull
+//	@Success		200				{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/work_schedule [post]
 func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
@@ -406,9 +406,9 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.EmployeeFull
+//	@Success		200	{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_schedule/{work_range_id} [delete]
+//	@Router			/employee/{id}/work_range/{work_range_id} [delete]
 func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 	var err error
 	employee_id := c.Params("id")
@@ -443,16 +443,18 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var ewr []*model.EmployeeWorkRange
+	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&ewr, "employee_id = ?", employee_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.EmployeeWorkRange
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &ewr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
