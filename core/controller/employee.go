@@ -270,47 +270,15 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400			{object}	lib.ErrorResponse
 //	@Router			/employee/{id}/design/images [post]
 func UpdateEmployeeImages(c *fiber.Ctx) error {
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"profile": true}
+
+	var employee model.Employee
+	Design, err := UpdateImagesById(c, employee.TableName(), &employee, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"profile": true}
-
-	var employee model.Employee
-	id := c.Params("id")
-	if err := tx.First(&employee, "id = ?", id).Error; err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find employee (%s): %w", id, err))
-	}
-
-	var uploaded_img_types = make([]string, 0)
-
-	defer func() {
-		r := recover()
-		if r != nil || err != nil {
-			for _, img_type := range uploaded_img_types {
-				_ = employee.Design.Images.Delete(img_type, employee.TableName(), employee.ID.String())
-			}
-		}
-	}()
-
-	for img_type := range img_types_allowed {
-		file, err := c.FormFile(img_type)
-		if err != nil {
-			continue
-		}
-		_, err = employee.Design.Images.Save(img_type, employee.TableName(), employee.ID.String(), file)
-		if err != nil {
-			return err
-		}
-		uploaded_img_types = append(uploaded_img_types, img_type)
-	}
-
-	if err = tx.Save(&employee).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &employee.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // DeleteEmployeeImage deletes an image of an employee
@@ -329,37 +297,14 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	lib.ErrorResponse
 //	@Router			/employee/{id}/design/images/{image_type} [delete]
 func DeleteEmployeeImage(c *fiber.Ctx) error {
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"profile": true}
+	var employee model.Employee
+	Design, err := DeleteImageById(c, employee.TableName(), &employee, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"profile": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-
-	var employee model.Employee
-	id := c.Params("id")
-	if err := tx.First(&employee, "id = ?", id).Error; err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find employee (%s): %w", id, err))
-	}
-
-	if err := employee.Design.Images.Delete(image_type, employee.TableName(), id); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := tx.Save(&employee).Error; err != nil {
-		return err
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &employee.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // AddEmployeeWorkSchedule creates a work schedule for an employee

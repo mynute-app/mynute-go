@@ -331,49 +331,15 @@ func DeleteClientById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images [patch]
 func UpdateClientImages(c *fiber.Ctx) error {
-	var err error
+	img_types_allowed := map[string]bool{"profile": true}
 
-	tx, err := lib.Session(c)
+	var client model.Client
+	Design, err := UpdateImagesById(c, client.TableName(), &client, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"profile": true}
-
-	var client model.Client
-	id := c.Params("id")
-	if err := tx.First(&client, "id = ?", id).Error; err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find client (%s): %w", id, err))
-	}
-
-	var uploaded_img_types = make([]string, 0)
-
-	defer func() {
-		r := recover()
-		if r != nil || err != nil {
-			for _, img_type := range uploaded_img_types {
-				_ = client.Design.Images.Delete(img_type, client.TableName(), client.ID.String())
-			}
-		}
-	}()
-
-	for img_type := range img_types_allowed {
-		file, err := c.FormFile(img_type)
-		if err != nil {
-			continue
-		}
-		_, err = client.Design.Images.Save(img_type, client.TableName(), client.ID.String(), file)
-		if err != nil {
-			return err
-		}
-		uploaded_img_types = append(uploaded_img_types, img_type)
-	}
-
-	if err = tx.Save(&client).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &client.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // DeleteClientImage deletes the design images of an client
@@ -391,37 +357,14 @@ func UpdateClientImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id}/design/images/{image_type} [delete]
 func DeleteClientImage(c *fiber.Ctx) error {
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"profile": true}
+	var client model.Client
+	Design, err := DeleteImageById(c, client.TableName(), &client, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"profile": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-
-	var client model.Client
-	id := c.Params("id")
-	if err := tx.First(&client, "id = ?", id).Error; err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find client (%s): %w", id, err))
-	}
-
-	if err := client.Design.Images.Delete(image_type, client.TableName(), id); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := tx.Save(&client).Error; err != nil {
-		return err
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &client.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 func Client(Gorm *handler.Gorm) {

@@ -157,53 +157,15 @@ func DeleteBranchById(c *fiber.Ctx) error {
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images [patch]
 func UpdateBranchImages(c *fiber.Ctx) error {
-	var err error
+	img_types_allowed := map[string]bool{"profile": true}
 
-	tx, err := lib.Session(c)
+	var branch model.Branch
+	Design, err := UpdateImagesById(c, branch.TableName(), &branch, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"profile": true}
-
-	var branch model.Branch
-	id := c.Params("id")
-	if err := tx.First(&branch, "id = ?", id).Error; err != nil {
-		return lib.Error.Company.NotFound.WithError(err)
-	}
-
-	var uploaded_img_types = make([]string, 0)
-
-	defer func() {
-		r := recover()
-		if r != nil || err != nil {
-			for _, img_type := range uploaded_img_types {
-				_ = branch.Design.Images.Delete(img_type, branch.TableName(), branch.ID.String())
-			}
-		}
-	}()
-
-	for img_type := range img_types_allowed {
-		file, err := c.FormFile(img_type)
-		if err != nil {
-			continue
-		}
-		_, err = branch.Design.Images.Save(img_type, branch.TableName(), branch.ID.String(), file)
-		if err != nil {
-			return err
-		}
-		uploaded_img_types = append(uploaded_img_types, img_type)
-	}
-
-	if len(uploaded_img_types) == 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no images uploaded"))
-	}
-
-	if err = tx.Save(&branch).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &branch.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // DeleteBranchImage deletes a branch's image
@@ -221,38 +183,14 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images/{image_type} [delete]
 func DeleteBranchImage(c *fiber.Ctx) error {
-	var err error
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"profile": true}
+	var branch model.Branch
+	Design, err := DeleteImageById(c, branch.TableName(), &branch, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"profile": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-
-	var branch model.Branch
-	id := c.Params("id")
-	if err := tx.First(&branch, "id = ?", id).Error; err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to find branch (%s): %w", id, err))
-	}
-
-	if err := branch.Design.Images.Delete(image_type, branch.TableName(), id); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := tx.Save(&branch).Error; err != nil {
-		return err
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &branch.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // CreateBranchWorkSchedule creates a work schedule for a branch

@@ -394,47 +394,15 @@ func DeleteCompanyById(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images [patch]
 func UpdateCompanyImages(c *fiber.Ctx) error {
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
+
+	var company model.Company
+	Design, err := UpdateImagesById(c, company.TableName(), &company, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
-
-	var company model.Company
-	id := c.Params("id")
-	if err := tx.First(&company, "id = ?", id).Error; err != nil {
-		return lib.Error.Company.NotFound.WithError(err)
-	}
-
-	var uploaded_img_types = make([]string, 0)
-
-	defer func() {
-		r := recover()
-		if r != nil || err != nil {
-			for _, img_type := range uploaded_img_types {
-				_ = company.Design.Images.Delete(img_type, company.TableName(), company.ID.String())
-			}
-		}
-	}()
-
-	for img_type := range img_types_allowed {
-		file, err := c.FormFile(img_type)
-		if err != nil {
-			continue
-		}
-		_, err = company.Design.Images.Save(img_type, company.TableName(), company.ID.String(), file)
-		if err != nil {
-			return err
-		}
-		uploaded_img_types = append(uploaded_img_types, img_type)
-	}
-
-	if err = tx.Save(&company).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // @Summary		Delete a specific company design image
@@ -450,37 +418,14 @@ func UpdateCompanyImages(c *fiber.Ctx) error {
 // @Failure		400				{object}	DTO.ErrorResponse
 // @Router			/company/{id}/design/images/{image_type} [delete]
 func DeleteCompanyImage(c *fiber.Ctx) error {
-	tx, err := lib.Session(c)
+	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
+	var company model.Company
+	Design, err := DeleteImageById(c, company.TableName(), &company, img_types_allowed)
 	if err != nil {
 		return err
 	}
 
-	image_type := c.Params("image_type")
-	img_types_allowed := map[string]bool{"logo": true, "banner": true, "favicon": true, "background": true}
-
-	allowed, ok := img_types_allowed[image_type]
-	if !ok {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-	if !allowed {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("image_type not allowed: %s", image_type))
-	}
-
-	var company model.Company
-	id := c.Params("id")
-	if err := tx.First(&company, "id = ?", id).Error; err != nil {
-		return lib.Error.Company.NotFound.WithError(err)
-	}
-
-	if err := company.Design.Images.Delete(image_type, company.TableName(), id); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := tx.Save(&company).Error; err != nil {
-		return err
-	}
-
-	return lib.ResponseFactory(c).SendDTO(200, &company.Design.Images, &dJSON.Images{})
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
 // UpdateCompanyColors updates the colors of a company
