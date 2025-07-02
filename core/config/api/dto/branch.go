@@ -55,6 +55,7 @@ type BranchBase struct {
 	City         string    `json:"city" example:"New York"`
 	State        string    `json:"state" example:"NY"`
 	Country      string    `json:"country" example:"USA"`
+	TimeZone     string    `json:"time_zone" example:"America/New_York"` // Time zone in IANA format
 }
 
 type ServiceDensity struct {

@@ -29,7 +29,7 @@ func (u *Client) Set() error {
 		return err
 	}
 	if err := u.UploadImages(200, map[string][]byte{
-		"picture": FileBytes.PNG_FILE_1,
+		"profile": FileBytes.PNG_FILE_1,
 	}, nil); err != nil {
 		return err
 	}

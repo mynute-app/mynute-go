@@ -67,12 +67,19 @@ func (c *Company) Set() error {
 			return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
 		}
 		if err := branch.UploadImages(200, map[string][]byte{
-			"picture": FileBytes.PNG_FILE_1,
+			"profile": FileBytes.PNG_FILE_1,
 		}, c.Owner.X_Auth_Token, nil); err != nil {
 			return err
 		}
 		c.Branches = append(c.Branches, branch)
 	}
+
+	servicesID := make([]DTO.ServiceID, len(c.Services))
+	for i, service := range c.Services {
+		servicesID[i] = DTO.ServiceID{ID: service.Created.ID}
+	}
+
+	branchID := c.Branches[0].Created.ID
 
 	for range 3 {
 		employee := &Employee{}
@@ -90,7 +97,7 @@ func (c *Company) Set() error {
 			return err
 		}
 		if err := employee.UploadImages(200, map[string][]byte{
-			"picture": FileBytes.PNG_FILE_1,
+			"profile": FileBytes.PNG_FILE_1,
 		}, nil, nil); err != nil {
 			return err
 		}
@@ -105,8 +112,7 @@ func (c *Company) Set() error {
 			}
 		}
 		employeeID := employee.Created.ID
-		branchID := c.Branches[0].Created.ID
-		employeeWorkSchedule := GetExampleEmployeeWorkSchedule(employeeID, branchID, c.Services)
+		employeeWorkSchedule := GetExampleEmployeeWorkSchedule(employeeID, branchID, servicesID)
 		if err := employee.CreateWorkSchedule(200, employeeWorkSchedule, nil, nil); err != nil {
 			return fmt.Errorf("failed to create work schedule for employee %s: %v", employee.Created.Email, err)
 		}

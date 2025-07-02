@@ -22,132 +22,36 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Company setup").Test(c.Set()) // Cria company, employees, branches, services
 
 	employee := c.Employees[0]
+	branch := c.Branches[0]
+	service := c.Services[0]
 
 	tt.Describe("Employee get by ID").Test(employee.GetById(200, nil, nil))
 	tt.Describe("Employee get by email").Test(employee.GetByEmail(200, nil, nil))
 
-	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
-		"name": "Updated Employee Name xD",
-	}, nil, nil))
-	ServicesID := []DTO.ServiceID{
-		{ID: c.Services[0].Created.ID},
-	}
-	tt.Describe("Employee update work schedule").Test(employee.CreateWorkSchedule(200, DTO.CreateEmployeeWorkSchedule{
-		WorkRanges: []DTO.CreateEmployeeWorkRange{
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    1,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    1,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    2,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    2,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    3,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    3,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    4,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    4,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    5,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    5,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    6,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				BranchID:   c.Branches[0].Created.ID,
-				Weekday:    6,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   c.Branches[0].Created.TimeZone,
-				Services:   ServicesID,
-			},
-		},
+	tt.Describe("Changing employee id").Test(employee.Update(400, map[string]any{
+		"Id":   "00000000-0000-0000-0000-000000000001",
+		"name": "Updated Employee Name xDDDD",
 	}, nil, nil))
 
 	tt.Describe("Changing employee company_id").Test(employee.Update(400, map[string]any{
 		"company_id": uuid.New().String(),
 	}, &c.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
+		"name": "Updated Employee Name xDDDD",
+	}, nil, nil))
+
+	ServicesID := []DTO.ServiceID{
+		{ID: service.Created.ID},
+	}
+
+	EmployeeWorkSchedule := modelT.GetExampleEmployeeWorkSchedule(employee.Created.ID, branch.Created.ID, ServicesID)
+
+	tt.Describe("Employee update work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
+	tt.Describe("Add service to employee").Test(employee.AddService(200, service, &c.Owner.X_Auth_Token, nil))
+	tt.Describe("Employee update work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
+	tt.Describe("Add branch to employee").Test(employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil))
+	tt.Describe("Employee update work schedule successfully").Test(employee.CreateWorkSchedule(200, EmployeeWorkSchedule, nil, nil))
 
 	tt.Describe("Upload profile image").Test(employee.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
