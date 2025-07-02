@@ -29,6 +29,7 @@ func Test_Client(t *testing.T) {
 		"name": "Updated Client Name",
 	}))
 	tt.Describe("Client get by email").Test(client.GetByEmail(200))
+	
 	tt.Describe("Upload profile image").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil))
@@ -41,5 +42,13 @@ func Test_Client(t *testing.T) {
 
 	tt.Describe("Get overwritten profile image").Test(client.GetImage(200, client.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
+	img_url := client.Created.Design.Images.Profile.URL
+
+	tt.Describe("Delete profile image").Test(client.DeleteImages(200, []string{"profile"}, nil))
+
+	tt.Describe("Get deleted profile image").Test(client.GetImage(404, img_url, nil))
+
 	tt.Describe("Client deletion").Test(client.Delete(200))
+
+	tt.Describe("Get deleted client by email").Test(client.GetByEmail(404))
 }

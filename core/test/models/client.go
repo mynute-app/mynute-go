@@ -215,15 +215,14 @@ func (c *Client) GetImage(status int, imageURL string, compareImgBytes *[]byte) 
 	return nil
 }
 
-func (c *Client) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *string) error {
 	if len(image_types) == 0 {
 		return fmt.Errorf("no image types provided to delete")
 	}
 
-	createdEmployeeID := c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &createdEmployeeID)
+	t, err := get_token(x_auth_token, &c.X_Auth_Token)
 	if err != nil {
-		return fmt.Errorf("failed to get company ID for deletion: %w", err)
+		return err
 	}
 
 	http := handler.NewHttpClient()
@@ -231,8 +230,7 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token str
 	if err := http.
 		Method("DELETE").
 		ExpectedStatus(status).
-		Header(namespace.HeadersKey.Auth, x_auth_token).
-		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
 		Error; err != nil {
 		return fmt.Errorf("failed to prepare delete images request: %w", err)
 	}
@@ -242,7 +240,7 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token str
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
-		http.ParseResponse(&c.Created.Design)
+		http.ParseResponse(&c.Created.Design.Images)
 		if http.Error != nil {
 			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}

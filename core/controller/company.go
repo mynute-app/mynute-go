@@ -110,7 +110,7 @@ func GetCompanyById(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	if id == "" {
-		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'id' not found on route parameters"))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter 'id' not found on route parameters"))
 	}
 
 	if err := tx.Where("id = ?", id).First(&company).Error; err != nil {
@@ -149,7 +149,7 @@ func GetCompanyByName(c *fiber.Ctx) error {
 	name := c.Params("name")
 
 	if name == "" {
-		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'name' not found on route parameters"))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter 'name' not found on route parameters"))
 	}
 
 	clearName, err := url.QueryUnescape(name)
@@ -191,7 +191,7 @@ func CheckIfCompanyExistsByTaxID(c *fiber.Ctx) error {
 	tax_id := c.Params("tax_id")
 
 	if tax_id == "" {
-		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
 	}
 
 	var company model.Company
@@ -227,7 +227,7 @@ func GetCompanyByTaxId(c *fiber.Ctx) error {
 	tax_id := c.Params("tax_id")
 
 	if tax_id == "" {
-		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter 'tax_id' not found on route parameters"))
 	}
 
 	if err := tx.First(&company, "tax_id = ?", tax_id).Error; err != nil {
@@ -264,7 +264,7 @@ func GetCompanyBySubdomain(c *fiber.Ctx) error {
 	subdomain_name := c.Params("subdomain_name")
 
 	if subdomain_name == "" {
-		return lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter 'subdomain_name' not found on route parameters"))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter 'subdomain_name' not found on route parameters"))
 	}
 
 	var subdomain model.Subdomain

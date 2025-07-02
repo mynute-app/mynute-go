@@ -192,7 +192,7 @@ type GeneralErrors struct {
 	CreatedError          ErrorStruct
 	UpdatedError          ErrorStruct
 	DeletedError          ErrorStruct
-	NotFoundError         ErrorStruct
+	ResourceNotFoundError ErrorStruct
 	InternalError         ErrorStruct
 	AuthError             ErrorStruct
 	SessionNotFound       ErrorStruct // New: For missing session in DB
@@ -282,7 +282,7 @@ var Error = ErrorCategory{
 		CreatedError:          NewError("Error creating record", "Erro ao criar registro", fiber.StatusBadRequest),
 		UpdatedError:          NewError("Error updating record", "Erro ao atualizar registro", fiber.StatusBadRequest),
 		DeletedError:          NewError("Error deleting record", "Erro ao deletar registro", fiber.StatusBadRequest),
-		NotFoundError:         NewError("EndPoint not found", "Recurso não encontrado", fiber.StatusNotFound),
+		ResourceNotFoundError: NewError("Resource not found", "Recurso não encontrado", fiber.StatusNotFound),
 		BadRequest:            NewError("Bad request", "Requisição inválida", fiber.StatusBadRequest),
 		AuthError:             NewError("Internal Server Error while authenticating", "Erro Interno de Servidor enquanto autenticando", fiber.StatusInternalServerError),
 		SessionNotFound:       NewError("Database session not found in context", "Sessão de banco de dados não encontrada no contexto", fiber.StatusInternalServerError),

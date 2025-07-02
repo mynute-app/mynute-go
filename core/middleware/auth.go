@@ -92,7 +92,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	}
 	if err := tx.Model(user).Preload(clause.Associations).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))
+			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))
 		}
 		log.Printf("tx Error fetching subject %s: %v", claim.ID, err)
 		return lib.Error.General.AuthError.WithError(err)
@@ -213,7 +213,7 @@ forLoop: // Label is optional but can improve readability
 		resourceFetchError = tx.Model(resource).Where(ResourceReference.DatabaseKey+" = ?", RequestVal).Preload(clause.Associations).Take(&resource_data).Error
 		if resourceFetchError != nil {
 			if resourceFetchError == gorm.ErrRecordNotFound {
-				return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
+				return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("resource not found for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
 			} else {
 				log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
 				return lib.Error.General.AuthError.WithError(resourceFetchError).WithError(fmt.Errorf("resource fetch error for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))

@@ -55,5 +55,13 @@ func Test_Branch(t *testing.T) {
 
 	tt.Describe("Get overwritten profile image").Test(branch.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
+	img_url := branch.Created.Design.Images.Profile.URL
+
+	tt.Describe("Delete profile image").Test(branch.DeleteImages(200, []string{"profile"}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get deleted profile image").Test(branch.GetImage(404, img_url, nil))
+
 	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get deleted branch by ID").Test(branch.GetById(404, company.Owner.X_Auth_Token, nil))
 }

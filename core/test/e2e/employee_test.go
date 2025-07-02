@@ -66,4 +66,6 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Get overwritten profile image").Test(employee.GetImage(200, employee.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
 	tt.Describe("Employee deletion").Test(employee.Delete(200, nil, nil))
+
+	tt.Describe("Get deleted employee by ID").Test(employee.GetById(404, &c.Owner.X_Auth_Token, nil))
 }

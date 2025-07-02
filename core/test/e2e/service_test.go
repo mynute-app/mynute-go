@@ -42,5 +42,5 @@ func Test_Service(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Service deletion").Test(service.Delete(200, company.Owner.X_Auth_Token, nil))
-	tt.Describe("Branch deletion").Test(branch.Delete(200, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Get deleted service by ID").Test(service.GetById(404, company.Owner.X_Auth_Token, nil))
 }

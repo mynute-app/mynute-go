@@ -433,7 +433,7 @@ func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token s
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
-		http.ParseResponse(&e.Created.Design)
+		http.ParseResponse(&e.Created.Design.Images)
 		if http.Error != nil {
 			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}

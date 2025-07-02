@@ -189,7 +189,7 @@ func (b *Branch) DeleteImages(status int, image_types []string, x_auth_token str
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
-		http.ParseResponse(&b.Created.Design)
+		http.ParseResponse(&b.Created.Design.Images)
 		if http.Error != nil {
 			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}

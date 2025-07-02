@@ -33,7 +33,7 @@ type service struct {
 func (s *service) get_param(param string) (string, error) {
 	paramVal := s.Context.Params(param)
 	if paramVal == "" {
-		return "", lib.Error.General.NotFoundError.WithError(fmt.Errorf("parameter %s not found on route parameters", param))
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("parameter %s not found on route parameters", param))
 	}
 	cleanedParamVal, err := url.QueryUnescape(paramVal)
 	if err != nil {
