@@ -18,7 +18,7 @@ type Service struct {
 
 func (s *Service) Create(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := s.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (s *Service) Update(status int, changes map[string]any, x_auth_token string
 		return fmt.Errorf("no changes provided")
 	}
 	companyIDStr := s.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (s *Service) Update(status int, changes map[string]any, x_auth_token string
 
 func (s *Service) GetById(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := s.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (s *Service) GetById(status int, x_auth_token string, x_company_id *string)
 
 func (s *Service) GetByName(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := s.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (s *Service) GetByName(status int, x_auth_token string, x_company_id *strin
 
 func (s *Service) Delete(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := s.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}

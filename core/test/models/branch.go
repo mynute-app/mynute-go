@@ -20,9 +20,24 @@ type Branch struct {
 	Appointments []*Appointment
 }
 
+func (b *Branch) GetID() string        { return b.Created.ID.String() }
+func (b *Branch) GetCompanyID() string { return b.Company.Created.ID.String() }
+func (b *Branch) GetAuthToken() string { return "" }
+func (b *Branch) SetWorkRanges(wr []any) error {
+	b.Created.BranchWorkSchedule = make([]model.BranchWorkRange, len(wr))
+	for i, v := range wr {
+		if ewr, ok := v.(model.BranchWorkRange); !ok {
+			return fmt.Errorf("invalid work range type")
+		} else {
+			b.Created.BranchWorkSchedule[i] = ewr
+		}
+	}
+	return nil
+}
+
 func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -53,7 +68,7 @@ func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) e
 
 func (b *Branch) Update(status int, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -77,7 +92,7 @@ func (b *Branch) Update(status int, changes map[string]any, x_auth_token string,
 
 func (b *Branch) GetByName(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -96,7 +111,7 @@ func (b *Branch) GetByName(status int, x_auth_token string, x_company_id *string
 
 func (b *Branch) GetById(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -115,7 +130,7 @@ func (b *Branch) GetById(status int, x_auth_token string, x_company_id *string) 
 
 func (b *Branch) Delete(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -142,7 +157,7 @@ func (b *Branch) UploadImages(status int, files map[string][]byte, x_auth_token 
 	}
 
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -168,7 +183,7 @@ func (b *Branch) DeleteImages(status int, image_types []string, x_auth_token str
 	}
 
 	createdCompanyID := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &createdCompanyID)
+	cID, err := Get_x_company_id(x_company_id, &createdCompanyID)
 	if err != nil {
 		return fmt.Errorf("failed to get company ID for deletion: %w", err)
 	}
@@ -227,7 +242,7 @@ func (b *Branch) GetImage(status int, imageURL string, compareImgBytes *[]byte) 
 
 func (b *Branch) AddService(status int, service *Service, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -257,7 +272,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 		return fmt.Errorf("work schedule cannot be nil")
 	}
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -279,7 +294,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 
 func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -299,7 +314,7 @@ func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes 
 
 func (b *Branch) DeleteWorkSchedule(status int, wr *model.BranchWorkRange, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}

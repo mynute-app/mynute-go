@@ -113,7 +113,7 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 
 func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := a.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 
 func (a *Appointment) Create(status int, x_auth_token string, x_company_id *string, startTime *string, tz string, b *Branch, e *Employee, s *Service, cy *Company, ct *Client) error {
 	companyIDStr := cy.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 
 func (a *Appointment) GetById(s int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := a.Created.CompanyID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (a *Appointment) GetById(s int, x_auth_token string, x_company_id *string) 
 
 func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := a.Created.CompanyID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}

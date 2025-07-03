@@ -21,15 +21,30 @@ type Employee struct {
 	X_Auth_Token string
 }
 
+func (e *Employee) GetID() string        { return e.Created.ID.String() }
+func (e *Employee) GetCompanyID() string { return e.Company.Created.ID.String() }
+func (e *Employee) GetAuthToken() string { return e.X_Auth_Token }
+func (e *Employee) SetWorkRanges(wr []any) error {
+	e.Created.EmployeeWorkSchedule = make([]model.EmployeeWorkRange, len(wr))
+	for i, v := range wr {
+		if ewr, ok := v.(model.EmployeeWorkRange); !ok {
+			return fmt.Errorf("invalid work range type")
+		} else {
+			e.Created.EmployeeWorkSchedule[i] = ewr
+		}
+	}
+	return nil
+}
+
 func (e *Employee) Create(s int, x_auth_token *string, x_company_id *string) error {
 	pswd := "1SecurePswd!"
 
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -59,12 +74,12 @@ func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x
 	if len(changes) == 0 {
 		return fmt.Errorf("no changes provided")
 	}
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -91,12 +106,12 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 	if EmployeeWorkSchedule.WorkRanges == nil {
 		return fmt.Errorf("work schedule cannot be nil")
 	}
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -123,12 +138,12 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 }
 
 func (e *Employee) GetById(s int, x_auth_token *string, x_company_id *string) error {
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -147,12 +162,12 @@ func (e *Employee) GetById(s int, x_auth_token *string, x_company_id *string) er
 }
 
 func (e *Employee) GetByEmail(s int, x_auth_token *string, x_company_id *string) error {
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -171,12 +186,12 @@ func (e *Employee) GetByEmail(s int, x_auth_token *string, x_company_id *string)
 }
 
 func (e *Employee) Delete(s int, x_auth_token *string, x_company_id *string) error {
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -200,7 +215,7 @@ func (e *Employee) Login(s int, x_company_id *string) error {
 		Password: e.Created.Password,
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -225,7 +240,7 @@ func (e *Employee) Login(s int, x_company_id *string) error {
 
 func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -262,12 +277,12 @@ func (e *Employee) CreateService(s int) error {
 }
 
 func (e *Employee) AddBranch(s int, b *Branch, token *string, x_company_id *string) error {
-	t, err := get_token(token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -293,12 +308,12 @@ func (e *Employee) AddBranch(s int, b *Branch, token *string, x_company_id *stri
 }
 
 func (e *Employee) AddService(s int, service *Service, token *string, x_company_id *string) error {
-	t, err := get_token(token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -324,12 +339,12 @@ func (e *Employee) AddService(s int, service *Service, token *string, x_company_
 }
 
 func (e *Employee) AddRole(s int, role *Role, x_auth_token *string, x_company_id *string) error {
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -357,12 +372,12 @@ func (e *Employee) UploadImages(status int, files map[string][]byte, x_auth_toke
 	}
 
 	companyIDStr := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
 
-	t, err := get_token(x_auth_token, &e.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
@@ -412,7 +427,7 @@ func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token s
 	}
 
 	createdEmployeeID := e.Company.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &createdEmployeeID)
+	cID, err := Get_x_company_id(x_company_id, &createdEmployeeID)
 	if err != nil {
 		return fmt.Errorf("failed to get company ID for deletion: %w", err)
 	}
@@ -445,7 +460,7 @@ func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token s
 	return nil
 }
 
-func get_token(priority *string, secundary *string) (string, error) {
+func Get_x_auth_token(priority *string, secundary *string) (string, error) {
 	if priority != nil {
 		return *priority, nil
 	} else if secundary != nil {
@@ -454,7 +469,7 @@ func get_token(priority *string, secundary *string) (string, error) {
 	return "", fmt.Errorf("no authentication token provided")
 }
 
-func get_x_company_id(priority *string, secundary *string) (string, error) {
+func Get_x_company_id(priority *string, secundary *string) (string, error) {
 	if priority != nil {
 		return *priority, nil
 	} else if secundary != nil {

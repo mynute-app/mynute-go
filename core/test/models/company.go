@@ -930,7 +930,7 @@ func (c *Company) Create(status int) error {
 
 func (c *Company) GetByName(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -965,7 +965,7 @@ func (c *Company) GetBySubdomain(status int) error {
 
 func (c *Company) GetById(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -986,7 +986,7 @@ func (c *Company) GetById(status int, x_auth_token string, x_company_id *string)
 
 func (c *Company) Update(status int, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	var companyIDStr = c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -1011,7 +1011,7 @@ func (c *Company) Update(status int, changes map[string]any, x_auth_token string
 
 func (c *Company) Delete(status int, x_auth_token string, x_company_id *string) error {
 	var companyIDStr = c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -1039,7 +1039,7 @@ func (c *Company) UploadImages(status int, files map[string][]byte, x_auth_token
 	}
 
 	companyIDStr := c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
@@ -1065,7 +1065,7 @@ func (c *Company) DeleteImages(status int, image_types []string, x_auth_token st
 	}
 
 	createdCompanyID := c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &createdCompanyID)
+	cID, err := Get_x_company_id(x_company_id, &createdCompanyID)
 	if err != nil {
 		return fmt.Errorf("failed to get company ID for deletion: %w", err)
 	}
@@ -1100,7 +1100,7 @@ func (c *Company) DeleteImages(status int, image_types []string, x_auth_token st
 
 func (c *Company) ChangeColors(status int, colors mJSON.Colors, x_auth_token string, x_company_id *string) error {
 	var companyIDStr = c.Created.ID.String()
-	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}

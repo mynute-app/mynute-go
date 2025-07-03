@@ -172,7 +172,7 @@ func (c *Client) UploadImages(status int, files map[string][]byte, x_auth_token 
 		}
 	}
 
-	t, err := get_token(x_auth_token, &c.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &c.X_Auth_Token)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 		return fmt.Errorf("no image types provided to delete")
 	}
 
-	t, err := get_token(x_auth_token, &c.X_Auth_Token)
+	t, err := Get_x_auth_token(x_auth_token, &c.X_Auth_Token)
 	if err != nil {
 		return err
 	}
