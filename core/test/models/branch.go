@@ -264,7 +264,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("POST").
-		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
+		URL(fmt.Sprintf("/branch/%s/work_schedule/", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
@@ -277,11 +277,46 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	return nil
 }
 
-func GetExampleBranchWorkSchedule(branchID uuid.UUID, services []*Service) DTO.CreateBranchWorkSchedule {
-	var servicesID []DTO.ServiceID
-	for _, service := range services {
-		servicesID = append(servicesID, DTO.ServiceID{ID: service.Created.ID})
+func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes map[string]any, x_auth_token string, x_company_id *string) error {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
 	}
+	if err := handler.NewHttpClient().
+		Method("PUT").
+		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wr.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(wr).
+		ParseResponse(&wr).
+		Error; err != nil {
+		return fmt.Errorf("failed to update branch work range: %w", err)
+	}
+	return nil
+}
+
+func (b *Branch) DeleteWorkSchedule(status int, wr *model.BranchWorkRange, x_auth_token string, x_company_id *string) error {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wr.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(nil).
+		Error; err != nil {
+		return fmt.Errorf("failed to delete branch work schedule: %w", err)
+	}
+	return nil
+}
+
+func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateBranchWorkSchedule {
 	return DTO.CreateBranchWorkSchedule{
 		WorkRanges: []DTO.CreateBranchWorkRange{
 			{

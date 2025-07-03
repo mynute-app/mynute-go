@@ -48,6 +48,11 @@ func (c *Company) Set() error {
 		c.Services = append(c.Services, service)
 	}
 
+	servicesID := make([]DTO.ServiceID, len(c.Services))
+	for i, service := range c.Services {
+		servicesID[i] = DTO.ServiceID{ID: service.Created.ID}
+	}
+
 	for range 1 {
 		branch := &Branch{}
 		branch.Company = c
@@ -62,7 +67,7 @@ func (c *Company) Set() error {
 				return fmt.Errorf("failed to assign service %s to branch %s: %v", service.Created.Name, branch.Created.Name, err)
 			}
 		}
-		branchWorkSchedule := GetExampleBranchWorkSchedule(branch.Created.ID, c.Services)
+		branchWorkSchedule := GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
 		if err := branch.CreateWorkSchedule(200, branchWorkSchedule, c.Owner.X_Auth_Token, nil); err != nil {
 			return fmt.Errorf("failed to create work schedule for branch %s: %v", branch.Created.Name, err)
 		}
@@ -72,11 +77,6 @@ func (c *Company) Set() error {
 			return err
 		}
 		c.Branches = append(c.Branches, branch)
-	}
-
-	servicesID := make([]DTO.ServiceID, len(c.Services))
-	for i, service := range c.Services {
-		servicesID[i] = DTO.ServiceID{ID: service.Created.ID}
 	}
 
 	branchID := c.Branches[0].Created.ID

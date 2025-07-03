@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"agenda-kaki-go/core"
+	DTO "agenda-kaki-go/core/config/api/dto"
 	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
@@ -35,7 +36,17 @@ func Test_Branch(t *testing.T) {
 	service.Company = company
 
 	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
+	servicesID := []DTO.ServiceID{{ID: service.Created.ID}}
+	BranchWorkSchedule := modelT.GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
+	tt.Describe("Branch work schedule creation").Test(branch.CreateWorkSchedule(400, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Branch work schedule creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
+	wr := branch.Created.BranchWorkSchedule[0]
+	tt.Describe("Updating branch work schedule").Test(branch.UpdateWorkRange(200, &wr, map[string]any{
+		"start": "07:00",
+		"end":   "20:00",
+	}, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Deleting branch work schedule").Test(branch.DeleteWorkSchedule(200, &wr, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
 	tt.Describe("Getting company by ID").Test(company.GetById(200, company.Owner.X_Auth_Token, nil))
 
