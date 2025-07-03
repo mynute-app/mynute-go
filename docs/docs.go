@@ -2695,7 +2695,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Remove service from employee's work range",
                 "parameters": [
@@ -2769,7 +2769,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Add services to employee's work range",
                 "parameters": [
@@ -3157,7 +3157,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Update work range",
                 "parameters": [
@@ -3197,6 +3197,68 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.UpdateWorkRange"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeFull"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a work schedule for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "EmployeeWorkSchedule"
+                ],
+                "summary": "Delete work schedule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3261,70 +3323,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Employee ID",
                         "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_schedule/{work_range_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a work schedule for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "EmployeeWorkSchedule"
-                ],
-                "summary": "Delete work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
                         "in": "path",
                         "required": true
                     }

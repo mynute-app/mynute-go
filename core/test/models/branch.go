@@ -264,7 +264,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("POST").
-		URL(fmt.Sprintf("/branch/%s/work_schedule/", b.Created.ID.String())).
+		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).

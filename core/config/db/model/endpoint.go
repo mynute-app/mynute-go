@@ -200,7 +200,7 @@ var DeleteBranchImage = &EndPoint{
 	Resource:         BranchResource,
 }
 var GetBranchWorkRange = &EndPoint{
-	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Path:             "/branch/:id/work_range/:work_range_id",
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetBranchWorkRange",
 	Description:      "View work range by ID",
@@ -209,7 +209,7 @@ var GetBranchWorkRange = &EndPoint{
 	Resource:         BranchResource,
 }
 var UpdateBranchWorkRange = &EndPoint{
-	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Path:             "/branch/:id/work_range/:work_range_id",
 	Method:           namespace.PatchActionMethod,
 	ControllerName:   "UpdateBranchWorkRange",
 	Description:      "Update work range in branch",
@@ -218,7 +218,7 @@ var UpdateBranchWorkRange = &EndPoint{
 	Resource:         BranchResource,
 }
 var DeleteBranchWorkRange = &EndPoint{
-	Path:             "/branch/:id/work_schedule/:work_range_id",
+	Path:             "/branch/:id/work_range/:work_range_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteBranchWorkRange",
 	Description:      "Remove work range from branch",
@@ -227,7 +227,7 @@ var DeleteBranchWorkRange = &EndPoint{
 	Resource:         BranchResource,
 }
 var AddBranchWorkRangeServices = &EndPoint{
-	Path:             "/branch/:id/work_schedule/:work_range_id/services",
+	Path:             "/branch/:id/work_range/:work_range_id/services",
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "AddBranchWorkRangeServices",
 	Description:      "Add services to work range in branch",
@@ -236,7 +236,7 @@ var AddBranchWorkRangeServices = &EndPoint{
 	Resource:         BranchResource,
 }
 var DeleteBranchWorkRangeService = &EndPoint{
-	Path:             "/branch/:id/work_schedule/:work_range_id/services/:service_id",
+	Path:             "/branch/:id/work_range/:work_range_id/services/:service_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteBranchWorkRangeService",
 	Description:      "Remove service from work range in branch",
@@ -483,7 +483,7 @@ var AddEmployeeWorkSchedule = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var DeleteEmployeeWorkRange = &EndPoint{
-	Path:             "/employee/:id/work_schedule/:work_range_id",
+	Path:             "/employee/:id/work_range/:work_range_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteEmployeeWorkRange",
 	Description:      "Remove work schedule from employee",
@@ -492,7 +492,7 @@ var DeleteEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var UpdateEmployeeWorkRange = &EndPoint{
-	Path:             "/employee/:id/work_schedule/:work_range_id",
+	Path:             "/employee/:id/work_range/:work_range_id",
 	Method:           namespace.PutActionMethod,
 	ControllerName:   "UpdateEmployeeWorkRange",
 	Description:      "Update work schedule for employee",
@@ -501,7 +501,7 @@ var UpdateEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var AddEmployeeWorkRangeServices = &EndPoint{
-	Path:             "/employee/:id/work_schedule/:work_range_id/service",
+	Path:             "/employee/:id/work_range/:work_range_id/service",
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "AddEmployeeWorkRangeServices",
 	Description:      "Add services to work range for a employee",
@@ -510,7 +510,7 @@ var AddEmployeeWorkRangeServices = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var DeleteEmployeeWorkRangeService = &EndPoint{
-	Path:             "/employee/:id/work_schedule/:work_range_id/service/:service_id",
+	Path:             "/employee/:id/work_range/:work_range_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteEmployeeWorkRangeService",
 	Description:      "Remove service from work range for a employee",

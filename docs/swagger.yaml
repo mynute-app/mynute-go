@@ -2715,7 +2715,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove service from employee's work range
       tags:
-      - EmployeeWorkRange
+      - EmployeeWorkSchedule
   /employee/{employee_id}/work_range/{work_range_id}/services:
     post:
       consumes:
@@ -2767,7 +2767,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add services to employee's work range
       tags:
-      - EmployeeWorkRange
+      - EmployeeWorkSchedule
   /employee/{id}:
     delete:
       description: Delete an employee by its ID
@@ -2971,6 +2971,47 @@ paths:
       tags:
       - Employee
   /employee/{id}/work_range/{work_range_id}:
+    delete:
+      description: Delete a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete work schedule
+      tags:
+      - EmployeeWorkSchedule
     put:
       consumes:
       - application/json
@@ -3019,7 +3060,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update work range
       tags:
-      - EmployeeWorkRange
+      - EmployeeWorkSchedule
   /employee/{id}/work_schedule:
     post:
       consumes:
@@ -3061,48 +3102,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create work schedule
-      tags:
-      - EmployeeWorkSchedule
-  /employee/{id}/work_schedule/{work_range_id}:
-    delete:
-      description: Delete a work schedule for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Work Range ID
-        in: path
-        name: work_range_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeFull'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Delete work schedule
       tags:
       - EmployeeWorkSchedule
   /employee/email/{email}:
