@@ -267,36 +267,32 @@ func (b *Branch) AddService(status int, service *Service, x_auth_token string, x
 	return nil
 }
 
-func (b *Branch) CreateWorkSchedule(s int, BranchWorkSchedule DTO.CreateBranchWorkSchedule, x_auth_token string, x_company_id *string) error {
-	if err := CreateWorkSchedule[*model.BranchWorkSchedule](b, "branch", s, BranchWorkSchedule, x_auth_token, x_company_id); err != nil {
+func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSchedule, x_auth_token string, x_company_id *string) error {
+	if schedule.WorkRanges == nil {
+		return fmt.Errorf("work schedule cannot be nil")
+	}
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
 		return err
 	}
+	var updated *model.BranchWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(schedule).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to create branch work schedule: %w", err)
+	}
+	b.Created.BranchWorkSchedule = updated.WorkRanges
 	return nil
-	// if schedule.WorkRanges == nil {
-	// 	return fmt.Errorf("work schedule cannot be nil")
-	// }
-	// companyIDStr := b.Company.Created.ID.String()
-	// cID, err := Get_x_company_id(x_company_id, &companyIDStr)
-	// if err != nil {
-	// 	return err
-	// }
-	// var updated *model.BranchWorkSchedule
-	// if err := handler.NewHttpClient().
-	// 	Method("POST").
-	// 	URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
-	// 	ExpectedStatus(status).
-	// 	Header(namespace.HeadersKey.Company, cID).
-	// 	Header(namespace.HeadersKey.Auth, x_auth_token).
-	// 	Send(schedule).
-	// 	ParseResponse(&updated).
-	// 	Error; err != nil {
-	// 	return fmt.Errorf("failed to create branch work schedule: %w", err)
-	// }
-	// b.Created.BranchWorkSchedule = updated.WorkRanges
-	// return nil
 }
 
-func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes DTO.UpdateWorkRange, x_auth_token string, x_company_id *string) error {
+func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
@@ -308,7 +304,7 @@ func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes 
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
-		Send(changes).
+		Send(wr).
 		ParseResponse(&wr).
 		Error; err != nil {
 		return fmt.Errorf("failed to update branch work range: %w", err)

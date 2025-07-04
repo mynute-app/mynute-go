@@ -1,8 +1,9 @@
-package modelT
+package e2e
 
 import (
 	"agenda-kaki-go/core/config/namespace"
 	handlerT "agenda-kaki-go/core/test/handlers"
+	modelT "agenda-kaki-go/core/test/models"
 	"fmt"
 	"reflect"
 )
@@ -11,7 +12,7 @@ type WorkScheduleModelTarget interface {
 	GetID() string
 	GetCompanyID() string
 	GetAuthToken() string
-	SetWorkRanges([]any) error
+	SetWorkRanges([]any)
 }
 
 func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, status int, schedule any, x_auth_token string, x_company_id *string) error {
@@ -26,15 +27,7 @@ func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, st
 
 	// Preparar headers
 	tCompanyID := target.GetCompanyID()
-
-	cID, err := Get_x_company_id(x_company_id, &tCompanyID)
-	if err != nil {
-		return err
-	}
-
-	tAuthToken := target.GetAuthToken()
-
-	token, err := Get_x_auth_token(&x_auth_token, &tAuthToken)
+	cID, err := modelT.Get_x_company_id(x_company_id, &tCompanyID)
 	if err != nil {
 		return err
 	}
@@ -46,7 +39,7 @@ func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, st
 		URL(fmt.Sprintf("/%s/%s/work_schedule", entity, target.GetID())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
-		Header(namespace.HeadersKey.Auth, token).
+		Header(namespace.HeadersKey.Auth, target.GetAuthToken()).
 		Send(schedule).
 		ParseResponse(&updated).
 		Error
@@ -54,8 +47,18 @@ func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, st
 		return fmt.Errorf("failed to create work schedule: %w", err)
 	}
 
-	if err := put_work_schedule(updated, target); err != nil {
-		return err
+	// Extrair WorkRanges
+	val := reflect.ValueOf(updated)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	wrField := val.FieldByName("WorkRanges")
+	if wrField.IsValid() && wrField.Kind() == reflect.Slice {
+		wr := make([]any, wrField.Len())
+		for i := 0; i < wrField.Len(); i++ {
+			wr[i] = wrField.Index(i).Interface()
+		}
+		target.SetWorkRanges(wr)
 	}
 
 	return nil
@@ -74,23 +77,4 @@ func UpdateWorkRange() {
 func DeleteWorkRange() {
 	// This function is intentionally left empty.
 	// It serves as a placeholder for future work schedule deletions.
-}
-
-func put_work_schedule[T any](updated T, target WorkScheduleModelTarget) error {
-	val := reflect.ValueOf(updated)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-	wrField := val.FieldByName("WorkRanges")
-	if wrField.IsValid() && wrField.Kind() == reflect.Slice {
-		wr := make([]any, wrField.Len())
-		for i := range wrField.Len() {
-			wr[i] = wrField.Index(i).Interface()
-		}
-		err := target.SetWorkRanges(wr)
-		if err != nil {
-			return fmt.Errorf("failed to set work ranges: %w", err)
-		}
-	}
-	return nil
 }

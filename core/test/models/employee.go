@@ -103,47 +103,38 @@ func (e *Employee) Update(s int, changes map[string]any, x_auth_token *string, x
 }
 
 func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmployeeWorkSchedule, x_auth_token *string, x_company_id *string) error {
-	eToken := e.X_Auth_Token
-	token, err := Get_x_auth_token(x_auth_token, &eToken)
+	if EmployeeWorkSchedule.WorkRanges == nil {
+		return fmt.Errorf("work schedule cannot be nil")
+	}
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
 		return err
 	}
-	if err := CreateWorkSchedule[*model.EmployeeWorkSchedule](e, "employee", s, EmployeeWorkSchedule, token, x_company_id); err != nil {
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
 		return err
 	}
+	var updated *model.EmployeeWorkSchedule
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/employee/%s/work_schedule", e.Created.ID.String())).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(EmployeeWorkSchedule).
+		ParseResponse(&updated).Error; err != nil {
+		return fmt.Errorf("failed to update employee work schedule: %w", err)
+	}
+
+	// if err := ValidateWorkSchedule(emp.EmployeeWorkSchedule, e, e.Company); err != nil {
+	// 	return fmt.Errorf("invalid work schedule: %w", err)
+	// }
+
+	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+
 	return nil
-	// if EmployeeWorkSchedule.WorkRanges == nil {
-	// 	return fmt.Errorf("work schedule cannot be nil")
-	// }
-	// t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
-	// if err != nil {
-	// 	return err
-	// }
-	// companyIDStr := e.Company.Created.ID.String()
-	// cID, err := Get_x_company_id(x_company_id, &companyIDStr)
-	// if err != nil {
-	// 	return err
-	// }
-	// var updated *model.EmployeeWorkSchedule
-	// http := handler.NewHttpClient()
-	// if err := http.
-	// 	Method("POST").
-	// 	URL(fmt.Sprintf("/employee/%s/work_schedule", e.Created.ID.String())).
-	// 	ExpectedStatus(s).
-	// 	Header(namespace.HeadersKey.Company, cID).
-	// 	Header(namespace.HeadersKey.Auth, t).
-	// 	Send(EmployeeWorkSchedule).
-	// 	ParseResponse(&updated).Error; err != nil {
-	// 	return fmt.Errorf("failed to update employee work schedule: %w", err)
-	// }
-
-	// // if err := ValidateWorkSchedule(emp.EmployeeWorkSchedule, e, e.Company); err != nil {
-	// // 	return fmt.Errorf("invalid work schedule: %w", err)
-	// // }
-
-	// e.Created.EmployeeWorkSchedule = updated.WorkRanges
-
-	// return nil
 }
 
 func (e *Employee) GetById(s int, x_auth_token *string, x_company_id *string) error {

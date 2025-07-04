@@ -30,23 +30,6 @@ func BranchWorkRangeIndexes(table string) map[string]string {
 	}
 }
 
-func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
-	if err := bwr.WorkRangeBase.BeforeCreate(tx); err != nil {
-		return err
-	}
-
-	branch := &Branch{BaseModel: BaseModel{ID: bwr.BranchID}}
-	if err := branch.HasServices(tx, bwr.Services); err != nil {
-		return err
-	}
-
-	if err := branch.ValidateBranchWorkRangeTime(tx, bwr); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (bwr *BranchWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	if err := bwr.WorkRangeBase.BeforeUpdate(tx); err != nil {
 		return err

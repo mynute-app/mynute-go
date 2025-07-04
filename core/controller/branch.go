@@ -373,18 +373,16 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var bwr []model.BranchWorkRange
+	var bwr []*model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	bws := model.BranchWorkSchedule{
-		WorkRanges: bwr,
-	}
+	var dto []*DTO.BranchWorkRange
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
