@@ -3,7 +3,6 @@ package model
 import (
 	"agenda-kaki-go/core/lib"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -120,14 +119,6 @@ func (ewr *EmployeeWorkRange) HasService(tx *gorm.DB, serviceID uuid.UUID) error
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range %s does not have service %s", ewr.ID, serviceID))
 	}
 	return nil
-}
-
-func (ewr *EmployeeWorkRange) GetTimeZone() (*time.Location, error) {
-	loc, err := time.LoadLocation(ewr.TimeZone)
-	if err != nil {
-		return nil, fmt.Errorf("employee work range (%s) has invalid time_zone %s: %w", ewr.ID, ewr.TimeZone, err)
-	}
-	return loc, nil
 }
 
 func (ewr *EmployeeWorkRange) Overlaps(other *EmployeeWorkRange) (bool, error) {

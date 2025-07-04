@@ -237,7 +237,6 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 				Weekday:   time.Weekday(bwr.Weekday),
 				StartTime: start,
 				EndTime:   end,
-				TimeZone:  bwr.TimeZone,
 				BranchID:  uuid.MustParse(branch_id),
 			},
 			Services: services,

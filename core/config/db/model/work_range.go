@@ -12,8 +12,8 @@ import (
 type WorkRangeBase struct {
 	BaseModel
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
-	StartTime time.Time    `json:"start_time" gorm:"not null"`
-	EndTime   time.Time    `json:"end_time" gorm:"not null"`
+	StartTime time.Time    `json:"start_time" gorm:"not null;type:timestamptz"`
+	EndTime   time.Time    `json:"end_time" gorm:"not null;type:timestamptz"`
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }
@@ -39,8 +39,6 @@ func (wr *WorkRangeBase) BeforeUpdate(tx *gorm.DB) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start time and end time must be present when updating a work range"))
 	} else if wr.Weekday.String() == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("weekday must be present when updating a work range"))
-	} else if wr.TimeZone == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("time zone must be present when updating a work range"))
 	}
 	if err := wr.ValidateTime(); err != nil {
 		return err
@@ -89,42 +87,44 @@ func (wr *WorkRangeBase) ValidateTime() error {
 }
 
 func (wr *WorkRangeBase) GetTimeZone() (*time.Location, error) {
-	loc, err := lib.GetTimeZone(wr.TimeZone)
-	if err != nil {
-		return nil, err
+	// Get Timezone from start time
+	stl := wr.StartTime.Location()
+	etl := wr.EndTime.Location()
+	if stl != etl {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("start time and end time must have the same timezone"))
 	}
-	return loc, nil
+	return stl, nil
 }
 
 // LocalTime2UTC converts the start and end times of the WorkRange from local time to UTC.
 // DO NOT EVER USE before the ConvertToBranchTimeZone function.
-func (wr *WorkRangeBase) LocalTime2UTC() error {
-	var err error
-	startTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.StartTime)
-	if err != nil {
-		return fmt.Errorf("invalid start time %s: %w", wr.StartTime, err)
-	}
-	endTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.EndTime)
-	if err != nil {
-		return fmt.Errorf("invalid end time %s: %w", wr.EndTime, err)
-	}
-	wr.StartTime = startTimeUTC
-	wr.EndTime = endTimeUTC
-	return nil
-}
+// func (wr *WorkRangeBase) LocalTime2UTC() error {
+// 	var err error
+// 	startTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.StartTime)
+// 	if err != nil {
+// 		return fmt.Errorf("invalid start time %s: %w", wr.StartTime, err)
+// 	}
+// 	endTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.EndTime)
+// 	if err != nil {
+// 		return fmt.Errorf("invalid end time %s: %w", wr.EndTime, err)
+// 	}
+// 	wr.StartTime = startTimeUTC
+// 	wr.EndTime = endTimeUTC
+// 	return nil
+// }
 
-func (wr *WorkRangeBase) Utc2LocalTime() error {
-	var err error
-	wr.StartTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.StartTime)
-	if err != nil {
-		return fmt.Errorf("failed to convert start time to local: %w", err)
-	}
-	wr.EndTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.EndTime)
-	if err != nil {
-		return fmt.Errorf("failed to convert end time to local: %w", err)
-	}
-	return nil
-}
+// func (wr *WorkRangeBase) Utc2LocalTime() error {
+// 	var err error
+// 	wr.StartTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.StartTime)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to convert start time to local: %w", err)
+// 	}
+// 	wr.EndTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.EndTime)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to convert end time to local: %w", err)
+// 	}
+// 	return nil
+// }
 
 func (wr *WorkRangeBase) Overlaps(other *WorkRangeBase) (bool, error) {
 	if wr.Weekday != other.Weekday {

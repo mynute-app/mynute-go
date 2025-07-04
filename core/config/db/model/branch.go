@@ -16,8 +16,6 @@ import (
 // Branch model
 type Branch struct {
 	BaseModel
-	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"` // Branch name
 	Street             string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"street"`
 	Number             string             `gorm:"type:varchar(100)" validate:"required,min=1,max=10" json:"number"`
@@ -32,6 +30,8 @@ type Branch struct {
 	Services           []*Service         `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
 	Appointments       []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
 	ServiceDensity     []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
+	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
+	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	BranchDensity      uint               `gorm:"not null;default:1" json:"branch_density"`
 	Design             mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
