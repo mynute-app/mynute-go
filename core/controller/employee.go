@@ -352,7 +352,6 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 				Weekday:   time.Weekday(ewr.Weekday),
 				StartTime: start,
 				EndTime:   end,
-				TimeZone:  ewr.TimeZone,
 				BranchID:  ewr.BranchID,
 			},
 			EmployeeID: ewr.EmployeeID,
@@ -558,7 +557,6 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 	work_range.Weekday = time.Weekday(input.Weekday)
 	work_range.StartTime = start
 	work_range.EndTime = end
-	work_range.TimeZone = input.TimeZone
 
 	if err := tx.Save(&work_range).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

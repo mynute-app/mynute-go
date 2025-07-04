@@ -96,6 +96,14 @@ func (wr *WorkRangeBase) GetTimeZone() (*time.Location, error) {
 	return stl, nil
 }
 
+func (wr *WorkRangeBase) GetTimeZoneString() (string, error) {
+	loc, err := wr.GetTimeZone()
+	if err != nil {
+		return "", err
+	}
+	return loc.String(), nil
+}
+
 // LocalTime2UTC converts the start and end times of the WorkRange from local time to UTC.
 // DO NOT EVER USE before the ConvertToBranchTimeZone function.
 // func (wr *WorkRangeBase) LocalTime2UTC() error {
@@ -164,6 +172,5 @@ func (wr *WorkRangeBase) ConvertToBranchTimeZone(tx *gorm.DB) error {
 	endTimeInBranchTZ := wr.EndTime.In(bTZ)
 	wr.StartTime = startTimeInBranchTZ
 	wr.EndTime = endTimeInBranchTZ
-	wr.TimeZone = bTZ_str
 	return nil
 }

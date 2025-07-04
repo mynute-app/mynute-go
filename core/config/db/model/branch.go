@@ -207,27 +207,30 @@ func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRan
 
 	ewrTZ, err := ewr.GetTimeZone()
 	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range (%s) has invalid time zone %s: %w", ewr.ID, ewr.TimeZone, err))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range has invalid time zone %s: %w", ewrTZ, err))
 	}
 
 	for _, bws := range bwrs { // bws is the Branch Work Schedule
 		if bws.Weekday != ewr.Weekday {
 			continue // Skip if the weekday does not match
 		}
-		bwsTZ, err := lib.GetTimeZone(bws.TimeZone)
+		bwsTZ, err := bws.GetTimeZone()
 		if err != nil {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch work range (%s) has invalid time zone %s: %w", bws.ID, bws.TimeZone, err))
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch work range (%s) has invalid time zone: %w", bws.ID, err))
 		}
 		if lib.TimeRangeFullyContained(bws.StartTime, bws.EndTime, bwsTZ, ewr.StartTime, ewr.EndTime, ewrTZ) {
 			return nil
 		}
 	}
-
-	localStartTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.StartTime)
+	ewrTimeZoneStr, err := ewr.GetTimeZoneString()
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee work range has invalid time zone %s: %w", ewrTimeZoneStr, err))
+	}
+	localStartTime, err := lib.Utc2LocalTime(ewrTimeZoneStr, ewr.StartTime)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
 	}
-	localEndTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.EndTime)
+	localEndTime, err := lib.Utc2LocalTime(ewrTimeZoneStr, ewr.EndTime)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
 	}

@@ -121,19 +121,27 @@ func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkR
 			return err
 		}
 		if overlaps {
-			startTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.StartTime)
+			ewrTimeZoneStr, err := ewr.GetTimeZoneString()
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone for employee work range: %w", err))
+			}
+			existingTimeZoneStr, err := existing.GetTimeZoneString()
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid time zone for existing work range (%s): %w", existing.ID, err))
+			}
+			startTime, err := lib.Utc2LocalTime(ewrTimeZoneStr, ewr.StartTime)
 			if err != nil {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time %s: %w", ewr.StartTime, err))
 			}
-			endTime, err := lib.Utc2LocalTime(ewr.TimeZone, ewr.EndTime)
+			endTime, err := lib.Utc2LocalTime(ewrTimeZoneStr, ewr.EndTime)
 			if err != nil {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end time %s: %w", ewr.EndTime, err))
 			}
-			existingStartTime, err := lib.Utc2LocalTime(existing.TimeZone, existing.StartTime)
+			existingStartTime, err := lib.Utc2LocalTime(existingTimeZoneStr, existing.StartTime)
 			if err != nil {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid existing start time %s: %w", existing.StartTime, err))
 			}
-			existingEndTime, err := lib.Utc2LocalTime(existing.TimeZone, existing.EndTime)
+			existingEndTime, err := lib.Utc2LocalTime(existingTimeZoneStr, existing.EndTime)
 			if err != nil {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid existing end time %s: %w", existing.EndTime, err))
 			}

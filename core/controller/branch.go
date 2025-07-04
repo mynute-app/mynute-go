@@ -347,8 +347,13 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if work_range.TimeZone != input.TimeZone {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range time zone (%s) does not match with input time zone (%s)", work_range.TimeZone, input.TimeZone))
+	wrTz, err := work_range.GetTimeZoneString()
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range (%s) has invalid time zone %s: %w", work_range.ID, wrTz, err))
+	}
+
+	if wrTz != input.TimeZone {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range time zone (%s) does not match with input time zone (%s)", wrTz, input.TimeZone))
 	}
 
 	start, err := lib.Parse_HHMM_To_Time(input.StartTime, input.TimeZone)
@@ -363,7 +368,6 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	work_range.Weekday = time.Weekday(input.Weekday)
 	work_range.StartTime = start
 	work_range.EndTime = end
-	work_range.TimeZone = input.TimeZone
 
 	if err := tx.Save(&work_range).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
