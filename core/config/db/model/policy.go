@@ -1102,6 +1102,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can create own schedule
 	}
 
+	var AllowGetEmployeeWorkRangeById = &PolicyRule{
+		Name:        "SDP: CanViewEmployeeWorkRangeById",
+		Description: "Allows employees, or company managers (Owner, GM, BM), to view their own work ranges.",
+		Effect:      "Allow",
+		EndPointID:  GetEmployeeWorkRange.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check),
+	}
+
 	var AllowUpdateEmployeeWorkRange = &PolicyRule{
 		Name:        "SDP: CanUpdateEmployeeWorkRange",
 		Description: "Allows employees, or company managers (Owner, GM, BM), to update their own work ranges.",
@@ -1338,6 +1346,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowAddBranchToEmployee,
 		AllowRemoveBranchFromEmployee,
 		AllowCreateEmployeeWorkSchedule,
+		AllowGetEmployeeWorkRangeById,
 		AllowUpdateEmployeeWorkRange,
 		AllowDeleteEmployeeWorkRange,
 		AllowAddEmployeeWorkRangeServices,

@@ -500,6 +500,15 @@ var UpdateEmployeeWorkRange = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
+var GetEmployeeWorkRange = &EndPoint{
+	Path:             "/employee/:id/work_range/:work_range_id",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetEmployeeWorkRangeById",
+	Description:      "View work range for employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
+}
 var AddEmployeeWorkRangeServices = &EndPoint{
 	Path:             "/employee/:id/work_range/:work_range_id/service",
 	Method:           namespace.CreateActionMethod,
@@ -787,6 +796,7 @@ var endpoints = []*EndPoint{
 	UpdateEmployeeImages,
 	DeleteEmployeeImage,
 	AddEmployeeWorkSchedule,
+	GetEmployeeWorkRange,
 	DeleteEmployeeWorkRange,
 	UpdateEmployeeWorkRange,
 	AddEmployeeWorkRangeServices,

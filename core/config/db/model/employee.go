@@ -16,6 +16,7 @@ import (
 
 type Employee struct {
 	BaseModel
+	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name                 string              `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
 	Surname              string              `gorm:"type:varchar(100)" validate:"max=100" json:"surname"`
 	Email                string              `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`

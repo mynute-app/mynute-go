@@ -242,6 +242,10 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 			},
 			Services: services,
 		})
+
+		if bwr.Weekday > 100 {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d at index %d", bwr.Weekday, i))
+		}
 	}
 
 	tx, err := lib.Session(c)
@@ -343,6 +347,11 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
+	if work_range.TimeZone != input.TimeZone {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range time zone (%s) does not match with input time zone (%s)", work_range.TimeZone, input.TimeZone))
+	}
+
 	start, err := lib.Parse_HHMM_To_Time(input.StartTime, input.TimeZone)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time: %w", err))

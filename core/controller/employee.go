@@ -394,6 +394,49 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetEmployeeWorkRangeById retrieves a work range for an employee
+//
+//	@Summary		Get work range by ID
+//	@Description	Retrieve a work range for an employee
+//	@Tags			EmployeeWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil		"Unauthorized"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Param			work_range_id	path		string	true	"Work Range ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.EmployeeWorkRange
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/{id}/work_range/{work_range_id} [get]
+func GetEmployeeWorkRangeById(c *fiber.Ctx) error {
+	employeeID := c.Params("id")
+	workRangeID := c.Params("work_range_id")
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var workRange model.EmployeeWorkRange
+	if err := tx.First(&workRange, "id = ? AND employee_id = ?", workRangeID, employeeID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if workRange.EmployeeID.String() != employeeID {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range [%s] does not belong to employee (%s)", workRangeID, employeeID))
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &workRange, &DTO.EmployeeWorkRange{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
 // DeleteEmployeeWorkRange deletes a work schedule for an employee
 //
 //	@Summary		Delete work schedule
@@ -902,6 +945,7 @@ func Employee(Gorm *handler.Gorm) {
 		UpdateEmployeeImages,
 		DeleteEmployeeImage,
 		AddEmployeeWorkSchedule,
+		GetEmployeeWorkRangeById,
 		DeleteEmployeeWorkRange,
 		UpdateEmployeeWorkRange,
 		AddEmployeeWorkRangeServices,

@@ -276,5 +276,5 @@ func Parse_HHMM_To_Time(input string, tz string) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid minute in time: %s", input)
 	}
-	return time.Date(1, 1, 1, hour, minute, 0, 0, loc), nil
+	return time.Date(2020, 1, 1, hour, minute, 0, 0, loc), nil
 }

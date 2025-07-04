@@ -25,7 +25,6 @@ type CreateEmployeeWorkRange struct {
 	Weekday    uint8       `json:"weekday" example:"1"`                                        // Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
 	StartTime  string      `json:"start_time" example:"09:00" format:"HH:mm"`                  // Start time (date ignored)
 	EndTime    string      `json:"end_time" example:"17:00" format:"HH:mm"`                    // End time (date ignored)
-	TimeZone   string      `json:"time_zone" example:"America/New_York"`                       // Timezone in IANA format, e.g., "America/New_York"
 	Services   []ServiceID `json:"services" swaggertype:"array,object"`                        // List of services associated with the work range
 }
 

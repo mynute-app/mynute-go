@@ -14,7 +14,6 @@ type WorkRangeBase struct {
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
 	StartTime time.Time    `json:"start_time" gorm:"not null"`
 	EndTime   time.Time    `json:"end_time" gorm:"not null"`
-	TimeZone  string       `json:"time_zone" gorm:"type:varchar(100);not null" validate:"required"`
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }
@@ -29,9 +28,9 @@ func (wr *WorkRangeBase) BeforeCreate(tx *gorm.DB) error {
 	if err := wr.ConvertToBranchTimeZone(tx); err != nil {
 		return err
 	}
-	if err := wr.LocalTime2UTC(); err != nil {
-		return err
-	}
+	// if err := wr.LocalTime2UTC(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -49,17 +48,17 @@ func (wr *WorkRangeBase) BeforeUpdate(tx *gorm.DB) error {
 	if err := wr.ConvertToBranchTimeZone(tx); err != nil {
 		return err
 	}
-	if err := wr.LocalTime2UTC(); err != nil {
-		return err
-	}
+	// if err := wr.LocalTime2UTC(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
 func (wr *WorkRangeBase) AfterFind(tx *gorm.DB) error {
-	if err := wr.Utc2LocalTime(); err != nil {
-		return fmt.Errorf("work range (%s) failed to convert UTC to local time (%s): %w", wr.ID, wr.TimeZone, err)
-	}
+	// if err := wr.Utc2LocalTime(); err != nil {
+	// 	return fmt.Errorf("work range (%s) failed to convert UTC to local time (%s): %w", wr.ID, wr.TimeZone, err)
+	// }
 
 	return nil
 }
@@ -101,14 +100,16 @@ func (wr *WorkRangeBase) GetTimeZone() (*time.Location, error) {
 // DO NOT EVER USE before the ConvertToBranchTimeZone function.
 func (wr *WorkRangeBase) LocalTime2UTC() error {
 	var err error
-	wr.StartTime, err = lib.LocalTime2UTC(wr.TimeZone, wr.StartTime)
+	startTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.StartTime)
 	if err != nil {
 		return fmt.Errorf("invalid start time %s: %w", wr.StartTime, err)
 	}
-	wr.EndTime, err = lib.LocalTime2UTC(wr.TimeZone, wr.EndTime)
+	endTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.EndTime)
 	if err != nil {
 		return fmt.Errorf("invalid end time %s: %w", wr.EndTime, err)
 	}
+	wr.StartTime = startTimeUTC
+	wr.EndTime = endTimeUTC
 	return nil
 }
 
@@ -159,8 +160,10 @@ func (wr *WorkRangeBase) ConvertToBranchTimeZone(tx *gorm.DB) error {
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s has invalid time zone %s: %w", wr.BranchID, bTZ_str, err))
 	}
-	wr.StartTime = wr.StartTime.In(bTZ)
-	wr.EndTime = wr.EndTime.In(bTZ)
+	startTimeInBranchTZ := wr.StartTime.In(bTZ)
+	endTimeInBranchTZ := wr.EndTime.In(bTZ)
+	wr.StartTime = startTimeInBranchTZ
+	wr.EndTime = endTimeInBranchTZ
 	wr.TimeZone = bTZ_str
 	return nil
 }
