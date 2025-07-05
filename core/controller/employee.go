@@ -465,7 +465,7 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 //
 //	@Summary		Update work range
 //	@Description	Update a work range for an employee
-//	@Tags			EmployeeWorkRange
+//	@Tags			EmployeeWorkSchedule
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -546,7 +546,7 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //
 //	@Summary		Add services to employee's work range
 //	@Description	Add services to an employee's work range
-//	@Tags			EmployeeWorkRange
+//	@Tags			EmployeeWorkSchedule
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -600,7 +600,7 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //
 //	@Summary		Remove service from employee's work range
 //	@Description	Remove a service from an employee's work range
-//	@Tags			EmployeeWorkRange
+//	@Tags			EmployeeWorkSchedule
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"

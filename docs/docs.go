@@ -2695,7 +2695,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Remove service from employee's work range",
                 "parameters": [
@@ -2769,7 +2769,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Add services to employee's work range",
                 "parameters": [
@@ -3157,7 +3157,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkRange"
+                    "EmployeeWorkSchedule"
                 ],
                 "summary": "Update work range",
                 "parameters": [
@@ -3204,6 +3204,68 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/DTO.EmployeeFull"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a work schedule for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "EmployeeWorkSchedule"
+                ],
+                "summary": "Delete work schedule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -3269,71 +3331,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_schedule/{work_range_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a work schedule for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "EmployeeWorkSchedule"
-                ],
-                "summary": "Delete work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -4986,6 +4984,18 @@ const docTemplate = `{
                     "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "DTO.EmployeeWorkSchedule": {
+            "description": "represents a work schedule for an employee, which is a collection of work ranges.",
+            "type": "object",
+            "properties": {
+                "employee_work_ranges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.EmployeeWorkRange"
+                    }
                 }
             }
         },
