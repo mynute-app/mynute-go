@@ -332,7 +332,13 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 
 	var EmployeeWorkSchedule model.EmployeeWorkSchedule
 
-	for _, ewr := range input.WorkRanges {
+	employee_id := c.Params("id")
+
+	for i, ewr := range input.WorkRanges {
+		if ewr.EmployeeID.String() != employee_id {
+			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, ewr.EmployeeID.String(), employee_id))
+		}
+		
 		start, err := lib.Parse_HHMM_To_Time(ewr.StartTime, ewr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time: %w", err))
@@ -359,17 +365,12 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 		})
 	}
 
-	employee_id := c.Params("id")
-
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
-	for i, ewr := range EmployeeWorkSchedule.WorkRanges {
-		if ewr.EmployeeID.String() != employee_id {
-			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, ewr.EmployeeID.String(), employee_id))
-		}
+	for _, ewr := range EmployeeWorkSchedule.WorkRanges {
 		if err := tx.Create(&ewr).Error; err != nil {
 			return lib.Error.General.CreatedError.WithError(err)
 		}

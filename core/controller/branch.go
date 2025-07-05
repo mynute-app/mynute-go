@@ -218,6 +218,10 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	branch_id := c.Params("id")
 
 	for i, bwr := range input.WorkRanges {
+		if bwr.BranchID.String() != branch_id {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range [%d] branch ID (%s) does not match branch ID (%s) from path", i+1, bwr.BranchID.String(), branch_id))
+		}
+
 		start, err := lib.Parse_HHMM_To_Time(bwr.StartTime, bwr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time at index %d: %w", i, err))
@@ -241,10 +245,6 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 			},
 			Services: services,
 		})
-
-		if bwr.Weekday > 100 {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d at index %d", bwr.Weekday, i))
-		}
 	}
 
 	tx, err := lib.Session(c)
