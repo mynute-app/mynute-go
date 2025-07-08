@@ -34,7 +34,6 @@ type ClientPopulated struct {
 	Surname      string                    `json:"surname" example:"Doe"`
 	Email        string                    `json:"email" example:"john.doe@example.com"`
 	Phone        string                    `json:"phone" example:"+1-555-555-5555"`
-	Tags         []string                  `json:"tags" example:"[\"tag1\", \"tag2\"]"`
 	Verified     bool                      `json:"verified" example:"false"`
 	Appointments *mJSON.ClientAppointments `json:"appointments"` // Appointments associated with the client
 }
