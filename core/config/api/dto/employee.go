@@ -25,6 +25,7 @@ type CreateEmployee struct {
 	Email     string    `json:"email" example:"joseph.doe@example.com"`
 	Phone     string    `json:"phone" example:"+15555555551"`
 	Password  string    `json:"password" example:"1SecurePswd!"`
+	TimeZone  string    `json:"time_zone" example:"America/Sao_Paulo"` // Use a valid timezone
 }
 
 // type EmployeeWorkSchedule struct {

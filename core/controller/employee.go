@@ -130,8 +130,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
-	employee.Email = email
-	if err := lib.ValidatorV10.Var(employee.Email, "email"); err != nil {
+	if err := lib.ValidatorV10.Var(email, "email"); err != nil {
 		if _, ok := err.(validator.ValidationErrors); ok {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
 		} else {
@@ -145,11 +144,17 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if err := database.LockForUpdate(tx, &employee, "email", email); err != nil {
 		return err
 	}
-	if employee.Verified {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email already verified"))
+	var is_verified bool
+	if err := tx.Model(&employee).Select("verified").Where("email = ?", email).Scan(&is_verified).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Employee.NotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
 	}
-	employee.Verified = true
-	if err := tx.Save(&employee).Error; err != nil {
+	if is_verified {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email %s is already verified", email))
+	}
+	if err := tx.Model(&employee).Where("email = ?", email).Update("verified", true).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Employee.NotFound
 		}

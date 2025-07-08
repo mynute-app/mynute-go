@@ -3,7 +3,6 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
-	"errors"
 	"fmt"
 	"time"
 
@@ -16,13 +15,13 @@ import (
 
 type Employee struct {
 	BaseModel
-	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Name                 string              `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
 	Surname              string              `gorm:"type:varchar(100)" validate:"max=100" json:"surname"`
 	Email                string              `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
 	Phone                string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags                 []string            `gorm:"type:json" json:"tags"`
 	Password             string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
+	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	ChangePassword       bool                `gorm:"default:false" json:"change_password"`
 	VerificationCode     string              `gorm:"type:varchar(100)" json:"verification_code"`
 	Verified             bool                `gorm:"default:false" json:"verified"`
@@ -50,21 +49,18 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
-	if e.CompanyID != uuid.Nil {
-		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
-	}
 	if e.Password != "" {
+		var dbEmployee Employee
+		tx.First(&dbEmployee, "id = ?", e.ID)
+		if e.Password == dbEmployee.Password || e.MatchPassword(dbEmployee.Password) {
+			return nil
+		}
 		if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
 			if _, ok := err.(validator.ValidationErrors); ok {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
 			} else {
 				return lib.Error.General.InternalError.WithError(err)
 			}
-		}
-		var dbEmployee Employee
-		tx.First(&dbEmployee, "id = ?", e.ID)
-		if e.Password == dbEmployee.Password || e.MatchPassword(dbEmployee.Password) {
-			return nil
 		}
 		return e.HashPassword()
 	}

@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"agenda-kaki-go/core"
 	"agenda-kaki-go/core/lib"
+	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
 
@@ -40,6 +41,24 @@ func Test_Service(t *testing.T) {
 	tt.Describe("Changing service company_id").Test(service.Update(400, map[string]any{
 		"company_id": uuid.New().String(),
 	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Upload profile image").Test(service.UploadImages(200, map[string][]byte{
+		"profile": FileBytes.PNG_FILE_1,
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get profile image").Test(service.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+
+	tt.Describe("Overwrite profile image").Test(service.UploadImages(200, map[string][]byte{
+		"profile": FileBytes.PNG_FILE_3,
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get overwritten profile image").Test(service.GetImage(200, service.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+
+	img_url := service.Created.Design.Images.Profile.URL
+
+	tt.Describe("Delete profile image").Test(service.DeleteImages(200, []string{"profile"}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Get deleted profile image").Test(service.GetImage(404, img_url, nil))
 
 	tt.Describe("Service deletion").Test(service.Delete(200, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Get deleted service by ID").Test(service.GetById(404, company.Owner.X_Auth_Token, nil))

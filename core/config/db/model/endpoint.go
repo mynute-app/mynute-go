@@ -721,6 +721,24 @@ var DeleteServiceById = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         ServiceResource,
 }
+var UpdateServiceImages = &EndPoint{
+	Path:             "/service/:id/design/images",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateServiceImages",
+	Description:      "Update images of a service",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         ServiceResource,
+}
+var DeleteServiceImage = &EndPoint{
+	Path:             "/service/:id/design/images/:image_type",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteServiceImage",
+	Description:      "Delete an image of a service",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         ServiceResource,
+}
 
 var GetScheduleOptions = &EndPoint{
 	Path:           "/schedule/options",
@@ -819,6 +837,8 @@ var endpoints = []*EndPoint{
 	GetServiceByName,
 	UpdateServiceById,
 	DeleteServiceById,
+	UpdateServiceImages,
+	DeleteServiceImage,
 	// Schedule
 	GetScheduleOptions,
 }

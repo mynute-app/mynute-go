@@ -49,17 +49,17 @@ func (c *Client) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (c *Client) BeforeUpdate(tx *gorm.DB) (err error) {
 	if c.Password != "" {
+		var dbClient Client
+		tx.First(&dbClient, "id = ?", c.ID)
+		if c.Password == dbClient.Password || c.MatchPassword(dbClient.Password) {
+			return nil
+		}
 		if err := lib.ValidatorV10.Var(c.Password, "myPasswordValidation"); err != nil {
 			if _, ok := err.(validator.ValidationErrors); ok {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
 			} else {
 				return lib.Error.General.InternalError.WithError(err)
 			}
-		}
-		var dbClient Client
-		tx.First(&dbClient, "id = ?", c.ID)
-		if c.Password == dbClient.Password || c.MatchPassword(dbClient.Password) {
-			return nil
 		}
 		return c.HashPassword()
 	}

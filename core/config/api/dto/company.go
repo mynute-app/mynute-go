@@ -15,6 +15,7 @@ type CreateCompany struct {
 	OwnerEmail     string `json:"owner_email" example:"john.clark@gmail.com" validate:"required,email"`
 	OwnerPhone     string `json:"owner_phone" example:"+15555555555" validate:"required,e164"`
 	OwnerPassword  string `json:"owner_password" example:"1SecurePswd!" validate:"required,myPasswordValidation"`
+	OwnerTimeZone  string `json:"owner_time_zone" example:"America/Sao_Paulo" validate:"required"` // Use a valid timezone
 	StartSubdomain string `json:"start_subdomain" example:"your-company-subdomain" validate:"required,mySubdomainValidation"`
 }
 

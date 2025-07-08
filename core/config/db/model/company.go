@@ -28,13 +28,19 @@ func (c *Company) GenerateSchemaName() string {
 	return "company" + "_" + c.ID.String()
 }
 
+func (c *Company) BeforeCreate(tx *gorm.DB) error {
+	c.SchemaName = c.GenerateSchemaName()
+	if err := lib.MyCustomStructValidator(c); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Company) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
 func (c *Company) MigrateSchema(tx *gorm.DB) error {
-	c.SchemaName = c.GenerateSchemaName()
-
 	if err := lib.ChangeToPublicSchema(tx); err != nil {
 		return err
 	}

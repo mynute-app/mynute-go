@@ -68,6 +68,7 @@ func CreateCompany(c *fiber.Ctx) error {
 	owner.Phone = body.OwnerPhone
 	owner.Password = body.OwnerPassword
 	owner.CompanyID = company.ID
+	owner.TimeZone = body.OwnerTimeZone
 
 	if err := company.CreateOwner(tx, &owner); err != nil {
 		end(err)

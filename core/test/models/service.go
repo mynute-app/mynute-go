@@ -6,6 +6,7 @@ import (
 	"agenda-kaki-go/core/config/namespace"
 	"agenda-kaki-go/core/lib"
 	handler "agenda-kaki-go/core/test/handlers"
+	"bytes"
 	"fmt"
 )
 
@@ -125,6 +126,99 @@ func (s *Service) Delete(status int, x_auth_token string, x_company_id *string) 
 		Send(nil).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete service: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) UploadImages(status int, files map[string][]byte, x_auth_token string, x_company_id *string) error {
+	var fileMap = make(handler.Files)
+	for field, content := range files {
+		fileMap[field] = handler.MyFile{
+			Name:    field + "_" + lib.GenerateRandomString(6) + ".png",
+			Content: content,
+		}
+	}
+
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	if err := handler.NewHttpClient().
+		Method("PATCH").
+		URL(fmt.Sprintf("/service/%s/design/images", s.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(fileMap).
+		ParseResponse(&s.Created.Design.Images).
+		Error; err != nil {
+		return fmt.Errorf("failed to upload service images: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) DeleteImages(status int, image_types []string, x_auth_token string, x_company_id *string) error {
+	if len(image_types) == 0 {
+		return fmt.Errorf("no images provided to delete")
+	}
+
+	createdCompanyID := s.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &createdCompanyID)
+	if err != nil {
+		return fmt.Errorf("failed to get company ID for deletion: %w", err)
+	}
+
+	http := handler.NewHttpClient()
+
+	if err := http.
+		Method("DELETE").
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Header(namespace.HeadersKey.Company, cID).
+		Error; err != nil {
+		return fmt.Errorf("failed to prepare delete images request: %w", err)
+	}
+
+	base_url := fmt.Sprintf("/service/%s/design/images", s.Created.ID.String())
+	for _, image_type := range image_types {
+		image_url := base_url + "/" + image_type
+		http.URL(image_url)
+		http.Send(nil)
+		http.ParseResponse(&s.Created.Design.Images)
+		if http.Error != nil {
+			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
+		}
+		url := s.Created.Design.Images.GetImageURL(image_type)
+		if url != "" {
+			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
+		}
+	}
+	return nil
+}
+
+func (s *Service) GetImage(status int, imageURL string, compareImgBytes *[]byte) error {
+	if imageURL == "" {
+		return fmt.Errorf("image URL cannot be empty")
+	}
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.URL(imageURL)
+	http.ExpectedStatus(status)
+	http.Send(nil)
+	// Compare the response bytes with the expected image bytes
+	if compareImgBytes != nil {
+		var response []byte
+		http.ParseResponse(&response)
+		if len(response) == 0 {
+			return fmt.Errorf("received empty response for image (%s)", imageURL)
+		} else if len(response) != len(*compareImgBytes) {
+			return fmt.Errorf("image size mismatch for %s: expected %d bytes, got %d bytes", imageURL, len(*compareImgBytes), len(response))
+		} else if !bytes.Equal(response, *compareImgBytes) {
+			return fmt.Errorf("image content mismatch for %s", imageURL)
+		}
 	}
 	return nil
 }

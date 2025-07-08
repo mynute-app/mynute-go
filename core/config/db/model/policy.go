@@ -1293,6 +1293,22 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_manager_check), // Any manager of the service's company
 	}
 
+	var AllowUpdateServiceImages = &PolicyRule{
+		Name:        "SDP: CanUpdateServiceImages",
+		Description: "Allows company managers (Owner, GM) to update service images.",
+		Effect:      "Allow",
+		EndPointID:  UpdateServiceImages.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Any manager of the service's company
+	}
+
+	var AllowDeleteServiceImage = &PolicyRule{
+		Name:        "SDP: CanDeleteServiceImage",
+		Description: "Allows company managers (Owner, GM) to delete service images.",
+		Effect:      "Allow",
+		EndPointID:  DeleteServiceImage.ID,
+		Conditions:  JsonRawMessage(company_admin_check), // Any manager of the service's company
+	}
+
 	// --- Combined Policies List ---
 	var Policies = []*PolicyRule{
 		// Appointments
@@ -1370,6 +1386,8 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetServiceById,
 		AllowUpdateServiceById,
 		AllowDeleteServiceById,
+		AllowUpdateServiceImages,
+		AllowDeleteServiceImage,
 	}
 
 	return Policies

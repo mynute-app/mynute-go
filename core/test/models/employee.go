@@ -60,6 +60,7 @@ func (e *Employee) Create(s int, x_auth_token *string, x_company_id *string) err
 			Surname:   lib.GenerateRandomName("Employee Surname"),
 			Email:     lib.GenerateRandomEmail("employee"),
 			Phone:     lib.GenerateRandomPhoneNumber(),
+			TimeZone:  "America/Sao_Paulo", // Use a valid timezone
 			Password:  pswd,
 		}).
 		ParseResponse(&e.Created).

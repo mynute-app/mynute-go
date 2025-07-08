@@ -57,7 +57,7 @@ func (b *Branch) Create(status int, x_auth_token string, x_company_id *string) e
 			City:         lib.GenerateRandomName("City"),
 			State:        lib.GenerateRandomName("State"),
 			Country:      lib.GenerateRandomName("Country"),
-			TimeZone:     "America/New_York",
+			TimeZone:     "America/Sao_Paulo",
 		}).
 		ParseResponse(&b.Created).
 		Error; err != nil {

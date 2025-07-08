@@ -894,6 +894,7 @@ func (c *Company) Create(status int) error {
 			OwnerEmail:     lib.GenerateRandomEmail("owner"),
 			OwnerPhone:     lib.GenerateRandomPhoneNumber(),
 			OwnerPassword:  ownerPswd,
+			OwnerTimeZone:  "America/Sao_Paulo",
 			StartSubdomain: strings.ToLower(lib.GenerateRandomString(12)),
 		}).
 		ParseResponse(&c.Created).
@@ -1141,19 +1142,4 @@ func (c *Company) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 		}
 	}
 	return nil
-}
-
-func intersectUUIDs(a, b []uuid.UUID) []uuid.UUID {
-	set := make(map[uuid.UUID]bool)
-	for _, id := range a {
-		set[id] = true
-	}
-
-	var intersection []uuid.UUID
-	for _, id := range b {
-		if set[id] {
-			intersection = append(intersection, id)
-		}
-	}
-	return intersection
 }

@@ -2,6 +2,7 @@ package controller
 
 import (
 	DTO "agenda-kaki-go/core/config/api/dto"
+	dJSON "agenda-kaki-go/core/config/api/dto/json"
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
@@ -135,6 +136,60 @@ func DeleteServiceById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Service{})
 }
 
+// UpdateServiceImages updates images of a service
+//
+//	@Summary		Update service images
+//	@Description	Update images of a service
+//	@Tags			Service
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Service ID"
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			images	formData	dJSON.Images	true	"Images"
+//	@Success		200		{object}	dJSON.Images
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Router			/service/{id}/design/images [patch]
+func UpdateServiceImages(c *fiber.Ctx) error {
+	img_types_allowed := map[string]bool{"profile": true}
+
+	var service model.Service
+	Design, err := UpdateImagesById(c, service.TableName(), &service, img_types_allowed)
+	if err != nil {
+		return err
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
+}
+
+// DeleteServiceImage deletes images of a service
+//
+//	@Summary		Delete service images
+//	@Description	Delete images of a service
+//	@Tags			Service
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID
+//	@Param			id				path		string	true	"Service ID"
+//	@Produce		json
+//	@Success		200	{object}	dJSON.Images
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/service/{id}/design/images/{image_type} [delete]
+func DeleteServiceImage(c *fiber.Ctx) error {
+	img_types_allowed := map[string]bool{"profile": true}
+
+	var service model.Service
+	Design, err := DeleteImageById(c, service.TableName(), &service, img_types_allowed)
+	if err != nil {
+		return err
+	}
+
+	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
+}
+
 // Service returns a service_controller
 func Service(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
@@ -144,5 +199,7 @@ func Service(Gorm *handler.Gorm) {
 		GetServiceByName,
 		UpdateServiceById,
 		DeleteServiceById,
+		UpdateServiceImages,
+		DeleteServiceImage,
 	})
 }
