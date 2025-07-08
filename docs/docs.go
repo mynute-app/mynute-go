@@ -3265,7 +3265,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+<<<<<<< HEAD
                             "$ref": "#/definitions/DTO.EmployeeFull"
+=======
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+>>>>>>> 54610f3bad9b8d508441e91209fc76ba817a7926
                         }
                     },
                     "400": {
@@ -3331,7 +3335,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+<<<<<<< HEAD
                             "$ref": "#/definitions/DTO.EmployeeFull"
+=======
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+>>>>>>> 54610f3bad9b8d508441e91209fc76ba817a7926
                         }
                     },
                     "400": {
@@ -4984,6 +4992,18 @@ const docTemplate = `{
                     "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "DTO.EmployeeWorkSchedule": {
+            "description": "represents a work schedule for an employee, which is a collection of work ranges.",
+            "type": "object",
+            "properties": {
+                "employee_work_ranges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.EmployeeWorkRange"
+                    }
                 }
             }
         },
