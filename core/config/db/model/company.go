@@ -12,12 +12,12 @@ import (
 
 type Company struct {
 	BaseModel
-	LegalName  string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"legal_name"` // Razão Social
-	TradeName  string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"trade_name"` // Nome Fantasia
+	LegalName  string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"legal_name"`
+	TradeName  string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"trade_name"`
 	TaxID      string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"tax_id"`
-	SchemaName string             `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"schema_name"`
-	Subdomains []*Subdomain       `gorm:"constraint:OnDelete:CASCADE;" json:"subdomains"`                        // One-to-many relationship with Subdomain
-	Sectors    []*Sector          `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE;" json:"sectors"` // Many-to-many relationship with Sector
+	SchemaName string             `gorm:"type:varchar(100);uniqueIndex" json:"schema_name"`
+	Subdomains []*Subdomain       `gorm:"constraint:OnDelete:CASCADE;" json:"subdomains"`
+	Sectors    []*Sector          `gorm:"many2many:company_sectors;constraint:OnDelete:CASCADE;" json:"sectors"`
 	Design     mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
@@ -29,7 +29,6 @@ func (c *Company) GenerateSchemaName() string {
 }
 
 func (c *Company) BeforeCreate(tx *gorm.DB) error {
-	c.SchemaName = c.GenerateSchemaName()
 	if err := lib.MyCustomStructValidator(c); err != nil {
 		return err
 	}
@@ -37,6 +36,17 @@ func (c *Company) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (c *Company) BeforeUpdate(tx *gorm.DB) error {
+	return nil
+}
+
+func (c *Company) AfterCreate(tx *gorm.DB) error {
+	schema_name := c.GenerateSchemaName()
+	if err := tx.Model(c).Update("schema_name", schema_name).Error; err != nil {
+		return fmt.Errorf("failed to update schema_name: %w", err)
+	}
+	if err := c.MigrateSchema(tx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -85,10 +95,6 @@ func (c *Company) Create(tx *gorm.DB) error {
 	}
 
 	if err := tx.Create(c).Error; err != nil {
-		return err
-	}
-
-	if err := c.MigrateSchema(tx); err != nil {
 		return err
 	}
 
