@@ -54,10 +54,6 @@ func (wr *WorkRangeBase) BeforeUpdate(tx *gorm.DB) error {
 }
 
 func (wr *WorkRangeBase) AfterFind(tx *gorm.DB) error {
-	// if err := wr.Utc2LocalTime(); err != nil {
-	// 	return fmt.Errorf("work range (%s) failed to convert UTC to local time (%s): %w", wr.ID, wr.TimeZone, err)
-	// }
-
 	return nil
 }
 

@@ -43,8 +43,9 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	wr := branch.Created.BranchWorkSchedule[0]
 	tt.Describe("Updating branch work schedule").Test(branch.UpdateWorkRange(200, &wr, map[string]any{
-		"start": "07:00",
-		"end":   "20:00",
+		"start":    "07:00",
+		"end":      "20:00",
+		"timezone": "America/Sao_Paulo",
 	}, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, &wr, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
