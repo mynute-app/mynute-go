@@ -50,24 +50,23 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
-	if e.CompanyID == uuid.Nil {
+	if e.CompanyID != uuid.Nil {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	if e.Password != "" {
-		var dbEmployee Employee
-		tx.First(&dbEmployee, "id = ?", e.ID)
-		if e.Password != dbEmployee.Password && !e.MatchPassword(dbEmployee.Password) {
-			if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
-				if _, ok := err.(validator.ValidationErrors); ok {
-					return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
-				} else {
-					return lib.Error.General.InternalError.WithError(err)
-				}
-			}
-			if err := e.HashPassword(); err != nil {
-				return err
+		if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
+			if _, ok := err.(validator.ValidationErrors); ok {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
+			} else {
+				return lib.Error.General.InternalError.WithError(err)
 			}
 		}
+		var dbEmployee Employee
+		tx.First(&dbEmployee, "id = ?", e.ID)
+		if e.Password == dbEmployee.Password || e.MatchPassword(dbEmployee.Password) {
+			return nil
+		}
+		return e.HashPassword()
 	}
 	return nil
 }
