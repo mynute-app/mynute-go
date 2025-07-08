@@ -38,9 +38,9 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
 	servicesID := []DTO.ServiceID{{ID: service.Created.ID}}
 	BranchWorkSchedule := modelT.GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
-	tt.Describe("Branch work schedule creation").Test(branch.CreateWorkSchedule(400, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Branch work schedule fail creation").Test(branch.CreateWorkSchedule(400, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
-	tt.Describe("Branch work schedule creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	wr := branch.Created.BranchWorkSchedule[0]
 	tt.Describe("Updating branch work schedule").Test(branch.UpdateWorkRange(200, &wr, map[string]any{
 		"start": "07:00",

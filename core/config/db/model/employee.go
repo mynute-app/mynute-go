@@ -49,6 +49,9 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
+	if e.CompanyID != uuid.Nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("the CompanyID cannot be changed after creation"))
+	}
 	if e.Password != "" {
 		var dbEmployee Employee
 		tx.First(&dbEmployee, "id = ?", e.ID)

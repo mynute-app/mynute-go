@@ -154,7 +154,8 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	if is_verified {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email %s is already verified", email))
 	}
-	if err := tx.Model(&employee).Where("email = ?", email).Update("verified", true).Error; err != nil {
+	var e model.Employee
+	if err := tx.Model(&e).Where("email = ?", email).Update("verified", true).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Employee.NotFound
 		}

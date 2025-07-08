@@ -339,7 +339,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   1,
 				StartTime: "08:00",
 				EndTime:   "20:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -347,7 +347,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   2,
 				StartTime: "08:00",
 				EndTime:   "20:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -355,7 +355,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   3,
 				StartTime: "08:00",
 				EndTime:   "20:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -363,7 +363,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   4,
 				StartTime: "08:00",
 				EndTime:   "20:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -371,7 +371,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   5,
 				StartTime: "08:00",
 				EndTime:   "20:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -379,7 +379,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   6,
 				StartTime: "08:00",
 				EndTime:   "12:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 			{
@@ -387,7 +387,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				Weekday:   0,
 				StartTime: "08:00",
 				EndTime:   "12:00",
-				TimeZone:  "America/New_York",
+				TimeZone:  "America/Sao_Paulo",
 				Services:  servicesID,
 			},
 		},

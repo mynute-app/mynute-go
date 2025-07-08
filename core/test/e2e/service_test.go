@@ -46,7 +46,7 @@ func Test_Service(t *testing.T) {
 		"profile": FileBytes.PNG_FILE_1,
 	}, company.Owner.X_Auth_Token, nil))
 
-	tt.Describe("Get profile image").Test(service.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+	tt.Describe("Get profile image").Test(service.GetImage(200, service.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
 
 	tt.Describe("Overwrite profile image").Test(service.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_3,

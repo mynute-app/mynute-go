@@ -210,7 +210,7 @@ var GetBranchWorkRange = &EndPoint{
 }
 var UpdateBranchWorkRange = &EndPoint{
 	Path:             "/branch/:id/work_range/:work_range_id",
-	Method:           namespace.PatchActionMethod,
+	Method:           namespace.PutActionMethod,
 	ControllerName:   "UpdateBranchWorkRange",
 	Description:      "Update work range in branch",
 	NeedsCompanyId:   true,
