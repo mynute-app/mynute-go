@@ -117,6 +117,9 @@ func (db *Database) InitialSeed() {
 		panic(err)
 	}
 
+	model.AllowSystemRoleCreation = true
+	defer func() { model.AllowSystemRoleCreation = false }()
+
 	if err := db.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).

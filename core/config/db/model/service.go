@@ -25,8 +25,8 @@ type Service struct {
 func (Service) TableName() string  { return "services" }
 func (Service) SchemaType() string { return "company" }
 
-func (Service) BeforeUpdate(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("CompanyID") {
+func (s *Service) BeforeUpdate(tx *gorm.DB) (err error) {
+	if s.CompanyID == uuid.Nil {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	return nil

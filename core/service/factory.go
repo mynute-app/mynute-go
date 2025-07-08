@@ -6,7 +6,6 @@ import (
 	"agenda-kaki-go/core/lib"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -107,25 +106,12 @@ func (s *service) UpdateOneById(model any) *service {
 		s.Error = err
 		return s
 	}
-	changes := make(map[string]any)
-	if err := s.Context.BodyParser(&changes); err != nil {
+	if err := s.Context.BodyParser(model); err != nil {
 		s.Error = lib.Error.General.InternalError.WithError(err)
 		return s
 	}
-	// to lowercase keys
-	for k := range changes {
-		klow := strings.ToLower(k)
-		if klow == "id" {
-			s.Error = lib.Error.General.BadRequest.WithError(fmt.Errorf("cannot change the ID of a record"))
-			return s
-		}
-	}
-	if err := s.MyGorm.UpdateOneById(val, model, changes); err != nil {
+	if err := s.MyGorm.UpdateOneById(val, model); err != nil {
 		s.Error = lib.Error.General.UpdatedError.WithError(err)
-		return s
-	}
-	if err := s.MyGorm.GetOneBy("id", val, model); err != nil {
-		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 		return s
 	}
 	return s

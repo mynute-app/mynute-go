@@ -37,7 +37,7 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 func (r *Role) BeforeUpdate(tx *gorm.DB) error {
 	if nameIsReserved, err := r.isRoleNameReserved(tx); err != nil {
 		return err
-	} else if nameIsReserved && tx.Statement.Changed("name") {
+	} else if nameIsReserved && r.Name != "" {
 		return lib.Error.Role.NameReserved
 	}
 	return nil

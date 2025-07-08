@@ -19,23 +19,13 @@ func MyGormWrapper(db *gorm.DB) *Gorm {
 }
 
 // UpdateOneById updates a single record by its ID and reloads it
-func (p *Gorm) UpdateOneById(value string, model any, changes any) error {
-
-	if err := p.DB.
-		Model(model).
-		Where("id = ?", value).
-		First(model).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record with id %s not found", value))
-		}
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error checking record existence: %w", err))
-	}
+func (p *Gorm) UpdateOneById(value string, model any) error {
 
 	if result := p.DB.
 		Model(model).
 		Omit(clause.Associations).
 		Where("id = ?", value).
-		Updates(changes); result.Error != nil {
+		Updates(model); result.Error != nil {
 		return fmt.Errorf("gorm update failed: %w", result.Error) // Wrap error
 	} else if result.RowsAffected == 0 {
 		var count int64
@@ -49,12 +39,8 @@ func (p *Gorm) UpdateOneById(value string, model any, changes any) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record `id = %s` exists but was not modified maybe the changes passed are likely identical to database", value))
 	}
 
-	err := p.DB.
-		Model(model).
-		Where("id = ?", value).
-		First(model).Error
-	if err != nil {
-		return fmt.Errorf("gorm reload after update failed: %w", err) // Wrap error
+	if err := p.DB.First(model, "id = ?", value).Error; err != nil {
+		return fmt.Errorf("gorm reload after update failed: %w", err)
 	}
 
 	return nil

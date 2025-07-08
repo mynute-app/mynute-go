@@ -91,9 +91,9 @@ func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 		return err
 	}
 
-	if tx.Statement.Changed("EmployeeID") {
+	if ewr.EmployeeID == uuid.Nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID cannot be changed after creation"))
-	} else if tx.Statement.Changed("BranchID") {
+	} else if ewr.BranchID == uuid.Nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID cannot be changed after creation"))
 	}
 

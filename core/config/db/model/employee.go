@@ -50,13 +50,13 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
-	if tx.Statement.Changed("CompanyID") {
+	if e.CompanyID == uuid.Nil {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	if e.Password != "" {
-		db_e := &Employee{}
-		tx.First(db_e, e.ID)
-		if e.Password != db_e.Password && !e.MatchPassword(db_e.Password) {
+		var dbEmployee Employee
+		tx.First(&dbEmployee, "id = ?", e.ID)
+		if e.Password != dbEmployee.Password && !e.MatchPassword(dbEmployee.Password) {
 			if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
 				if _, ok := err.(validator.ValidationErrors); ok {
 					return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
@@ -69,11 +69,6 @@ func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
 			}
 		}
 	}
-	// if !e.EmployeeWorkSchedule.IsEmpty() && tx.Statement.Changed("work_schedule") {
-	// 	if err := e.ValiateWorkSchedule(tx); err != nil {
-	// 		return err
-	// 	}
-	// }
 	return nil
 }
 

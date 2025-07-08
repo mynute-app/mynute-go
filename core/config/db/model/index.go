@@ -10,19 +10,17 @@ import (
 )
 
 type BaseModel struct {
-	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;<-:create" json:"id"`
+	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("ID") {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("ID cannot be changed after creation"))
+	if m.ID != uuid.Nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("ID cannot be set manually"))
 	}
-	if m.ID == uuid.Nil {
-		m.ID = uuid.New()
-	} else if m.ID.Variant() != uuid.RFC4122 {
+	if m.ID != uuid.Nil && m.ID.Variant() != uuid.RFC4122 {
 		errMsg := fmt.Errorf("BeforeSave: Invalid UUID variant for ID %s in %T", m.ID.String(), m)
 		return lib.Error.General.UpdatedError.WithError(errMsg)
 	}

@@ -28,8 +28,19 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Client update").Test(client.Update(200, map[string]any{
 		"name": "Updated Client Name",
 	}))
+	tt.Describe("Client update").Test(client.Update(400, map[string]any{
+		"name":     "Should Fail Update on Client Name",
+		"password": "newpswrd123!",
+	}))
+	tt.Describe("Client update").Test(client.Update(200, map[string]any{
+		"name":     "Should Succeed Update on Client Name",
+		"password": "NewPswrd123!",
+	}))
+	tt.Describe("Client update").Test(client.Update(200, map[string]any{
+		"password": "NewPswrd1@!",
+	}))
 	tt.Describe("Client get by email").Test(client.GetByEmail(200))
-	
+
 	tt.Describe("Upload profile image").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil))

@@ -3,8 +3,10 @@ package model
 import (
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
+	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -46,6 +48,24 @@ func (c *Client) BeforeCreate(tx *gorm.DB) (err error) {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) BeforeUpdate(tx *gorm.DB) (err error) {
+	if c.Password != "" {
+		if err := lib.ValidatorV10.Var(c.Password, "myPasswordValidation"); err != nil {
+			if _, ok := err.(validator.ValidationErrors); ok {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
+			}
+			return lib.Error.General.InternalError.WithError(err)
+		}
+		return c.HashPassword()
+	}
+	return nil
+}
+
+func (c *Client) MatchPassword(hashedPass string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(c.Password))
+	return err == nil
 }
 
 // Method to set hashed password:

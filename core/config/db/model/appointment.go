@@ -116,56 +116,73 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
-	if tx.Statement.Changed("CompanyID") {
-		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	if !a.History.IsEmpty() {
+		// This check seems to prevent manual updates to the history field, which is good.
+		// However, our code below will overwrite it anyway. Let's make sure it's what you want.
+		// If the user sends a `history` field in the JSON, it will be in `a.History`.
+		// It's better to tell GORM to ignore any incoming value for this field.
+		tx.Statement.SetColumn("history", nil, true)
 	}
+	// --- End: Validations ---
 
-	if tx.Statement.Changed("History") {
-		return lib.Error.Appointment.HistoryManualUpdateForbidden
-	}
-
-	var changes []mJSON.FieldChange
-
-	if a.History.IsEmpty() {
-		a.History = mJSON.AppointmentHistory{FieldChanges: []mJSON.FieldChange{}}
-	}
-
-	if tx.Statement.Schema == nil {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("statement schema is nil at database transaction layer"))
-	}
-
+	// Fetch the original record from the database using the ID from the `a` struct.
+	// NOTE: This relies on `a.ID` being populated before the hook runs.
+	// If `BodyParser` doesn't get the ID, this will fail. A safer way is to get the
+	// ID from the WHERE clause, as in the previous example.
 	var originalAppointment Appointment
-	if err := tx.Model(&Appointment{}).
-		Where("id = ?", a.ID).
-		First(&originalAppointment).
-		Error; err != nil {
+	if err := tx.First(&originalAppointment, "id = ?", a.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("appointment ID %s", a.ID))
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
 	}
 
-	for _, field := range tx.Statement.Schema.Fields {
-		if (!tx.Statement.Changed(field.Name) && field.Name != "history") || field.Name == "id" {
+	var changes []mJSON.FieldChange
+
+	// --- Start: The Refactored Comparison Logic ---
+	originalVal := reflect.ValueOf(originalAppointment)
+	newVal := reflect.ValueOf(*a) // The incoming struct 'a' has the new data
+
+	// Iterate through all fields of the Appointment struct
+	for i := 0; i < newVal.NumField(); i++ {
+		fieldStruct := newVal.Type().Field(i)
+		fieldName := fieldStruct.Name
+
+		// Skip fields that we don't want to track or compare
+		if fieldName == "ID" || fieldName == "CreatedAt" || fieldName == "UpdatedAt" || fieldName == "History" || fieldName == "Comments" || fieldName == "BaseModel" {
 			continue
 		}
-		oldValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(originalAppointment))
-		newValue, _ := field.ValueOf(tx.Statement.Context, reflect.ValueOf(a))
-		if oldValue != newValue {
+
+		// Prevent changing CompanyID
+		if fieldName == "CompanyID" && originalAppointment.CompanyID != a.CompanyID && a.CompanyID != uuid.Nil {
+			return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+		}
+
+		originalFieldVal := originalVal.FieldByName(fieldName).Interface()
+		newFieldVal := newVal.Field(i).Interface()
+
+		// Check if the new value is a non-zero value for its type.
+		// This aligns with GORM's struct-update behavior.
+		isNewValueNonZero := !reflect.DeepEqual(newFieldVal, reflect.Zero(fieldStruct.Type).Interface())
+
+		// If the new value is non-zero AND it's different from the original value...
+		if isNewValueNonZero && !reflect.DeepEqual(originalFieldVal, newFieldVal) {
 			changes = append(changes, mJSON.FieldChange{
 				CreatedAt: time.Now(),
-				Field:     field.Name,
-				OldValue:  fmt.Sprintf("%v", oldValue),
-				NewValue:  fmt.Sprintf("%v", newValue),
+				Field:     fieldName,
+				OldValue:  fmt.Sprintf("%v", originalFieldVal),
+				NewValue:  fmt.Sprintf("%v", newFieldVal),
 			})
 		}
 	}
+	// --- End: The Refactored Comparison Logic ---
 
 	if len(changes) > 0 {
 		err := a.ValidateRules(tx, false)
 		if err != nil {
 			return err
 		}
+		// Append the new changes to the history from the original record
 		a.History.FieldChanges = append(originalAppointment.History.FieldChanges, changes...)
 	}
 
@@ -188,11 +205,11 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.Appointment.MissingRequiredIDs
 	}
 	// Check start time only on creation or if it explicitly changed to the past
-	if isCreate || tx.Statement.Changed("StartTime") {
+	if isCreate || a.StartTime.IsZero() {
 		if a.StartTime.Before(time.Now().Add(-1 * time.Minute)) {
 			return lib.Error.Appointment.StartTimeInThePast // Use specific error for past time
 		}
-	} else if tx.Statement.Changed("CompanyID") {
+	} else if a.CompanyID != uuid.Nil {
 		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("can not change company id")) // Use specific error for company ID change
 	}
 

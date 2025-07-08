@@ -85,14 +85,10 @@ func UpdateImagesById(c *fiber.Ctx, model_table_name string, model any, img_type
 	if err != nil {
 		return nil, err
 	}
-	if err := tx.First(model, "id = ?", id).Error; err != nil {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to fetch model (%s) with id (%s): %w", model_table_name, id, err))
-	}
 
-	modelElementValue := reflect.ValueOf(model).Elem()
-	Design, ok := modelElementValue.FieldByName("Design").Interface().(mJSON.DesignConfig)
-	if !ok {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("model (%s) does not have a valid Design field", model_table_name))
+	var Design mJSON.DesignConfig
+	if err := tx.Model(model).Where("id = ?", id).Pluck("design", &Design).Error; err != nil {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to fetch model (%s) with id (%s): %w", model_table_name, id, err))
 	}
 
 	var uploaded_img_types = make([]string, 0)
@@ -144,14 +140,10 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	if err != nil {
 		return nil, err
 	}
-	if err := tx.First(model, "id = ?", id).Error; err != nil {
+	
+	var Design mJSON.DesignConfig
+	if err := tx.Model(model).Where("id = ?", id).Pluck("design", &Design).Error; err != nil {
 		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to fetch model (%s) with id (%s): %w", model_table_name, id, err))
-	}
-
-	modelElementValue := reflect.ValueOf(model).Elem()
-	Design, ok := modelElementValue.FieldByName("Design").Interface().(mJSON.DesignConfig)
-	if !ok {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("model (%s) does not have a valid Design field", model_table_name))
 	}
 
 	var uploaded_img_types = make([]string, 0)
