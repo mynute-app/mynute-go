@@ -314,7 +314,7 @@ func (b *Branch) UpdateWorkRange(status int, wrID string, changes map[string]any
 	return nil
 }
 
-func (b *Branch) DeleteWorkRange(status int, wr *model.BranchWorkRange, x_auth_token string, x_company_id *string) error {
+func (b *Branch) DeleteWorkRange(status int, wrID string, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
@@ -323,7 +323,7 @@ func (b *Branch) DeleteWorkRange(status int, wr *model.BranchWorkRange, x_auth_t
 	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("DELETE").
-		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wr.ID.String())).
+		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wrID)).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).

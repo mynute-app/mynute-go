@@ -53,6 +53,26 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Add branch to employee").Test(employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil))
 	tt.Describe("Employee update work schedule successfully").Test(employee.CreateWorkSchedule(200, EmployeeWorkSchedule, nil, nil))
 
+	wr := employee.Created.EmployeeWorkSchedule[0]
+	tt.Describe("Updating fail branch work schedule").Test(employee.UpdateWorkRange(400, wr.ID.String(), map[string]any{
+		"start_time": "06:00",
+		"end_time":   "20:00",
+		"time_zone":  "America/Sao_Paulo",
+	}, nil, nil))
+	tt.Describe("Updating success branch work schedule").Test(employee.UpdateWorkRange(400, wr.ID.String(), map[string]any{
+		"start_time": "09:00",
+		"end_time":   "18:00",
+		"time_zone":  "America/Sao_Paulo",
+		"weekday":    1,
+	}, nil, nil))
+	tt.Describe("Updating success branch work schedule").Test(employee.UpdateWorkRange(200, wr.ID.String(), map[string]any{
+		"start_time": "09:30",
+		"end_time":   "11:00",
+		"time_zone":  "America/Sao_Paulo",
+		"weekday":    1,
+	}, nil, nil))
+	tt.Describe("Deleting branch work range").Test(employee.DeleteWorkRange(200, wr.ID.String(), nil, nil))
+
 	tt.Describe("Upload profile image").Test(employee.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil, nil))

@@ -53,7 +53,7 @@ func Test_Branch(t *testing.T) {
 		"time_zone":  "America/Sao_Paulo",
 		"weekday":    1,
 	}, company.Owner.X_Auth_Token, nil))
-	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, &wr, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, wr.ID.String(), company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
 	tt.Describe("Getting company by ID").Test(company.GetById(200, company.Owner.X_Auth_Token, nil))
 

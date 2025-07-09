@@ -117,6 +117,7 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 		return err
 	}
 	var updated *model.EmployeeWorkSchedule
+
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
@@ -129,12 +130,60 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 		return fmt.Errorf("failed to update employee work schedule: %w", err)
 	}
 
-	// if err := ValidateWorkSchedule(emp.EmployeeWorkSchedule, e, e.Company); err != nil {
-	// 	return fmt.Errorf("invalid work schedule: %w", err)
-	// }
-
 	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+	return nil
+}
 
+
+func (e *Employee) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token *string, x_company_id *string) error {
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	var updated *model.EmployeeWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("PUT").
+		URL(fmt.Sprintf("/employee/%s/work_range/%s", e.Created.ID.String(), wrID)).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(changes).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to update branch work range: %w", err)
+	}
+	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+	return nil
+}
+
+func (e *Employee) DeleteWorkRange(status int, wrID string, x_auth_token *string, x_company_id *string) error {
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	var updated *model.EmployeeWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL(fmt.Sprintf("/employee/%s/work_range/%s", e.Created.ID.String(), wrID)).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(nil).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to delete branch work schedule: %w", err)
+	}
+	e.Created.EmployeeWorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -297,7 +346,7 @@ func (e *Employee) AddBranch(s int, b *Branch, token *string, x_company_id *stri
 		Error; err != nil {
 		return fmt.Errorf("failed to add branch to employee: %w", err)
 	}
-	if err := b.GetById(s, e.Company.Owner.X_Auth_Token, nil); err != nil {
+	if err := b.GetById(s, b.Company.Owner.X_Auth_Token, nil); err != nil {
 		return fmt.Errorf("failed to get branch by ID after adding to employee: %w", err)
 	}
 	if err := e.GetById(s, nil, nil); err != nil {

@@ -344,7 +344,7 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 		if ewr.EmployeeID.String() != employee_id {
 			return lib.Error.General.CreatedError.WithError(fmt.Errorf("work range [%d] employee ID (%s) does not match employee ID (%s) from path", i+1, ewr.EmployeeID.String(), employee_id))
 		}
-		
+
 		start, err := lib.Parse_HHMM_To_Time(ewr.StartTime, ewr.TimeZone)
 		if err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_time: %w", err))
@@ -489,10 +489,6 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := tx.Delete(&work_schedule).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
 	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
@@ -532,6 +528,15 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
 	work_range_id := c.Params("work_range_id")
 
+	var mapInput map[string]any
+	if err := json.Unmarshal(c.Request().Body(), &mapInput); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
+	}
+
+	if mapInput["weekday"] == nil || mapInput["start_time"] == nil || mapInput["end_time"] == nil || mapInput["time_zone"] == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing required fields"))
+	}
+
 	var work_range model.EmployeeWorkRange
 
 	tx, err := lib.Session(c)
@@ -567,6 +572,7 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 	work_range.Weekday = time.Weekday(input.Weekday)
 	work_range.StartTime = start
 	work_range.EndTime = end
+	work_range.TimeZone = input.TimeZone
 
 	if err := tx.Save(&work_range).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -575,16 +581,18 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var ewr []*model.EmployeeWorkRange
+	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&ewr, "employee_id = ?", employee_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.EmployeeWorkRange
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &ewr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

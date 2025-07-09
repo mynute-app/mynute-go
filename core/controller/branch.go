@@ -330,6 +330,15 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
+	var mapInput map[string]any
+	if err := json.Unmarshal(c.Request().Body(), &mapInput); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
+	}
+
+	if mapInput["weekday"] == nil || mapInput["start_time"] == nil || mapInput["end_time"] == nil || mapInput["time_zone"] == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing required fields"))
+	}
+
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
@@ -342,15 +351,6 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 
 	if work_range.BranchID.String() != branch_id {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range branch ID does not match with branch ID from path"))
-	}
-
-	var mapInput map[string]any
-	if err := json.Unmarshal(c.Request().Body(), &mapInput); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
-	}
-
-	if mapInput["weekday"] == nil || mapInput["start_time"] == nil || mapInput["end_time"] == nil || mapInput["time_zone"] == nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing required fields"))
 	}
 
 	var input DTO.UpdateWorkRange

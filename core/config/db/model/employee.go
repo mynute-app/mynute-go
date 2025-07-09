@@ -101,7 +101,10 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 // ValidateEmployeeWorkRangeTime checks if the employee work range overlaps with existing work ranges for the employee.
 func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	var emp_work_schedule []EmployeeWorkRange
-	if err := tx.Find(&emp_work_schedule, "employee_id = ? AND weekday = ?", e.ID, ewr.Weekday).Error; err != nil {
+	if err := tx.
+	Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
+	Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
+	Find(&emp_work_schedule).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return lib.Error.General.InternalError.WithError(err)
 		}
@@ -154,12 +157,6 @@ func (e *Employee) RemoveWorkRange(tx *gorm.DB, wr *EmployeeWorkRange) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if err := tx.Preload(clause.Associations).First(&e, "id = ?", e.ID.String()).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
 	return nil
 }
 

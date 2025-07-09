@@ -103,6 +103,7 @@ func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
 	}
+	
 	if err := branch.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
 	}
