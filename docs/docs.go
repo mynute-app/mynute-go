@@ -3143,6 +3143,68 @@ const docTemplate = `{
             }
         },
         "/employee/{id}/work_range/{work_range_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a work range for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "EmployeeWorkSchedule"
+                ],
+                "summary": "Get work range by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkRange"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -3265,11 +3327,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-<<<<<<< HEAD
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-=======
                             "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
->>>>>>> 54610f3bad9b8d508441e91209fc76ba817a7926
                         }
                     },
                     "400": {
@@ -3335,11 +3393,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-<<<<<<< HEAD
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-=======
                             "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
->>>>>>> 54610f3bad9b8d508441e91209fc76ba817a7926
                         }
                     },
                     "400": {
@@ -4040,13 +4094,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "Service ID",
                         "name": "id",
                         "in": "path",
@@ -4126,6 +4173,123 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/service/{id}/design/images": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update images of a service",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Update service images",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dJSON.Images"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/service/{id}/design/images/{image_type}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete images of a service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Delete service images",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dJSON.Images"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -4695,6 +4859,7 @@ const docTemplate = `{
                 "owner_email",
                 "owner_password",
                 "owner_phone",
+                "owner_time_zone",
                 "start_subdomain"
             ],
             "properties": {
@@ -4721,6 +4886,11 @@ const docTemplate = `{
                 "owner_surname": {
                     "type": "string",
                     "example": "Clark"
+                },
+                "owner_time_zone": {
+                    "description": "Use a valid timezone",
+                    "type": "string",
+                    "example": "America/Sao_Paulo"
                 },
                 "start_subdomain": {
                     "type": "string",
@@ -4765,6 +4935,11 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "time_zone": {
+                    "description": "Use a valid timezone",
+                    "type": "string",
+                    "example": "America/Sao_Paulo"
                 }
             }
         },

@@ -428,6 +428,10 @@ definitions:
       owner_surname:
         example: Clark
         type: string
+      owner_time_zone:
+        description: Use a valid timezone
+        example: America/Sao_Paulo
+        type: string
       start_subdomain:
         example: your-company-subdomain
         type: string
@@ -441,6 +445,7 @@ definitions:
     - owner_email
     - owner_password
     - owner_phone
+    - owner_time_zone
     - start_subdomain
     type: object
   DTO.CreateEmployee:
@@ -464,6 +469,10 @@ definitions:
         type: string
       surname:
         example: Doe
+        type: string
+      time_zone:
+        description: Use a valid timezone
+        example: America/Sao_Paulo
         type: string
     type: object
   DTO.CreateEmployeeWorkRange:
@@ -3009,11 +3018,7 @@ paths:
         "200":
           description: OK
           schema:
-<<<<<<< HEAD
-            $ref: '#/definitions/DTO.EmployeeFull'
-=======
             $ref: '#/definitions/DTO.EmployeeWorkSchedule'
->>>>>>> 54610f3bad9b8d508441e91209fc76ba817a7926
         "400":
           description: Bad Request
           schema:
@@ -3023,6 +3028,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete work schedule
+      tags:
+      - EmployeeWorkSchedule
+    get:
+      description: Retrieve a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get work range by ID
       tags:
       - EmployeeWorkSchedule
     put:
@@ -3616,11 +3662,6 @@ paths:
         name: X-Company-ID
         required: true
         type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
       - description: Service ID
         in: path
         name: id
@@ -3702,6 +3743,82 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update service by ID
+      tags:
+      - Service
+  /service/{id}/design/images:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update images of a service
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update service images
+      tags:
+      - Service
+  /service/{id}/design/images/{image_type}:
+    delete:
+      description: Delete images of a service
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete service images
       tags:
       - Service
   /service/name/{name}:

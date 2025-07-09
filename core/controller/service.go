@@ -126,7 +126,6 @@ func UpdateServiceById(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	nil
@@ -172,7 +171,7 @@ func UpdateServiceImages(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.Images
