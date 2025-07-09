@@ -42,10 +42,16 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	wr := branch.Created.BranchWorkSchedule[0]
-	tt.Describe("Updating branch work schedule").Test(branch.UpdateWorkRange(200, &wr, map[string]any{
-		"start":    "07:00",
-		"end":      "20:00",
-		"timezone": "America/Sao_Paulo",
+	tt.Describe("Updating fail branch work schedule").Test(branch.UpdateWorkRange(400, wr.ID.String(), map[string]any{
+		"start_time": "06:00",
+		"end_time":   "20:00",
+		"time_zone":  "America/Sao_Paulo",
+	}, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Updating success branch work schedule").Test(branch.UpdateWorkRange(200, wr.ID.String(), map[string]any{
+		"start_time": "06:00",
+		"end_time":   "20:00",
+		"time_zone":  "America/Sao_Paulo",
+		"weekday":    1,
 	}, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, &wr, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))

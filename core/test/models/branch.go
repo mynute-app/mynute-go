@@ -292,23 +292,25 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	return nil
 }
 
-func (b *Branch) UpdateWorkRange(status int, wr *model.BranchWorkRange, changes map[string]any, x_auth_token string, x_company_id *string) error {
+func (b *Branch) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
+	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("PUT").
-		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wr.ID.String())).
+		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wrID)).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
-		Send(wr).
-		ParseResponse(&wr).
+		Send(changes).
+		ParseResponse(&updated).
 		Error; err != nil {
 		return fmt.Errorf("failed to update branch work range: %w", err)
 	}
+	b.Created.BranchWorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -318,6 +320,7 @@ func (b *Branch) DeleteWorkRange(status int, wr *model.BranchWorkRange, x_auth_t
 	if err != nil {
 		return err
 	}
+	var updated *model.BranchWorkSchedule
 	if err := handler.NewHttpClient().
 		Method("DELETE").
 		URL(fmt.Sprintf("/branch/%s/work_range/%s", b.Created.ID.String(), wr.ID.String())).
@@ -325,9 +328,11 @@ func (b *Branch) DeleteWorkRange(status int, wr *model.BranchWorkRange, x_auth_t
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
 		Send(nil).
+		ParseResponse(&updated).
 		Error; err != nil {
 		return fmt.Errorf("failed to delete branch work schedule: %w", err)
 	}
+	b.Created.BranchWorkSchedule = updated.WorkRanges
 	return nil
 }
 

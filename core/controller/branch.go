@@ -8,6 +8,7 @@ import (
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -241,6 +242,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 				Weekday:   time.Weekday(bwr.Weekday),
 				StartTime: start,
 				EndTime:   end,
+				TimeZone:  bwr.TimeZone,
 				BranchID:  uuid.MustParse(branch_id),
 			},
 			Services: services,
@@ -342,6 +344,15 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range branch ID does not match with branch ID from path"))
 	}
 
+	var mapInput map[string]any
+	if err := json.Unmarshal(c.Request().Body(), &mapInput); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to parse request body: %w", err))
+	}
+
+	if mapInput["weekday"] == nil || mapInput["start_time"] == nil || mapInput["end_time"] == nil || mapInput["time_zone"] == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing required fields"))
+	}
+
 	var input DTO.UpdateWorkRange
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -366,6 +377,7 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 	}
 
 	work_range.Weekday = time.Weekday(input.Weekday)
+	work_range.TimeZone = input.TimeZone
 	work_range.StartTime = start
 	work_range.EndTime = end
 
@@ -376,16 +388,18 @@ func UpdateBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var bwr []*model.BranchWorkRange
+	var bwr []model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.BranchWorkRange
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -428,16 +442,18 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var bwr []*model.BranchWorkRange
+	var bwr []model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.BranchWorkRange
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

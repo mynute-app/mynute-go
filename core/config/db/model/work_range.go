@@ -14,6 +14,7 @@ type WorkRangeBase struct {
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
 	StartTime time.Time    `json:"start_time" gorm:"not null;type:timestamptz"`
 	EndTime   time.Time    `json:"end_time" gorm:"not null;type:timestamptz"`
+	TimeZone  string       `json:"time_zone" gorm:"not null;type:varchar(255)" validate:"required,timezone"` // Time zone of the work range, e.g., "America/New_York"
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }
@@ -28,9 +29,6 @@ func (wr *WorkRangeBase) BeforeCreate(tx *gorm.DB) error {
 	if err := wr.ConvertToBranchTimeZone(tx); err != nil {
 		return err
 	}
-	// if err := wr.LocalTime2UTC(); err != nil {
-	// 	return err
-	// }
 	return nil
 }
 
@@ -46,14 +44,16 @@ func (wr *WorkRangeBase) BeforeUpdate(tx *gorm.DB) error {
 	if err := wr.ConvertToBranchTimeZone(tx); err != nil {
 		return err
 	}
-	// if err := wr.LocalTime2UTC(); err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
 func (wr *WorkRangeBase) AfterFind(tx *gorm.DB) error {
+	loc, err := wr.GetTimeZone()
+	if err != nil {
+		return err
+	}
+	wr.StartTime = wr.StartTime.In(loc)
+	wr.EndTime = wr.EndTime.In(loc)
 	return nil
 }
 
@@ -83,13 +83,11 @@ func (wr *WorkRangeBase) ValidateTime() error {
 }
 
 func (wr *WorkRangeBase) GetTimeZone() (*time.Location, error) {
-	// Get Timezone from start time
-	stl := wr.StartTime.Location()
-	etl := wr.EndTime.Location()
-	if stl != etl {
-		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("start time and end time must have the same timezone"))
+	loc, err := lib.GetTimeZone(wr.TimeZone)
+	if err != nil {
+		return nil, err
 	}
-	return stl, nil
+	return loc, nil
 }
 
 func (wr *WorkRangeBase) GetTimeZoneString() (string, error) {
@@ -99,36 +97,6 @@ func (wr *WorkRangeBase) GetTimeZoneString() (string, error) {
 	}
 	return loc.String(), nil
 }
-
-// LocalTime2UTC converts the start and end times of the WorkRange from local time to UTC.
-// DO NOT EVER USE before the ConvertToBranchTimeZone function.
-// func (wr *WorkRangeBase) LocalTime2UTC() error {
-// 	var err error
-// 	startTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.StartTime)
-// 	if err != nil {
-// 		return fmt.Errorf("invalid start time %s: %w", wr.StartTime, err)
-// 	}
-// 	endTimeUTC, err := lib.LocalTime2UTC(wr.TimeZone, wr.EndTime)
-// 	if err != nil {
-// 		return fmt.Errorf("invalid end time %s: %w", wr.EndTime, err)
-// 	}
-// 	wr.StartTime = startTimeUTC
-// 	wr.EndTime = endTimeUTC
-// 	return nil
-// }
-
-// func (wr *WorkRangeBase) Utc2LocalTime() error {
-// 	var err error
-// 	wr.StartTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.StartTime)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to convert start time to local: %w", err)
-// 	}
-// 	wr.EndTime, err = lib.Utc2LocalTime(wr.TimeZone, wr.EndTime)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to convert end time to local: %w", err)
-// 	}
-// 	return nil
-// }
 
 func (wr *WorkRangeBase) Overlaps(other *WorkRangeBase) (bool, error) {
 	if wr.Weekday != other.Weekday {
@@ -149,24 +117,26 @@ func (wr *WorkRangeBase) Overlaps(other *WorkRangeBase) (bool, error) {
 // It retrieves the branch's time zone from the database and applies it to the start and end times.
 // Necessary to maintain consistency with Branch time zone as it wouldn't make sense to have a BranchWorkRange in a different time zone than the Branch itself.
 func (wr *WorkRangeBase) ConvertToBranchTimeZone(tx *gorm.DB) error {
-	var bTZ_str string
+	var bTZ string
 	if err := tx.
 		Model(&Branch{}).
 		Where("id = ?", wr.BranchID.String()).
 		Select("time_zone").
-		Row().Scan(&bTZ_str); err != nil {
+		Row().Scan(&bTZ); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s not found", wr.BranchID))
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	bTZ, err := lib.GetTimeZone(bTZ_str)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s has invalid time zone %s: %w", wr.BranchID, bTZ_str, err))
+	if bTZ == wr.TimeZone {
+		return nil
 	}
-	startTimeInBranchTZ := wr.StartTime.In(bTZ)
-	endTimeInBranchTZ := wr.EndTime.In(bTZ)
-	wr.StartTime = startTimeInBranchTZ
-	wr.EndTime = endTimeInBranchTZ
+	bLoc, err := lib.GetTimeZone(bTZ)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch with ID %s has invalid time zone %s: %w", wr.BranchID, bTZ, err))
+	}
+	wr.StartTime = wr.StartTime.In(bLoc)
+	wr.EndTime = wr.EndTime.In(bLoc)
+	wr.TimeZone = bTZ
 	return nil
 }

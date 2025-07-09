@@ -257,13 +257,23 @@ func TimeRangeFullyContained(aStart, aEnd time.Time, aTZ *time.Location, bStart,
 	return !bStart.Before(aStart) && !bEnd.After(aEnd)
 }
 
-// Parse_HHMM_To_Time parses a "HH:MM" string using the given time_zone location
-// and returns a time.Time with date 0001-01-01.
+// Parse_HHMM_To_Time parses either a "HH:MM" string using the given time_zone location
+// or a full ISO datetime string with offset like "2020-01-01T08:00:00-03:00".
+// It always returns a time.Time with date 2020-01-01 and the correct time zone location.
 func Parse_HHMM_To_Time(input string, tz string) (time.Time, error) {
 	loc, err := GetTimeZone(tz)
 	if err != nil {
 		return time.Time{}, err
 	}
+
+	// Case 1: full ISO datetime with offset
+	if t, err := time.Parse(time.RFC3339, input); err == nil {
+		// Convert to desired location
+		t = t.In(loc)
+		return time.Date(2020, 1, 1, t.Hour(), t.Minute(), 0, 0, loc), nil
+	}
+
+	// Case 2: HH:MM
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
 		return time.Time{}, fmt.Errorf("invalid time format: %s", input)
@@ -276,5 +286,6 @@ func Parse_HHMM_To_Time(input string, tz string) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid minute in time: %s", input)
 	}
+
 	return time.Date(2020, 1, 1, hour, minute, 0, 0, loc), nil
 }

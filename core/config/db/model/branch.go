@@ -241,7 +241,10 @@ func (b *Branch) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRan
 func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRange) error {
 	var existing []BranchWorkRange
 
-	err := tx.Find(&existing, "branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).Error
+	err := tx.
+	Where("branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).
+	Where("start_time <= ? AND end_time >= ?", newRange.EndTime, newRange.StartTime).
+	Find(&existing).Error
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to fetch existing work ranges: %w", err))
 	}

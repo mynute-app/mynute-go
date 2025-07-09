@@ -364,6 +364,7 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 				Weekday:   time.Weekday(ewr.Weekday),
 				StartTime: start,
 				EndTime:   end,
+				TimeZone:  ewr.TimeZone,
 				BranchID:  ewr.BranchID,
 			},
 			EmployeeID: ewr.EmployeeID,
