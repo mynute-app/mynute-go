@@ -2904,7 +2904,7 @@ paths:
       tags:
       - Employee
   /employee/{id}/design/images:
-    post:
+    patch:
       consumes:
       - application/json
       description: Update the images of an employee

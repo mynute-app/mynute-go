@@ -276,7 +276,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Param			profile	formData	file	false	"Profile image"
 //	@Success		200		{object}	dJSON.Images
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/design/images [post]
+//	@Router			/employee/{id}/design/images [patch]
 func UpdateEmployeeImages(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
 
