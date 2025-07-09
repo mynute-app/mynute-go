@@ -170,6 +170,19 @@ services:
       - dev
       - test
 
+  mailhog:
+    container_name: mailhog-kaki
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - kaki-network
+    profiles:
+      - dev
+      - test
+
       
 networks:
   kaki-network:
