@@ -12,11 +12,11 @@ import (
 var AllowSystemRoleCreation = false
 
 type Role struct {
-	BaseModel               // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
-	Name         string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
-	Description  string     `json:"description"`
-	CompanyID    *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
-	Company      *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
+	BaseModel              // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
+	Name        string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
+	Description string     `json:"description"`
+	CompanyID   *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
+	Company     *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
 }
 
 func (Role) TableName() string  { return "public.roles" }
@@ -37,8 +37,18 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 func (r *Role) BeforeUpdate(tx *gorm.DB) error {
 	if nameIsReserved, err := r.isRoleNameReserved(tx); err != nil {
 		return err
-	} else if nameIsReserved && r.Name != "" {
-		return lib.Error.Role.NameReserved
+	} else if nameIsReserved {
+		var existing Role
+		if err := tx.
+			Where("id = ?", r.ID).
+			First(&existing).Error; err != nil {
+			return err
+		}
+
+		// Só bloqueia se o nome foi alterado
+		if existing.Name != r.Name {
+			return lib.Error.Role.NameReserved
+		}
 	}
 	return nil
 }

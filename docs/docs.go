@@ -3013,7 +3013,7 @@ const docTemplate = `{
             }
         },
         "/employee/{id}/design/images": {
-            "post": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
