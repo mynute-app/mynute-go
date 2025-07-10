@@ -140,7 +140,7 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var Design mJSON.DesignConfig
 	if err := tx.Model(model).Where("id = ?", id).Pluck("design", &Design).Error; err != nil {
 		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("failed to fetch model (%s) with id (%s): %w", model_table_name, id, err))
@@ -175,4 +175,32 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	}
 
 	return &Design, nil
+}
+
+func ResetPasswordByEmail(c *fiber.Ctx, model any) (string, error) {
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model must be a non-nil pointer"))
+	}
+
+	newPassword := lib.GenerateValidPassword()
+
+	email := c.Params("email")
+	if email == "" {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("id parameter is required at path"))
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return "", err
+	}
+
+	if err := tx.
+		Model(model).
+		Where("email = ?", email).
+		Update("password", newPassword).Error; err != nil {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to update password: %w", err))
+	}
+
+	return newPassword, nil
 }

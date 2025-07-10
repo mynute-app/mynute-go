@@ -2218,7 +2218,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - CRUD"
                 ],
                 "summary": "Create employee",
                 "parameters": [
@@ -2277,7 +2277,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - CRUD"
                 ],
                 "summary": "Get employee by email",
                 "parameters": [
@@ -2337,7 +2337,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Auth"
                 ],
                 "summary": "Login",
                 "parameters": [
@@ -2374,6 +2374,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/reset-password/{email}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sets a random password of an employee using its email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee - Auth"
+                ],
+                "summary": "Reset employee password to a random value",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employee/verify-email/{email}/{code}": {
             "post": {
                 "security": [
@@ -2389,7 +2436,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Auth"
                 ],
                 "summary": "Verify email",
                 "parameters": [
@@ -2437,7 +2484,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Branches"
                 ],
                 "summary": "Add employee to branch",
                 "parameters": [
@@ -2499,7 +2546,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Branches"
                 ],
                 "summary": "Remove employee from branch",
                 "parameters": [
@@ -2566,7 +2613,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Services"
                 ],
                 "summary": "Add service to employee",
                 "parameters": [
@@ -2628,7 +2675,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Services"
                 ],
                 "summary": "Remove service from employee",
                 "parameters": [
@@ -2695,7 +2742,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule - Services"
                 ],
                 "summary": "Remove service from employee's work range",
                 "parameters": [
@@ -2769,7 +2816,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule - Services"
                 ],
                 "summary": "Add services to employee's work range",
                 "parameters": [
@@ -2845,7 +2892,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - CRUD"
                 ],
                 "summary": "Get employee by ID",
                 "parameters": [
@@ -2900,7 +2947,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - CRUD"
                 ],
                 "summary": "Delete employee by ID",
                 "parameters": [
@@ -2958,7 +3005,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - CRUD"
                 ],
                 "summary": "Update employee",
                 "parameters": [
@@ -3027,7 +3074,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Images"
                 ],
                 "summary": "Update employee images",
                 "parameters": [
@@ -3090,7 +3137,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Employee - Images"
                 ],
                 "summary": "Delete employee image",
                 "parameters": [
@@ -3154,7 +3201,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule"
                 ],
                 "summary": "Get work range by ID",
                 "parameters": [
@@ -3219,7 +3266,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule"
                 ],
                 "summary": "Update work range",
                 "parameters": [
@@ -3290,7 +3337,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule"
                 ],
                 "summary": "Delete work schedule",
                 "parameters": [
@@ -3354,7 +3401,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "EmployeeWorkSchedule"
+                    "Employee - WorkSchedule"
                 ],
                 "summary": "Create work schedule",
                 "parameters": [

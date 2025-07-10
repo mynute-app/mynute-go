@@ -2516,7 +2516,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create employee
       tags:
-      - Employee
+      - Employee - CRUD
   /employee/{employee_id}/branch/{branch_id}:
     delete:
       description: Remove an employee from a branch
@@ -2558,7 +2558,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove employee from branch
       tags:
-      - Employee
+      - Employee - Branches
     post:
       description: Add an employee to a branch
       parameters:
@@ -2599,7 +2599,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add employee to branch
       tags:
-      - Employee
+      - Employee - Branches
   /employee/{employee_id}/service/{service_id}:
     delete:
       description: Remove a service from an employee
@@ -2641,7 +2641,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove service from employee
       tags:
-      - Employee
+      - Employee - Services
     post:
       consumes:
       - application/json
@@ -2684,7 +2684,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add service to employee
       tags:
-      - Employee
+      - Employee - Services
   /employee/{employee_id}/work_range/{work_range_id}/service/{service_id}:
     delete:
       consumes:
@@ -2733,7 +2733,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove service from employee's work range
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule - Services
   /employee/{employee_id}/work_range/{work_range_id}/services:
     post:
       consumes:
@@ -2785,7 +2785,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add services to employee's work range
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule - Services
   /employee/{id}:
     delete:
       description: Delete an employee by its ID
@@ -2822,7 +2822,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete employee by ID
       tags:
-      - Employee
+      - Employee - CRUD
     get:
       description: Retrieve an employee by its ID
       parameters:
@@ -2858,7 +2858,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get employee by ID
       tags:
-      - Employee
+      - Employee - CRUD
     patch:
       consumes:
       - application/json
@@ -2902,7 +2902,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update employee
       tags:
-      - Employee
+      - Employee - CRUD
   /employee/{id}/design/images:
     patch:
       consumes:
@@ -2945,7 +2945,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update employee images
       tags:
-      - Employee
+      - Employee - Images
   /employee/{id}/design/images/{image_type}:
     delete:
       description: Delete an image of an employee
@@ -2987,7 +2987,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete employee image
       tags:
-      - Employee
+      - Employee - Images
   /employee/{id}/work_range/{work_range_id}:
     delete:
       description: Delete a work schedule for an employee
@@ -3029,7 +3029,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete work schedule
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule
     get:
       description: Retrieve a work range for an employee
       parameters:
@@ -3070,7 +3070,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get work range by ID
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule
     put:
       consumes:
       - application/json
@@ -3119,7 +3119,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update work range
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule
   /employee/{id}/work_schedule:
     post:
       consumes:
@@ -3162,7 +3162,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create work schedule
       tags:
-      - EmployeeWorkSchedule
+      - Employee - WorkSchedule
   /employee/email/{email}:
     get:
       description: Retrieve an employee by its email
@@ -3199,7 +3199,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get employee by email
       tags:
-      - Employee
+      - Employee - CRUD
   /employee/login:
     post:
       consumes:
@@ -3232,7 +3232,37 @@ paths:
       - ApiKeyAuth: []
       summary: Login
       tags:
-      - Employee
+      - Employee - Auth
+  /employee/reset-password/{email}:
+    post:
+      consumes:
+      - application/json
+      description: Sets a random password of an employee using its email
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Reset employee password to a random value
+      tags:
+      - Employee - Auth
   /employee/verify-email/{email}/{code}:
     post:
       consumes:
@@ -3265,7 +3295,7 @@ paths:
       - ApiKeyAuth: []
       summary: Verify email
       tags:
-      - Employee
+      - Employee - Auth
   /holidays:
     post:
       consumes:

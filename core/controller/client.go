@@ -367,6 +367,27 @@ func DeleteClientImage(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
+// ResetClientPasswordByEmail resets the password of a client by email
+//
+//	@Summary		Reset client password by email
+//	@Description	Reset the password of a client by its email
+//	@Tags			Client
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			email			path		string	true	"Client Email"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/reset-password/{email} [post]
+func ResetClientPasswordByEmail(c *fiber.Ctx) error {
+	var client model.Client
+	if password, err := ResetPasswordByEmail(c, &client); err != nil {
+		return err
+	}
+	return nil
+}
+
 func Client(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{

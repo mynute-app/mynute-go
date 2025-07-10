@@ -37,7 +37,7 @@ func (u *Client) Set() error {
 }
 
 func (u *Client) Create(s int) error {
-	pswd := "1SecurePswd!"
+	pswd := lib.GenerateValidPassword()
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/client").
@@ -117,7 +117,7 @@ func (u *Client) VerifyEmail(s int) error {
 func (u *Client) Login(s int) error {
 	login := DTO.LoginClient{
 		Email:    u.Created.Email,
-		Password: "1SecurePswd!",
+		Password: u.Created.Password,
 	}
 	http := handler.NewHttpClient()
 	if err := http.

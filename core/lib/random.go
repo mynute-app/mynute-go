@@ -122,3 +122,40 @@ func GenerateDateRFC3339(params ...int) string {
 	return GenerateDate(params...).Format(time.RFC3339)
 }
 
+// GenerateValidPassword creates a random password that meets common security requirements.
+// The password will contain at least one lowercase letter, one uppercase letter, one digit, and
+// one special character. The total length will be between 8 and 16 characters.
+// The password will be shuffled to ensure randomness.
+func GenerateValidPassword() string {
+	const (
+		lower   = "abcdefghijklmnopqrstuvwxyz"
+		upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		digits  = "0123456789"
+		special = "!@#$"
+		all     = lower + upper + digits + special
+	)
+
+	length := GenerateRandomIntFromRange(8, 17)
+
+	// Garante pelo menos um de cada tipo
+	password := []byte{
+		lower[rnd.Intn(len(lower))],
+		upper[rnd.Intn(len(upper))],
+		digits[rnd.Intn(len(digits))],
+		special[rnd.Intn(len(special))],
+	}
+
+	// Preenche o resto com qualquer caractere válido
+	for i := len(password); i < length; i++ {
+		password = append(password, all[rnd.Intn(len(all))])
+	}
+
+	// Embaralha o resultado
+	rnd.Shuffle(len(password), func(i, j int) {
+		password[i], password[j] = password[j], password[i]
+	})
+
+	return string(password)
+}
+
+

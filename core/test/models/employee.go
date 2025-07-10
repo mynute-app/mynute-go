@@ -37,7 +37,7 @@ func (e *Employee) SetWorkRanges(wr []any) error {
 }
 
 func (e *Employee) Create(s int, x_auth_token *string, x_company_id *string) error {
-	pswd := "1SecurePswd!"
+	pswd := lib.GenerateValidPassword()
 
 	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
 	if err != nil {
