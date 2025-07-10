@@ -87,13 +87,18 @@ func (ewr *EmployeeWorkRange) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
+	var old EmployeeWorkRange
+	if err := tx.Model(&old).Where("id = ?", ewr.ID).First(&old).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error fetching old work range: %w", err))
+	}
+
 	if err := ewr.WorkRangeBase.BeforeUpdate(tx); err != nil {
 		return err
 	}
 
-	if ewr.EmployeeID == uuid.Nil {
+	if ewr.EmployeeID != old.EmployeeID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID cannot be changed after creation"))
-	} else if ewr.BranchID == uuid.Nil {
+	} else if ewr.BranchID != old.BranchID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID cannot be changed after creation"))
 	}
 

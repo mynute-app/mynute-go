@@ -48,6 +48,15 @@ func (bwr *BranchWorkRange) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (bwr *BranchWorkRange) BeforeUpdate(tx *gorm.DB) error {
+	var old BranchWorkRange
+	if err := tx.Model(&old).Where("id = ?", bwr.ID).First(&old).Error; err != nil {
+		return fmt.Errorf("error fetching old work range: %w", err)
+	}
+
+	if bwr.BranchID != old.BranchID {
+		return fmt.Errorf("branch ID cannot be changed after creation")
+	}
+
 	if err := bwr.WorkRangeBase.BeforeUpdate(tx); err != nil {
 		return err
 	}
