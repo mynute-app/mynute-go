@@ -1,6 +1,7 @@
 package controller
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
 	mJSON "agenda-kaki-go/core/config/db/model/json"
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/service"
@@ -177,30 +178,30 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	return &Design, nil
 }
 
-func ResetPasswordByEmail(c *fiber.Ctx, model any) (string, error) {
+func ResetPasswordByEmail(c *fiber.Ctx, model any) (DTO.PasswordReseted, error) {
 	modelValue := reflect.ValueOf(model)
 	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model must be a non-nil pointer"))
+		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(fmt.Errorf("model must be a non-nil pointer"))
 	}
 
-	newPassword := lib.GenerateValidPassword()
+	NewPassword := lib.GenerateValidPassword()
 
 	email := c.Params("email")
 	if email == "" {
-		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("id parameter is required at path"))
+		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(fmt.Errorf("id parameter is required at path"))
 	}
 
 	tx, err := lib.Session(c)
 	if err != nil {
-		return "", err
+		return DTO.PasswordReseted{}, err
 	}
 
 	if err := tx.
 		Model(model).
 		Where("email = ?", email).
-		Update("password", newPassword).Error; err != nil {
-		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("failed to update password: %w", err))
+		Update("password", NewPassword).Error; err != nil {
+		return DTO.PasswordReseted{}, lib.Error.General.InternalError.WithError(fmt.Errorf("failed to update password: %w", err))
 	}
 
-	return newPassword, nil
+	return DTO.PasswordReseted{Password: NewPassword}, nil
 }

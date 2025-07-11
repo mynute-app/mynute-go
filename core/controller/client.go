@@ -382,10 +382,11 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Router			/client/reset-password/{email} [post]
 func ResetClientPasswordByEmail(c *fiber.Ctx) error {
 	var client model.Client
-	if password, err := ResetPasswordByEmail(c, &client); err != nil {
+	password, err := ResetPasswordByEmail(c, &client)
+	if err != nil {
 		return err
 	}
-	return nil
+	return lib.ResponseFactory(c).Send(200, &password)
 }
 
 func Client(Gorm *handler.Gorm) {
@@ -394,6 +395,7 @@ func Client(Gorm *handler.Gorm) {
 		CreateClient,
 		LoginClient,
 		VerifyClientEmail,
+		ResetClientPasswordByEmail,
 		GetClientByEmail,
 		GetClientById,
 		GetClientAppointments,

@@ -201,6 +201,8 @@ func LoginEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
+	
+
 	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
 	return nil
 }
@@ -276,10 +278,11 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Router			/employee/reset-password/{email} [post]
 func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {
 	var employee model.Employee
-	if password, err := ResetPasswordByEmail(c, &employee); err != nil {
+	password, err := ResetPasswordByEmail(c, &employee)
+	if err != nil {
 		return err
 	}
-	return nil
+	return lib.ResponseFactory(c).Send(200, &password)
 }
 
 // UpdateEmployeeImages updates the images of an employee
@@ -979,6 +982,7 @@ func Employee(Gorm *handler.Gorm) {
 		RemoveBranchFromEmployee,
 		LoginEmployee,
 		VerifyEmployeeEmail,
+		ResetEmployeePasswordByEmail,
 		UpdateEmployeeImages,
 		DeleteEmployeeImage,
 		AddEmployeeWorkSchedule,

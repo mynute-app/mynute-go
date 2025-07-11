@@ -76,33 +76,38 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	var user any
 	var userIs string
 	var schema string
-	if claim.CompanyID == uuid.Nil {
+	if claim.Type == namespace.ClientKey.Name {
 		userIs = "client"
 		user = &model.Client{ClientMeta: model.ClientMeta{BaseModel: model.BaseModel{ID: claim.ID}}}
 		schema = "public"
-	} else {
+	} else if claim.Type == namespace.EmployeeKey.Name {
 		userIs = "employee"
 		user = &model.Employee{BaseModel: model.BaseModel{ID: claim.ID}}
 		schema = "company"
+	} else {
+		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("unknown user type: %s", claim.Type))
 	}
 
 	subject_data := make(map[string]any)
 	if err := change_schema(schema); err != nil {
 		return err
 	}
-	if err := tx.Model(user).Preload(clause.Associations).First(user).Error; err != nil {
+	var current_pswrd string
+	if err := tx.Model(user).Preload(clause.Associations).First(user).Pluck("password", &current_pswrd).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))
 		}
-		log.Printf("tx Error fetching subject %s: %v", claim.ID, err)
 		return lib.Error.General.AuthError.WithError(err)
 	}
-	jsonDataSub, errSub := json.Marshal(user)
+	if current_pswrd != claim.Password {
+		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("token possibly has outdated password for %s with ID '%s'", userIs, claim.ID))
+	}
+	jsonDataSubject, errSub := json.Marshal(user)
 	if errSub != nil {
 		log.Printf("Error marshaling subject: %v", errSub)
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal subject error: %w", errSub))
 	}
-	if errSub = json.Unmarshal(jsonDataSub, &subject_data); errSub != nil {
+	if errSub = json.Unmarshal(jsonDataSubject, &subject_data); errSub != nil {
 		log.Printf("Error unmarshaling subject: %v", errSub)
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal subject error: %w", errSub))
 	}
@@ -219,28 +224,6 @@ forLoop: // Label is optional but can improve readability
 				return lib.Error.General.AuthError.WithError(resourceFetchError).WithError(fmt.Errorf("resource fetch error for %s=%s in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
 			}
 		}
-		// if resourceFetchError == nil {
-		// 	// Convert fetched resource struct to map
-		// 	jsonDataRes, errRes := json.Marshal(resource)
-		// 	if errRes != nil {
-		// 		log.Printf("Error marshaling resource: %v", errRes)
-		// 		return lib.Error.General.AuthError.WithError(fmt.Errorf("marshal resource error: %w", errRes))
-		// 	}
-		// 	if errRes = json.Unmarshal(jsonDataRes, &resource_data); errRes != nil {
-		// 		log.Printf("Error unmarshaling resource: %v", errRes)
-		// 		return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal resource error: %w", errRes))
-		// 	}
-		// } else {
-		// 	if !errors.Is(resourceFetchError, gorm.ErrRecordNotFound) {
-		// 		// Handle unexpected tx errors
-		// 		log.Printf("tx Error fetching resource %s=%s in table %s: %v", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table, resourceFetchError)
-		// 		return lib.Error.General.AuthError.WithError(resourceFetchError)
-		// 	} else {
-		// 		// Handle case where resource is not found
-		// 		log.Printf("Resource %s=%s not found in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table)
-		// 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("resource not found: %s=%s, in table %s", ResourceReference.DatabaseKey, RequestVal, EndPoint.Resource.Table))
-		// 	}
-		// }
 	}
 
 	// --- Collect Path, Query, Header data ---

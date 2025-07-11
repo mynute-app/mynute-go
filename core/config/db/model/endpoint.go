@@ -265,6 +265,12 @@ var VerifyClientEmail = &EndPoint{
 	ControllerName: "VerifyClientEmail",
 	Description:    "Verify client email",
 }
+var ResetClientPasswordByEmail = &EndPoint{
+	Path:             "/client/reset-password/:email",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "ResetClientPasswordByEmail",
+	Description:      "Reset client password by email",
+}
 var GetClientByEmail = &EndPoint{
 	Path:             "/client/email/:email",
 	Method:           namespace.ViewActionMethod,
@@ -427,6 +433,13 @@ var VerifyEmployeeEmail = &EndPoint{
 	ControllerName: "VerifyEmployeeEmail",
 	Description:    "Verify employee email",
 	NeedsCompanyId: true,
+}
+var ResetEmployeePasswordByEmail = &EndPoint{
+	Path:             "/employee/reset-password/:email",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "ResetEmployeePasswordByEmail",
+	Description:      "Reset employee password by email",
+	NeedsCompanyId:   true,
 }
 var GetEmployeeById = &EndPoint{
 	Path:             "/employee/:id",
@@ -781,6 +794,7 @@ var endpoints = []*EndPoint{
 	CreateClient,
 	LoginClient,
 	VerifyClientEmail,
+	ResetClientPasswordByEmail,
 	GetClientByEmail,
 	GetClientById,
 	UpdateClientById,
@@ -803,6 +817,7 @@ var endpoints = []*EndPoint{
 	CreateEmployee,
 	LoginEmployee,
 	VerifyEmployeeEmail,
+	ResetEmployeePasswordByEmail,
 	GetEmployeeById,
 	GetEmployeeByEmail,
 	UpdateEmployeeById,

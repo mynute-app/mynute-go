@@ -93,6 +93,11 @@ var ClientKey = TypeStruct{
 	Model: "user_model",
 }
 
+var EmployeeKey = TypeStruct{
+	Name:  "employee",
+	Model: "employee_model",
+}
+
 var ServiceKey = TypeStruct{
 	Name:  "service",
 	Model: "service_model",
