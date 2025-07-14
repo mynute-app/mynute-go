@@ -757,13 +757,13 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
 	}
 
-	var AllowGetBranchByName = &PolicyRule{
-		Name:        "SDP: CanViewBranchByName",
-		Description: "Allows any user belonging to the same company to view branch details by name.",
-		Effect:      "Allow",
-		EndPointID:  GetBranchByName.ID,
-		Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
-	}
+	// var AllowGetBranchByName = &PolicyRule{
+	// 	Name:        "SDP: CanViewBranchByName",
+	// 	Description: "Allows any user belonging to the same company to view branch details by name.",
+	// 	Effect:      "Allow",
+	// 	EndPointID:  GetBranchByName.ID,
+	// 	Conditions:  JsonRawMessage(company_internal_user_check), // Any internal user of the branch's company can view
+	// }
 
 	var AllowUpdateBranchById = &PolicyRule{
 		Name:        "SDP: CanUpdateBranch",
@@ -1320,7 +1320,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		// Branches
 		AllowCreateBranch,
 		AllowGetBranchById,
-		AllowGetBranchByName,
+		// AllowGetBranchByName,
 		AllowUpdateBranchById,
 		AllowDeleteBranchById,
 		AllowGetEmployeeServicesByBranchId,

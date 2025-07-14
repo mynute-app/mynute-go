@@ -310,63 +310,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/branch/name/{name}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a branch by its name",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Get branch by name",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch Name",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
         "/branch/{branch_id}/employee/{employee_id}/services": {
             "get": {
                 "security": [
@@ -688,6 +631,13 @@ const docTemplate = `{
                         "description": "X-Company-ID",
                         "name": "X-Company-ID",
                         "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Branch ID",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     },
                     {
@@ -4453,6 +4403,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "USA"
                 },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
+                },
                 "id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
@@ -4516,6 +4469,9 @@ const docTemplate = `{
                 "country": {
                     "type": "string",
                     "example": "USA"
+                },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
                 },
                 "employees": {
                     "type": "array",
@@ -5123,6 +5079,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
+                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -5357,6 +5316,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "A 60-minute in-depth business consultation"
                 },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
+                },
                 "duration": {
                     "type": "integer",
                     "example": 60
@@ -5392,6 +5354,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string",
                     "example": "A 60-minute in-depth business consultation"
+                },
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
                 },
                 "duration": {
                     "type": "integer",

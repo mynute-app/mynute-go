@@ -118,15 +118,15 @@ var GetBranchById = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
-var GetBranchByName = &EndPoint{
-	Path:             "/branch/name/:name",
-	Method:           namespace.ViewActionMethod,
-	ControllerName:   "GetBranchByName",
-	Description:      "View branch by name",
-	NeedsCompanyId:   true,
-	DenyUnauthorized: true,
-	Resource:         BranchResource,
-}
+// var GetBranchByName = &EndPoint{
+// 	Path:             "/branch/name/:name",
+// 	Method:           namespace.ViewActionMethod,
+// 	ControllerName:   "GetBranchByName",
+// 	Description:      "View branch by name",
+// 	NeedsCompanyId:   true,
+// 	DenyUnauthorized: true,
+// 	Resource:         BranchResource,
+// }
 var UpdateBranchById = &EndPoint{
 	Path:             "/branch/:id",
 	Method:           namespace.PatchActionMethod,
@@ -776,7 +776,6 @@ var endpoints = []*EndPoint{
 	// Branch
 	CreateBranch,
 	GetBranchById,
-	GetBranchByName,
 	UpdateBranchById,
 	DeleteBranchById,
 	GetEmployeeServicesByBranchId,

@@ -1,6 +1,10 @@
 package DTO
 
-import "github.com/google/uuid"
+import (
+	mJSON "agenda-kaki-go/core/config/db/model/json"
+
+	"github.com/google/uuid"
+)
 
 type TimeRange struct {
 	Start string `json:"start" example:"09:00"`
@@ -56,6 +60,7 @@ type EmployeeFull struct {
 	Branches             []BranchBase        `json:"branches"`
 	Services             []ServiceBase       `json:"services"`
 	Roles                []RolePopulated     `json:"roles"`
+	Design               mJSON.DesignConfig  `json:"design"`
 }
 
 // @description	Employee Base DTO
