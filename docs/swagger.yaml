@@ -80,6 +80,8 @@ definitions:
       country:
         example: USA
         type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
@@ -127,6 +129,8 @@ definitions:
       country:
         example: USA
         type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       employees:
         items:
           $ref: '#/definitions/DTO.EmployeeBase'
@@ -573,6 +577,8 @@ definitions:
       company_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       email:
         example: john.doe@example.com
         type: string
@@ -744,6 +750,8 @@ definitions:
       description:
         example: A 60-minute in-depth business consultation
         type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       duration:
         example: 60
         type: integer
@@ -770,6 +778,8 @@ definitions:
       description:
         example: A 60-minute in-depth business consultation
         type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       duration:
         example: 60
         type: integer
@@ -1451,6 +1461,11 @@ paths:
         name: id
         required: true
         type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: Branch
         in: body
         name: branch
@@ -1767,43 +1782,6 @@ paths:
       summary: Create work schedule for a branch
       tags:
       - BranchWorkSchedule
-  /branch/name/{name}:
-    get:
-      description: Retrieve a branch by its name
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Branch Name
-        in: path
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.BranchFull'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Get branch by name
-      tags:
-      - Branch
   /client:
     post:
       consumes:

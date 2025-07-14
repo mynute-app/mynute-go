@@ -83,16 +83,16 @@ func GetBranchById(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.BranchFull
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/name/{name} [get]
-func GetBranchByName(c *fiber.Ctx) error {
-	var branch model.Branch
-	if err := GetOneBy("name", c, &branch); err != nil {
-		return err
-	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	return nil
-}
+// func GetBranchByName(c *fiber.Ctx) error {
+// 	var branch model.Branch
+// 	if err := GetOneBy("name", c, &branch); err != nil {
+// 		return err
+// 	}
+// 	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
+// 		return lib.Error.General.InternalError.WithError(err)
+// 	}
+// 	return nil
+// }
 
 // UpdateBranch updates a branch by ID
 //
@@ -103,6 +103,7 @@ func GetBranchByName(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Branch ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string				true	"Branch ID"
@@ -722,7 +723,6 @@ func Branch(Gorm *handler.Gorm) {
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		CreateBranch,
 		GetBranchById,
-		GetBranchByName,
 		UpdateBranchById,
 		DeleteBranchById,
 		GetEmployeeServicesByBranchId,
