@@ -85,7 +85,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		user = &model.Employee{BaseModel: model.BaseModel{ID: claim.ID}}
 		schema = "company"
 	} else {
-		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("unknown user type: %s", claim.Type))
+		return lib.Error.General.AuthError.WithError(fmt.Errorf("unknown user type: %s", claim.Type))
 	}
 
 	subject_data := make(map[string]any)

@@ -11,10 +11,8 @@ import (
 	"agenda-kaki-go/core/middleware"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -161,48 +159,10 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401	{object}	nil
 //	@Router			/employee/login [post]
 func LoginEmployee(c *fiber.Ctx) error {
-	var body DTO.LoginEmployee
-	if err := c.BodyParser(&body); err != nil {
-		return err
-	}
-	tx, err := lib.Session(c)
+	token, err := Login(namespace.ClientKey.Name, &model.Employee{}, c)
 	if err != nil {
 		return err
 	}
-
-	var employee model.Employee
-	if err := tx.Where("email = ?", body.Email).Preload(clause.Associations).First(&employee).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Employee.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if !employee.Verified {
-		return lib.Error.Client.NotVerified
-	}
-
-	if !handler.ComparePassword(employee.Password, body.Password) {
-		return lib.Error.Auth.InvalidLogin
-	}
-
-	var dto DTO.Claims
-
-	if employeeBytes, err := json.Marshal(&employee); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	} else {
-		if err := json.Unmarshal(employeeBytes, &dto); err != nil {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-	}
-
-	token, err := handler.JWT(c).Encode(dto)
-	if err != nil {
-		return err
-	}
-
-	
-
 	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
 	return nil
 }
@@ -222,45 +182,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 //	@Failure		404		{object}	nil
 //	@Router			/employee/verify-email/{email}/{code} [post]
 func VerifyEmployeeEmail(c *fiber.Ctx) error {
-	email := c.Params("email")
-	var employee model.Employee
-	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
-	email, err := url.QueryUnescape(email)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(err)
-	}
-	if err := lib.ValidatorV10.Var(email, "email"); err != nil {
-		if _, ok := err.(validator.ValidationErrors); ok {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
-		} else {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-	}
-	tx, err := lib.Session(c)
-	if err != nil {
-		return err
-	}
-	if err := database.LockForUpdate(tx, &employee, "email", email); err != nil {
-		return err
-	}
-	var is_verified bool
-	if err := tx.Model(&employee).Select("verified").Where("email = ?", email).Scan(&is_verified).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Employee.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	if is_verified {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email %s is already verified", email))
-	}
-	var e model.Employee
-	if err := tx.Model(&e).Where("email = ?", email).Update("verified", true).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Employee.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	return nil
+	return VerifyEmail(c, &model.Employee{})
 }
 
 // ResetEmployeePasswordByEmail sets a random password of an employee using its email

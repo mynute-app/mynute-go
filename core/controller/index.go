@@ -9,7 +9,6 @@ import (
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 func Create(c *fiber.Ctx, model any) error {
@@ -17,27 +16,9 @@ func Create(c *fiber.Ctx, model any) error {
 	if err := c.BodyParser(model); err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
-	Service := service.Factory(c)
+	Service := service.New(c)
 	defer Service.DeferDB(err)
-	if err := Service.Create(model).Error; err != nil {
-		return lib.Error.General.CreatedError.WithError(err)
-	}
-	HasID := func(model any) (uuid.UUID, bool) {
-		val := reflect.ValueOf(model)
-		if val.Kind() == reflect.Ptr {
-			val = val.Elem()
-		}
-		field := val.FieldByName("ID")
-		if !field.IsValid() || field.Type() != reflect.TypeOf(uuid.UUID{}) {
-			return uuid.Nil, false
-		}
-		return field.Interface().(uuid.UUID), true
-	}
-	id, ok := HasID(model)
-	if !ok {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("model does have ID field"))
-	}
-	if err := Service.MyGorm.GetOneBy("id", id.String(), model); err != nil {
+	if err := Service.SetModel(model).Create().Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 	return nil
@@ -45,9 +26,9 @@ func Create(c *fiber.Ctx, model any) error {
 
 func GetOneBy(param string, c *fiber.Ctx, model any) error {
 	var err error
-	Service := service.Factory(c)
+	Service := service.New(c)
 	defer Service.DeferDB(err)
-	if err := Service.GetBy(param, model).Error; err != nil {
+	if err = Service.SetModel(model).GetBy(param).Error; err != nil {
 		return err
 	}
 	return nil
@@ -55,16 +36,47 @@ func GetOneBy(param string, c *fiber.Ctx, model any) error {
 
 func UpdateOneById(c *fiber.Ctx, model any) error {
 	var err error
-	Service := service.Factory(c)
+	Service := service.New(c)
 	defer Service.DeferDB(err)
-	return Service.UpdateOneById(model).Error
+	if err = Service.SetModel(model).UpdateOneById().Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func DeleteOneById(c *fiber.Ctx, model any) error {
 	var err error
-	Service := service.Factory(c)
+	Service := service.New(c)
 	defer Service.DeferDB(err)
-	return Service.DeleteOneById(model).Error
+	if err = Service.SetModel(model).DeleteOneById().Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func Login(user_type string, model any, c *fiber.Ctx) (string, error) {
+	var err error
+	Service := service.New(c)
+	defer Service.DeferDB(err)
+	token, err := Service.SetModel(model).Login(user_type)
+	return token, err
+}
+
+func ResetPasswordByEmail(c *fiber.Ctx, model any) (DTO.PasswordReseted, error) {
+	var err error
+	email := c.Params("email")
+	Service := service.New(c)
+	defer Service.DeferDB(err)
+	new_pass, err := Service.SetModel(model).ResetPasswordByEmail(email)
+	return new_pass, err
+}
+
+func VerifyEmail(c *fiber.Ctx, model any) error {
+	var err error
+	email := c.Params("email")
+	Service := service.New(c)
+	defer Service.DeferDB(err)
+	return Service.SetModel(model).VerifyEmail(email)
 }
 
 func UpdateImagesById(c *fiber.Ctx, model_table_name string, model any, img_types_allowed map[string]bool) (*mJSON.DesignConfig, error) {
@@ -178,30 +190,4 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	return &Design, nil
 }
 
-func ResetPasswordByEmail(c *fiber.Ctx, model any) (DTO.PasswordReseted, error) {
-	modelValue := reflect.ValueOf(model)
-	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
-		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(fmt.Errorf("model must be a non-nil pointer"))
-	}
 
-	NewPassword := lib.GenerateValidPassword()
-
-	email := c.Params("email")
-	if email == "" {
-		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(fmt.Errorf("id parameter is required at path"))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return DTO.PasswordReseted{}, err
-	}
-
-	if err := tx.
-		Model(model).
-		Where("email = ?", email).
-		Update("password", NewPassword).Error; err != nil {
-		return DTO.PasswordReseted{}, lib.Error.General.InternalError.WithError(fmt.Errorf("failed to update password: %w", err))
-	}
-
-	return DTO.PasswordReseted{Password: NewPassword}, nil
-}

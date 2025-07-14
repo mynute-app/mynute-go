@@ -1,16 +1,22 @@
 package service
 
 import (
+	DTO "agenda-kaki-go/core/config/api/dto"
 	database "agenda-kaki-go/core/config/db"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"reflect"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-func Factory(c *fiber.Ctx) *service {
+func New(c *fiber.Ctx) *service {
 	var err error
 	tx, end, err := database.ContextTransaction(c)
 	service := &service{
@@ -23,10 +29,29 @@ func Factory(c *fiber.Ctx) *service {
 }
 
 type service struct {
+	Model   any
 	Context *fiber.Ctx
 	MyGorm  *handler.Gorm
 	DeferDB func(err error)
 	Error   error
+}
+
+func (s *service) SetModel(model any) *service {
+	if s.Error != nil {
+		return s
+	}
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() != reflect.Ptr || modelValue.IsNil() {
+		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model must be a non-nil pointer"))
+		return s
+	}
+	// Check if model is a struct
+	if modelValue.Kind() != reflect.Struct {
+		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model must be a struct"))
+		return s
+	}
+	s.Model = model
+	return s
 }
 
 func (s *service) get_param(param string) (string, error) {
@@ -51,53 +76,73 @@ func (s *service) GetAll(model any) *service {
 	return s
 }
 
-func (s *service) GetBy(param string, model any) *service {
+func (s *service) GetBy(param string) *service {
 	if s.Error != nil {
 		return s
 	}
 	if param == "" {
-		return s.GetAll(model)
+		return s.GetAll(s.Model)
 	}
 	val, err := s.get_param(param)
 	if err != nil {
 		s.Error = err
 		return s
 	}
-	if err := s.MyGorm.GetOneBy(param, val, model); err != nil {
+	if err := s.MyGorm.GetOneBy(param, val, s.Model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
 }
 
-func (s *service) ForceGetBy(param string, model any) *service {
+func (s *service) ForceGetBy(param string) *service {
 	if s.Error != nil {
 		return s
 	}
 	if param == "" {
-		return s.GetAll(model)
+		return s.GetAll(s.Model)
 	}
 	val, err := s.get_param(param)
 	if err != nil {
 		s.Error = err
 		return s
 	}
-	if err := s.MyGorm.ForceGetOneBy(param, val, model); err != nil {
+	if err := s.MyGorm.ForceGetOneBy(param, val, s.Model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
 }
 
-func (s *service) Create(model any) *service {
+func (s *service) Create() *service {
 	if s.Error != nil {
 		return s
 	}
-	if err := s.MyGorm.Create(model); err != nil {
+	if err := s.MyGorm.Create(s.Model); err != nil {
 		s.Error = err
+	}
+	HasID := func(model any) (uuid.UUID, bool) {
+		val := reflect.ValueOf(model)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+		field := val.FieldByName("ID")
+		if !field.IsValid() || field.Type() != reflect.TypeOf(uuid.UUID{}) {
+			return uuid.Nil, false
+		}
+		return field.Interface().(uuid.UUID), true
+	}
+	id, ok := HasID(s.Model)
+	if !ok {
+		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model does not have ID field"))
+		return s
+	}
+	if err := s.MyGorm.GetOneBy("id", id.String(), s.Model); err != nil {
+		s.Error = lib.Error.General.CreatedError.WithError(err)
+		return s
 	}
 	return s
 }
 
-func (s *service) UpdateOneById(model any) *service {
+func (s *service) UpdateOneById() *service {
 	if s.Error != nil {
 		return s
 	}
@@ -106,18 +151,18 @@ func (s *service) UpdateOneById(model any) *service {
 		s.Error = err
 		return s
 	}
-	if err := s.Context.BodyParser(model); err != nil {
+	if err := s.Context.BodyParser(s.Model); err != nil {
 		s.Error = lib.Error.General.InternalError.WithError(err)
 		return s
 	}
-	if err := s.MyGorm.UpdateOneById(val, model); err != nil {
+	if err := s.MyGorm.UpdateOneById(val, s.Model); err != nil {
 		s.Error = lib.Error.General.UpdatedError.WithError(err)
 		return s
 	}
 	return s
 }
 
-func (s *service) DeleteOneById(model any) *service {
+func (s *service) DeleteOneById() *service {
 	if s.Error != nil {
 		return s
 	}
@@ -125,7 +170,7 @@ func (s *service) DeleteOneById(model any) *service {
 	if err != nil {
 		return s
 	}
-	if err := s.MyGorm.DeleteOneById(val, model); err != nil {
+	if err := s.MyGorm.DeleteOneById(val, s.Model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
@@ -143,4 +188,101 @@ func (s *service) ForceDeleteOneById(model any) *service {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
+}
+
+func (s *service) Login(user_type string) (string, error) {
+	if s.Error != nil {
+		return "", s.Error
+	}
+	var err error
+	var body DTO.LoginClient
+	if err := s.Context.BodyParser(&body); err != nil {
+		return "", err
+	}
+	var verified bool
+	var psswrd string
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", body.Email).
+		First(s.Model).
+		Pluck("verified", &verified).
+		Pluck("password", &psswrd).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", lib.Error.Client.NotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	if !verified {
+		return "", lib.Error.Client.NotVerified
+	}
+	if !handler.ComparePassword(psswrd, body.Password) {
+		return "", lib.Error.Auth.InvalidLogin
+	}
+	userBytes, err := json.Marshal(s.Model)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	var claims DTO.Claims
+	if err := json.Unmarshal(userBytes, &claims); err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	claims.Type = user_type
+	token, err := handler.JWT(s.Context).Encode(&claims)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *service) prepare_email(email string) (string, error) {
+	if email == "" {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("email parameter is empty"))
+	}
+	cleanedEmail, err := url.QueryUnescape(email)
+	if err != nil {
+		return "", lib.Error.General.BadRequest.WithError(err)
+	}
+	if err := lib.ValidatorV10.Var(cleanedEmail, "email"); err != nil {
+		if _, ok := err.(validator.ValidationErrors); ok {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid email: %w", err))
+		} else {
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+	}
+	return cleanedEmail, nil
+}
+
+func (s *service) ResetPasswordByEmail(email string) (DTO.PasswordReseted, error) {
+	if s.Error != nil {
+		return DTO.PasswordReseted{}, s.Error
+	}
+	email, err := s.prepare_email(email)
+	if err != nil {
+		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(err)
+	}
+	newPassword := lib.GenerateValidPassword()
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", email).
+		Update("password", newPassword).Error; err != nil {
+		return DTO.PasswordReseted{}, lib.Error.General.InternalError.WithError(err)
+	}
+	return DTO.PasswordReseted{Password: newPassword}, nil
+}
+
+func (s *service) VerifyEmail(email string) error {
+	if s.Error != nil {
+		return s.Error
+	}
+	email, err := s.prepare_email(email)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", email).
+		Update("verified", true).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	return nil
 }

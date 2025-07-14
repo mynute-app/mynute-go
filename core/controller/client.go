@@ -10,9 +10,7 @@ import (
 	"agenda-kaki-go/core/lib"
 	"agenda-kaki-go/core/middleware"
 	"fmt"
-	"net/url"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -60,31 +58,7 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/login [post]
 func LoginClient(c *fiber.Ctx) error {
-	var err error
-	var body DTO.LoginClient
-	if err := c.BodyParser(&body); err != nil {
-		return err
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return err
-	}
-
-	var client model.ClientMeta
-	if err := tx.Model(&model.Client{}).Where("email = ?", body.Email).First(&client).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	if !client.Verified {
-		return lib.Error.Client.NotVerified
-	}
-	if !handler.ComparePassword(client.Password, body.Password) {
-		return lib.Error.Auth.InvalidLogin
-	}
-	token, err := handler.JWT(c).Encode(client)
+	token, err := Login(namespace.ClientKey.Name, &model.Client{}, c)
 	if err != nil {
 		return err
 	}
@@ -105,46 +79,7 @@ func LoginClient(c *fiber.Ctx) error {
 //	@Failure		404		{object}	nil
 //	@Router			/client/verify-email/{email}/{code} [post]
 func VerifyClientEmail(c *fiber.Ctx) error {
-	var err error
-	email := c.Params("email")
-	var client model.ClientMeta
-	// Parse the email from the URL as it comes in the form of "john.clark%40gmail.com"
-	email, err = url.QueryUnescape(email)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(err)
-	}
-	client.Email = email
-	if err := lib.ValidatorV10.Var(client.Email, "email"); err != nil {
-		if _, ok := err.(validator.ValidationErrors); ok {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("email invalid"))
-		} else {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return err
-	}
-	var clientFull model.Client
-	var exists string
-	if err := tx.Model(&clientFull).
-		Where("email = ?", email).
-		Pluck("email", &exists).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if exists == "" {
-		return lib.Error.Client.NotFound
-	}
-
-	sqlQuery := fmt.Sprintf("UPDATE %s SET verified = true WHERE email = ?", clientFull.TableName())
-
-	if err := tx.Exec(sqlQuery, email).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return nil
+	return VerifyEmail(c, &model.Client{})
 }
 
 // GetClientByEmail retrieves an client by email

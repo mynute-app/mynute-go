@@ -89,7 +89,6 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
-	// Turn bytes into model.Client{} struct
 	var client DTO.Claims
 	err = json.Unmarshal(claim_data_bytes, &client)
 	if err != nil {
