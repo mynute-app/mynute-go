@@ -13,9 +13,6 @@ import (
 
 func Create(c *fiber.Ctx, model any) error {
 	var err error
-	if err := c.BodyParser(model); err != nil {
-		return lib.Error.General.CreatedError.WithError(err)
-	}
 	Service := service.New(c)
 	defer Service.DeferDB(err)
 	if err := Service.SetModel(model).Create().Error; err != nil {

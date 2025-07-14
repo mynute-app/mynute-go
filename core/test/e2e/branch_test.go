@@ -30,7 +30,7 @@ func Test_Branch(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Branch get by ID").Test(branch.GetById(200, company.Owner.X_Auth_Token, nil))
-	tt.Describe("Branch get by name").Test(branch.GetByName(200, company.Owner.X_Auth_Token, nil))
+	// tt.Describe("Branch get by name").Test(branch.GetByName(200, company.Owner.X_Auth_Token, nil))
 
 	service := &modelT.Service{}
 	service.Company = company

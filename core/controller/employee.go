@@ -159,7 +159,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401	{object}	nil
 //	@Router			/employee/login [post]
 func LoginEmployee(c *fiber.Ctx) error {
-	token, err := Login(namespace.ClientKey.Name, &model.Employee{}, c)
+	token, err := Login(namespace.EmployeeKey.Name, &model.Employee{}, c)
 	if err != nil {
 		return err
 	}

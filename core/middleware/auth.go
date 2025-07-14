@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -92,16 +93,34 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	if err := change_schema(schema); err != nil {
 		return err
 	}
-	var current_pswrd string
-	if err := tx.Model(user).Preload(clause.Associations).First(user).Pluck("password", &current_pswrd).Error; err != nil {
+	
+	if err := tx.Model(user).Preload(clause.Associations).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))
 		}
 		return lib.Error.General.AuthError.WithError(err)
 	}
+
+	userReflectedVal := reflect.ValueOf(user)
+
+	if userReflectedVal.Kind() != reflect.Ptr || userReflectedVal.IsNil() {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("user interface passed (%s) must be a non-nil pointer", userIs))
+	}
+	if userReflectedVal.Elem().Kind() != reflect.Struct {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("user interface passed (%s) must point to a struct", userIs))
+	}
+
+	passwordField := userReflectedVal.Elem().FieldByName("Password")
+	if !passwordField.IsValid() || passwordField.Kind() != reflect.String {
+		return lib.Error.General.AuthError.WithError(fmt.Errorf("password field missing or invalid in %s", userIs))
+	}
+
+	current_pswrd := passwordField.String()
+
 	if current_pswrd != claim.Password {
 		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("token possibly has outdated password for %s with ID '%s'", userIs, claim.ID))
 	}
+
 	jsonDataSubject, errSub := json.Marshal(user)
 	if errSub != nil {
 		log.Printf("Error marshaling subject: %v", errSub)

@@ -4,6 +4,7 @@ import (
 	"agenda-kaki-go/core"
 
 	DTO "agenda-kaki-go/core/config/api/dto"
+	"agenda-kaki-go/core/lib"
 	FileBytes "agenda-kaki-go/core/lib/file_bytes"
 	handlerT "agenda-kaki-go/core/test/handlers"
 	modelT "agenda-kaki-go/core/test/models"
@@ -40,6 +41,27 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
 		"name": "Updated Employee Name xDDDD",
 	}, nil, nil))
+
+	tt.Describe("Employee fail to update").Test(employee.Update(400, map[string]any{
+		"name":     "Should Fail Update on Employee Name",
+		"password": "newpswrd123",
+	}, nil, nil))
+
+	new_password := lib.GenerateValidPassword()
+
+	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
+		"name":     "Should Succeed Update on Employee Name",
+		"password": new_password,
+	}, nil, nil))
+
+	tt.Describe("Employee update").Test(employee.Update(401, map[string]any{
+		"password": "NewPswrd1@!",
+	}, nil, nil))
+
+	employee.Created.Password = new_password // Update the password in the employee model
+	tt.Describe("Employee get by email").Test(employee.GetByEmail(401, nil, nil))
+	
+	tt.Describe("Employee login").Test(employee.Login(200, nil))
 
 	ServicesID := []DTO.ServiceID{
 		{ID: service.Created.ID},

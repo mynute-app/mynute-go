@@ -45,9 +45,8 @@ func (s *service) SetModel(model any) *service {
 		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model must be a non-nil pointer"))
 		return s
 	}
-	// Check if model is a struct
-	if modelValue.Kind() != reflect.Struct {
-		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model must be a struct"))
+	if modelValue.Elem().Kind() != reflect.Struct {
+		s.Error = lib.Error.General.InternalError.WithError(fmt.Errorf("model must point to a struct"))
 		return s
 	}
 	s.Model = model
@@ -114,6 +113,10 @@ func (s *service) ForceGetBy(param string) *service {
 
 func (s *service) Create() *service {
 	if s.Error != nil {
+		return s
+	}
+	if err := s.Context.BodyParser(s.Model); err != nil {
+		s.Error = lib.Error.General.InternalError.WithError(err)
 		return s
 	}
 	if err := s.MyGorm.Create(s.Model); err != nil {
@@ -199,25 +202,38 @@ func (s *service) Login(user_type string) (string, error) {
 	if err := s.Context.BodyParser(&body); err != nil {
 		return "", err
 	}
-	var verified bool
-	var psswrd string
 	if err := s.MyGorm.DB.
 		Model(s.Model).
 		Where("email = ?", body.Email).
-		First(s.Model).
-		Pluck("verified", &verified).
-		Pluck("password", &psswrd).Error; err != nil {
+		First(s.Model).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return "", lib.Error.Client.NotFound
 		}
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
+
+	val := reflect.ValueOf(s.Model)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	verifiedField := val.FieldByName("Verified")
+	passwordField := val.FieldByName("Password")
+
+	if !verifiedField.IsValid() || !passwordField.IsValid() {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("model must have Verified and Password fields"))
+	}
+
+	verified := verifiedField.Bool()
+	password := passwordField.String()
+
 	if !verified {
 		return "", lib.Error.Client.NotVerified
 	}
-	if !handler.ComparePassword(psswrd, body.Password) {
+	if !handler.ComparePassword(password, body.Password) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
+	
 	userBytes, err := json.Marshal(s.Model)
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
