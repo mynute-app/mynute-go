@@ -23,7 +23,7 @@ type AppointmentBase struct {
 	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
 	StartTime             time.Time  `gorm:"type:time;not null" json:"start_time"`
 	EndTime               time.Time  `gorm:"type:time;not null" json:"end_time"`
-	TimeZone              string     `gorm:"type:varchar(100);not null" json:"time_zone"  validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone              string     `gorm:"type:varchar(100);not null" json:"time_zone"  validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	ActualStartTime       time.Time  `gorm:"type:time;not null" json:"actual_start_time"`
 	ActualEndTime         time.Time  `gorm:"type:time;not null" json:"actual_end_time"`
 	CancelTime            time.Time  `gorm:"type:time;not null" json:"cancel_time"`

@@ -30,7 +30,7 @@ func Test_Appointment(t *testing.T) {
 
 	// --- Test Case 0 ---
 	var a0 modelT.Appointment
-	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, time.Local)
+	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, time.Now().Location())
 	tt.Describe("Finding valid appointment slot for base employee - slot0").Test(err)
 	if !found0 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)

@@ -31,7 +31,7 @@ type Branch struct {
 	Appointments       []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
 	ServiceDensity     []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
 	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	BranchDensity      uint               `gorm:"not null;default:1" json:"branch_density"`
 	Design             mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }

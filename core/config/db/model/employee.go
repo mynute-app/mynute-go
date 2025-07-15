@@ -21,7 +21,7 @@ type Employee struct {
 	Phone                string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags                 []string            `gorm:"type:json" json:"tags"`
 	Password             string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
-	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	Verified             bool                `gorm:"default:false" json:"verified"`
 	SlotTimeDiff         uint                `gorm:"default:30" json:"slot_time_diff"`
 	EmployeeWorkSchedule []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
