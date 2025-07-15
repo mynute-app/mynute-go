@@ -195,7 +195,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			email	path		string	true	"Employee Email"
-//	@Success		200		{object}	nil
+//	@Success		200		{object}	DTO.PasswordReseted
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
 func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {

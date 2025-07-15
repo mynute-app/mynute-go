@@ -708,6 +708,11 @@ definitions:
         example: 1SecurePswd!
         type: string
     type: object
+  DTO.PasswordReseted:
+    properties:
+      password:
+        type: string
+    type: object
   DTO.RolePopulated:
     properties:
       company_id:
@@ -2067,6 +2072,38 @@ paths:
       summary: Login
       tags:
       - Client
+  /client/reset-password/{email}:
+    post:
+      description: Reset the password of a client by its email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Reset client password by email
+      tags:
+      - Client
   /client/verify-email/{email}/{code}:
     post:
       consumes:
@@ -3232,6 +3269,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
         "400":
           description: Bad Request
           schema:

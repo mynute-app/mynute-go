@@ -312,7 +312,7 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
 //	@Produce		json
-//	@Success		200	{object}	nil
+//	@Success		200	{object}	DTO.PasswordReseted
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/reset-password/{email} [post]
 func ResetClientPasswordByEmail(c *fiber.Ctx) error {

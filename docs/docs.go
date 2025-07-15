@@ -1248,6 +1248,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/client/reset-password/{email}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Reset the password of a client by its email",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Reset client password by email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.PasswordReseted"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/client/verify-email/{email}/{code}": {
             "post": {
                 "description": "Verify an client's email",
@@ -2360,7 +2410,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.PasswordReseted"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -5254,6 +5307,14 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "1SecurePswd!"
+                }
+            }
+        },
+        "DTO.PasswordReseted": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
                 }
             }
         },
