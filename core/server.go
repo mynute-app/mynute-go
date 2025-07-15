@@ -6,7 +6,7 @@ import (
 	"agenda-kaki-go/core/config/db/model"
 	"agenda-kaki-go/core/handler"
 	"agenda-kaki-go/core/lib"
-	myUploader "agenda-kaki-go/core/lib/Uploader"
+	myUploader "agenda-kaki-go/core/lib/cloud_uploader"
 	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"

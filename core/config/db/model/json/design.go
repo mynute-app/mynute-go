@@ -2,7 +2,7 @@ package mJSON
 
 import (
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/lib/Uploader"
+	myUploader "agenda-kaki-go/core/lib/cloud_uploader"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"

@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/lib/Logger"
+	myLogger "agenda-kaki-go/core/lib/metrics"
 	"encoding/json"
 	"log/slog"
 	"time"
@@ -114,4 +114,3 @@ func ErrorV13(logger *slog.Logger) fiber.ErrorHandler {
 		return nil
 	}
 }
-

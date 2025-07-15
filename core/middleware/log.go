@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/lib/Logger"
+	myLogger "agenda-kaki-go/core/lib/metrics"
 	"log/slog"
 	"time"
 
