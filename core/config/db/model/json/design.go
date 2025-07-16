@@ -139,3 +139,39 @@ func (d *DesignConfig) Scan(value any) error {
 	}
 	return json.Unmarshal(bytes, d)
 }
+
+func (c Colors) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Colors) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan Colors: expected []byte")
+	}
+	return json.Unmarshal(bytes, c)
+}
+
+func (i Image) Value() (driver.Value, error) {
+	return json.Marshal(i)
+}
+
+func (i *Image) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan Image: expected []byte")
+	}
+	return json.Unmarshal(bytes, i)
+}
+
+func (is Images) Value() (driver.Value, error) {
+	return json.Marshal(is)
+}
+
+func (is *Images) Scan(value any) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan Images: expected []byte")
+	}
+	return json.Unmarshal(bytes, is)
+}

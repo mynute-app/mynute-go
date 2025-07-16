@@ -39,7 +39,7 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 		return fmt.Errorf("appointment already created, cannot create again")
 	}
 	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
-	appointmentSlot, found, err := a.FindValidAppointmentSlot(e, preferredLocation)
+	appointmentSlot, found, err := a.FindValidAppointmentSlot(e, preferredLocation, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 		return err
 	}
 	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
-	appointmentSlot, found, err := a.FindValidAppointmentSlot(a.Employee, preferredLocation)
+	appointmentSlot, found, err := a.FindValidAppointmentSlot(a.Employee, preferredLocation, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to find valid appointment slot: %w", err)
 	}
@@ -307,9 +307,17 @@ const (
 	slotSearchTimeStep    = 15 * time.Minute // Example: check every 15 minutes
 )
 
-func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLocation *time.Location) (*FoundAppointmentSlot, bool, error) {
+func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLocation *time.Location, branchCache *map[string]*model.Branch, serviceCache *map[string]*model.Service) (*FoundAppointmentSlot, bool, error) {
 	if preferredLocation == nil {
 		return nil, false, fmt.Errorf("preferredLocation is nil; time_zone must be explicitly passed")
+	}
+
+	if branchCache == nil {
+		branchCache = &map[string]*model.Branch{}
+	}
+
+	if serviceCache == nil {
+		serviceCache = &map[string]*model.Service{}
 	}
 
 	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
@@ -327,9 +335,6 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	now := time.Now().In(preferredLocation)
 	searchStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, preferredLocation)
 
-	branchCache := make(map[string]*model.Branch)
-	serviceCache := make(map[string]*model.Service)
-
 	for dayOffset := range slotSearchHorizonDays {
 		currentDate := searchStart.AddDate(0, 0, dayOffset)
 		currentWeekday := currentDate.Weekday()
@@ -338,7 +343,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	wrLoop:
 		for _, wr := range workRanges {
 			branchID := wr.BranchID.String()
-			branch, ok := branchCache[wr.BranchID.String()]
+			branch, ok := (*branchCache)[wr.BranchID.String()]
 			if !ok {
 				var branchModel model.Branch
 				if err := handler.NewHttpClient().
@@ -352,11 +357,11 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 					return nil, false, fmt.Errorf("failed to get branch by ID %s: %w", branchID, err)
 				}
 				branch = &branchModel
-				branchCache[branchID] = branch
+				(*branchCache)[branchID] = branch
 			}
 			for _, wr_srvc := range wr.Services {
 				serviceID := wr_srvc.ID.String()
-				service, ok := serviceCache[serviceID]
+				service, ok := (*serviceCache)[serviceID]
 				if !ok {
 					var serviceModel model.Service
 					if err := handler.NewHttpClient().
@@ -370,7 +375,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 						return nil, false, fmt.Errorf("failed to get service by ID %s: %w", serviceID, err)
 					}
 					service = &serviceModel
-					serviceCache[serviceID] = service
+					(*serviceCache)[serviceID] = service
 				}
 
 				branchHasService := false

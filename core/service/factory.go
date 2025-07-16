@@ -121,6 +121,7 @@ func (s *service) Create() *service {
 	}
 	if err := s.MyGorm.Create(s.Model); err != nil {
 		s.Error = err
+		return s
 	}
 	HasID := func(model any) (uuid.UUID, bool) {
 		val := reflect.ValueOf(model)

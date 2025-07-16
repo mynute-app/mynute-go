@@ -23,7 +23,7 @@ type AppointmentBase struct {
 	CancelledEmployeeID   *uuid.UUID `gorm:"type:uuid" json:"cancelled_employee_id"`
 	StartTime             time.Time  `gorm:"type:time;not null" json:"start_time"`
 	EndTime               time.Time  `gorm:"type:time;not null" json:"end_time"`
-	TimeZone              string     `gorm:"type:varchar(100);not null" json:"time_zone"  validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone              string     `gorm:"type:varchar(100);not null" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	ActualStartTime       time.Time  `gorm:"type:time;not null" json:"actual_start_time"`
 	ActualEndTime         time.Time  `gorm:"type:time;not null" json:"actual_end_time"`
 	CancelTime            time.Time  `gorm:"type:time;not null" json:"cancel_time"`
@@ -107,9 +107,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	if !a.History.IsEmpty() {
 		return lib.Error.Appointment.HistoryManualUpdateForbidden
 	}
-	err := a.ValidateRules(tx, true) // isCreate = true
-	if err != nil {
-		// Return the lib.ErrorStruct directly
+	if err := a.ValidateRules(tx, true); err != nil {
 		return err
 	}
 	return nil
@@ -216,7 +214,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	// 1. Load Required Associations (Defensively)
 	var err error
 
-	err = tx.Model(&Service{}).Preload(clause.Associations).First(&a.Service, a.ServiceID).Error
+	err = tx.Preload(clause.Associations).First(&a.Service, "id = ?", a.ServiceID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("service ID %s", a.ServiceID))
 	}
@@ -224,7 +222,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading service: %w", err))
 	}
 
-	err = tx.Model(&Employee{}).Preload(clause.Associations).First(&a.Employee, a.EmployeeID).Error
+	err = tx.Preload(clause.Associations).First(&a.Employee, "id = ?", a.EmployeeID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return lib.Error.Employee.NotFound.WithError(fmt.Errorf("employee ID %s", a.EmployeeID))
 	}
@@ -232,7 +230,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading employee: %w", err))
 	}
 
-	err = tx.Model(&Branch{}).Preload(clause.Associations).First(&a.Branch, a.BranchID).Error
+	err = tx.Preload(clause.Associations).First(&a.Branch, "id = ?", a.BranchID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return lib.Error.Branch.NotFound.WithError(fmt.Errorf("branch ID %s", a.BranchID))
 	} // Use Branch NotFound
@@ -323,71 +321,44 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	// 4. Check Employee Availability (Work Schedule)
-	if len(a.Employee.EmployeeWorkSchedule) == 0 {
-		return lib.Error.Employee.NoWorkScheduleForDay
-	}
+	var count int64
 	weekday := a.StartTime.Weekday()
-	workRanges := a.Employee.GetWorkRangeForDay(weekday) // Use helper if available
-
-	if len(workRanges) == 0 {
-		return lib.Error.Employee.NoWorkScheduleForDay
+	aStartTimeUTC := time.Date(2020, 1, 1, a.StartTime.Hour(), a.StartTime.Minute(), 0, 0, a.StartTime.Location()).UTC()
+	aEndTimeUTC := time.Date(2020, 1, 1, a.EndTime.Hour(), a.EndTime.Minute(), 0, 0, a.EndTime.Location()).UTC()
+	if err := tx.Model(&EmployeeWorkRange{}).
+		Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).
+		Where("start_time <= ? AND end_time >= ? AND weekday = ?", aStartTimeUTC, aEndTimeUTC, weekday).
+		Count(&count).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
+		}
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error querying work schedule: %w", err))
 	}
 
-	isAvailableInSchedule := false
-	appointmentDateStr := a.StartTime.Format("2006-01-02")
-	for _, wr := range workRanges {
-		if wr.BranchID != a.BranchID {
-			continue
-		}
-
-		// Use layout matching your "15:30:00" format
-		layout := "2006-01-02 15:04"
-		scheduleStart, errStart := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.StartTime), a.StartTime.Location())
-		scheduleEnd, errEnd := time.ParseInLocation(layout, fmt.Sprintf("%s %s", appointmentDateStr, wr.EndTime), a.StartTime.Location())
-
-		if errStart != nil || errEnd != nil {
-			return lib.Error.Appointment.InvalidWorkScheduleFormat.WithError(fmt.Errorf("invalid work schedule format parse for employee %s with range %s-%s. start time error: %v / end time error: %v", a.EmployeeID, wr.StartTime, wr.EndTime, errStart, errEnd))
-		}
-		if !scheduleEnd.After(scheduleStart) {
-			continue
-		}
-
-		fitsStart := !a.StartTime.Before(scheduleStart)
-		fitsEnd := a.EndTime.Before(scheduleEnd) || a.EndTime.Equal(scheduleEnd)
-
-		if fitsStart && fitsEnd {
-			isAvailableInSchedule = true
-			break
-		}
-	}
-
-	if !isAvailableInSchedule {
-		return lib.Error.Employee.NotAvailableWorkSchedule // Use specific error
+	if count == 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
 	}
 
 	// 5. Overlap Checks (for active, non-self appointments)
-	overlapCondition := `start_time < ? AND end_time > ?`
+	count = 0
+	overlapCondition := `start_time <= ? AND end_time >= ?`
 	baseOverlapQuery := tx.Model(&Appointment{}).
 		Where("is_cancelled = ?", false).
 		Where("id != ?", a.ID).
-		Where(overlapCondition, a.EndTime, a.StartTime)
+		Where(overlapCondition, aStartTimeUTC, aEndTimeUTC)
 
-	var count int64
-
-	// Check Employee Overlap
-	err = baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&count).Error
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
-	} // Generic load/db error
+	// Employee Overlap
+	if err = baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
+	}
 	if count > 0 {
 		return lib.Error.Employee.ScheduleConflict
 	}
 
-	// Check Client Overlap
+	// Client Overlap
 	count = 0
-	err = baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking client overlap: %w", err))
+	if err = baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
 	}
 	if count > 0 {
 		return lib.Error.Client.ScheduleConflict
