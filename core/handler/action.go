@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"

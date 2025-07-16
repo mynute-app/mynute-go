@@ -1,16 +1,16 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	dJSON "agenda-kaki-go/core/config/api/dto/json"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	dJSON "mynute-go/core/config/api/dto/json"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

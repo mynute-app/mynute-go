@@ -1,10 +1,10 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
-	utilsT "agenda-kaki-go/core/test/utils"
+	"mynute-go/core"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
+	utilsT "mynute-go/core/test/utils"
 	"testing"
 	"time"
 

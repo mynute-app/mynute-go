@@ -1,11 +1,11 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core"
-	DTO "agenda-kaki-go/core/config/api/dto"
-	FileBytes "agenda-kaki-go/core/lib/file_bytes"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
+	"mynute-go/core"
+	DTO "mynute-go/core/config/api/dto"
+	FileBytes "mynute-go/core/lib/file_bytes"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
 
 	"testing"
 

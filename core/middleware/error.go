@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/lib"
-	myLogger "agenda-kaki-go/core/lib/metrics"
 	"encoding/json"
 	"log/slog"
+	"mynute-go/core/lib"
+	myLogger "mynute-go/core/lib/metrics"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

@@ -1,10 +1,10 @@
 package model
 
 import (
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
 	"errors"
 	"fmt"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
 	"strings"
 	"time"
 
@@ -31,7 +31,7 @@ type Branch struct {
 	Appointments       []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
 	ServiceDensity     []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
 	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"`          // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	BranchDensity      uint               `gorm:"not null;default:1" json:"branch_density"`
 	Design             mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
@@ -118,7 +118,6 @@ func (b *Branch) RemoveService(tx *gorm.DB, service *Service) error {
 	}
 	return nil
 }
-
 
 func (b *Branch) HasServices(tx *gorm.DB, services []*Service) error {
 	if len(services) > 0 {
@@ -242,9 +241,9 @@ func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRa
 	var existing []BranchWorkRange
 
 	err := tx.
-	Where("branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).
-	Where("start_time <= ? AND end_time >= ?", newRange.EndTime, newRange.StartTime).
-	Find(&existing).Error
+		Where("branch_id = ? AND weekday = ? AND id != ?", newRange.BranchID, newRange.Weekday, newRange.ID).
+		Where("start_time <= ? AND end_time >= ?", newRange.EndTime, newRange.StartTime).
+		Find(&existing).Error
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to fetch existing work ranges: %w", err))
 	}
@@ -267,5 +266,3 @@ func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRa
 
 	return nil
 }
-
-

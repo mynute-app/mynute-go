@@ -1,11 +1,11 @@
 package controller
 
 import (
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	ScheduleFilter "agenda-kaki-go/core/lib/schedule_filter"
-	"agenda-kaki-go/core/middleware"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	ScheduleFilter "mynute-go/core/lib/schedule_filter"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	"mynute-go/core/lib"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -108,7 +108,7 @@ func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
 	}
-	
+
 	if err := branch.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
 	}

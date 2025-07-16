@@ -1,9 +1,9 @@
 package model
 
 import (
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

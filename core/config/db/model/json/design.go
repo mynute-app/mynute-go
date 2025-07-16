@@ -1,13 +1,13 @@
 package mJSON
 
 import (
-	"agenda-kaki-go/core/lib"
-	myUploader "agenda-kaki-go/core/lib/cloud_uploader"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"mynute-go/core/lib"
+	myUploader "mynute-go/core/lib/cloud_uploader"
 )
 
 type DesignConfig struct {

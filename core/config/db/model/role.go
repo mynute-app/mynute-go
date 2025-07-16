@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
 
 	"github.com/google/uuid"
 

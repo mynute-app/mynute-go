@@ -1,8 +1,8 @@
 package utilsT
 
 import (
-	modelT "agenda-kaki-go/core/test/models"
 	"fmt"
+	modelT "mynute-go/core/test/models"
 
 	"github.com/google/uuid"
 )

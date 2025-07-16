@@ -1,13 +1,13 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core"
+	"mynute-go/core"
 
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/lib"
-	FileBytes "agenda-kaki-go/core/lib/file_bytes"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/lib"
+	FileBytes "mynute-go/core/lib/file_bytes"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
 	"testing"
 
 	"github.com/google/uuid"
@@ -60,7 +60,7 @@ func Test_Employee(t *testing.T) {
 
 	employee.Created.Password = new_password // Update the password in the employee model
 	tt.Describe("Employee get by email").Test(employee.GetByEmail(401, nil, nil))
-	
+
 	tt.Describe("Employee login").Test(employee.Login(200, nil))
 
 	ServicesID := []DTO.ServiceID{

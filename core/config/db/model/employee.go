@@ -1,9 +1,9 @@
 package model
 
 import (
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -100,9 +100,9 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	var emp_work_schedule []EmployeeWorkRange
 	if err := tx.
-	Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
-	Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
-	Find(&emp_work_schedule).Error; err != nil {
+		Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
+		Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
+		Find(&emp_work_schedule).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return lib.Error.General.InternalError.WithError(err)
 		}

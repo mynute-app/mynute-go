@@ -1,12 +1,12 @@
 package service
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
 	"net/url"
 	"reflect"
 
@@ -233,7 +233,7 @@ func (s *service) Login(user_type string) (string, error) {
 	if !handler.ComparePassword(password, body.Password) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
-	
+
 	userBytes, err := json.Marshal(s.Model)
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)

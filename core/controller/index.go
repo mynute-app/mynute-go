@@ -1,11 +1,11 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/service"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
+	"mynute-go/core/service"
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
@@ -186,5 +186,3 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 
 	return &Design, nil
 }
-
-

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/google/uuid"

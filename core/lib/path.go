@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-var root_dir = "agenda-kaki-go"
+var root_dir = "mynute-go"
 
-// findProjectRoot searches for the `agenda-kaki-go` directory from the current working directory upwards.
+// findProjectRoot searches for the `mynute-go` directory from the current working directory upwards.
 func FindProjectRoot() (string, error) {
 	// Get the current directory
 	dir, err := os.Getwd()
@@ -16,7 +16,7 @@ func FindProjectRoot() (string, error) {
 		return "", err
 	}
 
-	// Walk up the directory tree until we find `agenda-kaki-go`
+	// Walk up the directory tree until we find `mynute-go`
 	for {
 		if strings.HasSuffix(dir, root_dir) {
 			return dir, nil

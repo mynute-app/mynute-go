@@ -1,14 +1,14 @@
 package modelT
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/test/handlers"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
+	handler "mynute-go/core/test/handlers"
 	"slices"
 	"time"
 
@@ -335,7 +335,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 		currentWeekday := currentDate.Weekday()
 		workRanges := weekdaySchedules[currentWeekday]
 
-		wrLoop:
+	wrLoop:
 		for _, wr := range workRanges {
 			branchID := wr.BranchID.String()
 			branch, ok := branchCache[wr.BranchID.String()]
@@ -405,7 +405,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 				initial_allowed_time := time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(),
 					wr_startTime_loc.Hour(), wr_startTime_loc.Minute(), 0, 0, preferredLocation)
 				maximum_allowed_time := initial_allowed_time.Add(wr_duration)
-				
+
 				if initial_allowed_time.Before(now) && maximum_allowed_time.Before(now) {
 					continue wrLoop // Skip this work range if both times are in the past
 				}

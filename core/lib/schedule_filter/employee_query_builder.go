@@ -3,7 +3,7 @@ package ScheduleFilter
 import (
 	"fmt"
 
-	"agenda-kaki-go/core/config/db/model" // Assuming model.EmployeeWorkRange is here
+	"mynute-go/core/config/db/model" // Assuming model.EmployeeWorkRange is here
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

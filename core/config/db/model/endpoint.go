@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"fmt"
+	"mynute-go/core/config/namespace"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -118,15 +118,16 @@ var GetBranchById = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
-// var GetBranchByName = &EndPoint{
-// 	Path:             "/branch/name/:name",
-// 	Method:           namespace.ViewActionMethod,
-// 	ControllerName:   "GetBranchByName",
-// 	Description:      "View branch by name",
-// 	NeedsCompanyId:   true,
-// 	DenyUnauthorized: true,
-// 	Resource:         BranchResource,
-// }
+
+//	var GetBranchByName = &EndPoint{
+//		Path:             "/branch/name/:name",
+//		Method:           namespace.ViewActionMethod,
+//		ControllerName:   "GetBranchByName",
+//		Description:      "View branch by name",
+//		NeedsCompanyId:   true,
+//		DenyUnauthorized: true,
+//		Resource:         BranchResource,
+//	}
 var UpdateBranchById = &EndPoint{
 	Path:             "/branch/:id",
 	Method:           namespace.PatchActionMethod,
@@ -266,10 +267,10 @@ var VerifyClientEmail = &EndPoint{
 	Description:    "Verify client email",
 }
 var ResetClientPasswordByEmail = &EndPoint{
-	Path:             "/client/reset-password/:email",
-	Method:           namespace.CreateActionMethod,
-	ControllerName:   "ResetClientPasswordByEmail",
-	Description:      "Reset client password by email",
+	Path:           "/client/reset-password/:email",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "ResetClientPasswordByEmail",
+	Description:    "Reset client password by email",
 }
 var GetClientByEmail = &EndPoint{
 	Path:             "/client/email/:email",
@@ -435,11 +436,11 @@ var VerifyEmployeeEmail = &EndPoint{
 	NeedsCompanyId: true,
 }
 var ResetEmployeePasswordByEmail = &EndPoint{
-	Path:             "/employee/reset-password/:email",
-	Method:           namespace.CreateActionMethod,
-	ControllerName:   "ResetEmployeePasswordByEmail",
-	Description:      "Reset employee password by email",
-	NeedsCompanyId:   true,
+	Path:           "/employee/reset-password/:email",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "ResetEmployeePasswordByEmail",
+	Description:    "Reset employee password by email",
+	NeedsCompanyId: true,
 }
 var GetEmployeeById = &EndPoint{
 	Path:             "/employee/:id",

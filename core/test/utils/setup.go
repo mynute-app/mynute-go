@@ -1,8 +1,8 @@
 package utilsT
 
 import (
-	"agenda-kaki-go/core/lib"
-	modelT "agenda-kaki-go/core/test/models"
+	"mynute-go/core/lib"
+	modelT "mynute-go/core/test/models"
 	"os"
 )
 
@@ -25,8 +25,8 @@ func CreateCompaniesRandomly(CompaniesToCreate int) ([]*modelT.Company, error) {
 			services = 2  // Fixed number of services for test environment
 		} else if app_env == "dev" {
 			employees = lib.GenerateRandomIntFromRange(1, 8) // Random From 1 to 8 per company
-			branches = lib.GenerateRandomIntFromRange(1, 4)   // Random From 1 to 4 per company
-			services = lib.GenerateRandomIntFromRange(1, 12)   // Random From 1 to 12 per company
+			branches = lib.GenerateRandomIntFromRange(1, 4)  // Random From 1 to 4 per company
+			services = lib.GenerateRandomIntFromRange(1, 12) // Random From 1 to 12 per company
 		}
 		if err := company.CreateCompanyRandomly(employees, branches, services); err != nil {
 			return nil, err

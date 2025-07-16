@@ -1,9 +1,9 @@
 package main
 
 import (
-	"agenda-kaki-go/core"
-	"agenda-kaki-go/core/lib"
-	utilsT "agenda-kaki-go/core/test/utils"
+	"mynute-go/core"
+	"mynute-go/core/lib"
+	utilsT "mynute-go/core/test/utils"
 	"os"
 )
 
