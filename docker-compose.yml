@@ -1,13 +1,13 @@
 # 
 # # RUN line below for dev & test # #
-# docker-compose -p kaki-go --profile dev -f docker-compose.yml up -d --force-recreate
+# docker-compose -p mynute-go --profile dev -f docker-compose.yml up -d --force-recreate
 # # RUN line below for prod # #
-# docker-compose -p kaki-go --profile prod -f docker-compose.yml up -d --force-recreate
+# docker-compose -p mynute-go --profile prod -f docker-compose.yml up -d --force-recreate
 #
 
 services:
   postgres:
-    container_name: postgresdb-kaki
+    container_name: postgres
     image: postgres:17.5
     restart: always
     volumes:
@@ -71,10 +71,10 @@ services:
         wait
       "
     networks:
-      - kaki-network
+      - mynute-app-network
 
   pgadmin:
-    container_name: pgadmin4-kaki
+    container_name: pgadmin
     image: dpage/pgadmin4:9.4
     restart: always
     volumes:
@@ -86,10 +86,10 @@ services:
     ports:
       - "${PGADMIN_PORT}:80"
     networks:
-      - kaki-network
+      - mynute-app-network
 
   fiber-app:
-    container_name: fiber-api-kaki
+    container_name: fiber-app
     build: .
     restart: always
     environment:
@@ -100,12 +100,12 @@ services:
     depends_on:
       - postgres
     networks:
-      - kaki-network
+      - mynute-app-network
     profiles:
       - prod  # Runs only in production
 
   prometheus:
-    container_name: prometheus-kaki
+    container_name: prometheus
     image: prom/prometheus:v3.4.1
     restart: always
     volumes:
@@ -115,11 +115,11 @@ services:
     depends_on:
       - postgres
     networks:
-      - kaki-network
+      - mynute-app-network
 
   grafana:
     image: grafana/grafana:12.0.1
-    container_name: grafana-kaki
+    container_name: grafana
     restart: always
     volumes:
       - grafana-data:/var/lib/grafana
@@ -128,7 +128,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - kaki-network
+      - mynute-app-network
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
@@ -136,7 +136,7 @@ services:
   loki:
     user: root
     restart: always
-    container_name: loki-kaki
+    container_name: loki
     image: grafana/loki:3.5.1
     ports:
       - "3100:3100"
@@ -149,10 +149,10 @@ services:
       - loki-compactor:/loki/compactor
       - loki-wal:/loki/wal
     networks:
-      - kaki-network
+      - mynute-app-network
 
   minio:
-    container_name: minio-kaki
+    container_name: minio
     image: quay.io/minio/minio
     restart: always
     ports:
@@ -165,27 +165,27 @@ services:
       - minio-data:/data
     command: server /data --console-address ":9001"
     networks:
-      - kaki-network
+      - mynute-app-network
     profiles:
       - dev
       - test
 
   mailhog:
-    container_name: mailhog-kaki
+    container_name: mailhog
     image: mailhog/mailhog
     restart: always
     ports:
       - "1025:1025"  # SMTP
       - "8025:8025"  # Web UI
     networks:
-      - kaki-network
+      - mynute-app-network
     profiles:
       - dev
       - test
 
       
 networks:
-  kaki-network:
+  mynute-app-network:
 
 volumes:
   postgres-data:
