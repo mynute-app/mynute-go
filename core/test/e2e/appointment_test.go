@@ -21,10 +21,7 @@ func Test_Appointment(t *testing.T) {
 	ct := &modelT.Client{}
 	cy := &modelT.Company{}
 
-	tt.Describe("Client creation").Test(ct.Create(200))
-	tt.Describe("Client email verification").Test(ct.VerifyEmail(200))
-	tt.Describe("Client login").Test(ct.Login(200))
-	tt.Describe("Client get by email").Test(ct.GetByEmail(200))
+	tt.Describe("Client creation").Test(ct.Set())
 	tt.Describe("Company setup").Test(cy.Set())
 
 	baseEmployee := cy.Employees[1]
@@ -128,11 +125,16 @@ func Test_Appointment(t *testing.T) {
 	if Appointments[0].Created.ID == uuid.Nil {
 		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
-	startTimeConflict := Appointments[0].Created.StartTime.Format(time.RFC3339)
-	timeZoneConflict := Appointments[0].Created.TimeZone
+
+	ct1 := &modelT.Client{}
+	tt.Describe("Client creation for conflicting appointments test").Test(ct1.Set())
 
 	var a3 modelT.Appointment
-	tt.Describe("Creating conflicting appointment a[3]").Test(
-		a3.Create(409, ct.X_Auth_Token, nil, &startTimeConflict, timeZoneConflict, branch0, baseEmployee, service0, cy, ct),
+	tt.Describe("Creating conflicting appointment a[3] with client token").Test(
+		a3.Create(409, ct1.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
+	)
+
+	tt.Describe("Creating conflicting appointment a[3] with employee token").Test(
+		a3.Create(409, baseEmployee.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
 	)
 }

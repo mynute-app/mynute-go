@@ -319,7 +319,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := UpdateOneById(c, &company); err != nil {
+	if err := UpdateOneById(c, &company, nil); err != nil {
 		return err
 	}
 

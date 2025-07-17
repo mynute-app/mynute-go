@@ -33,6 +33,9 @@ func (u *Client) Set() error {
 	}, nil); err != nil {
 		return err
 	}
+	if err := u.GetByEmail(200); err != nil {
+		return err
+	}
 	return nil
 }
 

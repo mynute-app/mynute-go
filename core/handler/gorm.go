@@ -9,7 +9,13 @@ import (
 )
 
 type Gorm struct {
-	DB *gorm.DB
+	DB            *gorm.DB
+	NestedPreload *[]string
+}
+
+func (p *Gorm) SetNestedPreload(preloads *[]string) *Gorm {
+	p.NestedPreload = preloads
+	return p
 }
 
 func MyGormWrapper(db *gorm.DB) *Gorm {
@@ -20,8 +26,9 @@ func MyGormWrapper(db *gorm.DB) *Gorm {
 
 // UpdateOneById updates a single record by its ID and reloads it
 func (p *Gorm) UpdateOneById(value string, model any) error {
+	query := p.DB
 
-	if result := p.DB.
+	if result := query.
 		Model(model).
 		Omit(clause.Associations).
 		Where("id = ?", value).
@@ -39,7 +46,13 @@ func (p *Gorm) UpdateOneById(value string, model any) error {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("record `id = %s` exists but was not modified maybe the changes passed are likely identical to database", value))
 	}
 
-	if err := p.DB.First(model, "id = ?", value).Error; err != nil {
+	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
+		for _, nested_preload := range *p.NestedPreload {
+			query = query.Preload(nested_preload)
+		}
+	}
+
+	if err := query.First(model, "id = ?", value).Error; err != nil {
 		return fmt.Errorf("gorm reload after update failed: %w", err)
 	}
 
@@ -75,6 +88,12 @@ func (p Gorm) GetOneBy(param string, value string, model any) error {
 	// The result of Preload is assigned back to query.
 	query = query.Preload(clause.Associations)
 
+	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
+		for _, nested_preload := range *p.NestedPreload {
+			query = query.Preload(nested_preload)
+		}
+	}
+
 	// Build the WHERE condition
 	cond := fmt.Sprintf("%s = ?", param)
 
@@ -91,6 +110,12 @@ func (p Gorm) ForceGetOneBy(param string, value string, model any) error {
 	query := p.DB.Unscoped()
 
 	query = query.Preload(clause.Associations)
+
+	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
+		for _, nested_preload := range *p.NestedPreload {
+			query = query.Preload(nested_preload)
+		}
+	}
 
 	cond := fmt.Sprintf("%s = ?", param)
 
@@ -149,6 +174,12 @@ func (p Gorm) GetAll(model any) error {
 
 	query := p.DB.Preload(clause.Associations)
 
+	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
+		for _, nested_preload := range *p.NestedPreload {
+			query = query.Preload(nested_preload)
+		}
+	}
+
 	if query.Error != nil {
 		return query.Error
 	}
@@ -163,6 +194,12 @@ func (p Gorm) ForceGetAll(model any) error {
 	query := p.DB.Unscoped()
 
 	query = query.Preload(clause.Associations)
+
+	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
+		for _, nested_preload := range *p.NestedPreload {
+			query = query.Preload(nested_preload)
+		}
+	}
 
 	// Fetch all records after applying all preloads
 	return query.Find(model).Error

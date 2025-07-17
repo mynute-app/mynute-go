@@ -52,7 +52,7 @@ func CreateService(c *fiber.Ctx) error {
 func GetServiceById(c *fiber.Ctx) error {
 	var service model.Service
 
-	if err := GetOneBy("id", c, &service); err != nil {
+	if err := GetOneBy("id", c, &service, nil); err != nil {
 		return err
 	}
 
@@ -76,7 +76,7 @@ func GetServiceById(c *fiber.Ctx) error {
 func GetServiceByName(c *fiber.Ctx) error {
 	var service model.Service
 
-	if err := GetOneBy("name", c, &service); err != nil {
+	if err := GetOneBy("name", c, &service, nil); err != nil {
 		return err
 	}
 
@@ -106,7 +106,7 @@ func GetServiceByName(c *fiber.Ctx) error {
 func UpdateServiceById(c *fiber.Ctx) error {
 	var service model.Service
 
-	if err := UpdateOneById(c, &service); err != nil {
+	if err := UpdateOneById(c, &service, nil); err != nil {
 		return err
 	}
 

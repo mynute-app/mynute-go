@@ -60,7 +60,7 @@ func CreateBranch(c *fiber.Ctx) error {
 //	@Router			/branch/{id} [get]
 func GetBranchById(c *fiber.Ctx) error {
 	var branch model.Branch
-	if err := GetOneBy("id", c, &branch); err != nil {
+	if err := GetOneBy("id", c, &branch, nil); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
@@ -114,7 +114,7 @@ func GetBranchById(c *fiber.Ctx) error {
 func UpdateBranchById(c *fiber.Ctx) error {
 	var branch model.Branch
 
-	if err := UpdateOneById(c, &branch); err != nil {
+	if err := UpdateOneById(c, &branch, nil); err != nil {
 		return err
 	}
 

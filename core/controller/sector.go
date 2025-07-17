@@ -51,7 +51,7 @@ func CreateSector(c *fiber.Ctx) error {
 func GetSectorByName(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := GetOneBy("name", c, &sector); err != nil {
+	if err := GetOneBy("name", c, &sector, nil); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func GetSectorByName(c *fiber.Ctx) error {
 func GetSectorById(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := GetOneBy("id", c, &sector); err != nil {
+	if err := GetOneBy("id", c, &sector, nil); err != nil {
 		return err
 	}
 
@@ -105,7 +105,7 @@ func GetSectorById(c *fiber.Ctx) error {
 func UpdateSectorById(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := UpdateOneById(c, &sector); err != nil {
+	if err := UpdateOneById(c, &sector, nil); err != nil {
 		return err
 	}
 

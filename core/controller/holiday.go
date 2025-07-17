@@ -51,7 +51,7 @@ func CreateHoliday(c *fiber.Ctx) error {
 func GetHolidayById(c *fiber.Ctx) error {
 	var holiday model.Holiday
 
-	if err := GetOneBy("id", c, &holiday); err != nil {
+	if err := GetOneBy("id", c, &holiday, nil); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func GetHolidayById(c *fiber.Ctx) error {
 func GetHolidayByName(c *fiber.Ctx) error {
 	var holiday model.Holiday
 
-	if err := GetOneBy("name", c, &holiday); err != nil {
+	if err := GetOneBy("name", c, &holiday, nil); err != nil {
 		return err
 	}
 
@@ -104,7 +104,7 @@ func GetHolidayByName(c *fiber.Ctx) error {
 func UpdateHolidayById(c *fiber.Ctx) error {
 	var holiday model.Holiday
 
-	if err := UpdateOneById(c, &holiday); err != nil {
+	if err := UpdateOneById(c, &holiday, nil); err != nil {
 		return err
 	}
 

@@ -63,7 +63,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Router			/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("id", c, &employee); err != nil {
+	if err := GetOneBy("id", c, &employee, &[]string{"EmployeeWorkSchedule.Services"}); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Router			/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("email", c, &employee); err != nil {
+	if err := GetOneBy("email", c, &employee, &[]string{"EmployeeWorkSchedule.Services"}); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -117,7 +117,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Router			/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := UpdateOneById(c, &employee); err != nil {
+	if err := UpdateOneById(c, &employee, nil); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -467,7 +467,7 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			work_range	body		DTO.UpdateWorkRange	true	"Work Range"
-//	@Success		200			{object}	DTO.EmployeeFull
+//	@Success		200			{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/work_range/{work_range_id} [put]
 func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
@@ -583,16 +583,18 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 		return err
 	}
 
-	var ewr []*model.EmployeeWorkRange
+	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&ewr, "employee_id = ?", employee_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.EmployeeWorkRange
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &ewr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -632,16 +634,18 @@ func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 		return err
 	}
 
-	var ewr []*model.EmployeeWorkRange
+	var ewr []model.EmployeeWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&ewr, "employee_id = ?", employee_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.EmployeeWorkRange
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &ewr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

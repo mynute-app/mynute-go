@@ -55,7 +55,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 //	@Router			/appointment/{id} [get]
 func GetAppointmentByID(c *fiber.Ctx) error {
 	var appointment model.Appointment
-	if err := GetOneBy("id", c, &appointment); err != nil {
+	if err := GetOneBy("id", c, &appointment, nil); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {

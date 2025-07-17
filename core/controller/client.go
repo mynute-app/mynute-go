@@ -213,7 +213,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 func UpdateClientById(c *fiber.Ctx) error {
 	var client model.Client
 
-	if err := UpdateOneById(c, &client); err != nil {
+	if err := UpdateOneById(c, &client, nil); err != nil {
 		return err
 	}
 
