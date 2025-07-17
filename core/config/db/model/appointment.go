@@ -195,14 +195,14 @@ func (a *Appointment) BeforeDelete(tx *gorm.DB) error {
 // This function is called from the hooks and can be reused in other contexts if needed
 func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 
-	// 0. Basic Required Fields & Time Checks
+	// 1. Basic Required Fields & Time Checks
+
 	if a.StartTime.IsZero() {
 		return lib.Error.Appointment.StartTimeInThePast
 	}
 	if a.ServiceID == uuid.Nil || a.EmployeeID == uuid.Nil || a.ClientID == uuid.Nil || a.BranchID == uuid.Nil || a.CompanyID == uuid.Nil {
 		return lib.Error.Appointment.MissingRequiredIDs
 	}
-	// Check start time only on creation or if it explicitly changed to the past
 	if isCreate || a.StartTime.IsZero() {
 		if a.StartTime.Before(time.Now().Add(-1 * time.Minute)) {
 			return lib.Error.Appointment.StartTimeInThePast // Use specific error for past time
@@ -211,117 +211,78 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("can not change company id")) // Use specific error for company ID change
 	}
 
-	// 1. Load Required Associations (Defensively)
-	var err error
-
-	err = tx.Preload(clause.Associations).First(&a.Service, "id = ?", a.ServiceID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("service ID %s", a.ServiceID))
-	}
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading service: %w", err))
-	}
-
-	err = tx.Preload(clause.Associations).First(&a.Employee, "id = ?", a.EmployeeID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return lib.Error.Employee.NotFound.WithError(fmt.Errorf("employee ID %s", a.EmployeeID))
-	}
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading employee: %w", err))
-	}
-
-	err = tx.Preload(clause.Associations).First(&a.Branch, "id = ?", a.BranchID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return lib.Error.Branch.NotFound.WithError(fmt.Errorf("branch ID %s", a.BranchID))
-	} // Use Branch NotFound
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("loading branch: %w", err))
-	}
-
 	// 2. Calculate & Validate EndTime
-	if a.Service.Duration <= 0 { // Use uint duration from your model
+	var serviceDuration uint
+	if err := tx.Model(&Service{}).Where("id = ?", a.ServiceID).Pluck("duration", &serviceDuration).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading service duration: %w", err))
+	}
+	if serviceDuration <= 0 { // Use uint duration from your model
 		return lib.Error.Appointment.InvalidServiceDuration
 	}
-	// Convert uint duration (minutes) to time.Duration
-	a.EndTime = a.StartTime.Add(time.Duration(a.Service.Duration) * time.Minute)
+
+	a.EndTime = a.StartTime.Add(time.Duration(serviceDuration) * time.Minute)
 	if !a.EndTime.After(a.StartTime) {
 		return lib.Error.Appointment.EndTimeBeforeStart
 	}
 
-	// --- If being cancelled, validation stops here ---
+	// --- If being cancelled, validation stops here --- //
 	if a.IsCancelled {
 		return nil
 	}
 
-	// --- Remaining checks only apply to active (non-cancelled) appointments ---
-
 	// 3. Relationship & Existence Checks (Use loaded structs)
-	if a.Branch.CompanyID != a.CompanyID {
+
+	// Check if Branch belongs to the same Company as the appointment
+	var aBranchCompanyID string
+	if err := tx.Model(&Branch{}).Where("id = ?", a.BranchID).Pluck("company_id", &aBranchCompanyID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch company ID: %w", err))
+	}
+	if aBranchCompanyID != a.CompanyID.String() {
 		return lib.Error.Company.BranchDoesNotBelong
 	}
-	if a.Employee.CompanyID != a.CompanyID {
+
+	// Check if Employee belongs to the same Company as the Appointment
+	var aEmployeeCompanyID string
+	if err := tx.Model(&Employee{}).Where("id = ?", a.EmployeeID).Pluck("company_id", &aEmployeeCompanyID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading employee company ID: %w", err))
+	}
+	if aEmployeeCompanyID != a.CompanyID.String() {
 		return lib.Error.Company.EmployeeDoesNotBelong
 	}
-	if a.Service.CompanyID != a.CompanyID {
+
+	// Check if Service belongs to the same Company as the Appointment
+	var aServiceCompanyID string
+	if err := tx.Model(&Service{}).Where("id = ?", a.ServiceID).Pluck("company_id", &aServiceCompanyID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading service company ID: %w", err))
+	}
+	if aServiceCompanyID != a.CompanyID.String() {
 		return lib.Error.Company.ServiceDoesNotBelong
 	}
 
-	// Use simpler direct checks or JOINs if performance demands, raw SQL less type-safe.
-	var serviceInBranch bool
-	if a.Branch.Services != nil {
-		for _, s := range a.Branch.Services {
-			if s.ID == a.ServiceID {
-				serviceInBranch = true
-				break
-			}
-		}
-	} else {
-		var count int64
-		tx.Table("branch_services").Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count)
-		serviceInBranch = count > 0
-	}
-	if !serviceInBranch {
+	var count int64
+
+	// Check if service belongs to the branch
+	count = 0
+	tx.Table("branch_services").Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count)
+	if count == 0 {
 		return lib.Error.Branch.ServiceDoesNotBelong
 	}
 
 	// Check if employee offers the service
-	var employeeService bool
-	if a.Employee.Services != nil {
-		for _, s := range a.Employee.Services {
-			if s.ID == a.ServiceID {
-				employeeService = true
-				break
-			}
-		}
-	} else {
-		var count int64
-		tx.Table("employee_services").Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Count(&count)
-		employeeService = count > 0
+	count = 0
+	tx.Table("employee_services").Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Count(&count)
+	if count == 0 {
+		return lib.Error.Employee.ServiceDoesNotBelong
 	}
-	if !employeeService {
-		return lib.Error.Employee.LacksService
-	} // Use specific error
 
 	// Check if employee works at the branch
-	var employeeInBranch bool
-	if a.Employee.Branches != nil { // Check preloaded (unlikely)
-		for _, b := range a.Employee.Branches {
-			if b.ID == a.BranchID {
-				employeeInBranch = true
-				break
-			}
-		}
-	} else {
-		var count int64
-		tx.Table("employee_branches").Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).Count(&count)
-		employeeInBranch = count > 0
-	}
-	if !employeeInBranch {
+	count = 0
+	tx.Table("employee_branches").Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).Count(&count)
+	if count == 0 {
 		return lib.Error.Employee.BranchDoesNotBelong
 	}
 
 	// 4. Check Employee Availability (Work Schedule)
-	var count int64
 	weekday := a.StartTime.Weekday()
 	aStartTimeUTC := time.Date(2020, 1, 1, a.StartTime.Hour(), a.StartTime.Minute(), 0, 0, a.StartTime.Location()).UTC()
 	aEndTimeUTC := time.Date(2020, 1, 1, a.EndTime.Hour(), a.EndTime.Minute(), 0, 0, a.EndTime.Location()).UTC()
@@ -339,7 +300,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
 	}
 
-	// 5. Overlap Checks (for active, non-self appointments)
+	// 5. Overlap and Capacity Checks
 	count = 0
 	overlapCondition := `start_time <= ? AND end_time >= ?`
 	baseOverlapQuery := tx.Model(&Appointment{}).
@@ -347,54 +308,59 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		Where("id != ?", a.ID).
 		Where(overlapCondition, aStartTimeUTC, aEndTimeUTC)
 
-	// Employee Overlap
-	if err = baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&count).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
-	}
-	if count > 0 {
-		return lib.Error.Employee.ScheduleConflict
-	}
-
 	// Client Overlap
 	count = 0
-	if err = baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error; err != nil {
+	if err := baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
 	}
 	if count > 0 {
 		return lib.Error.Client.ScheduleConflict
 	}
 
-	// Check Branch Service Capacity (Using JSONB field on Branch)
-	count = 0
-	err = baseOverlapQuery.Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Count(&count).Error
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking service capacity: %w", err))
+	// Employee Overlap and Capacities
+	var employeeAppointmentsCount int64
+	if err := baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&employeeAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
 	}
-
-	serviceMax := uint(0) // Use uint to match your model
-	// Branch should be loaded, iterate over its ServiceDensity slice
-	for _, sd := range a.Branch.ServiceDensity { // Access JSONB field directly
-		if sd.ServiceID == a.ServiceID {
-			serviceMax = sd.MaxSchedulesOverlap // Use uint MaxSchedulesOverlap
-			break
+	if employeeAppointmentsCount > 0 {
+		var employeeTotalServiceDensity int32
+		if err := tx.Model(&Employee{}).Where("id = ?", a.EmployeeID).Pluck("total_service_density", &employeeTotalServiceDensity).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading employee density: %w", err))
+		}
+		if employeeTotalServiceDensity >= 0 && employeeAppointmentsCount >= int64(employeeTotalServiceDensity) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s has reached its maximum density of %d appointments", a.EmployeeID, employeeTotalServiceDensity))
+		}
+		var serviceDensityForTheEmployee int32
+		if err := tx.Model(&EmployeeServiceDensity{}).Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Pluck("density", &serviceDensityForTheEmployee).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading employee service density: %w", err))
+		}
+		if serviceDensityForTheEmployee >= 0 && employeeAppointmentsCount >= int64(serviceDensityForTheEmployee) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s has reached its maximum density of %d appointments for service (%s)", a.EmployeeID, serviceDensityForTheEmployee, a.ServiceID))
 		}
 	}
-	// Cast serviceMax to int64 for comparison with count
-	if serviceMax > 0 && count >= int64(serviceMax) {
-		return lib.Error.Branch.MaxServiceCapacityReached // Use new specific error
+
+	// Branch Overlap and Capacities
+	var branchAppointmentsCount int64
+	if err := baseOverlapQuery.Where("branch_id = ?", a.BranchID).Count(&branchAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking branch overlap: %w", err))
+	}
+	if branchAppointmentsCount > 0 {
+		var branchTotalServiceDensity int32
+		if err := tx.Model(&Branch{}).Where("id = ?", a.BranchID).Pluck("total_service_density", &branchTotalServiceDensity).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch density: %w", err))
+		}
+		if branchTotalServiceDensity >= 0 && branchAppointmentsCount >= int64(branchTotalServiceDensity) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s has reached its maximum density of %d appointments", a.BranchID, branchTotalServiceDensity))
+		}
+		var serviceDensityForTheBranch int32
+		if err := tx.Model(&BranchServiceDensity{}).Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Pluck("density", &serviceDensityForTheBranch).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch service density: %w", err))
+		}
+		if serviceDensityForTheBranch >= 0 && branchAppointmentsCount >= int64(serviceDensityForTheBranch) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s has reached its maximum density of %d appointments for service (%s)", a.BranchID, serviceDensityForTheBranch, a.ServiceID))
+		}
 	}
 
-	// Check Overall Branch Capacity (Using BranchDensity field on Branch)
-	count = 0
-	err = baseOverlapQuery.Where("branch_id = ?", a.BranchID).Count(&count).Error
-	if err != nil {
-		return lib.Error.Appointment.AssociationLoadFailed.WithError(fmt.Errorf("db error checking branch capacity: %w", err))
-	}
-
-	branchMax := a.Branch.BranchDensity
-	if branchMax > 0 && count >= int64(branchMax) {
-		return lib.Error.Branch.MaxCapacityReached // Use new specific error
-	}
 	return nil // All validations passed
 }
 

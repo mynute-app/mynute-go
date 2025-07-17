@@ -24,12 +24,12 @@ func (b *Branch) GetID() string        { return b.Created.ID.String() }
 func (b *Branch) GetCompanyID() string { return b.Company.Created.ID.String() }
 func (b *Branch) GetAuthToken() string { return "" }
 func (b *Branch) SetWorkRanges(wr []any) error {
-	b.Created.BranchWorkSchedule = make([]model.BranchWorkRange, len(wr))
+	b.Created.WorkSchedule = make([]model.BranchWorkRange, len(wr))
 	for i, v := range wr {
 		if ewr, ok := v.(model.BranchWorkRange); !ok {
 			return fmt.Errorf("invalid work range type")
 		} else {
-			b.Created.BranchWorkSchedule[i] = ewr
+			b.Created.WorkSchedule[i] = ewr
 		}
 	}
 	return nil
@@ -288,7 +288,7 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 		Error; err != nil {
 		return fmt.Errorf("failed to create branch work schedule: %w", err)
 	}
-	b.Created.BranchWorkSchedule = updated.WorkRanges
+	b.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -310,7 +310,7 @@ func (b *Branch) UpdateWorkRange(status int, wrID string, changes map[string]any
 		Error; err != nil {
 		return fmt.Errorf("failed to update branch work range: %w", err)
 	}
-	b.Created.BranchWorkSchedule = updated.WorkRanges
+	b.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -332,7 +332,7 @@ func (b *Branch) DeleteWorkRange(status int, wrID string, x_auth_token string, x
 		Error; err != nil {
 		return fmt.Errorf("failed to delete branch work schedule: %w", err)
 	}
-	b.Created.BranchWorkSchedule = updated.WorkRanges
+	b.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 

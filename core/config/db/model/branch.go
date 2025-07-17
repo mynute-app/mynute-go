@@ -16,24 +16,24 @@ import (
 // Branch model
 type Branch struct {
 	BaseModel
-	Name               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"` // Branch name
-	Street             string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"street"`
-	Number             string             `gorm:"type:varchar(100)" validate:"required,min=1,max=10" json:"number"`
-	Complement         string             `gorm:"type:varchar(100)" validate:"max=100" json:"complement"`
-	Neighborhood       string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"neighborhood"`
-	ZipCode            string             `gorm:"type:varchar(100)" validate:"required,min=5,max=8" json:"zip_code"`
-	City               string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"city"`
-	State              string             `gorm:"type:varchar(100)" validate:"required,min=2,max=20" json:"state"` // State code (e.g., "NY" for New York, "SP" for São Paulo)
-	Country            string             `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"country"`
-	CompanyID          uuid.UUID          `gorm:"not null;index" json:"company_id"`
-	Employees          []*Employee        `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
-	Services           []*Service         `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
-	Appointments       []Appointment      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
-	ServiceDensity     []ServiceDensity   `gorm:"type:jsonb" json:"service_density"`                                    // One-to-many relation with ServiceDensity
-	BranchWorkSchedule []BranchWorkRange  `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	TimeZone           string             `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	BranchDensity      uint               `gorm:"not null;default:1" json:"branch_density"`
-	Design             mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
+	Name                string                 `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"` // Branch name
+	Street              string                 `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"street"`
+	Number              string                 `gorm:"type:varchar(100)" validate:"required,min=1,max=10" json:"number"`
+	Complement          string                 `gorm:"type:varchar(100)" validate:"max=100" json:"complement"`
+	Neighborhood        string                 `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"neighborhood"`
+	ZipCode             string                 `gorm:"type:varchar(100)" validate:"required,min=5,max=8" json:"zip_code"`
+	City                string                 `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"city"`
+	State               string                 `gorm:"type:varchar(100)" validate:"required,min=2,max=20" json:"state"` // State code (e.g., "NY" for New York, "SP" for São Paulo)
+	Country             string                 `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"country"`
+	CompanyID           uuid.UUID              `gorm:"not null;index" json:"company_id"`
+	Employees           []*Employee            `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE"`              // Many-to-many relation with Employee
+	Services            []*Service             `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE"`                // Many-to-many relation with Service
+	Appointments        []Appointment          `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"appointments"` // One-to-many relation with Appointment
+	ServiceDensity      []BranchServiceDensity `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"service_density"`
+	WorkSchedule        []BranchWorkRange      `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
+	TimeZone            string                 `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TotalServiceDensity int32                  `gorm:"not null;default:-1" json:"total_service_density"`
+	Design              mJSON.DesignConfig     `gorm:"type:jsonb" json:"design"`
 }
 
 func (Branch) TableName() string { return "branches" }
@@ -55,6 +55,17 @@ func (b *Branch) BeforeCreate(tx *gorm.DB) error {
 func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
 	if b.CompanyID != uuid.Nil {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	}
+	var serviceDensity []BranchServiceDensity
+	if err := tx.Find(&serviceDensity, "branch_id = ?", b.ID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch service densities: %w", err))
+	}
+	if b.TotalServiceDensity > 0 {
+		for _, sd := range serviceDensity {
+			if sd.Density > b.TotalServiceDensity {
+				return lib.Error.Branch.MaxServiceCapacityReached.WithError(fmt.Errorf("existing service density (%d) from service (%s) exceeding branch density value to update (%d)", sd.Density, sd.ServiceID, b.TotalServiceDensity))
+			}
+		}
 	}
 	return nil
 }

@@ -21,8 +21,6 @@ type Employee struct {
 	Phone                string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags                 []string            `gorm:"type:json" json:"tags"`
 	Password             string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
-	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	Verified             bool                `gorm:"default:false" json:"verified"`
 	SlotTimeDiff         uint                `gorm:"default:30" json:"slot_time_diff"`
 	EmployeeWorkSchedule []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
 	Appointments         []Appointment       `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
@@ -30,6 +28,9 @@ type Employee struct {
 	Branches             []*Branch           `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
 	Services             []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
 	Roles                []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TotalServiceDensity  int32               `gorm:"not null;default:-1" json:"total_service_density"`                            // Total service density for the employee
+	Verified             bool                `gorm:"default:false" json:"verified"`
 	Design               mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
 }
 
