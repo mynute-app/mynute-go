@@ -13,9 +13,9 @@ type ClientAppointments []*ClientAppointment
 
 type ClientAppointment struct {
 	AppointmentID uuid.UUID `json:"appointment_id"`
-	CompanySchema string    `json:"company_schema"`
-	IsCancelled   bool      `json:"is_cancelled"`
+	CompanyID     uuid.UUID `json:"company_id"`
 	StartTime     time.Time `json:"start_time"`
+	TimeZone      string    `json:"time_zone"`
 }
 
 func (cas *ClientAppointments) Value() (driver.Value, error) {
@@ -68,4 +68,26 @@ func (cas *ClientAppointments) UpdateOneById(id uuid.UUID, newCa *ClientAppointm
 			break
 		}
 	}
+}
+
+func (cas *ClientAppointments) InFuture() ClientAppointments {
+	now := time.Now()
+	futureAppointments := ClientAppointments{}
+	for _, ca := range *cas {
+		if ca.StartTime.After(now) {
+			futureAppointments = append(futureAppointments, ca)
+		}
+	}
+	return futureAppointments
+}
+
+func (cas *ClientAppointments) FromPast() ClientAppointments {
+	now := time.Now()
+	pastAppointments := ClientAppointments{}
+	for _, ca := range *cas {
+		if ca.StartTime.Before(now) {
+			pastAppointments = append(pastAppointments, ca)
+		}
+	}
+	return pastAppointments
 }

@@ -93,12 +93,12 @@ func (c *Client) GetFullClient(tx *gorm.DB) error {
 	return nil
 }
 
-func (c *Client) AddAppointment(a *Appointment, companySchema string) {
+func (c *Client) AddAppointment(a *Appointment) {
 	ca := &mJSON.ClientAppointment{
 		AppointmentID: a.ID,
-		CompanySchema: companySchema,
-		IsCancelled:   a.IsCancelled,
+		CompanyID:     a.CompanyID,
 		StartTime:     a.StartTime,
+		TimeZone:      a.TimeZone,
 	}
 
 	c.Appointments.Add(ca)

@@ -93,7 +93,7 @@ func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading company: %w", err))
 	}
-	client.AddAppointment(a, a.Service, &company, a.Branch, a.Employee)
+	client.AddAppointment(a)
 	if err := tx.Save(&client).Error; err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("updating client: %w", err))
 	}
@@ -114,25 +114,23 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
-	if !a.History.IsEmpty() {
-		// This check seems to prevent manual updates to the history field, which is good.
-		// However, our code below will overwrite it anyway. Let's make sure it's what you want.
-		// If the user sends a `history` field in the JSON, it will be in `a.History`.
-		// It's better to tell GORM to ignore any incoming value for this field.
-		tx.Statement.SetColumn("history", nil, true)
-	}
-	// --- End: Validations ---
-
 	// Fetch the original record from the database using the ID from the `a` struct.
-	// NOTE: This relies on `a.ID` being populated before the hook runs.
-	// If `BodyParser` doesn't get the ID, this will fail. A safer way is to get the
-	// ID from the WHERE clause, as in the previous example.
 	var originalAppointment Appointment
 	if err := tx.First(&originalAppointment, "id = ?", a.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.Appointment.NotFound.WithError(fmt.Errorf("appointment ID %s", a.ID))
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading appointment: %w", err))
+	}
+
+	if a.CompanyID != uuid.Nil && a.CompanyID != originalAppointment.CompanyID {
+		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("cannot change company ID"))
+	} else if a.BranchID != uuid.Nil && a.BranchID != originalAppointment.BranchID {
+		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("cannot change branch ID"))
+	} else if a.EmployeeID != uuid.Nil && a.EmployeeID != originalAppointment.EmployeeID {
+		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("cannot change employee ID"))
+	} else if a.ServiceID != uuid.Nil && a.ServiceID != originalAppointment.ServiceID {
+		return lib.Error.Appointment.UpdateFailed.WithError(fmt.Errorf("cannot change service ID"))
 	}
 
 	var changes []mJSON.FieldChange
@@ -142,7 +140,7 @@ func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
 	newVal := reflect.ValueOf(*a) // The incoming struct 'a' has the new data
 
 	// Iterate through all fields of the Appointment struct
-	for i := 0; i < newVal.NumField(); i++ {
+	for i := range newVal.NumField() {
 		fieldStruct := newVal.Type().Field(i)
 		fieldName := fieldStruct.Name
 
@@ -173,14 +171,12 @@ func (a *Appointment) BeforeUpdate(tx *gorm.DB) error {
 			})
 		}
 	}
-	// --- End: The Refactored Comparison Logic ---
 
 	if len(changes) > 0 {
 		err := a.ValidateRules(tx, false)
 		if err != nil {
 			return err
 		}
-		// Append the new changes to the history from the original record
 		a.History.FieldChanges = append(originalAppointment.History.FieldChanges, changes...)
 	}
 
