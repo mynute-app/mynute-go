@@ -44,7 +44,12 @@ func CreateService(c *fiber.Ctx) error {
 //	@Summary		Get service by ID
 //	@Description	Retrieve a service by its ID
 //	@Tags			Service
-//	@Param			id	path	string	true	"Service ID"
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Service ID"
+//	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Service
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -68,7 +73,12 @@ func GetServiceById(c *fiber.Ctx) error {
 //	@Summary		Get service by name
 //	@Description	Retrieve a service by its name
 //	@Tags			Service
-//	@Param			name	path	string	true	"Service Name"
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Service ID"
+//	@Param			name			path		string	true	"Service Name"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Service
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -147,7 +157,7 @@ func DeleteServiceById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Service ID"
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			images	formData	dJSON.Images	true	"Images"
+//	@Param			profile	formData	file	false	"Profile image"
 //	@Success		200		{object}	dJSON.Images
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service/{id}/design/images [patch]
