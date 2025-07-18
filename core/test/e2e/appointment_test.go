@@ -131,10 +131,10 @@ func Test_Appointment(t *testing.T) {
 
 	var a3 modelT.Appointment
 	tt.Describe("Creating conflicting appointment a[3] with client token").Test(
-		a3.Create(409, ct1.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
+		a3.Create(400, ct1.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
 	)
 
 	tt.Describe("Creating conflicting appointment a[3] with employee token").Test(
-		a3.Create(409, baseEmployee.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
+		a3.Create(400, baseEmployee.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
 	)
 }

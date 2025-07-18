@@ -11,7 +11,7 @@ type BranchServiceDensity struct {
 	BaseModel
 	BranchID  uuid.UUID `json:"branch_id" gorm:"primaryKey"`
 	ServiceID uuid.UUID `json:"service_id" gorm:"primaryKey"`
-	Density   int32     `json:"density" gorm:"not null;default:-1"` // Use int32 to allow negative values for unbounded
+	Density   int32     `json:"density" gorm:"not null;default:1"` // Use int32 to allow negative values for unbounded
 }
 
 const BranchServiceDensityTableName = "branch_service_densities"

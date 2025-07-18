@@ -280,11 +280,11 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 
 	// 4. Check Employee Availability (Work Schedule)
 	weekday := a.StartTime.Weekday()
-	aStartTimeUTC := time.Date(2020, 1, 1, a.StartTime.Hour(), a.StartTime.Minute(), 0, 0, a.StartTime.Location()).UTC()
-	aEndTimeUTC := time.Date(2020, 1, 1, a.EndTime.Hour(), a.EndTime.Minute(), 0, 0, a.EndTime.Location()).UTC()
+	aStartTimeHHMMUTC := time.Date(2020, 1, 1, a.StartTime.Hour(), a.StartTime.Minute(), 0, 0, a.StartTime.Location()).UTC()
+	aEndTimeHHMMUTC := time.Date(2020, 1, 1, a.EndTime.Hour(), a.EndTime.Minute(), 0, 0, a.EndTime.Location()).UTC()
 	if err := tx.Model(&EmployeeWorkRange{}).
 		Where("employee_id = ? AND branch_id = ?", a.EmployeeID, a.BranchID).
-		Where("start_time <= ? AND end_time >= ? AND weekday = ?", aStartTimeUTC, aEndTimeUTC, weekday).
+		Where("start_time <= ? AND end_time >= ? AND weekday = ?", aStartTimeHHMMUTC, aEndTimeHHMMUTC, weekday).
 		Count(&count).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
@@ -297,62 +297,74 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	// 5. Overlap and Capacity Checks
-	count = 0
-	overlapCondition := `start_time <= ? AND end_time >= ?`
-	baseOverlapQuery := tx.Model(&Appointment{}).
-		Where("is_cancelled = ?", false).
-		Where("id != ?", a.ID).
-		Where(overlapCondition, aStartTimeUTC, aEndTimeUTC)
+	aStartTimeUTC := a.StartTime.UTC()
+	aEndTimeUTC := a.EndTime.UTC()
+	overlapTime := `start_time <= ? AND end_time >= ?`
+	notSameID := `id != ?`
+	cancelled := `is_cancelled = ?`
+
+	Query := func() *gorm.DB {
+		return tx.Model(&Appointment{}).
+			Where(cancelled, false).
+			Where(notSameID, a.ID).
+			Where(overlapTime, aStartTimeUTC, aEndTimeUTC)
+	}
 
 	// Client Overlap
-	count = 0
-	if err := baseOverlapQuery.Where("client_id = ?", a.ClientID).Count(&count).Error; err != nil {
+	var clientAppointmentsCount int64
+	if err := Query().
+		Where("client_id = ?", a.ClientID).
+		Count(&clientAppointmentsCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
 	}
-	if count > 0 {
+	if clientAppointmentsCount > 0 {
 		return lib.Error.Client.ScheduleConflict
 	}
 
 	// Employee Overlap and Capacities
 	var employeeAppointmentsCount int64
-	if err := baseOverlapQuery.Where("employee_id = ?", a.EmployeeID).Count(&employeeAppointmentsCount).Error; err != nil {
+	if err := Query().
+		Where("employee_id = ?", a.EmployeeID).
+		Count(&employeeAppointmentsCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
 	}
 	if employeeAppointmentsCount > 0 {
-		var employeeTotalServiceDensity int32
+		var employeeTotalServiceDensity int64 // As here it is a field with default set to -1 by gorm tags we don't need to initialize it to -1
 		if err := tx.Model(&Employee{}).Where("id = ?", a.EmployeeID).Pluck("total_service_density", &employeeTotalServiceDensity).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading employee density: %w", err))
 		}
-		if employeeTotalServiceDensity >= 0 && employeeAppointmentsCount >= int64(employeeTotalServiceDensity) {
+		if employeeAppointmentsCount >= employeeTotalServiceDensity {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s has reached its maximum density of %d appointments", a.EmployeeID, employeeTotalServiceDensity))
 		}
-		var serviceDensityForTheEmployee int32
+		serviceDensityForTheEmployee := int64(-1) // Force default to -1 if not found (gorm defaults to 0). It will avoid triggering the subsequent error involuntarily
 		if err := tx.Model(&EmployeeServiceDensity{}).Where("employee_id = ? AND service_id = ?", a.EmployeeID, a.ServiceID).Pluck("density", &serviceDensityForTheEmployee).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading employee service density: %w", err))
 		}
-		if serviceDensityForTheEmployee >= 0 && employeeAppointmentsCount >= int64(serviceDensityForTheEmployee) {
+		if serviceDensityForTheEmployee >= 0 && employeeAppointmentsCount >= serviceDensityForTheEmployee {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s has reached its maximum density of %d appointments for service (%s)", a.EmployeeID, serviceDensityForTheEmployee, a.ServiceID))
 		}
 	}
 
 	// Branch Overlap and Capacities
 	var branchAppointmentsCount int64
-	if err := baseOverlapQuery.Where("branch_id = ?", a.BranchID).Count(&branchAppointmentsCount).Error; err != nil {
+	if err := Query().
+		Where("branch_id = ?", a.BranchID).
+		Count(&branchAppointmentsCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking branch overlap: %w", err))
 	}
 	if branchAppointmentsCount > 0 {
-		var branchTotalServiceDensity int32
+		var branchTotalServiceDensity int32 // As here it is a field with default set to -1 by gorm tags we don't need to initialize it to -1
 		if err := tx.Model(&Branch{}).Where("id = ?", a.BranchID).Pluck("total_service_density", &branchTotalServiceDensity).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch density: %w", err))
 		}
 		if branchTotalServiceDensity >= 0 && branchAppointmentsCount >= int64(branchTotalServiceDensity) {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s has reached its maximum density of %d appointments", a.BranchID, branchTotalServiceDensity))
 		}
-		var serviceDensityForTheBranch int32
+		serviceDensityForTheBranch := int64(-1) // Force default to -1 if not found (gorm defaults to 0). It will avoid triggering the subsequent error involuntarily
 		if err := tx.Model(&BranchServiceDensity{}).Where("branch_id = ? AND service_id = ?", a.BranchID, a.ServiceID).Pluck("density", &serviceDensityForTheBranch).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch service density: %w", err))
 		}
-		if serviceDensityForTheBranch >= 0 && branchAppointmentsCount >= int64(serviceDensityForTheBranch) {
+		if serviceDensityForTheBranch >= 0 && branchAppointmentsCount >= serviceDensityForTheBranch {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s has reached its maximum density of %d appointments for service (%s)", a.BranchID, serviceDensityForTheBranch, a.ServiceID))
 		}
 	}

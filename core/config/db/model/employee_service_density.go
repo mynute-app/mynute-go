@@ -11,7 +11,7 @@ type EmployeeServiceDensity struct {
 	BaseModel
 	EmployeeID uuid.UUID `json:"employee_id" gorm:"primaryKey"`
 	ServiceID  uuid.UUID `json:"service_id" gorm:"primaryKey"`
-	Density    int32     `json:"density" gorm:"not null;default:-1"` // Use int32 to allow negative values for unbounded
+	Density    uint32     `json:"density" gorm:"not null;default:1"` // Use int32 to allow negative values for unbounded
 }
 
 const EmployeeServiceDensityTableName = "employee_service_densities"
@@ -42,12 +42,12 @@ func (esd *EmployeeServiceDensity) BeforeCreate(tx *gorm.DB) error {
 		return fmt.Errorf("employee service density for employee %d and service %d already exists", esd.EmployeeID, esd.ServiceID)
 	}
 
-	var employeeTotalServiceDensity int32
+	var employeeTotalServiceDensity uint32
 	if err := tx.Model(&Employee{}).Where("id = ?", esd.EmployeeID).Pluck("total_service_density", &employeeTotalServiceDensity).Error; err != nil {
 		return fmt.Errorf("error loading employee density: %w", err)
 	}
 
-	if employeeTotalServiceDensity >= 0 && esd.Density > employeeTotalServiceDensity {
+	if esd.Density > employeeTotalServiceDensity {
 		return fmt.Errorf("employee service density %d exceeds employee maximum density %d", esd.Density, employeeTotalServiceDensity)
 	}
 
@@ -60,11 +60,11 @@ func (esd *EmployeeServiceDensity) BeforeUpdate(tx *gorm.DB) error {
 	}
 
 	if esd.Density > 0 {
-		var employeeTotalServiceDensity int32
+		var employeeTotalServiceDensity uint32
 		if err := tx.Model(&Employee{}).Where("id = ?", esd.EmployeeID).Pluck("total_service_density", &employeeTotalServiceDensity).Error; err != nil {
 			return fmt.Errorf("error loading employee density: %w", err)
 		}
-		if employeeTotalServiceDensity >= 0 && esd.Density > employeeTotalServiceDensity {
+		if esd.Density > employeeTotalServiceDensity {
 			return fmt.Errorf("employee service density %d exceeds employee maximum density %d", esd.Density, employeeTotalServiceDensity)
 		}
 	}

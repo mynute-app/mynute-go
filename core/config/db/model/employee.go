@@ -29,7 +29,7 @@ type Employee struct {
 	Services             []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
 	Roles                []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	TotalServiceDensity  int32               `gorm:"not null;default:-1" json:"total_service_density"`                            // Total service density for the employee
+	TotalServiceDensity  uint32              `gorm:"not null;default:1" json:"total_service_density"`                            // Total service density for the employee
 	Verified             bool                `gorm:"default:false" json:"verified"`
 	Design               mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
 }
