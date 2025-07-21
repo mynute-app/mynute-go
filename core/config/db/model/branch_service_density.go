@@ -10,7 +10,9 @@ import (
 type BranchServiceDensity struct {
 	BaseModel
 	BranchID  uuid.UUID `json:"branch_id" gorm:"primaryKey"`
+	Branch    Branch    `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`
 	ServiceID uuid.UUID `json:"service_id" gorm:"primaryKey"`
+	Service   Service   `json:"service" gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
 	Density   int32     `json:"density" gorm:"not null;default:1"` // Use int32 to allow negative values for unbounded
 }
 

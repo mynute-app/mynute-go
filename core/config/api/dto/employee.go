@@ -55,22 +55,24 @@ type CreateEmployee struct {
 type EmployeeFull struct {
 	EmployeeBase
 	Verified             bool                `json:"verified" example:"true"`
+	Email                string              `json:"email" example:"john.doe@example.com"`
+	Phone                string              `json:"phone" example:"+15555555555"`
 	EmployeeWorkSchedule []EmployeeWorkRange `json:"work_schedule"`
 	Appointments         []Appointment       `json:"appointments"`
 	Branches             []BranchBase        `json:"branches"`
 	Services             []ServiceBase       `json:"services"`
 	Roles                []RolePopulated     `json:"roles"`
-	Design               mJSON.DesignConfig  `json:"design"`
 }
 
 // @description	Employee Base DTO
 // @name			EmployeeBaseDTO
 // @tag.name		employee.base.dto
 type EmployeeBase struct {
-	ID        uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Name      string    `json:"name" example:"John"`
-	Surname   string    `json:"surname" example:"Doe"`
-	Email     string    `json:"email" example:"john.doe@example.com"`
-	Phone     string    `json:"phone" example:"+15555555555"`
+	ID                  uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID           uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
+	Name                string             `json:"name" example:"John"`
+	Surname             string             `json:"surname" example:"Doe"`
+	TimeZone            string             `json:"time_zone" example:"America/Sao_Paulo"`
+	TotalServiceDensity uint32             `json:"total_service_density" example:"100"`
+	Design              mJSON.DesignConfig `json:"design"`
 }

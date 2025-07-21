@@ -39,3 +39,28 @@ type ServiceBase struct {
 type ServiceID struct {
 	ID uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
 }
+
+type AvailableEmployeeInfo struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Surname  string    `json:"surname"`
+	TimeZone string    `json:"time_zone"`
+}
+
+type AvailableTimeSlot struct {
+	Time        string      `json:"time"`
+	EmployeesID []uuid.UUID `json:"employees"`
+}
+
+type AvailableDay struct {
+	Date      string              `json:"date"`
+	BranchID  uuid.UUID           `json:"branch_id"`
+	TimeSlots []AvailableTimeSlot `json:"time_slots"`
+}
+
+type ServiceAvailability struct {
+	ServiceID     uuid.UUID      `json:"service_id"`
+	AvailableDays []AvailableDay `json:"available_days"`
+	EmployeeInfo  []EmployeeBase `json:"employee_info"`
+	BranchInfo    []BranchBase   `json:"branch_info"`
+}
