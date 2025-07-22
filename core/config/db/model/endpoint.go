@@ -762,15 +762,6 @@ var GetServiceAvailability = &EndPoint{
 	Resource:         ServiceResource,
 }
 
-var GetScheduleOptions = &EndPoint{
-	Path:           "/schedule/options",
-	Method:         namespace.ViewActionMethod,
-	ControllerName: "GetScheduleOptions",
-	Description:    "Get schedule options",
-	NeedsCompanyId: true,
-	Resource:       CompanyResource,
-}
-
 // --- Combine all Endpoints into a slice for seeding --- //
 var endpoints = []*EndPoint{
 	// Appointment
@@ -863,8 +854,6 @@ var endpoints = []*EndPoint{
 	UpdateServiceImages,
 	DeleteServiceImage,
 	GetServiceAvailability,
-	// Schedule
-	GetScheduleOptions,
 }
 
 type EndpointCfg struct {
