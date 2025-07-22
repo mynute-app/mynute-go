@@ -222,3 +222,23 @@ func (s *Service) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 	}
 	return nil
 }
+
+func (s *Service) GetAvailability(status int, x_company_id *string) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.ExpectedStatus(status)
+	http.URL(fmt.Sprintf("/service/%s/availability", s.Created.ID.String()))
+	http.Header(namespace.HeadersKey.Company, cID)
+	http.Send(nil)
+
+	if http.Error != nil {
+		return fmt.Errorf("failed to get service availability: %w", http.Error)
+	}
+
+	return nil
+}

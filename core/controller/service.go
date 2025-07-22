@@ -210,14 +210,15 @@ func DeleteServiceImage(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.ServiceAvailability
 //	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/service/{id}/availability [get]
 func GetServiceAvailability(c *fiber.Ctx) error {
-	serviceIDStr := c.Query("service_id")
+	serviceIDStr := c.Query("id")
 	if serviceIDStr == "" {
-		return lib.Error.General.BadRequest.WithError(errors.New("service_id query parameter is required"))
+		return lib.Error.General.BadRequest.WithError(errors.New("id query parameter is required"))
 	}
 	serviceID, err := uuid.Parse(serviceIDStr)
 	if err != nil {
-		return lib.Error.General.BadRequest.WithError(errors.New("invalid service_id"))
+		return lib.Error.General.BadRequest.WithError(errors.New("invalid id"))
 	}
 	date_forward_start := c.Query("date_forward_start")
 	if date_forward_start == "" {
@@ -345,6 +346,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 
 				slot := emp.StartTime.In(loc)
 				end := emp.EndTime.In(loc)
+
 				for slot.Before(end) {
 					slotEnd := slot.Add(time.Minute * time.Duration(emp.Employee.SlotTimeDiff))
 
@@ -411,7 +413,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		branchInfo = append(branchInfo, b)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(DTO.ServiceAvailability{
+	return lib.ResponseFactory(c).Send(200, &DTO.ServiceAvailability{
 		ServiceID:     serviceID,
 		AvailableDays: availableDays,
 		EmployeeInfo:  employeeInfo,
@@ -430,5 +432,6 @@ func Service(Gorm *handler.Gorm) {
 		DeleteServiceById,
 		UpdateServiceImages,
 		DeleteServiceImage,
+		GetServiceAvailability,
 	})
 }

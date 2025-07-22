@@ -62,4 +62,7 @@ func Test_Service(t *testing.T) {
 
 	tt.Describe("Service deletion").Test(service.Delete(200, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Get deleted service by ID").Test(service.GetById(404, company.Owner.X_Auth_Token, nil))
+
+	cService := company.Services[0]
+	tt.Describe("Get service availability by ID").Test(cService.GetAvailability(200, &company.Owner.X_Auth_Token))
 }

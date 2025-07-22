@@ -753,6 +753,14 @@ var DeleteServiceImage = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         ServiceResource,
 }
+var GetServiceAvailability = &EndPoint{
+	Path:             "/service/:id/availability",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetServiceAvailability",
+	Description:      "Get availability of a service",
+	NeedsCompanyId:   true,
+	Resource:         ServiceResource,
+}
 
 var GetScheduleOptions = &EndPoint{
 	Path:           "/schedule/options",

@@ -880,7 +880,8 @@ func (c *Company) Create(status int) error {
 	if c == nil {
 		return fmt.Errorf("company receiver is nil")
 	}
-	ownerPswd := "1SecurePswd!"
+	ownerPswd := lib.GenerateValidPassword()
+	ownerEmail := lib.GenerateRandomEmail("owner")
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/company").
@@ -891,7 +892,7 @@ func (c *Company) Create(status int) error {
 			TaxID:          lib.GenerateRandomStrNumber(14),
 			OwnerName:      lib.GenerateRandomName("Owner Name"),
 			OwnerSurname:   lib.GenerateRandomName("Owner Surname"),
-			OwnerEmail:     lib.GenerateRandomEmail("owner"),
+			OwnerEmail:     ownerEmail,
 			OwnerPhone:     lib.GenerateRandomPhoneNumber(),
 			OwnerPassword:  ownerPswd,
 			OwnerTimeZone:  "America/Sao_Paulo",
@@ -907,6 +908,7 @@ func (c *Company) Create(status int) error {
 		Company: c,
 		Created: &owner,
 	}
+	c.Owner.Created.Email = ownerEmail
 	if err := c.Owner.VerifyEmail(200, nil); err != nil {
 		return fmt.Errorf("failed to verify owner email: %w", err)
 	}
