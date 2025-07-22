@@ -290,9 +290,17 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	var appointmentCounts []appointmentCountResult
 
 	// Extrai os IDs dos funcionários para filtrar a query de agendamentos
-	employeeIDs := make([]uuid.UUID, 0, len(empRanges))
+	// --- Extrai os IDs ÚNICOS dos funcionários para filtrar a query de agendamentos ---
+	// Usamos um map como um "set" para garantir que cada ID apareça apenas uma vez.
+	employeeIDSet := make(map[uuid.UUID]struct{})
 	for _, er := range empRanges {
-		employeeIDs = append(employeeIDs, er.EmployeeID)
+		employeeIDSet[er.EmployeeID] = struct{}{}
+	}
+
+	// Agora, convertemos o set de volta para um slice para usar na query do GORM.
+	employeeIDs := make([]uuid.UUID, 0, len(employeeIDSet))
+	for id := range employeeIDSet {
+		employeeIDs = append(employeeIDs, id)
 	}
 
 	if len(employeeIDs) > 0 {
