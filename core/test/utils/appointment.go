@@ -1,10 +1,10 @@
 package utilsT
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
 	"fmt"
+	"mynute-go/core/config/namespace"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
 )
 
 func GetAppointment(s int, appointment_id string, company_id, token string, a *modelT.Appointment) error {

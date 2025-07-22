@@ -1,13 +1,13 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -55,7 +55,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 //	@Router			/appointment/{id} [get]
 func GetAppointmentByID(c *fiber.Ctx) error {
 	var appointment model.Appointment
-	if err := GetOneBy("id", c, &appointment); err != nil {
+	if err := GetOneBy("id", c, &appointment, nil); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {

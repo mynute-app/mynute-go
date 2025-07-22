@@ -1,13 +1,13 @@
 package modelT
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
+	handler "mynute-go/core/test/handlers"
 
 	"github.com/google/uuid"
 )
@@ -133,7 +133,6 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 	e.Created.EmployeeWorkSchedule = updated.WorkRanges
 	return nil
 }
-
 
 func (e *Employee) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token *string, x_company_id *string) error {
 	companyIDStr := e.Company.Created.ID.String()

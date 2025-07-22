@@ -1,10 +1,10 @@
 package database
 
 import (
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/lib"
 	"os"
 	"reflect"
 	"time"

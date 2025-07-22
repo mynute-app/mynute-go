@@ -1,9 +1,9 @@
 package model
 
 import (
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -21,8 +21,6 @@ type Employee struct {
 	Phone                string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags                 []string            `gorm:"type:json" json:"tags"`
 	Password             string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
-	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	Verified             bool                `gorm:"default:false" json:"verified"`
 	SlotTimeDiff         uint                `gorm:"default:30" json:"slot_time_diff"`
 	EmployeeWorkSchedule []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
 	Appointments         []Appointment       `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
@@ -30,6 +28,9 @@ type Employee struct {
 	Branches             []*Branch           `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
 	Services             []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
 	Roles                []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TotalServiceDensity  uint32              `gorm:"not null;default:1" json:"total_service_density"`                            // Total service density for the employee
+	Verified             bool                `gorm:"default:false" json:"verified"`
 	Design               mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
 }
 
@@ -100,9 +101,9 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	var emp_work_schedule []EmployeeWorkRange
 	if err := tx.
-	Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
-	Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
-	Find(&emp_work_schedule).Error; err != nil {
+		Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
+		Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
+		Find(&emp_work_schedule).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return lib.Error.General.InternalError.WithError(err)
 		}

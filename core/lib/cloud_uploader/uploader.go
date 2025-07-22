@@ -1,8 +1,8 @@
 package myUploader
 
 import (
-	"agenda-kaki-go/core/lib"
 	"errors"
+	"mynute-go/core/lib"
 )
 
 type Uploader interface {

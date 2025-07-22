@@ -3315,7 +3315,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -3687,64 +3687,6 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/schedule/options": {
-            "get": {
-                "description": "Retrieve schedule options based on filters like branch, employee, service, and time.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Schedule"
-                ],
-                "summary": "Get schedule options",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by branch ID",
-                        "name": "branch_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by employee ID",
-                        "name": "employee_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by service ID",
-                        "name": "service_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Specify what to retrieve: 'services', 'branches', 'employees', or 'time_slots'",
-                        "name": "get",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
                     }
                 }
             }
@@ -4285,6 +4227,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/service/{id}/availability": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve the availability of a service for the next 30 days",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Get service availability",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service ID",
+                        "name": "service_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client Time Zone (IANA format, e.g., America/New_York)",
+                        "name": "timezone",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "The start date for the forward search in number format",
+                        "name": "date_forward_start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "The end date for the forward search in number format",
+                        "name": "date_forward_end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ServiceAvailability"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/service/{id}/design/images": {
             "patch": {
                 "security": [
@@ -4500,6 +4510,37 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.AvailableDay": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "time_slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.AvailableTimeSlot"
+                    }
+                }
+            }
+        },
+        "DTO.AvailableTimeSlot": {
+            "type": "object",
+            "properties": {
+                "employees": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
         "DTO.BranchBase": {
             "description": "Branch Base DTO",
             "type": "object",
@@ -4552,6 +4593,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "America/New_York"
                 },
+                "total_service_density": {
+                    "type": "integer",
+                    "example": 100
+                },
                 "zip_code": {
                     "type": "string",
                     "example": "10001"
@@ -4567,9 +4612,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/DTO.Appointment"
                     }
-                },
-                "branch_density": {
-                    "type": "integer"
                 },
                 "city": {
                     "type": "string",
@@ -4636,6 +4678,10 @@ const docTemplate = `{
                     "description": "Time zone in IANA format",
                     "type": "string",
                     "example": "America/New_York"
+                },
+                "total_service_density": {
+                    "type": "integer",
+                    "example": 100
                 },
                 "zip_code": {
                     "type": "string",
@@ -5154,9 +5200,8 @@ const docTemplate = `{
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
+                "design": {
+                    "$ref": "#/definitions/mJSON.DesignConfig"
                 },
                 "id": {
                     "type": "string",
@@ -5166,13 +5211,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "John"
                 },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "time_zone": {
+                    "type": "string",
+                    "example": "America/Sao_Paulo"
+                },
+                "total_service_density": {
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },
@@ -5230,6 +5279,14 @@ const docTemplate = `{
                 "surname": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "time_zone": {
+                    "type": "string",
+                    "example": "America/Sao_Paulo"
+                },
+                "total_service_density": {
+                    "type": "integer",
+                    "example": 100
                 },
                 "verified": {
                     "type": "boolean",
@@ -5465,6 +5522,32 @@ const docTemplate = `{
                 "price": {
                     "type": "integer",
                     "example": 150
+                }
+            }
+        },
+        "DTO.ServiceAvailability": {
+            "type": "object",
+            "properties": {
+                "available_days": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.AvailableDay"
+                    }
+                },
+                "branch_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.BranchBase"
+                    }
+                },
+                "employee_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.EmployeeBase"
+                    }
+                },
+                "service_id": {
+                    "type": "string"
                 }
             }
         },

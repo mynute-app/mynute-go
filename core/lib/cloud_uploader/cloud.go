@@ -2,10 +2,10 @@
 package myUploader
 
 import (
-	"agenda-kaki-go/core/lib"
 	"bytes"
 	"context"
 	"fmt"
+	"mynute-go/core/lib"
 	"net/http"
 	"path"
 	"path/filepath"

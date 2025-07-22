@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
 	"log"
+	"mynute-go/core/lib"
 	"os"
 	"strconv"
 

@@ -1,15 +1,15 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	dJSON "agenda-kaki-go/core/config/api/dto/json"
-	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	dJSON "mynute-go/core/config/api/dto/json"
+	"mynute-go/core/config/db/model"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -213,7 +213,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 func UpdateClientById(c *fiber.Ctx) error {
 	var client model.Client
 
-	if err := UpdateOneById(c, &client); err != nil {
+	if err := UpdateOneById(c, &client, nil); err != nil {
 		return err
 	}
 

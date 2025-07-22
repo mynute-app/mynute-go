@@ -1,9 +1,9 @@
 package cloud
 
 import (
-	"agenda-kaki-go/core/lib"
 	"context"
 	"fmt"
+	"mynute-go/core/lib"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-type CloudFlare struct {}
+type CloudFlare struct{}
 
 func (cf *CloudFlare) R2() (*s3.Client, error) {
 	var accountId = os.Getenv("R2_ACCOUNT_ID")

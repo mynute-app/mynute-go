@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"agenda-kaki-go/core/controller"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
+	"mynute-go/core/controller"
+	"mynute-go/core/handler"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -25,7 +25,6 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Holiday(Gorm)
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
-	controller.Schedule(Gorm)
 
 	r := App.Group("/")
 

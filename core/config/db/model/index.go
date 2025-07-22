@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,11 +25,14 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 var TenantModels = []any{
-	&EmployeeWorkRange{},
-	&BranchWorkRange{},
+	
 	&Appointment{},
 	&AppointmentArchive{},
+	&BranchServiceDensity{},
+	&BranchWorkRange{},
 	&Branch{},
+	&EmployeeServiceDensity{},
+	&EmployeeWorkRange{},
 	&Employee{},
 	&Service{},
 	&Payment{},

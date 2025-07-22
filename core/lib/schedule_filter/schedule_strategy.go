@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"agenda-kaki-go/core/config/db/model" // Ensure correct model path
-	// "agenda-kaki-go/core/model" // Your provided path seems to be this
-	"agenda-kaki-go/core/lib"
+	"mynute-go/core/config/db/model" // Ensure correct model path
+	// "mynute-go/core/model" // Your provided path seems to be this
+	"mynute-go/core/lib"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

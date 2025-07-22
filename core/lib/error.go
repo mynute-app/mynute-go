@@ -1,10 +1,10 @@
 package lib
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mynute-go/core/config/namespace"
 
 	"github.com/gofiber/fiber/v2"
 )

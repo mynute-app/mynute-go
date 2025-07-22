@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"agenda-kaki-go/core/config/db/model"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math" // Added for toTime float handling
+	"mynute-go/core/config/db/model"
 	"reflect"
 	"strings"
 	"time"

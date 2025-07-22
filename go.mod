@@ -1,4 +1,4 @@
-module agenda-kaki-go
+module mynute-go
 
 go 1.23.4
 

@@ -1,9 +1,9 @@
 package model
 
 import (
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -93,32 +93,12 @@ func (c *Client) GetFullClient(tx *gorm.DB) error {
 	return nil
 }
 
-func (c *Client) AddAppointment(a *Appointment, s *Service, company *Company, b *Branch, e *Employee) {
-	if c.Appointments == nil {
-		c.Appointments = &mJSON.ClientAppointments{}
-	}
-
+func (c *Client) AddAppointment(a *Appointment) {
 	ca := &mJSON.ClientAppointment{
-		AppointmentID:    a.ID,
-		ServiceName:      s.Name,
-		ServicePrice:     s.Price,
-		ServiceID:        s.ID,
-		CompanyTradeName: company.TradeName,
-		CompanyLegalName: company.LegalName,
-		CompanyID:        a.CompanyID,
-		BranchAddress:    a.Branch.GetAddress(),
-		BranchID:         a.Branch.ID,
-		EmployeeName:     a.Employee.Name,
-		EmployeeID:       a.Employee.ID,
-		IsCancelled:      a.IsCancelled,
-		StartTime:        a.StartTime,
-	}
-
-	if a.Payment != nil {
-		if a.Payment.Price != 0 && a.Payment.Currency != "" {
-			ca.Price = &a.Payment.Price
-			ca.Currency = &a.Payment.Currency
-		}
+		AppointmentID: a.ID,
+		CompanyID:     a.CompanyID,
+		StartTime:     a.StartTime,
+		TimeZone:      a.TimeZone,
 	}
 
 	c.Appointments.Add(ca)

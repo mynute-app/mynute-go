@@ -1,9 +1,9 @@
 package cloud
 
 import (
-	"agenda-kaki-go/core/lib"
 	"context"
 	"fmt"
+	"mynute-go/core/lib"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"

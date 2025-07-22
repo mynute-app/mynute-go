@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"agenda-kaki-go/core/lib"
+	"mynute-go/core/lib"
 
 	"github.com/google/uuid"
 )

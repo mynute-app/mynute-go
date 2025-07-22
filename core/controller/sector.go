@@ -1,11 +1,11 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -51,7 +51,7 @@ func CreateSector(c *fiber.Ctx) error {
 func GetSectorByName(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := GetOneBy("name", c, &sector); err != nil {
+	if err := GetOneBy("name", c, &sector, nil); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func GetSectorByName(c *fiber.Ctx) error {
 func GetSectorById(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := GetOneBy("id", c, &sector); err != nil {
+	if err := GetOneBy("id", c, &sector, nil); err != nil {
 		return err
 	}
 
@@ -105,7 +105,7 @@ func GetSectorById(c *fiber.Ctx) error {
 func UpdateSectorById(c *fiber.Ctx) error {
 	var sector model.Sector
 
-	if err := UpdateOneById(c, &sector); err != nil {
+	if err := UpdateOneById(c, &sector, nil); err != nil {
 		return err
 	}
 

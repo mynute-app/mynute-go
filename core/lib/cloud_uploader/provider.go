@@ -2,9 +2,9 @@
 package myUploader
 
 import (
-	"agenda-kaki-go/core/config/cloud"
 	"context"
 	"fmt"
+	"mynute-go/core/config/cloud"
 	"os"
 	"strings"
 

@@ -1,12 +1,12 @@
 package handler
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"errors"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
 	"os"
 	"time"
 

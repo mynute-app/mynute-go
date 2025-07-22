@@ -1,8 +1,8 @@
 package model
 
 import (
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	"mynute-go/core/lib"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +14,7 @@ type WorkRangeBase struct {
 	Weekday   time.Weekday `json:"weekday" gorm:"not null"`
 	StartTime time.Time    `json:"start_time" gorm:"not null;type:timestamptz"`
 	EndTime   time.Time    `json:"end_time" gorm:"not null;type:timestamptz"`
-	TimeZone  string       `json:"time_zone" gorm:"not null;type:varchar(255)" validate:"required,timezone"` // Time zone of the work range, e.g., "America/New_York"
+	TimeZone  string       `json:"time_zone" gorm:"not null;type:varchar(255)" validate:"required,myTimezoneValidation"` // Time zone of the work range, e.g., "America/New_York"
 	BranchID  uuid.UUID    `json:"branch_id" gorm:"type:uuid;not null;index:idx_branch_id"`
 	Branch    Branch       `json:"branch" gorm:"foreignKey:BranchID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }

@@ -1,10 +1,10 @@
 package e2e
 
 import (
-	"agenda-kaki-go/core/config/namespace"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
 	"fmt"
+	"mynute-go/core/config/namespace"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
 	"reflect"
 )
 

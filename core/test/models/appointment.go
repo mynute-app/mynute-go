@@ -1,16 +1,15 @@
 package modelT
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/test/handlers"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
+	handler "mynute-go/core/test/handlers"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,7 +39,7 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 		return fmt.Errorf("appointment already created, cannot create again")
 	}
 	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
-	appointmentSlot, found, err := a.FindValidAppointmentSlot(e, preferredLocation)
+	appointmentSlot, found, err := a.FindValidAppointmentSlot(e, preferredLocation, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -118,7 +117,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 		return err
 	}
 	preferredLocation := time.UTC // Choose your time_zone (e.g., UTC)
-	appointmentSlot, found, err := a.FindValidAppointmentSlot(a.Employee, preferredLocation)
+	appointmentSlot, found, err := a.FindValidAppointmentSlot(a.Employee, preferredLocation, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to find valid appointment slot: %w", err)
 	}
@@ -308,9 +307,17 @@ const (
 	slotSearchTimeStep    = 15 * time.Minute // Example: check every 15 minutes
 )
 
-func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLocation *time.Location) (*FoundAppointmentSlot, bool, error) {
+func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLocation *time.Location, branchCache *map[string]*model.Branch, serviceCache *map[string]*model.Service) (*FoundAppointmentSlot, bool, error) {
 	if preferredLocation == nil {
 		return nil, false, fmt.Errorf("preferredLocation is nil; time_zone must be explicitly passed")
+	}
+
+	if branchCache == nil {
+		branchCache = &map[string]*model.Branch{}
+	}
+
+	if serviceCache == nil {
+		serviceCache = &map[string]*model.Service{}
 	}
 
 	// fmt.Printf("---- Starting findValidAppointmentSlot for Employee ID: %s ----\n", employee.Created.ID.String())
@@ -328,66 +335,94 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	now := time.Now().In(preferredLocation)
 	searchStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, preferredLocation)
 
-	branchCache := make(map[string]*model.Branch)
-	serviceCache := make(map[string]*model.Service)
-
 	for dayOffset := range slotSearchHorizonDays {
 		currentDate := searchStart.AddDate(0, 0, dayOffset)
 		currentWeekday := currentDate.Weekday()
 		workRanges := weekdaySchedules[currentWeekday]
 
+	wrLoop:
 		for _, wr := range workRanges {
-			branch, ok := branchCache[wr.BranchID.String()]
+			branchID := wr.BranchID.String()
+			branch, ok := (*branchCache)[wr.BranchID.String()]
 			if !ok {
 				var branchModel model.Branch
 				if err := handler.NewHttpClient().
 					Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
 					Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token).
 					Method("GET").
-					URL("/branch/" + wr.BranchID.String()).
+					URL("/branch/" + branchID).
 					ExpectedStatus(200).
 					Send(nil).
 					ParseResponse(&branchModel).Error; err != nil {
-					return nil, false, fmt.Errorf("failed to get branch by ID %s: %w", wr.BranchID.String(), err)
+					return nil, false, fmt.Errorf("failed to get branch by ID %s: %w", branchID, err)
 				}
 				branch = &branchModel
-				branchCache[wr.BranchID.String()] = branch
+				(*branchCache)[branchID] = branch
 			}
-			branchID := branch.ID.String()
-			for _, wrSrvc := range wr.Services {
-				sID := wrSrvc.ID.String()
-				service, ok := serviceCache[sID]
+			for _, wr_srvc := range wr.Services {
+				serviceID := wr_srvc.ID.String()
+				service, ok := (*serviceCache)[serviceID]
 				if !ok {
 					var serviceModel model.Service
 					if err := handler.NewHttpClient().
 						Header(namespace.HeadersKey.Company, employee.Company.Created.ID.String()).
 						Header(namespace.HeadersKey.Auth, employee.Company.Owner.X_Auth_Token).
 						Method("GET").
-						URL("/service/" + sID).
+						URL("/service/" + serviceID).
 						ExpectedStatus(200).
 						Send(nil).
 						ParseResponse(&serviceModel).Error; err != nil {
-						return nil, false, fmt.Errorf("failed to get service by ID %s: %w", sID, err)
+						return nil, false, fmt.Errorf("failed to get service by ID %s: %w", serviceID, err)
 					}
 					service = &serviceModel
-					serviceCache[sID] = service
+					(*serviceCache)[serviceID] = service
 				}
-				duration := time.Duration(service.Duration) * time.Minute
-				startTime := wr.StartTime.In(preferredLocation)
-				endTime := wr.EndTime.In(preferredLocation)
-				// startTime, err := parseTimeWithLocation(currentDate, wr.StartTime.String(), wr.TimeZone, preferredLocation)
-				// if err != nil {
-				// 	return nil, false, fmt.Errorf("failed to parse start time for work range #%d: %w", iWr, err)
-				// }
-				// endTime, err := parseTimeWithLocation(currentDate, wr.EndTime.String(), wr.TimeZone, preferredLocation)
-				// if err != nil || !startTime.Before(endTime) {
-				// 	return nil, false, fmt.Errorf("invalid time range for work range #%d: %w", iWr, err)
-				// }
-				for tStart := startTime; tStart.Add(duration).Before(endTime) || tStart.Add(duration).Equal(endTime); tStart = tStart.Add(slotSearchTimeStep) {
+
+				branchHasService := false
+
+				for _, brnchService := range branch.Services {
+					if brnchService.ID.String() == serviceID {
+						branchHasService = true
+						break
+					}
+				}
+
+				if !branchHasService {
+					return nil, false, fmt.Errorf("work range %s implies that this service %s exists in branch %s but it does not", wr.ID.String(), serviceID, branchID)
+				}
+
+				employeeHasService := false
+
+				for _, empService := range employee.Created.Services {
+					if empService.ID.String() == serviceID {
+						employeeHasService = true
+						break
+					}
+				}
+
+				if !employeeHasService {
+					return nil, false, fmt.Errorf("work range %s implies that this service %s exists in employee %s but it does not", wr.ID.String(), serviceID, employee.Created.ID.String())
+				}
+
+				service_duration := time.Duration(service.Duration) * time.Minute
+				wr_duration := wr.EndTime.Sub(wr.StartTime)
+				wr_startTime_loc := wr.StartTime.In(preferredLocation)
+				initial_allowed_time := time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(),
+					wr_startTime_loc.Hour(), wr_startTime_loc.Minute(), 0, 0, preferredLocation)
+				maximum_allowed_time := initial_allowed_time.Add(wr_duration)
+
+				if initial_allowed_time.Before(now) && maximum_allowed_time.Before(now) {
+					continue wrLoop // Skip this work range if both times are in the past
+				}
+				if initial_allowed_time.After(maximum_allowed_time) {
+					return nil, false, fmt.Errorf("weird behaviour: initial allowed time %s is after maximum allowed time %s for work range %s", initial_allowed_time, maximum_allowed_time, wr.ID.String())
+				}
+				// Log the search parameters
+				for tStart := initial_allowed_time; tStart.Add(service_duration).Before(maximum_allowed_time) || tStart.Add(service_duration).Equal(maximum_allowed_time); tStart = tStart.Add(slotSearchTimeStep) {
+					tEnd := tStart.Add(service_duration)
 					if tStart.Before(now) {
 						continue
 					}
-					tEnd := tStart.Add(duration)
 					overlap := false
 					for _, appt := range employee.Created.Appointments {
 						start := appt.StartTime.In(preferredLocation)
@@ -406,7 +441,7 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 					return &FoundAppointmentSlot{
 						StartTimeRFC3339: tStart.Format(time.RFC3339),
 						BranchID:         branchID,
-						ServiceID:        sID,
+						ServiceID:        serviceID,
 						TimeZone:         preferredLocation.String(),
 					}, true, nil
 				}
@@ -414,49 +449,4 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 		}
 	}
 	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s", employee.Created.ID.String())
-}
-
-// parseTimeWithLocation parses a time string in "HH:MM" (15:04) or "HH:MM:SS" (15:04:05) format and combines it with a given date.
-// It also supports full time.Time string formats like "YYYY-MM-DD HH:MM:SS -LLLL -LL" (0001-01-01 07:00:00 -0300 -03), extracting only the time part.
-//
-// Parameters:
-// - targetDate: the date to apply the parsed time to.
-// - timeStr: a string representing the time, either in "HH:MM", "HH:MM:SS", or full time.Time.String() format.
-// - loc: the time.Location to apply.
-//
-// Returns:
-// - A time.Time with the date from targetDate and the time from timeStr.
-// - An error if parsing fails.
-func parseTimeWithLocation(targetDate time.Time, timeStr string, original_time_zone string, preferred_time_zone *time.Location) (time.Time, error) {
-	// If the input looks like a full time.Time string, extract just the "HH:MM:SS" part
-	if strings.Contains(timeStr, " ") && strings.Contains(timeStr, "-") && strings.Contains(timeStr, ":") {
-		parts := strings.Fields(timeStr)
-		if len(parts) >= 2 {
-			timeStr = parts[1] // Extract only the time portion, e.g., "07:00:00"
-		}
-	}
-
-	// Determine the expected layout based on number of colons
-	layout := "15:04"
-	if strings.Count(timeStr, ":") == 2 {
-		layout = "15:04:05"
-	}
-
-	time_original_time_zone, err := time.LoadLocation(original_time_zone)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid time zone '%s': %w", time_original_time_zone, err)
-	}
-
-	timeParsed, err := time.ParseInLocation(layout, timeStr, time_original_time_zone)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse time string '%s' with layout '%s': %w", timeStr, layout, err)
-	}
-
-	timeInLoc := timeParsed.In(preferred_time_zone)
-
-	return time.Date(
-		targetDate.Year(), targetDate.Month(), targetDate.Day(),
-		timeInLoc.Hour(), timeInLoc.Minute(), timeInLoc.Second(), 0,
-		preferred_time_zone,
-	), nil
 }

@@ -1,16 +1,16 @@
 package core
 
 import (
-	"agenda-kaki-go/core/config/api/routes"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	myUploader "agenda-kaki-go/core/lib/cloud_uploader"
-	"agenda-kaki-go/core/middleware"
 	"fmt"
 	"log"
 	"log/slog"
+	"mynute-go/core/config/api/routes"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	myUploader "mynute-go/core/lib/cloud_uploader"
+	"mynute-go/core/middleware"
 	"os"
 
 	"github.com/gofiber/fiber/v2"

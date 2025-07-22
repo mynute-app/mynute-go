@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -70,6 +71,16 @@ func isValidSubdomain(fl validator.FieldLevel) bool {
 		subdomain[len(subdomain)-1] != '-'
 }
 
+func isValidTimezone(fl validator.FieldLevel) bool {
+	timezone := fl.Field().String()
+	if timezone == "local" || timezone == "Local" {
+		return false
+	}
+	// Check if the timezone is a valid IANA timezone
+	_, err := time.LoadLocation(timezone)
+	return err == nil
+}
+
 // init function to initialize and register the validator
 func init() {
 	ValidatorV10 = validator.New()
@@ -77,6 +88,9 @@ func init() {
 		panic(err)
 	}
 	if err := ValidatorV10.RegisterValidation("mySubdomainValidation", isValidSubdomain); err != nil {
+		panic(err)
+	}
+	if err := ValidatorV10.RegisterValidation("myTimezoneValidation", isValidTimezone); err != nil {
 		panic(err)
 	}
 }

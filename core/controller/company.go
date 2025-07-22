@@ -1,15 +1,15 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	dJSON "agenda-kaki-go/core/config/api/dto/json"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/db/model"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	dJSON "mynute-go/core/config/api/dto/json"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/config/db/model"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
@@ -319,7 +319,7 @@ func UpdateCompanyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := UpdateOneById(c, &company); err != nil {
+	if err := UpdateOneById(c, &company, nil); err != nil {
 		return err
 	}
 

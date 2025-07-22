@@ -1,6 +1,6 @@
 package modelT
 
-import "agenda-kaki-go/core/config/db/model"
+import "mynute-go/core/config/db/model"
 
 type Role struct {
 	Created    *model.Role

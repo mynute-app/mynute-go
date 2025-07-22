@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
 	"fmt"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"

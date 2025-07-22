@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/handler"
 	"fmt"
 	"log"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/handler"
 	"reflect"
 	"runtime"
 	"strings"
@@ -93,7 +93,7 @@ func (ep *Endpoint) RegisterHandler(handler fiber.Handler) {
 
 func getEndpointControllerName(fn fiber.Handler) string {
 	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
-	// Example: "agenda-kaki-go/core/controller.(*appointment_controller).CreateAppointment-fm"
+	// Example: "mynute-go/core/controller.(*appointment_controller).CreateAppointment-fm"
 	parts := strings.Split(fullName, ".")
 	if len(parts) == 0 {
 		return fullName

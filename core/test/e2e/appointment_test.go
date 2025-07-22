@@ -1,10 +1,12 @@
 package e2e_test
 
 import (
-	"agenda-kaki-go/core"
-	handlerT "agenda-kaki-go/core/test/handlers"
-	modelT "agenda-kaki-go/core/test/models"
-	utilsT "agenda-kaki-go/core/test/utils"
+	"mynute-go/core"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	handlerT "mynute-go/core/test/handlers"
+	modelT "mynute-go/core/test/models"
+	utilsT "mynute-go/core/test/utils"
 	"testing"
 	"time"
 
@@ -19,18 +21,53 @@ func Test_Appointment(t *testing.T) {
 	ct := &modelT.Client{}
 	cy := &modelT.Company{}
 
-	tt.Describe("Client creation").Test(ct.Create(200))
-	tt.Describe("Client email verification").Test(ct.VerifyEmail(200))
-	tt.Describe("Client login").Test(ct.Login(200))
-	tt.Describe("Client get by email").Test(ct.GetByEmail(200))
+	tt.Describe("Client creation").Test(ct.Set())
 	tt.Describe("Company setup").Test(cy.Set())
 
 	baseEmployee := cy.Employees[1]
 	Appointments := []*modelT.Appointment{}
 
+	sp_location, err := time.LoadLocation("America/Sao_Paulo")
+	if err != nil {
+		t.Fatalf("Failed to load time zone: %v", err)
+	}
+
+	branchCache := &map[string]*model.Branch{}
+	serviceCache := &map[string]*model.Service{}
+
+	for _, b := range baseEmployee.Created.Branches {
+		var branch model.Branch
+		if err := handlerT.NewHttpClient().
+			Header(namespace.HeadersKey.Company, baseEmployee.Company.Created.ID.String()).
+			Header(namespace.HeadersKey.Auth, baseEmployee.Company.Owner.X_Auth_Token).
+			Method("GET").
+			URL("/branch/" + b.ID.String()).
+			ExpectedStatus(200).
+			Send(nil).
+			ParseResponse(&branch).Error; err != nil {
+			tt.Describe("Fetching branch for employee appointment setup").Test(err)
+		}
+		(*branchCache)[b.ID.String()] = &branch
+	}
+
+	for _, s := range baseEmployee.Created.Services {
+		var service model.Service
+		if err := handlerT.NewHttpClient().
+			Header(namespace.HeadersKey.Company, baseEmployee.Company.Created.ID.String()).
+			Header(namespace.HeadersKey.Auth, baseEmployee.Company.Owner.X_Auth_Token).
+			Method("GET").
+			URL("/service/" + s.ID.String()).
+			ExpectedStatus(200).
+			Send(nil).
+			ParseResponse(&service).Error; err != nil {
+			tt.Describe("Fetching service for employee appointment setup").Test(err)
+		}
+		(*serviceCache)[s.ID.String()] = &service
+	}
+
 	// --- Test Case 0 ---
 	var a0 modelT.Appointment
-	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, time.Local)
+	slot0, found0, err := a0.FindValidAppointmentSlot(baseEmployee, sp_location, branchCache, serviceCache)
 	tt.Describe("Finding valid appointment slot for base employee - slot0").Test(err)
 	if !found0 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
@@ -50,7 +87,7 @@ func Test_Appointment(t *testing.T) {
 
 	// --- Test Case 1 ---
 	var a1 modelT.Appointment
-	slot1, found1, err := a1.FindValidAppointmentSlot(baseEmployee, time.Local)
+	slot1, found1, err := a1.FindValidAppointmentSlot(baseEmployee, sp_location, branchCache, serviceCache)
 	tt.Describe("Finding valid appointment slot for base employee - slot1").Test(err)
 	if !found1 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
@@ -68,7 +105,7 @@ func Test_Appointment(t *testing.T) {
 
 	// --- Test Case 2 ---
 	var a2 modelT.Appointment
-	slot2, found2, err := a2.FindValidAppointmentSlot(baseEmployee, time.Local)
+	slot2, found2, err := a2.FindValidAppointmentSlot(baseEmployee, sp_location, branchCache, serviceCache)
 	tt.Describe("Finding valid appointment slot for base employee - slot2").Test(err)
 	if !found2 {
 		t.Logf("Employee Work Schedule: %+v", baseEmployee.Created.EmployeeWorkSchedule)
@@ -88,11 +125,16 @@ func Test_Appointment(t *testing.T) {
 	if Appointments[0].Created.ID == uuid.Nil {
 		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
-	startTimeConflict := Appointments[0].Created.StartTime.Format(time.RFC3339)
-	timeZoneConflict := Appointments[0].Created.TimeZone
+
+	ct1 := &modelT.Client{}
+	tt.Describe("Client creation for conflicting appointments test").Test(ct1.Set())
 
 	var a3 modelT.Appointment
-	tt.Describe("Creating conflicting appointment a[3]").Test(
-		a3.Create(409, ct.X_Auth_Token, nil, &startTimeConflict, timeZoneConflict, branch0, baseEmployee, service0, cy, ct),
+	tt.Describe("Creating conflicting appointment a[3] with client token").Test(
+		a3.Create(400, ct1.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
+	)
+
+	tt.Describe("Creating conflicting appointment a[3] with employee token").Test(
+		a3.Create(400, baseEmployee.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, branch0, baseEmployee, service0, cy, ct1),
 	)
 }

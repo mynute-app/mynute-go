@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/middleware"
+	"mynute-go/core/handler"
+	"mynute-go/core/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/shareed2k/goth_fiber"

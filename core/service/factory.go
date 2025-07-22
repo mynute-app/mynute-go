@@ -1,12 +1,12 @@
 package service
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
 	"net/url"
 	"reflect"
 
@@ -33,7 +33,13 @@ type service struct {
 	Context *fiber.Ctx
 	MyGorm  *handler.Gorm
 	DeferDB func(err error)
+	NestedPreload *[]string
 	Error   error
+}
+
+func (s *service) SetNestedPreload(preloads *[]string) *service {
+	s.NestedPreload = preloads
+	return s
 }
 
 func (s *service) SetModel(model any) *service {
@@ -69,7 +75,7 @@ func (s *service) GetAll(model any) *service {
 	if s.Error != nil {
 		return s
 	}
-	if err := s.MyGorm.GetAll(model); err != nil {
+	if err := s.MyGorm.SetNestedPreload(s.NestedPreload).GetAll(model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
@@ -87,7 +93,7 @@ func (s *service) GetBy(param string) *service {
 		s.Error = err
 		return s
 	}
-	if err := s.MyGorm.GetOneBy(param, val, s.Model); err != nil {
+	if err := s.MyGorm.SetNestedPreload(s.NestedPreload).GetOneBy(param, val, s.Model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
@@ -105,7 +111,7 @@ func (s *service) ForceGetBy(param string) *service {
 		s.Error = err
 		return s
 	}
-	if err := s.MyGorm.ForceGetOneBy(param, val, s.Model); err != nil {
+	if err := s.MyGorm.SetNestedPreload(s.NestedPreload).ForceGetOneBy(param, val, s.Model); err != nil {
 		s.Error = lib.Error.General.RecordNotFound.WithError(err)
 	}
 	return s
@@ -121,6 +127,7 @@ func (s *service) Create() *service {
 	}
 	if err := s.MyGorm.Create(s.Model); err != nil {
 		s.Error = err
+		return s
 	}
 	HasID := func(model any) (uuid.UUID, bool) {
 		val := reflect.ValueOf(model)
@@ -158,7 +165,7 @@ func (s *service) UpdateOneById() *service {
 		s.Error = lib.Error.General.InternalError.WithError(err)
 		return s
 	}
-	if err := s.MyGorm.UpdateOneById(val, s.Model); err != nil {
+	if err := s.MyGorm.SetNestedPreload(s.NestedPreload).UpdateOneById(val, s.Model); err != nil {
 		s.Error = lib.Error.General.UpdatedError.WithError(err)
 		return s
 	}
@@ -233,7 +240,7 @@ func (s *service) Login(user_type string) (string, error) {
 	if !handler.ComparePassword(password, body.Password) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
-	
+
 	userBytes, err := json.Marshal(s.Model)
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)

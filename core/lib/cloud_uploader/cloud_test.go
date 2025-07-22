@@ -2,8 +2,8 @@
 package myUploader
 
 import (
-	"agenda-kaki-go/core/lib/file_bytes"
 	"context"
+	FileBytes "mynute-go/core/lib/file_bytes"
 	"strings"
 	"testing"
 

@@ -1,7 +1,7 @@
 package DTO
 
 import (
-	dJSON "agenda-kaki-go/core/config/api/dto/json"
+	dJSON "mynute-go/core/config/api/dto/json"
 
 	"github.com/google/uuid"
 )

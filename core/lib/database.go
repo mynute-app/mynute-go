@@ -1,8 +1,8 @@
 package lib
 
 import (
-	"agenda-kaki-go/core/config/namespace"
 	"fmt"
+	"mynute-go/core/config/namespace"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"

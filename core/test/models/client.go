@@ -1,14 +1,14 @@
 package modelT
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	FileBytes "agenda-kaki-go/core/lib/file_bytes"
-	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
+	FileBytes "mynute-go/core/lib/file_bytes"
+	handler "mynute-go/core/test/handlers"
 	"reflect"
 )
 
@@ -31,6 +31,9 @@ func (u *Client) Set() error {
 	if err := u.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil); err != nil {
+		return err
+	}
+	if err := u.GetByEmail(200); err != nil {
 		return err
 	}
 	return nil

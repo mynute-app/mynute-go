@@ -1,15 +1,15 @@
 package middleware
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
 	"net/url"
 	"reflect"
 	"strings"
@@ -93,7 +93,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	if err := change_schema(schema); err != nil {
 		return err
 	}
-	
+
 	if err := tx.Model(user).Preload(clause.Associations).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("subject '%s' with ID '%s' not found at '%s' schema", userIs, claim.ID, schema))

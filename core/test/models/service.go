@@ -1,13 +1,13 @@
 package modelT
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/config/namespace"
-	"agenda-kaki-go/core/lib"
-	handler "agenda-kaki-go/core/test/handlers"
 	"bytes"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/config/namespace"
+	"mynute-go/core/lib"
+	handler "mynute-go/core/test/handlers"
 )
 
 type Service struct {
@@ -220,5 +220,26 @@ func (s *Service) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 			return fmt.Errorf("image content mismatch for %s", imageURL)
 		}
 	}
+	return nil
+}
+
+func (s *Service) GetAvailability(status int, x_company_id *string, from, to int) error {
+	companyIDStr := s.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.ExpectedStatus(status)
+	url := fmt.Sprintf("/service/%s/availability?date_forward_start=%d&date_forward_end=%d", s.Created.ID.String(), from, to)
+	http.URL(url)
+	http.Header(namespace.HeadersKey.Company, cID)
+	http.Send(nil)
+
+	if http.Error != nil {
+		return fmt.Errorf("failed to get service availability: %w", http.Error)
+	}
+
 	return nil
 }

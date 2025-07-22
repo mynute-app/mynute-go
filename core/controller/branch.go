@@ -1,15 +1,15 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	dJSON "agenda-kaki-go/core/config/api/dto/json"
-	database "agenda-kaki-go/core/config/db"
-	"agenda-kaki-go/core/config/db/model"
-	"agenda-kaki-go/core/handler"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/middleware"
 	"encoding/json"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	dJSON "mynute-go/core/config/api/dto/json"
+	database "mynute-go/core/config/db"
+	"mynute-go/core/config/db/model"
+	"mynute-go/core/handler"
+	"mynute-go/core/lib"
+	"mynute-go/core/middleware"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -60,7 +60,7 @@ func CreateBranch(c *fiber.Ctx) error {
 //	@Router			/branch/{id} [get]
 func GetBranchById(c *fiber.Ctx) error {
 	var branch model.Branch
-	if err := GetOneBy("id", c, &branch); err != nil {
+	if err := GetOneBy("id", c, &branch, nil); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
@@ -114,7 +114,7 @@ func GetBranchById(c *fiber.Ctx) error {
 func UpdateBranchById(c *fiber.Ctx) error {
 	var branch model.Branch
 
-	if err := UpdateOneById(c, &branch); err != nil {
+	if err := UpdateOneById(c, &branch, nil); err != nil {
 		return err
 	}
 

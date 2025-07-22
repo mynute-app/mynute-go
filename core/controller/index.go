@@ -1,11 +1,11 @@
 package controller
 
 import (
-	DTO "agenda-kaki-go/core/config/api/dto"
-	mJSON "agenda-kaki-go/core/config/db/model/json"
-	"agenda-kaki-go/core/lib"
-	"agenda-kaki-go/core/service"
 	"fmt"
+	DTO "mynute-go/core/config/api/dto"
+	mJSON "mynute-go/core/config/db/model/json"
+	"mynute-go/core/lib"
+	"mynute-go/core/service"
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,21 +21,21 @@ func Create(c *fiber.Ctx, model any) error {
 	return nil
 }
 
-func GetOneBy(param string, c *fiber.Ctx, model any) error {
+func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string) error {
 	var err error
 	Service := service.New(c)
 	defer Service.DeferDB(err)
-	if err = Service.SetModel(model).GetBy(param).Error; err != nil {
+	if err = Service.SetModel(model).SetNestedPreload(nested_preload).GetBy(param).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func UpdateOneById(c *fiber.Ctx, model any) error {
+func UpdateOneById(c *fiber.Ctx, model any, nested_preload *[]string) error {
 	var err error
 	Service := service.New(c)
 	defer Service.DeferDB(err)
-	if err = Service.SetModel(model).UpdateOneById().Error; err != nil {
+	if err = Service.SetModel(model).SetNestedPreload(nested_preload).UpdateOneById().Error; err != nil {
 		return err
 	}
 	return nil
@@ -186,5 +186,3 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 
 	return &Design, nil
 }
-
-

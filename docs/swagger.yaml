@@ -65,6 +65,26 @@ definitions:
         example: America/New_York
         type: string
     type: object
+  DTO.AvailableDay:
+    properties:
+      branch_id:
+        type: string
+      date:
+        type: string
+      time_slots:
+        items:
+          $ref: '#/definitions/DTO.AvailableTimeSlot'
+        type: array
+    type: object
+  DTO.AvailableTimeSlot:
+    properties:
+      employees:
+        items:
+          type: string
+        type: array
+      time:
+        type: string
+    type: object
   DTO.BranchBase:
     description: Branch Base DTO
     properties:
@@ -104,6 +124,9 @@ definitions:
         description: Time zone in IANA format
         example: America/New_York
         type: string
+      total_service_density:
+        example: 100
+        type: integer
       zip_code:
         example: "10001"
         type: string
@@ -115,8 +138,6 @@ definitions:
         items:
           $ref: '#/definitions/DTO.Appointment'
         type: array
-      branch_density:
-        type: integer
       city:
         example: New York
         type: string
@@ -165,6 +186,9 @@ definitions:
         description: Time zone in IANA format
         example: America/New_York
         type: string
+      total_service_density:
+        example: 100
+        type: integer
       zip_code:
         example: "10001"
         type: string
@@ -547,21 +571,23 @@ definitions:
       company_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      email:
-        example: john.doe@example.com
-        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
       id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
       name:
         example: John
         type: string
-      phone:
-        example: "+15555555555"
-        type: string
       surname:
         example: Doe
         type: string
+      time_zone:
+        example: America/Sao_Paulo
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
     type: object
   DTO.EmployeeFull:
     description: Employee Full DTO
@@ -602,6 +628,12 @@ definitions:
       surname:
         example: Doe
         type: string
+      time_zone:
+        example: America/Sao_Paulo
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
       verified:
         example: true
         type: boolean
@@ -773,6 +805,23 @@ definitions:
       price:
         example: 150
         type: integer
+    type: object
+  DTO.ServiceAvailability:
+    properties:
+      available_days:
+        items:
+          $ref: '#/definitions/DTO.AvailableDay'
+        type: array
+      branch_info:
+        items:
+          $ref: '#/definitions/DTO.BranchBase'
+        type: array
+      employee_info:
+        items:
+          $ref: '#/definitions/DTO.EmployeeBase'
+        type: array
+      service_id:
+        type: string
     type: object
   DTO.ServiceBase:
     description: Service Base DTO
@@ -3123,7 +3172,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.EmployeeFull'
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
         "400":
           description: Bad Request
           schema:
@@ -3464,46 +3513,6 @@ paths:
       summary: Get holiday by name
       tags:
       - Holidays
-  /schedule/options:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve schedule options based on filters like branch, employee,
-        service, and time.
-      parameters:
-      - description: Filter by branch ID
-        in: query
-        name: branch_id
-        type: string
-      - description: Filter by employee ID
-        in: query
-        name: employee_id
-        type: string
-      - description: Filter by service ID
-        in: query
-        name: service_id
-        type: string
-      - description: 'Specify what to retrieve: ''services'', ''branches'', ''employees'',
-          or ''time_slots'''
-        in: query
-        name: get
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful operation
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-      summary: Get schedule options
-      tags:
-      - Schedule
   /sector:
     post:
       consumes:
@@ -3809,6 +3818,51 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update service by ID
+      tags:
+      - Service
+  /service/{id}/availability:
+    get:
+      description: Retrieve the availability of a service for the next 30 days
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: query
+        name: service_id
+        required: true
+        type: string
+      - description: Client Time Zone (IANA format, e.g., America/New_York)
+        in: query
+        name: timezone
+        required: true
+        type: string
+      - description: The start date for the forward search in number format
+        in: query
+        name: date_forward_start
+        required: true
+        type: number
+      - description: The end date for the forward search in number format
+        in: query
+        name: date_forward_end
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.ServiceAvailability'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get service availability
       tags:
       - Service
   /service/{id}/design/images:
