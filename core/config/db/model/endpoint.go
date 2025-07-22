@@ -862,6 +862,7 @@ var endpoints = []*EndPoint{
 	DeleteServiceById,
 	UpdateServiceImages,
 	DeleteServiceImage,
+	GetServiceAvailability,
 	// Schedule
 	GetScheduleOptions,
 }
