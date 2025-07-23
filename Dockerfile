@@ -23,4 +23,4 @@ COPY --from=builder /build ./
 
 EXPOSE 3000
 
-CMD ["./app"]
+CMD ["sh"]
