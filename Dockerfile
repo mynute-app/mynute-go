@@ -1,7 +1,7 @@
 # Etapa 1: build da aplicação
 FROM golang:1.23.11-alpine AS builder
 
-WORKDIR /app/mynute-go
+WORKDIR /build
 
 RUN apk update && apk add --no-cache git
 
@@ -13,13 +13,13 @@ COPY . .
 
 RUN go build -o app .
 
-# Etapa 2: imagem final (runtime enxuto)
+# Etapa 2: imagem final
 FROM alpine:latest
 
 WORKDIR /app/mynute-go
 
-# Copia a pasta inteira do projeto + binário
-COPY --from=builder /app/mynute-go ./
+# Copia tudo pro diretório que o código espera
+COPY --from=builder /build ./ 
 
 EXPOSE 3000
 
