@@ -18,7 +18,7 @@ func FindProjectRoot() (string, error) {
 
 	// Walk up the directory tree until we find `mynute-go`
 	for {
-		if strings.HasSuffix(dir, root_dir) {
+		if filepath.Base(dir) == root_dir {
 			return dir, nil
 		}
 
