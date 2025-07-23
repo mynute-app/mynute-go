@@ -90,8 +90,8 @@ services:
     networks:
       - mynute-app-network
 
-  fiber-app:
-    container_name: fiber-app
+  go-backend-app:
+    container_name: go-backend-app
     build: .
     restart: always
     environment:
@@ -101,6 +101,8 @@ services:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
       - postgres
+      - grafana
+      - loki
     networks:
       - mynute-app-network
     profiles:
