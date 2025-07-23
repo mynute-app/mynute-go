@@ -3,6 +3,8 @@
 # docker-compose -p mynute-go --profile dev -f docker-compose.yml up -d --force-recreate
 # # RUN line below for prod # #
 # docker-compose -p mynute-go --profile prod -f docker-compose.yml up -d --force-recreate
+# # ADD line below for prod in Dokploy > Advanced > Run Command # #
+# compose --profile prod up -d --force-recreate
 #
 
 services:
