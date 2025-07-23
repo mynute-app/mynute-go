@@ -4,7 +4,6 @@ version: '3.8'
 
 services:
   postgres:
-    container_name: postgres
     image: postgres:17.5
     restart: always
     volumes:
@@ -77,7 +76,6 @@ services:
       - mynute-app-network
 
   pgadmin:
-    container_name: pgadmin
     image: dpage/pgadmin4:9.4
     restart: always
     volumes:
@@ -92,7 +90,6 @@ services:
       - mynute-app-network
 
   prometheus:
-    container_name: prometheus
     image: prom/prometheus:v3.4.1
     restart: always
     volumes:
@@ -106,7 +103,6 @@ services:
 
   grafana:
     image: grafana/grafana:12.0.1
-    container_name: grafana
     restart: always
     volumes:
       - grafana-data:/var/lib/grafana
@@ -123,7 +119,6 @@ services:
   loki:
     user: root
     restart: always
-    container_name: loki
     image: grafana/loki:3.5.1
     ports:
       - "3100:3100"
@@ -139,7 +134,6 @@ services:
       - mynute-app-network
 
   minio:
-    container_name: minio
     image: quay.io/minio/minio
     restart: always
     ports:
@@ -155,7 +149,6 @@ services:
       - mynute-app-network
 
   mailhog:
-    container_name: mailhog
     image: mailhog/mailhog
     restart: always
     ports:

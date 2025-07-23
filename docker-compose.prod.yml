@@ -1,16 +1,12 @@
 version: '3.8'
 # # RUN line below for prod in local machine # #
-# # # WINDOWS:
-# # # # docker-compose -p mynute-go -f docker-compose.prod.yml build --no-cache; docker-compose -p mynute-go -f docker-compose.prod.yml up -d --force-recreate
-# # # LINUX:
-# # # # docker-compose -p mynute-go -f docker-compose.prod.yml build --no-cache && docker-compose -p mynute-go -f docker-compose.prod.yml up -d --force-recreate
+# # # docker compose -p mynuteapp-backend-main-go-qibr49 -f ./docker-compose.prod.yml up -d --build --remove-orphans
 
 # # ADD line below for prod in VPS using Dokploy at Advanced > Run Command # #
 # compose build --no-cache && docker compose up -d --force-recreate
 
 services:
   postgres:
-    container_name: postgres
     image: postgres:17.5
     restart: always
     volumes:
@@ -83,7 +79,6 @@ services:
       - mynute-app-network
 
   pgadmin:
-    container_name: pgadmin
     image: dpage/pgadmin4:9.4
     restart: always
     volumes:
@@ -98,7 +93,6 @@ services:
       - mynute-app-network
 
   go-backend-app: # <-- MODIFIED: Added environment variables and updated depends_on
-    container_name: go-backend-app
     build: .
     restart: always
     env_file:
@@ -116,7 +110,6 @@ services:
       - mynute-app-network
 
   prometheus:
-    container_name: prometheus
     image: prom/prometheus:v3.4.1
     restart: always
     volumes:
@@ -130,7 +123,6 @@ services:
 
   grafana:
     image: grafana/grafana:12.0.1
-    container_name: grafana
     restart: always
     volumes:
       - grafana-data:/var/lib/grafana
@@ -147,7 +139,6 @@ services:
   loki:
     user: root
     restart: always
-    container_name: loki
     image: grafana/loki:3.5.1
     ports:
       - "3100:3100"
