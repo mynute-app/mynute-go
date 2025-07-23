@@ -1,19 +1,14 @@
-# 
-# # RUN line below for dev & test # #
-# docker-compose -p mynute-go --profile dev -f docker-compose.yml up -d --force-recreate
-
 # # RUN line below for prod in local machine # #
 # # # WINDOWS:
-# # # # docker-compose -p mynute-go --profile prod -f docker-compose.yml build --no-cache; docker-compose -p mynute-go --profile prod -f docker-compose.yml up -d --force-recreate
+# # # # docker-compose -p mynute-go -f docker-compose.prod.yml build --no-cache; docker-compose -p mynute-go -f docker-compose.prod.yml up -d --force-recreate
 # # # LINUX:
-# # # # docker-compose -p mynute-go --profile prod -f docker-compose.yml build --no-cache && docker-compose -p mynute-go --profile prod -f docker-compose.yml up -d --force-recreate
+# # # # docker-compose -p mynute-go -f docker-compose.prod.yml build --no-cache && docker-compose -p mynute-go -f docker-compose.prod.yml up -d --force-recreate
 
-# # ADD line below for prod in Dokploy > Advanced > Run Command # #
-# compose --profile prod build --no-cache && docker-compose --profile prod up -d --force-recreate
-#
+# # ADD line below for prod in VPS using Dokploy at Advanced > Run Command # #
+# compose build --no-cache && docker compose up -d --force-recreate
 
 services:
-  postgres: # <-- MODIFIED: Added healthcheck
+  postgres:
     container_name: postgres
     image: postgres:17.5
     restart: always
@@ -23,12 +18,12 @@ services:
       - .env
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
-    healthcheck: # <-- ADD THIS BLOCK
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s # Gives time for the init script to run before first check
+      start_period: 30s
     command: >
       bash -c "
         echo '✅   Starting PostgreSQL...';
@@ -107,7 +102,6 @@ services:
     restart: always
     env_file:
       - .env
-
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on: # <-- MODIFY THIS BLOCK
@@ -119,8 +113,6 @@ services:
         condition: service_started
     networks:
       - mynute-app-network
-    profiles:
-      - prod
 
   prometheus:
     container_name: prometheus
@@ -168,39 +160,6 @@ services:
       - loki-wal:/loki/wal
     networks:
       - mynute-app-network
-
-  minio:
-    container_name: minio
-    image: quay.io/minio/minio
-    restart: always
-    ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # Console web
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio-data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - mynute-app-network
-    profiles:
-      - dev
-      - test
-
-  mailhog:
-    container_name: mailhog
-    image: mailhog/mailhog
-    restart: always
-    ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
-    networks:
-      - mynute-app-network
-    profiles:
-      - dev
-      - test
-
       
 networks:
   mynute-app-network:
