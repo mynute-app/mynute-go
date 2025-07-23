@@ -55,7 +55,7 @@ func get_s3_client() (*myS3Client, error) {
 		}
 		return &myS3Client{Client: client}, nil
 	}
-	return nil, fmt.Errorf("unsupported storage driver: %s", driver)
+	return nil, fmt.Errorf("unsupported storage driver: '%s'", driver)
 }
 
 func get_s3_info() (string, string, error) {

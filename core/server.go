@@ -7,7 +7,6 @@ import (
 	"mynute-go/core/config/api/routes"
 	database "mynute-go/core/config/db"
 	"mynute-go/core/config/db/model"
-	"mynute-go/core/handler"
 	"mynute-go/core/lib"
 	myUploader "mynute-go/core/lib/cloud_uploader"
 	"mynute-go/core/middleware"
@@ -32,8 +31,8 @@ func NewServer() *Server {
 	app.Use(middleware.LogV13(logger))
 	lib.LoadEnv()
 	db := database.Connect()
-	session := handler.NewCookieStore(handler.SessionOpts())
-	handler.NewAuth(session)
+	// session := handler.NewCookieStore(handler.SessionOpts())
+	// handler.NewAuth(session)
 	db.Migrate(model.GeneralModels)
 	db.InitialSeed()
 	routes.Build(db.Gorm, app)
