@@ -8,7 +8,7 @@
 #
 
 services:
-  postgres:
+  postgres: # <-- MODIFIED: Added healthcheck
     container_name: postgres
     image: postgres:17.5
     restart: always
@@ -18,6 +18,12 @@ services:
       - .env
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    healthcheck: # <-- ADD THIS BLOCK
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Gives time for the init script to run before first check
     command: >
       bash -c "
         echo '✅   Starting PostgreSQL...';
@@ -90,23 +96,31 @@ services:
     networks:
       - mynute-app-network
 
-  go-backend-app:
+  go-backend-app: # <-- MODIFIED: Added environment variables and updated depends_on
     container_name: go-backend-app
     build: .
     restart: always
     environment:
       - APP_ENV=${APP_ENV}
-      - PORT=${APP_PORT}
+      - APP_PORT=${APP_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST} # <-- ADD THIS
+      - POSTGRES_USER=${POSTGRES_USER} # <-- ADD THIS
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD} # <-- ADD THIS
+      - POSTGRES_DB=${POSTGRES_DB_DEV} # <-- ADD THIS (using dev db)
+      - POSTGRES_PORT=${POSTGRES_PORT} # <-- ADD THIS
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    depends_on:
-      - postgres
-      - grafana
-      - loki
+    depends_on: # <-- MODIFY THIS BLOCK
+      postgres:
+        condition: service_healthy
+      grafana: # These don't need healthchecks unless you have a hard dependency
+        condition: service_started
+      loki:
+        condition: service_started
     networks:
       - mynute-app-network
     profiles:
-      - prod  # Runs only in production
+      - prod
 
   prometheus:
     container_name: prometheus
