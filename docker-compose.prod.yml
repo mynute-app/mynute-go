@@ -1,3 +1,4 @@
+version: '3.8'
 # # RUN line below for prod in local machine # #
 # # # WINDOWS:
 # # # # docker-compose -p mynute-go -f docker-compose.prod.yml build --no-cache; docker-compose -p mynute-go -f docker-compose.prod.yml up -d --force-recreate
