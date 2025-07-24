@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -15,18 +16,24 @@ type LokiEntry struct {
 
 type LokiStream struct {
 	Stream map[string]string `json:"stream"`
-	Values [][2]string        `json:"values"`
+	Values [][2]string       `json:"values"`
 }
 
-type Loki struct {}
+type Loki struct{}
 
 // Deprecated: Use LogV13 instead.
 // Log sends a log message to Loki with the specified labels.
 func (l *Loki) LogV12(message string, labels map[string]string) error {
+	loki_host := os.Getenv("LOKI_HOST")
+	if loki_host == "" {
+		loki_host = "localhost"
+	}
+
+	lokiURL := fmt.Sprintf("http://%s:3100/loki/api/v1/push", loki_host)
+
 	const (
 		maxRetries = 3
 		retryDelay = 1 * time.Second
-		lokiURL    = "http://localhost:3100/loki/api/v1/push"
 	)
 
 	entry := LokiEntry{
@@ -65,11 +72,18 @@ func (l *Loki) LogV12(message string, labels map[string]string) error {
 // The streamLabels parameter is used to set the stream labels for the log entry.
 // It returns an error if the log could not be sent after all retries.
 // Example usage:
-//   logger := myLogger.Loki{}
-//   err := logger.LogV13(map[string]string{"app": "myapp", "level": "info"}, map[string]any{"message": "This is a log message"})
+//
+//	logger := myLogger.Loki{}
+//	err := logger.LogV13(map[string]string{"app": "myapp", "level": "info"}, map[string]any{"message": "This is a log message"})
 func (l *Loki) LogV13(streamLabels map[string]string, bodyLabels map[string]any) error {
+	loki_host := os.Getenv("LOKI_HOST")
+	if loki_host == "" {
+		loki_host = "localhost"
+	}
+
+	lokiURL := fmt.Sprintf("http://%s:3100/loki/api/v1/push", loki_host)
+
 	const (
-		lokiURL    = "http://localhost:3100/loki/api/v1/push"
 		maxRetries = 3
 		retryDelay = 1 * time.Second
 	)

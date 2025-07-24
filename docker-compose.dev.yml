@@ -75,20 +75,6 @@ services:
     networks:
       - mynute-app-network
 
-  pgadmin:
-    image: dpage/pgadmin4:9.4
-    restart: always
-    volumes:
-      - ./pgadmin-data:/var/lib/pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS}
-    ports:
-      - "${PGADMIN_PORT}:80"
-    networks:
-      - mynute-app-network
-
   prometheus:
     image: prom/prometheus:v3.4.1
     restart: always
