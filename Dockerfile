@@ -1,5 +1,5 @@
 # Etapa 1: build da aplicação
-FROM golang:1.23.11-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /mynute-go
 
