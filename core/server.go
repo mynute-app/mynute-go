@@ -35,6 +35,7 @@ func NewServer() *Server {
 	// handler.NewAuth(session)
 	db.Migrate(model.GeneralModels)
 	db.InitialSeed()
+	app.Static("/", "./static")
 	routes.Build(db.Gorm, app)
 	if err := myUploader.StartProvider(); err != nil {
 		panic(err)
