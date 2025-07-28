@@ -13,24 +13,22 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
     env_file:
       - .env
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-maindb}"]
       interval: 300s
       timeout: 5s
       retries: 10
-      start_period: 5s
+      start_period: 15s
     command: >
       bash -c "
         echo '✅   Starting PostgreSQL...';
-        docker-entrypoint.sh postgres & 
+        docker-entrypoint.sh postgres &
 
         # Wait for PostgreSQL to be fully ready
         echo '⏳   Waiting for PostgreSQL to start...';
-        until pg_isready -h localhost -p 5432 -U $POSTGRES_USER; do
+        until pg_isready -h 127.0.0.1 -p 5432 -U $POSTGRES_USER; do
           echo '⏳   Still waiting for PostgreSQL...';
-          sleep 5;
+          sleep 2;
         done;
 
         echo '✅   PostgreSQL is ready! Proceeding with initialization...';
@@ -100,8 +98,6 @@ services:
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
     depends_on:
       - postgres
     networks:
@@ -119,7 +115,7 @@ services:
       interval: 300s
       timeout: 5s
       retries: 10
-      start_period: 5s
+      start_period: 15s
     depends_on:
       - prometheus
       - loki
@@ -133,8 +129,6 @@ services:
     user: root
     restart: always
     image: grafana/loki:3.5.1
-    ports:
-      - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
       - ./loki-config.yaml:/etc/loki/loki-config.yaml
