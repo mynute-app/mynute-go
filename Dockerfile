@@ -21,6 +21,7 @@ FROM alpine:latest
 WORKDIR /mynute-go
 
 COPY --from=builder /mynute-go/mynute-backend-app .
+COPY --from=builder /mynute-go/static ./static
 
 EXPOSE 4000
 
