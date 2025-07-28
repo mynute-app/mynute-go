@@ -114,8 +114,15 @@ services:
       - grafana-data:/var/lib/grafana
     ports:
       - "${GRAFANA_ALIAS_PORT}:${GRAFANA_PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/login"]
+      interval: 300s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     depends_on:
       - prometheus
+      - loki
     networks:
       - mynute-app-network
     environment:
