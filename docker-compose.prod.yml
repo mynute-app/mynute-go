@@ -89,7 +89,7 @@ services:
       postgres:
         condition: service_healthy
       grafana:
-        condition: service_started
+        condition: service_healthy
       loki:
         condition: service_started
     networks:

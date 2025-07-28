@@ -28,6 +28,8 @@ func Build(DB *gorm.DB, App *fiber.App) {
 
 	r := App.Group("/")
 
+	r.Get("/", controller.Home)
+
 	endpoints := &middleware.Endpoint{DB: Gorm}
 	if err := endpoints.Build(r); err != nil {
 		panic(err)
