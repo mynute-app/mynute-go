@@ -840,7 +840,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 			},
 		}),
 	}
-
+	
 	var AllowGetBranchWorkRangeById = &PolicyRule{
 		Name:        "SDP: CanViewBranchWorkRangeById",
 		Description: "Allows company members to view branch work schedules by ID.",

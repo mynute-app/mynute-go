@@ -279,6 +279,45 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetBranchWorkSchedule
+//
+//	@Summary		Get all branch work ranges
+//	@Description	Retrieve all work ranges for a branch
+//	@Tags			BranchWorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			id				path	string	true	"Branch ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.BranchWorkSchedule
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/branch/{id}/work_schedule [get]
+func GetBranchWorkSchedule(c *fiber.Ctx) error {
+	branchID := c.Params("id")
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var bwr []model.BranchWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&bwr, "branch_id = ?", branchID).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
 // GetBranchWorkRange
 //
 //	@Summary		Get branch work range By ID
@@ -292,6 +331,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.BranchWorkRange
 //	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/branch/{id}/work_range/{work_range_id} [get]
 func GetBranchWorkRange(c *fiber.Ctx) error {
 	branchID := c.Params("id")
 	workRangeID := c.Params("work_range_id")
@@ -731,6 +771,7 @@ func Branch(Gorm *handler.Gorm) {
 		UpdateBranchImages,
 		DeleteBranchImage,
 		CreateBranchWorkSchedule,
+		GetBranchWorkSchedule,
 		GetBranchWorkRange,
 		UpdateBranchWorkRange,
 		DeleteBranchWorkRange,

@@ -804,6 +804,65 @@ const docTemplate = `{
             }
         },
         "/branch/{id}/work_range/{work_range_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a branch's work range by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BranchWorkSchedule"
+                ],
+                "summary": "Get branch work range By ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.BranchWorkRange"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -1062,6 +1121,58 @@ const docTemplate = `{
             }
         },
         "/branch/{id}/work_schedule": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all work ranges for a branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BranchWorkSchedule"
+                ],
+                "summary": "Get all branch work ranges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.BranchWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -3393,6 +3504,61 @@ const docTemplate = `{
             }
         },
         "/employee/{id}/work_schedule": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all work ranges for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee - WorkSchedule"
+                ],
+                "summary": "Get all employee's work ranges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -4253,8 +4419,8 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Service ID",
-                        "name": "service_id",
-                        "in": "query",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     },
                     {
@@ -4731,6 +4897,19 @@ const docTemplate = `{
                     "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "DTO.BranchWorkSchedule": {
+            "description": "represents a work schedule for a branch, which is a collection of work ranges.",
+            "type": "object",
+            "properties": {
+                "branch_work_ranges": {
+                    "description": "List of work ranges for the branch",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.BranchWorkRange"
+                    }
                 }
             }
         },
