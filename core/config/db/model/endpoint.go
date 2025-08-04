@@ -245,7 +245,7 @@ var AddBranchWorkRangeServices = &EndPoint{
 	Resource:         BranchResource,
 }
 var DeleteBranchWorkRangeService = &EndPoint{
-	Path:             "/branch/:id/work_range/:work_range_id/services/:service_id",
+	Path:             "/branch/:id/work_range/:work_range_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteBranchWorkRangeService",
 	Description:      "Remove service from work range in branch",
@@ -540,7 +540,7 @@ var GetEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var AddEmployeeWorkRangeServices = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id/service",
+	Path:             "/employee/:id/work_range/:work_range_id/services",
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "AddEmployeeWorkRangeServices",
 	Description:      "Add services to work range for a employee",

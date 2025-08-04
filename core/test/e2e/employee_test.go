@@ -1,9 +1,11 @@
 package e2e_test
 
 import (
+	"fmt"
 	"mynute-go/core"
 
 	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
 	"mynute-go/core/lib"
 	FileBytes "mynute-go/core/lib/file_bytes"
 	handlerT "mynute-go/core/test/handlers"
@@ -75,7 +77,7 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Add branch to employee").Test(employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil))
 	tt.Describe("Employee create work schedule successfully").Test(employee.CreateWorkSchedule(200, EmployeeWorkSchedule, nil, nil))
 	tt.Describe("Get Employee work schedule successfully").Test(employee.GetWorkSchedule(200, nil, nil))
-	wr := employee.Created.EmployeeWorkSchedule[0]
+	wr := employee.Created.WorkSchedule[0]
 	tt.Describe("Updating fail branch work schedule").Test(employee.UpdateWorkRange(400, wr.ID.String(), map[string]any{
 		"start_time": "06:00",
 		"end_time":   "20:00",
@@ -93,6 +95,39 @@ func Test_Employee(t *testing.T) {
 		"time_zone":  "America/Sao_Paulo",
 		"weekday":    1,
 	}, nil, nil))
+
+	removeAllServicesFromWorkRange := func(work_range model.EmployeeWorkRange) error {
+		for _, service := range work_range.Services {
+			if err := employee.RemoveServiceFromWorkRange(200, work_range.ID.String(), service.ID.String(), nil, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tt.Describe("Removing all services from employee work range").Test(removeAllServicesFromWorkRange(wr))
+
+	checkIfAllServicesRemoved := func(work_range model.EmployeeWorkRange) error {
+		for _, ewr := range employee.Created.WorkSchedule {
+			if ewr.ID == work_range.ID && len(ewr.Services) > 0 {
+				return fmt.Errorf("Employee work range %s still has services associated: %v", work_range.ID, ewr.Services)
+			}
+		}
+		return nil
+	}
+
+	tt.Describe("Checking if all services were removed from employee work range").Test(checkIfAllServicesRemoved(wr))
+
+	AddAllServicesBackToWorkRange := func(work_range model.EmployeeWorkRange) error {
+		var services DTO.EmployeeWorkRangeServices
+		for _, service := range work_range.Services {
+			services.Services = append(services.Services, DTO.ServiceID{ID: service.ID})
+		}
+		return employee.AddServicesToWorkRange(200, work_range.ID.String(), services, nil, nil)
+	}
+
+	tt.Describe("Adding all services back to employee work range").Test(AddAllServicesBackToWorkRange(wr))
+
 	tt.Describe("Deleting branch work range").Test(employee.DeleteWorkRange(200, wr.ID.String(), nil, nil))
 
 	tt.Describe("Upload profile image").Test(employee.UploadImages(200, map[string][]byte{

@@ -1,8 +1,10 @@
 package e2e_test
 
 import (
+	"fmt"
 	"mynute-go/core"
 	DTO "mynute-go/core/config/api/dto"
+	"mynute-go/core/config/db/model"
 	FileBytes "mynute-go/core/lib/file_bytes"
 	handlerT "mynute-go/core/test/handlers"
 	modelT "mynute-go/core/test/models"
@@ -42,6 +44,7 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Get Branch work schedule success").Test(branch.GetWorkSchedule(200, "", nil))
+
 	wr := branch.Created.WorkSchedule[0]
 	tt.Describe("Updating fail branch work schedule").Test(branch.UpdateWorkRange(400, wr.ID.String(), map[string]any{
 		"start_time": "06:00",
@@ -54,6 +57,39 @@ func Test_Branch(t *testing.T) {
 		"time_zone":  "America/Sao_Paulo",
 		"weekday":    1,
 	}, company.Owner.X_Auth_Token, nil))
+
+	removeAllServicesFromWorkRange := func(work_range model.BranchWorkRange) error {
+		for _, service := range work_range.Services {
+			if err := branch.RemoveServiceFromWorkRange(200, work_range.ID.String(), service.ID.String(), company.Owner.X_Auth_Token, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tt.Describe("Removing all service from branch work range").Test(removeAllServicesFromWorkRange(wr))
+
+	checkIfAllServicesRemoved := func(work_range model.BranchWorkRange) error {
+		for _, bwr := range branch.Created.WorkSchedule {
+			if bwr.ID == work_range.ID && len(bwr.Services) > 0 {
+				return fmt.Errorf("Branch work range %s still has services associated: %v", work_range.ID, bwr.Services)
+			}
+		}
+		return nil
+	}
+
+	tt.Describe("Checking if all services were removed from branch work range").Test(checkIfAllServicesRemoved(wr))
+
+	AddAllServicesBackToWorkRange := func(work_range model.BranchWorkRange) error {
+		var services DTO.BranchWorkRangeServices
+		for _, service := range work_range.Services {
+			services.Services = append(services.Services, DTO.ServiceID{ID: service.ID})
+		}
+		return branch.AddServicesToWorkRange(200, work_range.ID.String(), services, company.Owner.X_Auth_Token, nil)
+	}
+
+	tt.Describe("Adding all services back to branch work range").Test(AddAllServicesBackToWorkRange(wr))
+
 	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, wr.ID.String(), company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
 	tt.Describe("Getting company by ID").Test(company.GetById(200, company.Owner.X_Auth_Token, nil))

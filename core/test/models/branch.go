@@ -109,6 +109,50 @@ func (b *Branch) GetByName(status int, x_auth_token string, x_company_id *string
 	return nil
 }
 
+func (b *Branch) AddServicesToWorkRange(status int, wrID string, services DTO.BranchWorkRangeServices, x_auth_token string, x_company_id *string) error {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var updated *model.BranchWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL(fmt.Sprintf("/branch/%s/work_range/%s/services", b.Created.ID.String(), wrID)).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(services).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to add services to branch work range: %w", err)
+	}
+	b.Created.WorkSchedule = updated.WorkRanges
+	return nil
+}
+
+func (b *Branch) RemoveServiceFromWorkRange(status int, wrID string, serviceID string, x_auth_token string, x_company_id *string) error {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var updated *model.BranchWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL(fmt.Sprintf("/branch/%s/work_range/%s/service/%s", b.Created.ID.String(), wrID, serviceID)).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(nil).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to remove service from branch work range: %w", err)
+	}
+	b.Created.WorkSchedule = updated.WorkRanges
+	return nil
+}
+
 func (b *Branch) GetById(status int, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
@@ -362,59 +406,59 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 	return DTO.CreateBranchWorkSchedule{
 		WorkRanges: []DTO.CreateBranchWorkRange{
 			{
-				BranchID:  branchID,
-				Weekday:   1,
-				StartTime: "08:00",
-				EndTime:   "20:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 1,
+				StartTime:               "08:00",
+				EndTime:                 "20:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   2,
-				StartTime: "08:00",
-				EndTime:   "20:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 2,
+				StartTime:               "08:00",
+				EndTime:                 "20:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   3,
-				StartTime: "08:00",
-				EndTime:   "20:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 3,
+				StartTime:               "08:00",
+				EndTime:                 "20:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   4,
-				StartTime: "08:00",
-				EndTime:   "20:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 4,
+				StartTime:               "08:00",
+				EndTime:                 "20:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   5,
-				StartTime: "08:00",
-				EndTime:   "20:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 5,
+				StartTime:               "08:00",
+				EndTime:                 "20:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   6,
-				StartTime: "08:00",
-				EndTime:   "12:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 6,
+				StartTime:               "08:00",
+				EndTime:                 "12:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
-				BranchID:  branchID,
-				Weekday:   0,
-				StartTime: "08:00",
-				EndTime:   "12:00",
-				TimeZone:  "America/Sao_Paulo",
+				BranchID:                branchID,
+				Weekday:                 0,
+				StartTime:               "08:00",
+				EndTime:                 "12:00",
+				TimeZone:                "America/Sao_Paulo",
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 		},

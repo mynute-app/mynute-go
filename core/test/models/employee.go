@@ -25,12 +25,12 @@ func (e *Employee) GetID() string        { return e.Created.ID.String() }
 func (e *Employee) GetCompanyID() string { return e.Company.Created.ID.String() }
 func (e *Employee) GetAuthToken() string { return e.X_Auth_Token }
 func (e *Employee) SetWorkRanges(wr []any) error {
-	e.Created.EmployeeWorkSchedule = make([]model.EmployeeWorkRange, len(wr))
+	e.Created.WorkSchedule = make([]model.EmployeeWorkRange, len(wr))
 	for i, v := range wr {
 		if ewr, ok := v.(model.EmployeeWorkRange); !ok {
 			return fmt.Errorf("invalid work range type")
 		} else {
-			e.Created.EmployeeWorkSchedule[i] = ewr
+			e.Created.WorkSchedule[i] = ewr
 		}
 	}
 	return nil
@@ -130,7 +130,7 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 		return fmt.Errorf("failed to update employee work schedule: %w", err)
 	}
 
-	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+	e.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -156,10 +156,9 @@ func (e *Employee) GetWorkSchedule(s int, x_auth_token *string, x_company_id *st
 		Error; err != nil {
 		return fmt.Errorf("failed to get employee work schedule: %w", err)
 	}
-	e.Created.EmployeeWorkSchedule = schedule.WorkRanges
+	e.Created.WorkSchedule = schedule.WorkRanges
 	return nil
 }
-		
 
 func (e *Employee) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token *string, x_company_id *string) error {
 	companyIDStr := e.Company.Created.ID.String()
@@ -183,7 +182,7 @@ func (e *Employee) UpdateWorkRange(status int, wrID string, changes map[string]a
 		Error; err != nil {
 		return fmt.Errorf("failed to update branch work range: %w", err)
 	}
-	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+	e.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -209,7 +208,59 @@ func (e *Employee) DeleteWorkRange(status int, wrID string, x_auth_token *string
 		Error; err != nil {
 		return fmt.Errorf("failed to delete branch work schedule: %w", err)
 	}
-	e.Created.EmployeeWorkSchedule = updated.WorkRanges
+	e.Created.WorkSchedule = updated.WorkRanges
+	return nil
+}
+
+func (e *Employee) AddServicesToWorkRange(s int, wrID string, body DTO.EmployeeWorkRangeServices, x_auth_token *string, x_company_id *string) error {
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var updated *model.EmployeeWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL(fmt.Sprintf("/employee/%s/work_range/%s/services", e.Created.ID.String(), wrID)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(body).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to add services to employee work range: %w", err)
+	}
+	e.Created.WorkSchedule = updated.WorkRanges
+	return nil
+}
+
+func (e *Employee) RemoveServiceFromWorkRange(s int, wrID string, serviceID string, x_auth_token *string, x_company_id *string) error {
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var updated *model.EmployeeWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("DELETE").
+		URL(fmt.Sprintf("/employee/%s/work_range/%s/service/%s", e.Created.ID.String(), wrID, serviceID)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(nil).
+		ParseResponse(&updated).
+		Error; err != nil {
+		return fmt.Errorf("failed to remove service from employee work range: %w", err)
+	}
+	e.Created.WorkSchedule = updated.WorkRanges
 	return nil
 }
 
@@ -558,102 +609,102 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 	return DTO.CreateEmployeeWorkSchedule{
 		WorkRanges: []DTO.CreateEmployeeWorkRange{
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    1,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   1,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    1,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   1,
+				StartTime:                 "13:00",
+				EndTime:                   "17:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    2,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   2,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    2,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   2,
+				StartTime:                 "13:00",
+				EndTime:                   "17:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    3,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   3,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    3,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   3,
+				StartTime:                 "13:00",
+				EndTime:                   "17:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    4,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   4,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    4,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   4,
+				StartTime:                 "13:00",
+				EndTime:                   "17:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    5,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   5,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    5,
-				StartTime:  "13:00",
-				EndTime:    "17:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   5,
+				StartTime:                 "13:00",
+				EndTime:                   "17:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
-				EmployeeID: employeeID,
-				BranchID:   branchID,
-				Weekday:    6,
-				StartTime:  "08:00",
-				EndTime:    "12:00",
-				TimeZone:   "America/Sao_Paulo",
+				EmployeeID:                employeeID,
+				BranchID:                  branchID,
+				Weekday:                   6,
+				StartTime:                 "08:00",
+				EndTime:                   "12:00",
+				TimeZone:                  "America/Sao_Paulo",
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 		},

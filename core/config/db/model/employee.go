@@ -15,23 +15,23 @@ import (
 
 type Employee struct {
 	BaseModel
-	Name                 string              `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
-	Surname              string              `gorm:"type:varchar(100)" validate:"max=100" json:"surname"`
-	Email                string              `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
-	Phone                string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
-	Tags                 []string            `gorm:"type:json" json:"tags"`
-	Password             string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
-	SlotTimeDiff         uint                `gorm:"default:30" json:"slot_time_diff"`
-	EmployeeWorkSchedule []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
-	Appointments         []Appointment       `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
-	CompanyID            uuid.UUID           `gorm:"not null;index" json:"company_id"`
-	Branches             []*Branch           `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
-	Services             []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
-	Roles                []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
-	TimeZone             string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
-	TotalServiceDensity  uint32              `gorm:"not null;default:1" json:"total_service_density"`                            // Total service density for the employee
-	Verified             bool                `gorm:"default:false" json:"verified"`
-	Design               mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
+	Name                string              `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
+	Surname             string              `gorm:"type:varchar(100)" validate:"max=100" json:"surname"`
+	Email               string              `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
+	Phone               string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
+	Tags                []string            `gorm:"type:json" json:"tags"`
+	Password            string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
+	SlotTimeDiff        uint                `gorm:"default:30" json:"slot_time_diff"`
+	WorkSchedule        []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
+	Appointments        []Appointment       `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
+	CompanyID           uuid.UUID           `gorm:"not null;index" json:"company_id"`
+	Branches            []*Branch           `gorm:"many2many:employee_branches;constraint:OnDelete:CASCADE;" json:"branches"`
+	Services            []*Service          `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"services"`
+	Roles               []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
+	TimeZone            string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
+	TotalServiceDensity uint32              `gorm:"not null;default:1" json:"total_service_density"`                             // Total service density for the employee
+	Verified            bool                `gorm:"default:false" json:"verified"`
+	Design              mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
 }
 
 func (Employee) TableName() string  { return "employees" }
@@ -86,10 +86,10 @@ func (e *Employee) HashPassword() error {
 
 func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 	var WorkRanges []EmployeeWorkRange
-	if len(e.EmployeeWorkSchedule) == 0 {
+	if len(e.WorkSchedule) == 0 {
 		return WorkRanges
 	}
-	for _, wr := range e.EmployeeWorkSchedule {
+	for _, wr := range e.WorkSchedule {
 		if wr.Weekday == day {
 			WorkRanges = append(WorkRanges, wr)
 		}

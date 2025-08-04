@@ -63,7 +63,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Router			/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("id", c, &employee, &[]string{"EmployeeWorkSchedule.Services"}); err != nil {
+	if err := GetOneBy("id", c, &employee, &[]string{"WorkSchedule.Services"}); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Router			/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("email", c, &employee, &[]string{"EmployeeWorkSchedule.Services"}); err != nil {
+	if err := GetOneBy("email", c, &employee, &[]string{"WorkSchedule.Services"}); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -603,7 +603,7 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
 func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
-	employee_id := c.Params("employee_id")
+	employee_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
 	var body DTO.EmployeeWorkRangeServices
@@ -673,7 +673,7 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
-	employee_id := c.Params("employee_id")
+	employee_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 	serviceID := c.Params("service_id")
 
