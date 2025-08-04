@@ -598,16 +598,16 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			services	body		[]DTO.ServiceID	true	"Services"
-//	@Success		200			{object}	DTO.EmployeeFull
+//	@Param			services	body		DTO.EmployeeWorkRangeServices	true	"Services"
+//	@Success		200			{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
 func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
-	work_range_id := c.Params("work_range_id")
+	workRangeID := c.Params("work_range_id")
 
-	var services []model.Service
-	if err := c.BodyParser(&services); err != nil {
+	var body DTO.EmployeeWorkRangeServices
+	if err := c.BodyParser(&body); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -619,8 +619,22 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := employee.AddServicesToWorkRange(tx, work_range_id, services); err != nil {
-		return err
+	var wr model.EmployeeWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.EmployeeID.String() != employee.ID.String() {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID mismatch"))
+	}
+
+	wrServices := make([]*model.Service, 0, len(body.Services))
+	for _, s := range body.Services {
+		wrServices = append(wrServices, &model.Service{BaseModel: model.BaseModel{ID: s.ID}})
+	}
+
+	if err := tx.Model(&wr).Association("Services").Append(wrServices); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var ewr []model.EmployeeWorkRange
@@ -655,23 +669,37 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //	@Param			service_id		path		string	true	"Service ID"
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	DTO.EmployeeFull
+//	@Success		200	{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")
-	work_range_id := c.Params("work_range_id")
-	service_id := c.Params("service_id")
+	workRangeID := c.Params("work_range_id")
+	serviceID := c.Params("service_id")
 
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
-	var employee model.Employee
-	employee.ID = uuid.MustParse(employee_id)
-	if err := employee.RemoveServiceFromWorkRange(tx, work_range_id, service_id); err != nil {
-		return err
+	var wr model.EmployeeWorkRange
+	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
+	}
+
+	if wr.EmployeeID.String() != employee_id {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee ID mismatch"))
+	}
+
+	serviceUUID, err := uuid.Parse(serviceID)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid service ID: %w", err))
+	}
+
+	service := &model.Service{BaseModel: model.BaseModel{ID: serviceUUID}}
+
+	if err := tx.Model(&wr).Association("Services").Delete(service); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var ewr []model.EmployeeWorkRange

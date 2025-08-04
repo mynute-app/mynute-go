@@ -511,7 +511,7 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string			true	"X-Company-ID"
 //	@Param			id				path		string			true	"Branch ID"
 //	@Param			work_range_id	path		string			true	"Work Range ID"
-//	@Param			services		body		[]DTO.ServiceID	true	"Services"
+//	@Param			services		body		DTO.BranchWorkRangeServices	true	"Services"
 //	@Success		200				{object}	DTO.BranchFull
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/services [post]
@@ -520,8 +520,8 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 	branch_id := c.Params("id")
 	workRangeID := c.Params("work_range_id")
 
-	var serviceIDs []DTO.ServiceID
-	if err := c.BodyParser(&serviceIDs); err != nil {
+	var body DTO.BranchWorkRangeServices
+	if err := c.BodyParser(&body); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -539,25 +539,27 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
 	}
 
-	services := make([]*model.Service, 0, len(serviceIDs))
-	for _, s := range serviceIDs {
-		services = append(services, &model.Service{BaseModel: model.BaseModel{ID: s.ID}})
+	wrServices := make([]*model.Service, 0, len(body.Services))
+	for _, s := range body.Services {
+		wrServices = append(wrServices, &model.Service{BaseModel: model.BaseModel{ID: s.ID}})
 	}
 
-	if err := tx.Model(&wr).Association("Services").Append(services); err != nil {
+	if err := tx.Model(&wr).Association("Services").Append(wrServices); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var bwr []*model.BranchWorkRange
+	var bwr []model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.BranchWorkRange
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -575,7 +577,7 @@ func AddBranchWorkRangeServices(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Branch ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Param			service_id		path		string	true	"Service ID"
-//	@Success		200				{object}	DTO.BranchFull
+//	@Success		200				{object}	DTO.BranchWorkSchedule
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
@@ -598,21 +600,27 @@ func DeleteBranchWorkRangeService(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch ID mismatch"))
 	}
 
-	serviceUUID := uuid.MustParse(serviceID)
-	if err := tx.Model(&wr).Association("Services").Delete(&model.Service{BaseModel: model.BaseModel{ID: serviceUUID}}); err != nil {
+	serviceUUID, err := uuid.Parse(serviceID)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid service ID: %w", err))
+	}
+	service := &model.Service{BaseModel: model.BaseModel{ID: serviceUUID}}
+	if err := tx.Model(&wr).Association("Services").Delete(service); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var bwr []*model.BranchWorkRange
+	var bwr []model.BranchWorkRange
 	if err := tx.
 		Preload(clause.Associations).
 		Find(&bwr, "branch_id = ?", branch_id).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	var dto []*DTO.BranchWorkRange
+	bws := model.BranchWorkSchedule{
+		WorkRanges: bwr,
+	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &bwr, &dto); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &bws, &DTO.BranchWorkSchedule{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
