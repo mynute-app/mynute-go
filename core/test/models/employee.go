@@ -537,7 +537,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -546,7 +546,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "13:00",
 				EndTime:    "17:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -555,7 +555,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -564,7 +564,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "13:00",
 				EndTime:    "17:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -573,7 +573,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -582,7 +582,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "13:00",
 				EndTime:    "17:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -591,7 +591,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -600,7 +600,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "13:00",
 				EndTime:    "17:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -609,7 +609,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -618,7 +618,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "13:00",
 				EndTime:    "17:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 			{
 				EmployeeID: employeeID,
@@ -627,7 +627,7 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 				StartTime:  "08:00",
 				EndTime:    "12:00",
 				TimeZone:   "America/Sao_Paulo",
-				Services:   servicesID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: servicesID},
 			},
 		},
 	}

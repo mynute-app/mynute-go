@@ -26,7 +26,7 @@ type CreateEmployeeWorkRange struct {
 	StartTime  string      `json:"start_time" example:"09:00" format:"HH:mm"`                  // Start time (date ignored)
 	EndTime    string      `json:"end_time" example:"17:00" format:"HH:mm"`                    // End time (date ignored)
 	TimeZone   string      `json:"time_zone" example:"America/New_York"`                       // Timezone in IANA format, e.g., "America/New_York"
-	Services   []ServiceID `json:"services" swaggertype:"array,object"`                        // List of services associated with the work range
+	EmployeeWorkRangeServices
 }
 
 type UpdateWorkRange struct {
@@ -48,4 +48,8 @@ type EmployeeWorkRange struct {
 	EndTime    string        `json:"end_time" example:"17:00" format:"HH:mm"`                    // End time (date ignored)
 	TimeZone   string        `json:"time_zone" example:"America/New_York"`                       // Timezone in IANA format, e.g., "America/New_York"
 	Services   []ServiceBase `json:"services" swaggertype:"array,object"`                        // List of services associated with the work range
+}
+
+type EmployeeWorkRangeServices struct {
+	Services []ServiceID `json:"services" swaggertype:"array,object"` // List of services associated with the work range
 }

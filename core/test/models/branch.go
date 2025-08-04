@@ -345,7 +345,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "20:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -353,7 +353,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "20:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -361,7 +361,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "20:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -369,7 +369,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "20:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -377,7 +377,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "20:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -385,7 +385,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "12:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 			{
 				BranchID:  branchID,
@@ -393,7 +393,7 @@ func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID
 				StartTime: "08:00",
 				EndTime:   "12:00",
 				TimeZone:  "America/Sao_Paulo",
-				Services:  servicesID,
+				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: servicesID},
 			},
 		},
 	}

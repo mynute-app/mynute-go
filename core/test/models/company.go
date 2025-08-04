@@ -746,7 +746,7 @@ func generateWorkRangesForDay(validBranches []*Branch, employee *Employee, weekd
 			TimeZone:   branch.Created.TimeZone,
 			EmployeeID: employee.Created.ID,
 			BranchID:   branch.Created.ID,
-			Services:   commonServices,
+			EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: commonServices},
 		})
 		lastEndTimeStr = endTimeStr
 	}
