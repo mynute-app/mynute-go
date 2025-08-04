@@ -210,11 +210,11 @@ func DeleteServiceImage(c *fiber.Ctx) error {
 //	@Description	Retrieve the availability of a service for the next 30 days
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			X-Company-ID		header		string	true	"X-Company-ID"
-//	@Param			id			path		string	true	"Service ID"
-//	@Param			timezone			query		string	true	"Client Time Zone (IANA format, e.g., America/New_York)"
-//	@Param			date_forward_start	query		number	true	"The start date for the forward search in number format"
-//	@Param			date_forward_end	query		number	true	"The end date for the forward search in number format"
+//	@Param			X-Company-ID		header	string	true	"X-Company-ID"
+//	@Param			id					path	string	true	"Service ID"
+//	@Param			timezone			query	string	true	"Client Time Zone (IANA format, e.g., America/New_York)"
+//	@Param			date_forward_start	query	number	true	"The start date for the forward search in number format"
+//	@Param			date_forward_end	query	number	true	"The end date for the forward search in number format"
 //	@Produce		json
 //	@Success		200	{object}	DTO.ServiceAvailability
 //	@Failure		400	{object}	DTO.ErrorResponse

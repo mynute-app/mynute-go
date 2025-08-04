@@ -134,6 +134,33 @@ func (e *Employee) CreateWorkSchedule(s int, EmployeeWorkSchedule DTO.CreateEmpl
 	return nil
 }
 
+func (e *Employee) GetWorkSchedule(s int, x_auth_token *string, x_company_id *string) error {
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var schedule *model.EmployeeWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL(fmt.Sprintf("/employee/%s/work_schedule", e.Created.ID.String())).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(nil).
+		ParseResponse(&schedule).
+		Error; err != nil {
+		return fmt.Errorf("failed to get employee work schedule: %w", err)
+	}
+	e.Created.EmployeeWorkSchedule = schedule.WorkRanges
+	return nil
+}
+		
+
 func (e *Employee) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token *string, x_company_id *string) error {
 	companyIDStr := e.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)

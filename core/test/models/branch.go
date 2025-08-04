@@ -292,6 +292,28 @@ func (b *Branch) CreateWorkSchedule(status int, schedule DTO.CreateBranchWorkSch
 	return nil
 }
 
+func (b *Branch) GetWorkSchedule(status int, x_auth_token string, x_company_id *string) error {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	var schedule *model.BranchWorkSchedule
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL(fmt.Sprintf("/branch/%s/work_schedule", b.Created.ID.String())).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(nil).
+		ParseResponse(&schedule).
+		Error; err != nil {
+		return fmt.Errorf("failed to get branch work schedule: %w", err)
+	}
+	b.Created.WorkSchedule = schedule.WorkRanges
+	return nil
+}
+
 func (b *Branch) UpdateWorkRange(status int, wrID string, changes map[string]any, x_auth_token string, x_company_id *string) error {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)

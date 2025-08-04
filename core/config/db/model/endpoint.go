@@ -200,6 +200,14 @@ var DeleteBranchImage = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
+var GetBranchWorkSchedule = &EndPoint{
+	Path:             "/branch/:id/work_schedule",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetBranchWorkSchedule",
+	Description:      "View work schedule for branch",
+	NeedsCompanyId:   true,
+	Resource:         BranchResource,
+}
 var GetBranchWorkRange = &EndPoint{
 	Path:             "/branch/:id/work_range/:work_range_id",
 	Method:           namespace.ViewActionMethod,
@@ -514,6 +522,14 @@ var UpdateEmployeeWorkRange = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
+var GetEmployeeWorkSchedule = &EndPoint{
+	Path:             "/employee/:id/work_schedule",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetEmployeeWorkSchedule",
+	Description:      "View work schedule for employee",
+	NeedsCompanyId:   true,
+	Resource:         EmployeeResource,
+}
 var GetEmployeeWorkRange = &EndPoint{
 	Path:             "/employee/:id/work_range/:work_range_id",
 	Method:           namespace.ViewActionMethod,
@@ -784,6 +800,7 @@ var endpoints = []*EndPoint{
 	UpdateBranchImages,
 	DeleteBranchImage,
 	CreateBranchWorkSchedule,
+	GetBranchWorkSchedule,
 	GetBranchWorkRange,
 	DeleteBranchWorkRange,
 	UpdateBranchWorkRange,
@@ -828,6 +845,7 @@ var endpoints = []*EndPoint{
 	UpdateEmployeeImages,
 	DeleteEmployeeImage,
 	AddEmployeeWorkSchedule,
+	GetEmployeeWorkSchedule,
 	GetEmployeeWorkRange,
 	DeleteEmployeeWorkRange,
 	UpdateEmployeeWorkRange,

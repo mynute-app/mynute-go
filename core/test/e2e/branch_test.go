@@ -41,6 +41,7 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Branch work schedule fail creation").Test(branch.CreateWorkSchedule(400, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
+	tt.Describe("Get Branch work schedule success").Test(branch.GetWorkSchedule(200, "", nil))
 	wr := branch.Created.WorkSchedule[0]
 	tt.Describe("Updating fail branch work schedule").Test(branch.UpdateWorkRange(400, wr.ID.String(), map[string]any{
 		"start_time": "06:00",

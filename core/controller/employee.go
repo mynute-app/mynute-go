@@ -347,6 +347,46 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetEmployeeWorkSchedule
+//
+//	@Summary		Get all employee's work ranges
+//	@Description	Retrieve all work ranges for an employee
+//	@Tags			Employee - WorkSchedule
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil		"Unauthorized"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.EmployeeWorkSchedule
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/{id}/work_schedule [get]
+func GetEmployeeWorkSchedule(c *fiber.Ctx) error {
+	employeeID := c.Params("id")
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	var ewr []model.EmployeeWorkRange
+	if err := tx.
+		Preload(clause.Associations).
+		Find(&ewr, "employee_id = ?", employeeID).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	ews := model.EmployeeWorkSchedule{
+		WorkRanges: ewr,
+	}
+
+	if err := lib.ResponseFactory(c).SendDTO(200, &ews, &DTO.EmployeeWorkSchedule{}); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
 // GetEmployeeWorkRangeById retrieves a work range for an employee
 //
 //	@Summary		Get work range by ID
@@ -912,6 +952,7 @@ func Employee(Gorm *handler.Gorm) {
 		UpdateEmployeeImages,
 		DeleteEmployeeImage,
 		AddEmployeeWorkSchedule,
+		GetEmployeeWorkSchedule,
 		GetEmployeeWorkRangeById,
 		DeleteEmployeeWorkRange,
 		UpdateEmployeeWorkRange,
