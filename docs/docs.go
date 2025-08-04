@@ -1038,7 +1038,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
+                            "$ref": "#/definitions/DTO.BranchWorkSchedule"
                         }
                     },
                     "400": {
@@ -1097,10 +1097,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/DTO.ServiceID"
-                            }
+                            "$ref": "#/definitions/DTO.BranchWorkRangeServices"
                         }
                     }
                 ],
@@ -2900,7 +2897,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -2968,10 +2965,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/DTO.ServiceID"
-                            }
+                            "$ref": "#/definitions/DTO.EmployeeWorkRangeServices"
                         }
                     }
                 ],
@@ -2979,7 +2973,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -4900,6 +4894,18 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.BranchWorkRangeServices": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "description": "List of services associated with the work range",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "DTO.BranchWorkSchedule": {
             "description": "represents a work schedule for a branch, which is a collection of work ranges.",
             "type": "object",
@@ -5529,6 +5535,18 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.EmployeeWorkRangeServices": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "description": "List of services associated with the work range",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "DTO.EmployeeWorkSchedule": {
             "description": "represents a work schedule for an employee, which is a collection of work ranges.",
             "type": "object",
@@ -5771,15 +5789,6 @@ const docTemplate = `{
                     "example": 5
                 },
                 "service_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                }
-            }
-        },
-        "DTO.ServiceID": {
-            "type": "object",
-            "properties": {
-                "id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 }

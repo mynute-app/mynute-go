@@ -507,10 +507,10 @@ func DeleteBranchWorkRange(c *fiber.Ctx) error {
 //	@Description	Add services to a branch's work range
 //	@Tags			BranchWorkSchedule
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string			true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string			true	"X-Company-ID"
-//	@Param			id				path		string			true	"Branch ID"
-//	@Param			work_range_id	path		string			true	"Work Range ID"
+//	@Param			X-Auth-Token	header		string						true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string						true	"X-Company-ID"
+//	@Param			id				path		string						true	"Branch ID"
+//	@Param			work_range_id	path		string						true	"Work Range ID"
 //	@Param			services		body		DTO.BranchWorkRangeServices	true	"Services"
 //	@Success		200				{object}	DTO.BranchFull
 //	@Failure		400				{object}	DTO.ErrorResponse

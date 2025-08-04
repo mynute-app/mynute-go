@@ -229,6 +229,14 @@ definitions:
         example: 1
         type: integer
     type: object
+  DTO.BranchWorkRangeServices:
+    properties:
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+    type: object
   DTO.BranchWorkSchedule:
     description: represents a work schedule for a branch, which is a collection of
       work ranges.
@@ -692,6 +700,14 @@ definitions:
         example: 1
         type: integer
     type: object
+  DTO.EmployeeWorkRangeServices:
+    properties:
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+    type: object
   DTO.EmployeeWorkSchedule:
     description: represents a work schedule for an employee, which is a collection
       of work ranges.
@@ -863,12 +879,6 @@ definitions:
         example: 5
         type: integer
       service_id:
-        example: 00000000-0000-0000-0000-000000000000
-        type: string
-    type: object
-  DTO.ServiceID:
-    properties:
-      id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
     type: object
@@ -1790,7 +1800,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.BranchFull'
+            $ref: '#/definitions/DTO.BranchWorkSchedule'
         "400":
           description: Bad Request
           schema:
@@ -1829,9 +1839,7 @@ paths:
         name: services
         required: true
         schema:
-          items:
-            $ref: '#/definitions/DTO.ServiceID'
-          type: array
+          $ref: '#/definitions/DTO.BranchWorkRangeServices'
       responses:
         "200":
           description: OK
@@ -2869,7 +2877,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.EmployeeFull'
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
         "400":
           description: Bad Request
           schema:
@@ -2912,16 +2920,14 @@ paths:
         name: services
         required: true
         schema:
-          items:
-            $ref: '#/definitions/DTO.ServiceID'
-          type: array
+          $ref: '#/definitions/DTO.EmployeeWorkRangeServices'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DTO.EmployeeFull'
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
         "400":
           description: Bad Request
           schema:
