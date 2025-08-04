@@ -90,6 +90,19 @@ func Test_Branch(t *testing.T) {
 
 	tt.Describe("Adding all services back to branch work range").Test(AddAllServicesBackToWorkRange(wr))
 
+	wrService := wr.Services[0]
+
+	tt.Describe("Add the same service again to branch work range").Test(branch.AddServicesToWorkRange(200, wr.ID.String(), DTO.BranchWorkRangeServices{
+		Services: []DTO.ServiceID{{ID: wrService.ID}},
+	}, company.Owner.X_Auth_Token, nil))
+
+	tt.Describe("Check if the number of services in branch work range is still the same").Test(func() error {
+		if len(branch.Created.WorkSchedule[0].Services) != len(wr.Services) {
+			return fmt.Errorf("Expected %d services, got %d", len(wr.Services), len(branch.Created.WorkSchedule[0].Services))
+		}
+		return nil
+	}())
+
 	tt.Describe("Deleting branch work range").Test(branch.DeleteWorkRange(200, wr.ID.String(), company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding branch to Owner").Test(company.Owner.AddBranch(200, branch, nil, nil))
 	tt.Describe("Getting company by ID").Test(company.GetById(200, company.Owner.X_Auth_Token, nil))
