@@ -342,7 +342,7 @@ func GetBranchWorkRange(c *fiber.Ctx) error {
 	}
 
 	var wr model.BranchWorkRange
-	if err := tx.First(&wr, "id = ?", workRangeID).Error; err != nil {
+	if err := tx.Preload(clause.Associations).First(&wr, "id = ?", workRangeID).Error; err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 	}
 

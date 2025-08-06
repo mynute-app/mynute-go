@@ -412,7 +412,7 @@ func GetEmployeeWorkRangeById(c *fiber.Ctx) error {
 	}
 
 	var workRange model.EmployeeWorkRange
-	if err := tx.First(&workRange, "id = ? AND employee_id = ?", workRangeID, employeeID).Error; err != nil {
+	if err := tx.Preload(clause.Associations).First(&workRange, "id = ? AND employee_id = ?", workRangeID, employeeID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range not found"))
 		}
