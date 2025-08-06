@@ -51,5 +51,5 @@ type EmployeeWorkRange struct {
 }
 
 type EmployeeWorkRangeServices struct {
-	Services []ServiceID `json:"services" swaggertype:"array,object"` // List of services associated with the work range
+	Services []ServiceBase `json:"services" swaggertype:"array,object"` // List of services associated with the work range
 }

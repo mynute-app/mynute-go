@@ -65,7 +65,7 @@ func Test_Employee(t *testing.T) {
 
 	tt.Describe("Employee login").Test(employee.Login(200, nil))
 
-	ServicesID := []DTO.ServiceID{
+	ServicesID := []DTO.ServiceBase{
 		{ID: service.Created.ID},
 	}
 
@@ -121,7 +121,7 @@ func Test_Employee(t *testing.T) {
 	AddAllServicesBackToWorkRange := func(work_range model.EmployeeWorkRange) error {
 		var services DTO.EmployeeWorkRangeServices
 		for _, service := range work_range.Services {
-			services.Services = append(services.Services, DTO.ServiceID{ID: service.ID})
+			services.Services = append(services.Services, DTO.ServiceBase{ID: service.ID})
 		}
 		return employee.AddServicesToWorkRange(200, work_range.ID.String(), services, nil, nil)
 	}
@@ -131,7 +131,7 @@ func Test_Employee(t *testing.T) {
 	wrService := wr.Services[0]
 
 	tt.Describe("Add the same service again to employee work range").Test(employee.AddServicesToWorkRange(200, wr.ID.String(), DTO.EmployeeWorkRangeServices{
-		Services: []DTO.ServiceID{{ID: wrService.ID}},
+		Services: []DTO.ServiceBase{{ID: wrService.ID}},
 	}, nil, nil))
 
 	tt.Describe("Check if the number of services in employee work range is still the same").Test(func() error {

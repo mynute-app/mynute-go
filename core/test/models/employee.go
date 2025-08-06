@@ -605,7 +605,7 @@ func Get_x_company_id(priority *string, secundary *string) (string, error) {
 	return "", fmt.Errorf("no company ID provided")
 }
 
-func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateEmployeeWorkSchedule {
+func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, servicesID []DTO.ServiceBase) DTO.CreateEmployeeWorkSchedule {
 	return DTO.CreateEmployeeWorkSchedule{
 		WorkRanges: []DTO.CreateEmployeeWorkRange{
 			{

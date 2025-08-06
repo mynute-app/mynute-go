@@ -48,9 +48,9 @@ func (c *Company) Set() error {
 		c.Services = append(c.Services, service)
 	}
 
-	servicesID := make([]DTO.ServiceID, len(c.Services))
+	servicesID := make([]DTO.ServiceBase, len(c.Services))
 	for i, service := range c.Services {
-		servicesID[i] = DTO.ServiceID{ID: service.Created.ID}
+		servicesID[i] = DTO.ServiceBase{ID: service.Created.ID}
 	}
 
 	for range 1 {
@@ -729,10 +729,10 @@ func generateWorkRangesForDay(validBranches []*Branch, employee *Employee, weekd
 		for _, s := range employee.Created.Services {
 			employeeServices[s.ID] = true
 		}
-		var commonServices []DTO.ServiceID
+		var commonServices []DTO.ServiceBase
 		for _, s := range branch.Services {
 			if _, ok := employeeServices[s.Created.ID]; ok {
-				commonServices = append(commonServices, DTO.ServiceID{ID: s.Created.ID})
+				commonServices = append(commonServices, DTO.ServiceBase{ID: s.Created.ID})
 			}
 		}
 		if len(commonServices) == 0 {

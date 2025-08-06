@@ -402,7 +402,7 @@ func (b *Branch) DeleteWorkRange(status int, wrID string, x_auth_token string, x
 	return nil
 }
 
-func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceID) DTO.CreateBranchWorkSchedule {
+func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceBase) DTO.CreateBranchWorkSchedule {
 	return DTO.CreateBranchWorkSchedule{
 		WorkRanges: []DTO.CreateBranchWorkRange{
 			{
