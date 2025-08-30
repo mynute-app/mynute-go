@@ -65,7 +65,7 @@ definitions:
         example: America/New_York
         type: string
     type: object
-  DTO.AvailableDay:
+  DTO.AvailableDate:
     properties:
       branch_id:
         type: string
@@ -73,10 +73,10 @@ definitions:
         type: string
       time_slots:
         items:
-          $ref: '#/definitions/DTO.AvailableTimeSlot'
+          $ref: '#/definitions/DTO.AvailableTime'
         type: array
     type: object
-  DTO.AvailableTimeSlot:
+  DTO.AvailableTime:
     properties:
       employees:
         items:
@@ -834,9 +834,9 @@ definitions:
     type: object
   DTO.ServiceAvailability:
     properties:
-      available_days:
+      available_dates:
         items:
-          $ref: '#/definitions/DTO.AvailableDay'
+          $ref: '#/definitions/DTO.AvailableDate'
         type: array
       branch_info:
         items:

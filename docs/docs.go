@@ -4670,7 +4670,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.AvailableDay": {
+        "DTO.AvailableDate": {
             "type": "object",
             "properties": {
                 "branch_id": {
@@ -4682,12 +4682,12 @@ const docTemplate = `{
                 "time_slots": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.AvailableTimeSlot"
+                        "$ref": "#/definitions/DTO.AvailableTime"
                     }
                 }
             }
         },
-        "DTO.AvailableTimeSlot": {
+        "DTO.AvailableTime": {
             "type": "object",
             "properties": {
                 "employees": {
@@ -5725,10 +5725,10 @@ const docTemplate = `{
         "DTO.ServiceAvailability": {
             "type": "object",
             "properties": {
-                "available_days": {
+                "available_dates": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.AvailableDay"
+                        "$ref": "#/definitions/DTO.AvailableDate"
                     }
                 },
                 "branch_info": {
