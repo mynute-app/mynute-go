@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	DTO "mynute-go/core/config/api/dto"
@@ -248,8 +249,14 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	if dfe <= dfs {
 		return lib.Error.General.BadRequest.WithError(errors.New("date_forward_end must be greater than date_forward_start"))
 	}
-	if dfe-dfs > 30 {
-		return lib.Error.General.BadRequest.WithError(errors.New("date search range (date_forward_end - date_forward_start) must not exceed 30 days"))
+	if dfe-dfs > 31 {
+		return lib.Error.General.BadRequest.WithError(errors.New("date search range (date_forward_end - date_forward_start) must not exceed 31 days"))
+	}
+	if dfe > 100 {
+		return lib.Error.General.BadRequest.WithError(errors.New("date_forward_end must not exceed 100 days in the future"))
+	}
+	if dfs < 0 {
+		return lib.Error.General.BadRequest.WithError(errors.New("date_forward_start must not be negative"))
 	}
 
 	companyIDStr := c.Get("X-Company-ID")
@@ -407,10 +414,26 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 
 							// Populate info maps if not already present
 							if _, ok := branchInfoMap[branchID]; !ok {
-								branchInfoMap[branchID] = DTO.BranchBase{ /* ... map from empRange.Branch ... */ }
+								empRangeBranchBytes, err := json.Marshal(empRange.Branch)
+								if err != nil {
+									return fmt.Errorf("failed to marshal branch info: %w", err)
+								}
+								var dtoBranchBase DTO.BranchBase
+								if err := json.Unmarshal(empRangeBranchBytes, &dtoBranchBase); err != nil {
+									return fmt.Errorf("failed to unmarshal branch info: %w", err)
+								}
+								branchInfoMap[branchID] = dtoBranchBase
 							}
 							if _, ok := employeeInfoMap[emp.ID]; !ok {
-								employeeInfoMap[emp.ID] = DTO.EmployeeBase{ /* ... map from emp ... */ }
+								empBytes, err := json.Marshal(emp)
+								if err != nil {
+									return fmt.Errorf("failed to marshal employee info: %w", err)
+								}
+								var dtoEmployeeBase DTO.EmployeeBase
+								if err := json.Unmarshal(empBytes, &dtoEmployeeBase); err != nil {
+									return fmt.Errorf("failed to unmarshal employee info: %w", err)
+								}
+								employeeInfoMap[emp.ID] = dtoEmployeeBase
 							}
 						}
 
@@ -421,20 +444,20 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		}
 	}
 
-	var availableDays []DTO.AvailableDay
+	var availableDates []DTO.AvailableDate
 	for date, branches := range availabilityMap {
 		for branchID, slots := range branches {
-			var timeSlots []DTO.AvailableTimeSlot
+			var availableTimes []DTO.AvailableTime
 			for timeStr, empIDs := range slots {
-				timeSlots = append(timeSlots, DTO.AvailableTimeSlot{
+				availableTimes = append(availableTimes, DTO.AvailableTime{
 					Time:        timeStr,
 					EmployeesID: empIDs,
 				})
 			}
-			availableDays = append(availableDays, DTO.AvailableDay{
-				Date:      date,
-				BranchID:  branchID,
-				TimeSlots: timeSlots,
+			availableDates = append(availableDates, DTO.AvailableDate{
+				Date:           date,
+				BranchID:       branchID,
+				AvailableTimes: availableTimes,
 			})
 		}
 	}
@@ -450,10 +473,10 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	}
 
 	return lib.ResponseFactory(c).Send(200, &DTO.ServiceAvailability{
-		ServiceID:     serviceID,
-		AvailableDays: availableDays,
-		EmployeeInfo:  employeeInfo,
-		BranchInfo:    branchInfo,
+		ServiceID:      serviceID,
+		AvailableDates: availableDates,
+		EmployeeInfo:   employeeInfo,
+		BranchInfo:     branchInfo,
 	})
 }
 

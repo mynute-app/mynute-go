@@ -47,20 +47,20 @@ type AvailableEmployeeInfo struct {
 	TimeZone string    `json:"time_zone"`
 }
 
-type AvailableTimeSlot struct {
+type AvailableTime struct {
 	Time        string      `json:"time"`
 	EmployeesID []uuid.UUID `json:"employees"`
 }
 
-type AvailableDay struct {
-	Date      string              `json:"date"`
-	BranchID  uuid.UUID           `json:"branch_id"`
-	TimeSlots []AvailableTimeSlot `json:"time_slots"`
+type AvailableDate struct {
+	Date           string          `json:"date"`
+	BranchID       uuid.UUID       `json:"branch_id"`
+	AvailableTimes []AvailableTime `json:"time_slots"`
 }
 
 type ServiceAvailability struct {
-	ServiceID     uuid.UUID      `json:"service_id"`
-	AvailableDays []AvailableDay `json:"available_days"`
-	EmployeeInfo  []EmployeeBase `json:"employee_info"`
-	BranchInfo    []BranchBase   `json:"branch_info"`
+	ServiceID      uuid.UUID       `json:"service_id"`
+	AvailableDates []AvailableDate `json:"available_dates"`
+	EmployeeInfo   []EmployeeBase  `json:"employee_info"`
+	BranchInfo     []BranchBase    `json:"branch_info"`
 }
