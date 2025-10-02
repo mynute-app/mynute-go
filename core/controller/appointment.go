@@ -21,8 +21,6 @@ import (
 //	@Tags			Appointment
 //	@Accept			json
 //	@Produce		json
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
 //	@Success		200				{object}	DTO.Appointment

@@ -1135,11 +1135,6 @@ paths:
       - application/json
       description: Create an appointment
       parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
       - description: X-Company-ID
         in: header
         name: X-Company-ID
@@ -1162,8 +1157,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
       summary: Create appointment
       tags:
       - Appointment

@@ -46,7 +46,7 @@ var CreateAppointment = &EndPoint{
 	ControllerName:   "CreateAppointment",
 	Description:      "Create an appointment",
 	NeedsCompanyId:   true,
-	DenyUnauthorized: true,
+	DenyUnauthorized: false,
 	Resource:         BranchResource,
 }
 var GetAppointmentByID = &EndPoint{

@@ -32,13 +32,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "X-Company-ID",
                         "name": "X-Company-ID",
                         "in": "header",
@@ -66,9 +59,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             }
