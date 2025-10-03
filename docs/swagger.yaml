@@ -2153,11 +2153,6 @@ paths:
     get:
       description: Retrieve an client by its email
       parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
       - description: Client Email
         in: path
         name: email
@@ -2174,10 +2169,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
       summary: Get client by email
       tags:
       - Client
