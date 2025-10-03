@@ -444,22 +444,40 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		}
 	}
 
-	var availableDates []DTO.AvailableDate
+	availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}
+
 	for date, branches := range availabilityMap {
-		for branchID, slots := range branches {
-			var availableTimes []DTO.AvailableTime
-			for timeStr, empIDs := range slots {
-				availableTimes = append(availableTimes, DTO.AvailableTime{
-					Time:        timeStr,
-					EmployeesID: empIDs,
-				})
+			if _, ok := availableDateMap[date]; !ok {
+					availableDateMap[date] = map[uuid.UUID]*DTO.AvailableDate{}
 			}
-			availableDates = append(availableDates, DTO.AvailableDate{
-				Date:           date,
-				BranchID:       branchID,
-				AvailableTimes: availableTimes,
-			})
-		}
+
+			for branchID, slots := range branches {
+					if _, ok := availableDateMap[date][branchID]; !ok {
+							availableDateMap[date][branchID] = &DTO.AvailableDate{
+									Date:           date,
+									BranchID:       branchID,
+									AvailableTimes: []DTO.AvailableTime{},
+							}
+					}
+
+					for timeStr, empIDs := range slots {
+							availableDateMap[date][branchID].AvailableTimes = append(
+									availableDateMap[date][branchID].AvailableTimes,
+									DTO.AvailableTime{
+											Time:        timeStr,
+											EmployeesID: empIDs,
+									},
+							)
+					}
+			}
+	}
+
+	// Flatten into slice
+	var availableDates []DTO.AvailableDate
+	for _, branches := range availableDateMap {
+			for _, ad := range branches {
+					availableDates = append(availableDates, *ad)
+			}
 	}
 
 	// Convert maps to slices
