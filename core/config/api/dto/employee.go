@@ -58,7 +58,6 @@ type EmployeeFull struct {
 	Email                string              `json:"email" example:"john.doe@example.com"`
 	Phone                string              `json:"phone" example:"+15555555555"`
 	EmployeeWorkSchedule []EmployeeWorkRange `json:"work_schedule"`
-	Appointments         []Appointment       `json:"appointments"`
 	Branches             []BranchBase        `json:"branches"`
 	Services             []ServiceBase       `json:"services"`
 	Roles                []RolePopulated     `json:"roles"`
