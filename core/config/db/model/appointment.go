@@ -93,7 +93,7 @@ func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading company: %w", err))
 	}
-	client.AddAppointment(a)
+	client.AddAppointment(a, tx)
 	if err := tx.Save(&client).Error; err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("updating client: %w", err))
 	}
@@ -318,6 +318,12 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
 	}
 	if clientAppointmentsCount > 0 {
+		var Appointments []Appointment
+		if err := Query().
+			Where("client_id = ?", a.ClientID).
+			Find(&Appointments).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("db error loading client overlapping appointments: %w", err))
+		}
 		return lib.Error.Client.ScheduleConflict
 	}
 

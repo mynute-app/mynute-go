@@ -5,7 +5,6 @@ import (
 	DTO "mynute-go/core/config/api/dto"
 	dJSON "mynute-go/core/config/api/dto/json"
 	"mynute-go/core/config/db/model"
-	mJSON "mynute-go/core/config/db/model/json"
 	"mynute-go/core/config/namespace"
 	"mynute-go/core/handler"
 	"mynute-go/core/lib"
@@ -36,7 +35,6 @@ func CreateClient(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	client.Appointments = &mJSON.ClientAppointments{}
 	if err := tx.Model(&model.Client{}).Create(&client).Error; err != nil {
 		return err
 	}
@@ -180,10 +178,10 @@ func GetClientAppointments(c *fiber.Ctx) error {
 		return err
 	}
 
-	var appointments mJSON.ClientAppointments
-	if err := tx.Model(&model.Client{}).
-		Where("id = ?", id).
-		Pluck("appointments", &appointments).Error; err != nil {
+	var Appointments []model.ClientAppointment
+	if err := tx.Model(&model.ClientAppointment{}).
+	Where("client_id = ?", id).
+	Find(&Appointments).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
@@ -191,7 +189,7 @@ func GetClientAppointments(c *fiber.Ctx) error {
 	}
 
 	return lib.ResponseFactory(c).Send(200, fiber.Map{
-		"appointments": appointments,
+		"appointments": Appointments,
 	})
 }
 

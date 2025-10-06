@@ -1,8 +1,6 @@
 package DTO
 
 import (
-	mJSON "mynute-go/core/config/db/model/json"
-
 	"github.com/google/uuid"
 )
 
@@ -29,11 +27,10 @@ type Client struct {
 }
 
 type ClientPopulated struct {
-	ID           uuid.UUID                 `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	Name         string                    `json:"name" example:"John"`
-	Surname      string                    `json:"surname" example:"Doe"`
-	Email        string                    `json:"email" example:"john.doe@example.com"`
-	Phone        string                    `json:"phone" example:"+1-555-555-5555"`
-	Verified     bool                      `json:"verified" example:"false"`
-	Appointments *mJSON.ClientAppointments `json:"appointments"` // Appointments associated with the client
+	ID       uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	Name     string    `json:"name" example:"John"`
+	Surname  string    `json:"surname" example:"Doe"`
+	Email    string    `json:"email" example:"john.doe@example.com"`
+	Phone    string    `json:"phone" example:"+1-555-555-5555"`
+	Verified bool      `json:"verified" example:"false"`
 }
