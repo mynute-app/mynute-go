@@ -221,9 +221,13 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	if err := ct.GetByEmail(200); err != nil {
 		return err
 	}
-	a.Client.Appointments = append(a.Client.Appointments, a)
-	a.Employee.Appointments = append(a.Employee.Appointments, a)
-	a.Branch.Appointments = append(a.Branch.Appointments, a)
+	ct.Appointments = append(ct.Appointments, a)
+	e.Appointments = append(e.Appointments, a)
+	b.Appointments = append(b.Appointments, a)
+	a.Employee = e
+	a.Company = cy
+	a.Service = s
+	a.Branch = b
 	return nil
 }
 

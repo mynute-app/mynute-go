@@ -309,7 +309,8 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
 			}
 		} else if schema == "company" {
-			if err := lib.ChangeToCompanySchema(tx, a.CompanyID.String()); err != nil {
+			companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
+			if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
 				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
 			}
 		}
@@ -398,6 +399,9 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 	if clientAppointmentsCount > 0 {
 		return lib.Error.Client.ScheduleConflict
+	}
+	if err := ChangeSchema("company"); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
 	}
 
 	return nil // All validations passed

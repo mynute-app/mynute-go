@@ -100,9 +100,16 @@ func (c *Client) AddAppointment(a *Appointment, tx *gorm.DB) error {
 		StartTime:     a.StartTime,
 		TimeZone:      a.TimeZone,
 	}
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
+	}
 	tx.Create(&appointment)
 	if err := tx.Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
+	if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
 	}
 	return nil
 }
