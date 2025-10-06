@@ -299,37 +299,33 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	// 5. Overlap and Capacity Checks
 	aStartTimeUTC := a.StartTime.UTC()
 	aEndTimeUTC := a.EndTime.UTC()
-	overlapTime := `start_time <= ? AND end_time >= ?`
+	overlapTime := `? > start_time AND end_time > ?`
 	notSameID := `id != ?`
 	cancelled := `is_cancelled = ?`
 
-	Query := func() *gorm.DB {
-		return tx.Model(&Appointment{}).
-			Where(cancelled, false).
-			Where(notSameID, a.ID).
-			Where(overlapTime, aStartTimeUTC, aEndTimeUTC)
+	ChangeSchema := func(schema string) error {
+		if schema == "public" {
+			if err := lib.ChangeToPublicSchema(tx); err != nil {
+				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
+			}
+		} else if schema == "company" {
+			if err := lib.ChangeToCompanySchema(tx, a.CompanyID.String()); err != nil {
+				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
+			}
+		}
+		return nil
 	}
 
-	// Client Overlap
-	var clientAppointmentsCount int64
-	if err := Query().
-		Where("client_id = ?", a.ClientID).
-		Count(&clientAppointmentsCount).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
-	}
-	if clientAppointmentsCount > 0 {
-		var Appointments []Appointment
-		if err := Query().
-			Where("client_id = ?", a.ClientID).
-			Find(&Appointments).Error; err != nil {
-			return lib.Error.General.InternalError.WithError(fmt.Errorf("db error loading client overlapping appointments: %w", err))
-		}
-		return lib.Error.Client.ScheduleConflict
+	Query := func(v interface{}) *gorm.DB {
+		return tx.Model(v).
+			Where(cancelled, false).
+			Where(notSameID, a.ID).
+			Where(overlapTime, aEndTimeUTC, aStartTimeUTC)
 	}
 
 	// Employee Overlap and Capacities
 	var employeeAppointmentsCount int64
-	if err := Query().
+	if err := Query(&Appointment{}).
 		Where("employee_id = ?", a.EmployeeID).
 		Count(&employeeAppointmentsCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking employee overlap: %w", err))
@@ -353,7 +349,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 
 	// Branch Overlap and Capacities
 	var branchAppointmentsCount int64
-	if err := Query().
+	if err := Query(&Appointment{}).
 		Where("branch_id = ?", a.BranchID).
 		Count(&branchAppointmentsCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking branch overlap: %w", err))
@@ -373,6 +369,32 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		if serviceDensityForTheBranch >= 0 && branchAppointmentsCount >= serviceDensityForTheBranch {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("branch %s has reached its maximum density of %d appointments for service (%s)", a.BranchID, serviceDensityForTheBranch, a.ServiceID))
 		}
+	}
+
+	// Client Overlap (Under Company Schema Search)
+	var clientAppointmentsCount int64
+	if err := Query(&Appointment{}).
+		Where("client_id = ?", a.ClientID).
+		Count(&clientAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
+	}
+	if clientAppointmentsCount > 0 {
+		return lib.Error.Client.ScheduleConflict
+	}
+
+	// Client Overlap (Under Public Schema Search)
+	if err := ChangeSchema("public"); err != nil {
+		return err
+	}
+	clientAppointmentsCount = 0
+	if err := Query(&ClientAppointment{}).
+		Where("client_id = ?", a.ClientID).
+		Where("company_id != ?", a.CompanyID).
+		Count(&clientAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
+	}
+	if clientAppointmentsCount > 0 {
+		return lib.Error.Client.ScheduleConflict
 	}
 
 	return nil // All validations passed
