@@ -3,24 +3,24 @@ package e2e_test
 import (
 	"fmt"
 
-	"mynute-go/src"
-	DTO "mynute-go/src/config/api/dto"
-	"mynute-go/src/config/db/model"
-	"mynute-go/src/lib"
-	FileBytes "mynute-go/src/lib/file_bytes"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core"
+	"mynute-go/core/src/config/api/dto"
+	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/file_bytes"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
+	coreModel "mynute-go/core/src/config/db/model"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
 func Test_Employee(t *testing.T) {
-	server := src.NewServer().Run("parallel")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 
-	tt := handlerT.NewTestErrorHandler(t)
-	c := &modelT.Company{}
+	tt := handler.NewTestErrorHandler(t)
+	c := &model.Company{}
 
 	tt.Describe("Company setup").Test(c.Set()) // Cria company, employees, branches, services
 
@@ -69,7 +69,7 @@ func Test_Employee(t *testing.T) {
 		{ID: service.Created.ID},
 	}
 
-	EmployeeWorkSchedule := modelT.GetExampleEmployeeWorkSchedule(employee.Created.ID, branch.Created.ID, ServicesID)
+	EmployeeWorkSchedule := model.GetExampleEmployeeWorkSchedule(employee.Created.ID, branch.Created.ID, ServicesID)
 
 	tt.Describe("Employee create work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
 	tt.Describe("Add service to employee").Test(employee.AddService(200, service, &c.Owner.X_Auth_Token, nil))
@@ -96,7 +96,7 @@ func Test_Employee(t *testing.T) {
 		"weekday":    1,
 	}, nil, nil))
 
-	removeAllServicesFromWorkRange := func(work_range model.EmployeeWorkRange) error {
+	removeAllServicesFromWorkRange := func(work_range coreModel.EmployeeWorkRange) error {
 		for _, service := range work_range.Services {
 			if err := employee.RemoveServiceFromWorkRange(200, work_range.ID.String(), service.ID.String(), nil, nil); err != nil {
 				return err
@@ -107,7 +107,7 @@ func Test_Employee(t *testing.T) {
 
 	tt.Describe("Removing all services from employee work range").Test(removeAllServicesFromWorkRange(wr))
 
-	checkIfAllServicesRemoved := func(work_range model.EmployeeWorkRange) error {
+	checkIfAllServicesRemoved := func(work_range coreModel.EmployeeWorkRange) error {
 		for _, ewr := range employee.Created.WorkSchedule {
 			if ewr.ID == work_range.ID && len(ewr.Services) > 0 {
 				return fmt.Errorf("Employee work range %s still has services associated: %v", work_range.ID, ewr.Services)
@@ -118,7 +118,7 @@ func Test_Employee(t *testing.T) {
 
 	tt.Describe("Checking if all services were removed from employee work range").Test(checkIfAllServicesRemoved(wr))
 
-	AddAllServicesBackToWorkRange := func(work_range model.EmployeeWorkRange) error {
+	AddAllServicesBackToWorkRange := func(work_range coreModel.EmployeeWorkRange) error {
 		var services DTO.EmployeeWorkRangeServices
 		for _, service := range work_range.Services {
 			services.Services = append(services.Services, DTO.ServiceBase{ID: service.ID})

@@ -2,20 +2,20 @@ package e2e
 
 import (
 	"fmt"
-	"mynute-go/src/config/namespace"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core/src/config/namespace"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
 	"reflect"
 )
 
-type WorkScheduleModelTarget interface {
+type WorkSchedulemodelarget interface {
 	GetID() string
 	GetCompanyID() string
 	GetAuthToken() string
 	SetWorkRanges([]any)
 }
 
-func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, status int, schedule any, x_auth_token string, x_company_id *string) error {
+func CreateWorkSchedule[T any](target WorkSchedulemodelarget, entity string, status int, schedule any, x_auth_token string, x_company_id *string) error {
 	// Validar WorkRanges
 	v := reflect.ValueOf(schedule)
 	if v.Kind() == reflect.Ptr {
@@ -27,14 +27,14 @@ func CreateWorkSchedule[T any](target WorkScheduleModelTarget, entity string, st
 
 	// Preparar headers
 	tCompanyID := target.GetCompanyID()
-	cID, err := modelT.Get_x_company_id(x_company_id, &tCompanyID)
+	cID, err := model.Get_x_company_id(x_company_id, &tCompanyID)
 	if err != nil {
 		return err
 	}
 
 	// Requisição
 	var updated T
-	err = handlerT.NewHttpClient().
+	err = handler.NewHttpClient().
 		Method("POST").
 		URL(fmt.Sprintf("/%s/%s/work_schedule", entity, target.GetID())).
 		ExpectedStatus(status).

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"mynute-go/core"
 	_ "mynute-go/docs"
-	core "mynute-go/src"
 )
 
 // @title						GO-Fiber API

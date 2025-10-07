@@ -1,12 +1,11 @@
 package e2e_test
 
 import (
-	"mynute-go/src"
-	"mynute-go/src/config/db/model"
-	"mynute-go/src/lib"
-	FileBytes "mynute-go/src/lib/file_bytes"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core"
+	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/file_bytes"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
 
 	"testing"
 )
@@ -17,11 +16,11 @@ type Client struct {
 }
 
 func Test_Client(t *testing.T) {
-	server := src.NewServer().Run("parallel")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 
-	tt := handlerT.NewTestErrorHandler(t)
-	client := &modelT.Client{}
+	tt := handler.NewTestErrorHandler(t)
+	client := &model.Client{}
 
 	tt.Describe("Client creation").Test(client.Create(200))
 	tt.Describe("Client email verification").Test(client.VerifyEmail(200))

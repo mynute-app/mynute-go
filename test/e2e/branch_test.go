@@ -3,12 +3,12 @@ package e2e_test
 import (
 	"fmt"
 
-	"mynute-go/src"
-	DTO "mynute-go/src/config/api/dto"
-	"mynute-go/src/config/db/model"
-	FileBytes "mynute-go/src/lib/file_bytes"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core"
+	"mynute-go/core/src/config/api/dto"
+	"mynute-go/core/src/lib/file_bytes"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
+	coreModel "mynute-go/core/src/config/db/model"
 
 	"testing"
 
@@ -16,15 +16,15 @@ import (
 )
 
 func Test_Branch(t *testing.T) {
-	server := src.NewServer().Run("parallel")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 
-	tt := handlerT.NewTestErrorHandler(t)
+	tt := handler.NewTestErrorHandler(t)
 
-	company := &modelT.Company{}
+	company := &model.Company{}
 	tt.Describe("Company creation").Test(company.Create(200))
 
-	branch := &modelT.Branch{}
+	branch := &model.Branch{}
 	branch.Company = company
 	tt.Describe("Branch creation").Test(branch.Create(200, company.Owner.X_Auth_Token, nil))
 
@@ -35,12 +35,12 @@ func Test_Branch(t *testing.T) {
 	tt.Describe("Branch get by ID").Test(branch.GetById(200, company.Owner.X_Auth_Token, nil))
 	// tt.Describe("Branch get by name").Test(branch.GetByName(200, company.Owner.X_Auth_Token, nil))
 
-	service := &modelT.Service{}
+	service := &model.Service{}
 	service.Company = company
 
 	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
 	servicesID := []DTO.ServiceBase{{ID: service.Created.ID}}
-	BranchWorkSchedule := modelT.GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
+	BranchWorkSchedule := model.GetExampleBranchWorkSchedule(branch.Created.ID, servicesID)
 	tt.Describe("Branch work schedule fail creation").Test(branch.CreateWorkSchedule(400, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Adding service to branch").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Branch work schedule success creation").Test(branch.CreateWorkSchedule(200, BranchWorkSchedule, company.Owner.X_Auth_Token, nil))
@@ -59,7 +59,7 @@ func Test_Branch(t *testing.T) {
 		"weekday":    1,
 	}, company.Owner.X_Auth_Token, nil))
 
-	removeAllServicesFromWorkRange := func(work_range model.BranchWorkRange) error {
+	removeAllServicesFromWorkRange := func(work_range coreModel.BranchWorkRange) error {
 		for _, service := range work_range.Services {
 			if err := branch.RemoveServiceFromWorkRange(200, work_range.ID.String(), service.ID.String(), company.Owner.X_Auth_Token, nil); err != nil {
 				return err
@@ -70,7 +70,7 @@ func Test_Branch(t *testing.T) {
 
 	tt.Describe("Removing all service from branch work range").Test(removeAllServicesFromWorkRange(wr))
 
-	checkIfAllServicesRemoved := func(work_range model.BranchWorkRange) error {
+	checkIfAllServicesRemoved := func(work_range coreModel.BranchWorkRange) error {
 		for _, bwr := range branch.Created.WorkSchedule {
 			if bwr.ID == work_range.ID && len(bwr.Services) > 0 {
 				return fmt.Errorf("Branch work range %s still has services associated: %v", work_range.ID, bwr.Services)
@@ -81,7 +81,7 @@ func Test_Branch(t *testing.T) {
 
 	tt.Describe("Checking if all services were removed from branch work range").Test(checkIfAllServicesRemoved(wr))
 
-	AddAllServicesBackToWorkRange := func(work_range model.BranchWorkRange) error {
+	AddAllServicesBackToWorkRange := func(work_range coreModel.BranchWorkRange) error {
 		var services DTO.BranchWorkRangeServices
 		for _, service := range work_range.Services {
 			services.Services = append(services.Services, DTO.ServiceBase{ID: service.ID})

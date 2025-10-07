@@ -1,11 +1,11 @@
 package e2e_test
 
 import (
-	"mynute-go/src"
-	"mynute-go/src/lib"
-	FileBytes "mynute-go/src/lib/file_bytes"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core"
+	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/file_bytes"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
 
 	"testing"
 
@@ -13,18 +13,18 @@ import (
 )
 
 func Test_Service(t *testing.T) {
-	server := src.NewServer().Run("parallel")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 
-	tt := handlerT.NewTestErrorHandler(t)
+	tt := handler.NewTestErrorHandler(t)
 
-	client := &modelT.Client{}
+	client := &model.Client{}
 	tt.Describe("Client setup").Test(client.Set()) // Sets up client, company, branches, and services
 
-	company := &modelT.Company{}
+	company := &model.Company{}
 	tt.Describe("Company setup").Test(company.Set())
 
-	service := &modelT.Service{Company: company}
+	service := &model.Service{Company: company}
 	tt.Describe("Service creation").Test(service.Create(200, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Service update").Test(service.Update(200, map[string]any{
@@ -34,7 +34,7 @@ func Test_Service(t *testing.T) {
 	tt.Describe("Service get by ID").Test(service.GetById(200, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Service get by name").Test(service.GetByName(200, company.Owner.X_Auth_Token, nil))
 
-	branch := &modelT.Branch{Company: company}
+	branch := &model.Branch{Company: company}
 	tt.Describe("Branch creation").Test(branch.Create(200, company.Owner.X_Auth_Token, nil))
 	tt.Describe("Branch add service").Test(branch.AddService(200, service, company.Owner.X_Auth_Token, nil))
 

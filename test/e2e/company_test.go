@@ -1,29 +1,29 @@
 package e2e_test
 
 import (
-	"mynute-go/src"
-	DTO "mynute-go/src/config/api/dto"
-	mJSON "mynute-go/src/config/db/model/json"
-	"mynute-go/src/lib"
-	FileBytes "mynute-go/src/lib/file_bytes"
-	handlerT "mynute-go/test/src/handlers"
-	modelT "mynute-go/test/src/models"
+	"mynute-go/core"
+	"mynute-go/core/src/config/api/dto"
+	"mynute-go/core/src/config/db/model/json"
+	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/file_bytes"
+	"mynute-go/test/src/handler"
+	"mynute-go/test/src/model"
 	"testing"
 )
 
 func Test_Company(t *testing.T) {
-	server := src.NewServer().Run("parallel")
+	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 
-	tt := handlerT.NewTestErrorHandler(t)
-	company := &modelT.Company{}
+	tt := handler.NewTestErrorHandler(t)
+	company := &model.Company{}
 
 	tt.Describe("Company creation").Test(company.Create(200))
 
 	should_not_create_tax_id := lib.GenerateRandomStrNumber(14)
 
 	tt.Describe("Company creation with duplicate subdomain").Test(
-		handlerT.NewHttpClient().
+		handler.NewHttpClient().
 			Method("POST").
 			URL("/company").
 			ExpectedStatus(400).
@@ -39,7 +39,7 @@ func Test_Company(t *testing.T) {
 				StartSubdomain: company.Created.Subdomains[0].Name,
 			}).Error)
 
-	tt.Describe("Check if company was not created due to duplicate subdomain").Test(handlerT.NewHttpClient().
+	tt.Describe("Check if company was not created due to duplicate subdomain").Test(handler.NewHttpClient().
 		Method("GET").
 		URL("/company/tax_id/" + should_not_create_tax_id + "/exists").
 		ExpectedStatus(404).
