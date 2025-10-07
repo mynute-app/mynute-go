@@ -8,6 +8,7 @@ import (
 	"mynute-go/core/config/namespace"
 	"mynute-go/core/lib"
 	handler "mynute-go/core/test/handlers"
+	"time"
 )
 
 type Service struct {
@@ -242,4 +243,51 @@ func (s *Service) GetAvailability(status int, x_company_id *string, from, to int
 	}
 
 	return nil
+}
+
+func (s *Service) FindValidRandomAppointmentSlot() (*FoundAppointmentSlot, error) {
+	cID := s.Company.Created.ID.String()
+	x_auth_token := s.Company.Owner.X_Auth_Token
+
+	http := handler.NewHttpClient()
+	http.Method("GET")
+	http.ExpectedStatus(200)
+	url := fmt.Sprintf("/service/%s/availability?date_forward_start=%d&date_forward_end=%d", s.Created.ID.String(), time.Now().Unix(), time.Now().Add(30*24*time.Hour).Unix())
+	http.URL(url)
+	http.Header(namespace.HeadersKey.Company, cID)
+	http.Header(namespace.HeadersKey.Auth, x_auth_token)
+	http.Send(nil)
+	var availability DTO.ServiceAvailability
+	http.ParseResponse(&availability)
+	if http.Error != nil {
+		return nil, fmt.Errorf("failed to get service availability: %w", http.Error)
+	}
+	if len(availability.AvailableDates) == 0 {
+		return nil, fmt.Errorf("no available slots found for service %s", s.Created.Name)
+	}
+	// Pick a random available date
+	randomAvailableDate := availability.AvailableDates[lib.GenerateRandomInt(len(availability.AvailableDates))]
+	BranchID := randomAvailableDate.BranchID.String()
+	dateStr := randomAvailableDate.Date
+	randomAvailableTime := randomAvailableDate.AvailableTimes[lib.GenerateRandomInt(len(randomAvailableDate.AvailableTimes))]
+	timeStr := randomAvailableTime.Time
+	StartTimeRFC3339 := fmt.Sprintf("%sT%s:00Z", dateStr, timeStr)
+	// Find the Branch TimeZone
+	TimeZone := ""
+	for _, b := range availability.BranchInfo {
+		if b.ID.String() == BranchID {
+			TimeZone = b.TimeZone
+			break
+		}
+	}
+	if TimeZone == "" {
+		return nil, fmt.Errorf("branch time zone not found for branch ID %s", BranchID)
+	}
+	
+	return &FoundAppointmentSlot{
+		StartTimeRFC3339: StartTimeRFC3339,
+		BranchID:  BranchID,
+		ServiceID: s.Created.ID.String(),
+		TimeZone:  TimeZone,
+	}, nil
 }
