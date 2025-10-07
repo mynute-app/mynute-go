@@ -21,11 +21,15 @@ func Create(c *fiber.Ctx, model any) error {
 	return nil
 }
 
-func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string) error {
+func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string, do_not_load *[]string) error {
 	var err error
 	Service := service.New(c)
 	defer Service.DeferDB(err)
-	if err = Service.SetModel(model).SetNestedPreload(nested_preload).GetBy(param).Error; err != nil {
+	if err = Service.
+		SetModel(model).
+		SetNestedPreload(nested_preload).
+		SetDoNotLoad(do_not_load).
+		GetBy(param).Error; err != nil {
 		return err
 	}
 	return nil

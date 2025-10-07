@@ -25,7 +25,6 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 var TenantModels = []any{
-	
 	&Appointment{},
 	&AppointmentArchive{},
 	&BranchServiceDensity{},
@@ -49,6 +48,7 @@ var GeneralModels = []any{
 	&Resource{},
 	&Property{},
 	&Subdomain{},
+	&ClientAppointment{},
 }
 
 func GetModelFromTableName(tableName string) (any, string, error) {

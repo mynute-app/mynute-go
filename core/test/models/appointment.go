@@ -1,11 +1,9 @@
 package modelT
 
 import (
-	"encoding/json"
 	"fmt"
 	DTO "mynute-go/core/config/api/dto"
 	"mynute-go/core/config/db/model"
-	mJSON "mynute-go/core/config/db/model/json"
 	"mynute-go/core/config/namespace"
 	"mynute-go/core/lib"
 	handler "mynute-go/core/test/handlers"
@@ -223,15 +221,13 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	if err := ct.GetByEmail(200); err != nil {
 		return err
 	}
-	var ClientAppointment mJSON.ClientAppointment
-	aCreatedByte, err := json.Marshal(a.Created)
-	if err != nil {
-		return fmt.Errorf("failed to marshal appointment: %w", err)
-	}
-	err = json.Unmarshal(aCreatedByte, &ClientAppointment)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal appointment: %w", err)
-	}
+	ct.Appointments = append(ct.Appointments, a)
+	e.Appointments = append(e.Appointments, a)
+	b.Appointments = append(b.Appointments, a)
+	a.Employee = e
+	a.Company = cy
+	a.Service = s
+	a.Branch = b
 	return nil
 }
 

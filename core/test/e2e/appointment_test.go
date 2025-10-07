@@ -7,6 +7,7 @@ import (
 	handlerT "mynute-go/core/test/handlers"
 	modelT "mynute-go/core/test/models"
 	utilsT "mynute-go/core/test/utils"
+	"os"
 	"testing"
 	"time"
 
@@ -17,6 +18,11 @@ func Test_Appointment(t *testing.T) {
 	server := core.NewServer().Run("parallel")
 	defer server.Shutdown()
 	tt := handlerT.NewTestErrorHandler(t)
+
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv != "test" {
+		t.Fatal("APP_ENV is not set to 'test'. Aborting tests to prevent data loss.")
+	}
 
 	ct := &modelT.Client{}
 	cy := &modelT.Company{}

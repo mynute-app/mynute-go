@@ -5,6 +5,7 @@ import (
 	handlerT "mynute-go/core/test/handlers"
 	modelT "mynute-go/core/test/models"
 	utilsT "mynute-go/core/test/utils"
+	"os"
 	"testing"
 )
 
@@ -29,6 +30,11 @@ func load_permissions_test_instance(t *testing.T) {
 }
 
 func Test_Setup_Permissions_Instance(t *testing.T) {
+	// Get APP_ENV from .env file
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv != "test" {
+		t.Fatal("APP_ENV is not set to 'test'. Aborting tests to prevent data loss.")
+	}
 	tt := handlerT.NewTestErrorHandler(t)
 
 	permissions_test_instance = &permissions_test{}
