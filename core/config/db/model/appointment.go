@@ -296,13 +296,6 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
 	}
 
-	// 5. Overlap and Capacity Checks
-	aStartTimeUTC := a.StartTime.UTC()
-	aEndTimeUTC := a.EndTime.UTC()
-	overlapTime := `? > start_time AND end_time > ?`
-	notSameID := `id != ?`
-	cancelled := `is_cancelled = ?`
-
 	ChangeSchema := func(schema string) error {
 		if schema == "public" {
 			if err := lib.ChangeToPublicSchema(tx); err != nil {
@@ -316,6 +309,13 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		}
 		return nil
 	}
+
+	// 5. Overlap and Capacity Checks
+	aStartTimeUTC := a.StartTime.UTC()
+	aEndTimeUTC := a.EndTime.UTC()
+	overlapTime := `? > start_time AND end_time > ?`
+	notSameID := `id != ?`
+	cancelled := `is_cancelled = ?`
 
 	Query := func() *gorm.DB {
 		return tx.Model(&Appointment{}).
@@ -444,8 +444,8 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	if err := tx.Model(&ClientAppointment{}).
 		Where("appointment_id = ?", a.ID).
 		First(&clientAppointment).Error; err != nil {
-		// TODO: Here is a critical point to discuss: if the appointment is 
-		// cancelled but the ClientAppointment record is missing 
+		// TODO: Here is a critical point to discuss: if the appointment is
+		// cancelled but the ClientAppointment record is missing
 		// we must send an alert to the admin team to investigate why it happened.
 		// For now, we won't do anything.
 		// This situation should never happen in a properly functioning system.
