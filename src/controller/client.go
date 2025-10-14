@@ -85,10 +85,7 @@ func VerifyClientEmail(c *fiber.Ctx) error {
 //	@Summary		Get client by email
 //	@Description	Retrieve an client by its email
 //	@Tags			Client
-//	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object}	nil
-//	@Param			email			path		string	true	"Client Email"
+//	@Param			email	path	string	true	"Client Email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
