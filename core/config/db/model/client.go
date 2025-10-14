@@ -31,7 +31,6 @@ type ClientMeta struct {
 // Updated Client model
 type Client struct {
 	ClientMeta
-	Appointments *mJSON.ClientAppointments `gorm:"type:jsonb" json:"appointments"`
 }
 
 func (Client) TableName() string  { return "public.clients" }
@@ -93,13 +92,24 @@ func (c *Client) GetFullClient(tx *gorm.DB) error {
 	return nil
 }
 
-func (c *Client) AddAppointment(a *Appointment) {
-	ca := &mJSON.ClientAppointment{
+func (c *Client) AddAppointment(a *Appointment, tx *gorm.DB) error {
+	appointment := ClientAppointment{
 		AppointmentID: a.ID,
+		ClientID:      c.ID,
 		CompanyID:     a.CompanyID,
 		StartTime:     a.StartTime,
 		TimeZone:      a.TimeZone,
 	}
-
-	c.Appointments.Add(ca)
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
+	}
+	tx.Create(&appointment)
+	if err := tx.Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
+	if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
+	}
+	return nil
 }

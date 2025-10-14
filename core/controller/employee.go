@@ -63,7 +63,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Router			/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("id", c, &employee, &[]string{"WorkSchedule.Services"}); err != nil {
+	if err := GetOneBy("id", c, &employee, &[]string{"WorkSchedule.Services"}, &[]string{"Appointments"}); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Router			/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
 	var employee model.Employee
-	if err := GetOneBy("email", c, &employee, &[]string{"WorkSchedule.Services"}); err != nil {
+	if err := GetOneBy("email", c, &employee, &[]string{"WorkSchedule.Services"}, &[]string{"Appointments"}); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {

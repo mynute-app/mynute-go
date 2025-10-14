@@ -93,7 +93,7 @@ func (a *Appointment) AfterCreate(tx *gorm.DB) error {
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("loading company: %w", err))
 	}
-	client.AddAppointment(a)
+	client.AddAppointment(a, tx)
 	if err := tx.Save(&client).Error; err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("updating client: %w", err))
 	}
@@ -296,10 +296,24 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
 	}
 
+	ChangeSchema := func(schema string) error {
+		if schema == "public" {
+			if err := lib.ChangeToPublicSchema(tx); err != nil {
+				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
+			}
+		} else if schema == "company" {
+			companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
+			if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
+				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
+			}
+		}
+		return nil
+	}
+
 	// 5. Overlap and Capacity Checks
 	aStartTimeUTC := a.StartTime.UTC()
 	aEndTimeUTC := a.EndTime.UTC()
-	overlapTime := `start_time <= ? AND end_time >= ?`
+	overlapTime := `? > start_time AND end_time > ?`
 	notSameID := `id != ?`
 	cancelled := `is_cancelled = ?`
 
@@ -307,18 +321,7 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		return tx.Model(&Appointment{}).
 			Where(cancelled, false).
 			Where(notSameID, a.ID).
-			Where(overlapTime, aStartTimeUTC, aEndTimeUTC)
-	}
-
-	// Client Overlap
-	var clientAppointmentsCount int64
-	if err := Query().
-		Where("client_id = ?", a.ClientID).
-		Count(&clientAppointmentsCount).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
-	}
-	if clientAppointmentsCount > 0 {
-		return lib.Error.Client.ScheduleConflict
+			Where(overlapTime, aEndTimeUTC, aStartTimeUTC)
 	}
 
 	// Employee Overlap and Capacities
@@ -369,6 +372,38 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		}
 	}
 
+	// Client Overlap (Under Company Schema Search)
+	var clientAppointmentsCount int64
+	if err := Query().
+		Where("client_id = ?", a.ClientID).
+		Count(&clientAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
+	}
+	if clientAppointmentsCount > 0 {
+		return lib.Error.Client.ScheduleConflict
+	}
+
+	// Client Overlap (Under Public Schema Search)
+	if err := ChangeSchema("public"); err != nil {
+		return err
+	}
+	clientAppointmentsCount = 0
+	if err := tx.Model(&ClientAppointment{}).
+		Where("client_id = ?", a.ClientID).
+		Where("appointment_id != ?", a.ID).
+		Where("company_id != ?", a.CompanyID).
+		Where(cancelled, false).
+		Where(overlapTime, aEndTimeUTC, aStartTimeUTC).
+		Count(&clientAppointmentsCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("db error checking client overlap: %w", err))
+	}
+	if clientAppointmentsCount > 0 {
+		return lib.Error.Client.ScheduleConflict
+	}
+	if err := ChangeSchema("company"); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
+	}
+
 	return nil // All validations passed
 }
 
@@ -401,6 +436,31 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	err := tx.Save(a).Error
 	if err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling appointment: %w", err))
+	}
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
+	}
+	var clientAppointment ClientAppointment
+	if err := tx.Model(&ClientAppointment{}).
+		Where("appointment_id = ?", a.ID).
+		First(&clientAppointment).Error; err != nil {
+		// TODO: Here is a critical point to discuss: if the appointment is
+		// cancelled but the ClientAppointment record is missing
+		// we must send an alert to the admin team to investigate why it happened.
+		// For now, we won't do anything.
+		// This situation should never happen in a properly functioning system.
+		if err == gorm.ErrRecordNotFound {
+			return nil // If not found, nothing more to do
+		}
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error loading client appointment: %w", err))
+	}
+	clientAppointment.IsCancelled = true
+	err = tx.Save(&clientAppointment).Error
+	if err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling client appointment: %w", err))
+	}
+	if err := lib.ChangeToCompanySchema(tx, a.CompanyID.String()); err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
 	}
 	return nil
 }

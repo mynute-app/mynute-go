@@ -39,7 +39,6 @@ type BranchFull struct {
 	BranchBase
 	Employees      []*EmployeeBase  `json:"employees"`
 	Services       []*ServiceBase   `json:"services"`
-	Appointments   []*Appointment   `json:"appointments"`
 	ServiceDensity []ServiceDensity `json:"service_density"`
 }
 

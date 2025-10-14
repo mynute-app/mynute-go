@@ -11,10 +11,16 @@ import (
 type Gorm struct {
 	DB            *gorm.DB
 	NestedPreload *[]string
+	DoNotLoad     *[]string
 }
 
 func (p *Gorm) SetNestedPreload(preloads *[]string) *Gorm {
 	p.NestedPreload = preloads
+	return p
+}
+
+func (p *Gorm) SetDoNotLoad(do_not_load *[]string) *Gorm {
+	p.DoNotLoad = do_not_load
 	return p
 }
 
@@ -94,6 +100,12 @@ func (p Gorm) GetOneBy(param string, value string, model any) error {
 		}
 	}
 
+	if p.DoNotLoad != nil && len(*p.DoNotLoad) > 0 {
+		for _, do_not_load := range *p.DoNotLoad {
+			query = query.Omit(do_not_load)
+		}
+	}
+
 	// Build the WHERE condition
 	cond := fmt.Sprintf("%s = ?", param)
 
@@ -114,6 +126,12 @@ func (p Gorm) ForceGetOneBy(param string, value string, model any) error {
 	if p.NestedPreload != nil && len(*p.NestedPreload) > 0 {
 		for _, nested_preload := range *p.NestedPreload {
 			query = query.Preload(nested_preload)
+		}
+	}
+
+	if p.DoNotLoad != nil && len(*p.DoNotLoad) > 0 {
+		for _, do_not_load := range *p.DoNotLoad {
+			query = query.Omit(do_not_load)
 		}
 	}
 

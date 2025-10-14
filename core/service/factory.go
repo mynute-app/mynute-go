@@ -34,11 +34,20 @@ type service struct {
 	MyGorm  *handler.Gorm
 	DeferDB func(err error)
 	NestedPreload *[]string
+	DoNotLoad     *[]string
 	Error   error
 }
 
 func (s *service) SetNestedPreload(preloads *[]string) *service {
 	s.NestedPreload = preloads
+	return s
+}
+
+func (s *service) SetDoNotLoad(do_not_load *[]string) *service {
+	if s.Error != nil {
+		return s
+	}
+	s.MyGorm.SetDoNotLoad(do_not_load)
 	return s
 }
 
