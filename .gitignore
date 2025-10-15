@@ -3,6 +3,7 @@
 tmp
 __debug
 .exe
+/test/e2e/*.exe
 *uploads*
 *local_uploads*
 *my_files*

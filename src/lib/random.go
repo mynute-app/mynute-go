@@ -54,6 +54,7 @@ func GenerateRandomEmail(name string) string {
 }
 
 // Generates a random integer of a specified length.
+// For example, if length is 3, it will generate a number between 100 and 999.
 func GenerateRandomInt(length int) int {
 	// Define the lower and upper bounds based on the desired length
 	lowerBound := int(math.Pow10(length - 1)) // 10^(n-1)
@@ -63,6 +64,8 @@ func GenerateRandomInt(length int) int {
 	return rnd.Intn(upperBound-lowerBound+1) + lowerBound
 }
 
+// Generates a random string of digits with the specified length.
+// For example, if length is 4, it might generate "4821".
 func GenerateRandomStrNumber(length int) string {
 	// Define the character set to be used for generating the random string
 	charset := "0123456789"

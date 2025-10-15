@@ -1145,3 +1145,15 @@ func (c *Company) GetImage(status int, imageURL string, compareImgBytes *[]byte)
 	}
 	return nil
 }
+
+func (c *Company) GetRandomService() (*Service, error) {
+	if len(c.Services) == 0 {
+		return nil, fmt.Errorf("no services available in the company to select a random service")
+	}
+
+	service := c.Services[lib.GenerateRandomIntFromRange(0, len(c.Services)-1)]
+	if service.Created.ID == uuid.Nil {
+		return nil, fmt.Errorf("selected service has nil ID")
+	}
+	return service, nil
+}
