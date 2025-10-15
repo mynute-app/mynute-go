@@ -3,11 +3,12 @@ package model
 import (
 	"bytes"
 	"fmt"
-	"mynute-go/core/src/config/api/dto"
+	DTO "mynute-go/core/src/config/api/dto"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
 	"mynute-go/test/src/handler"
+	"time"
 )
 
 type Service struct {
@@ -253,14 +254,15 @@ type RandomAppointmentSlot struct {
 	TimeZone         string
 }
 
-func (s *Service) FindValidRandomAppointmentSlot() (*RandomAppointmentSlot, error) {
+func (s *Service) FindValidRandomAppointmentSlot(timezone string) (*RandomAppointmentSlot, error) {
 	cID := s.Company.Created.ID.String()
 	x_auth_token := s.Company.Owner.X_Auth_Token
-
 	http := handler.NewHttpClient()
 	http.Method("GET")
 	http.ExpectedStatus(200)
-	url := fmt.Sprintf("/service/%s/availability?date_forward_start=%d&date_forward_end=%d", s.Created.ID.String(), 0, 30)
+	query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", 0, 30, timezone)
+	endpoint := fmt.Sprintf("/service/%s/availability", s.Created.ID.String())
+	url := fmt.Sprintf("%s?%s", endpoint, query)
 	http.URL(url)
 	http.Header(namespace.HeadersKey.Company, cID)
 	http.Header(namespace.HeadersKey.Auth, x_auth_token)
@@ -279,19 +281,19 @@ func (s *Service) FindValidRandomAppointmentSlot() (*RandomAppointmentSlot, erro
 	dateStr := randomAvailableDate.Date
 	randomAvailableTime := randomAvailableDate.AvailableTimes[lib.GenerateRandomIntFromRange(0, len(randomAvailableDate.AvailableTimes)-1)]
 	timeStr := randomAvailableTime.Time
-	StartTimeRFC3339 := fmt.Sprintf("%sT%s:00Z", dateStr, timeStr)
+
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load location '%s': %w", timezone, err)
+	}
+
+	parsedTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", dateStr, timeStr), loc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	StartTimeRFC3339 := parsedTime.Format(time.RFC3339)
 	EmployeeID := randomAvailableTime.EmployeesID[lib.GenerateRandomIntFromRange(0, len(randomAvailableTime.EmployeesID)-1)].String()
-	// Find the Branch TimeZone
-	TimeZone := ""
-	for _, b := range availability.BranchInfo {
-		if b.ID.String() == BranchID {
-			TimeZone = b.TimeZone
-			break
-		}
-	}
-	if TimeZone == "" {
-		return nil, fmt.Errorf("branch time zone not found for branch ID %s", BranchID)
-	}
 
 	return &RandomAppointmentSlot{
 		StartTimeRFC3339: StartTimeRFC3339,
@@ -299,6 +301,6 @@ func (s *Service) FindValidRandomAppointmentSlot() (*RandomAppointmentSlot, erro
 		BranchID:         BranchID,
 		EmployeeID:       EmployeeID,
 		ServiceID:        s.Created.ID.String(),
-		TimeZone:         TimeZone,
+		TimeZone:         timezone,
 	}, nil
 }

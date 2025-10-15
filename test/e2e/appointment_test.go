@@ -50,8 +50,10 @@ func Test_Appointment(t *testing.T) {
 		return nil, fmt.Errorf("employee not found")
 	}
 
+	TimeZone := "America/Sao_Paulo"
+
 	// Test Case 0: Successful appointment creation
-	slot0, err := service.FindValidRandomAppointmentSlot()
+	slot0, err := service.FindValidRandomAppointmentSlot(TimeZone)
 	tt.Describe("Finding valid appointment slot for service - a[0]").Test(err)
 
 	slot0Branch, err := GetBranchByID(slot0.BranchID, cy)
@@ -66,7 +68,7 @@ func Test_Appointment(t *testing.T) {
 	Appointments = append(Appointments, &a0)
 
 	// Test Case 1: Successful appointment creation
-	slot1, err := service.FindValidRandomAppointmentSlot()
+	slot1, err := service.FindValidRandomAppointmentSlot(TimeZone)
 	tt.Describe("Finding valid appointment slot for service - a[1]").Test(err)
 
 	slot1Branch, err := GetBranchByID(slot1.BranchID, cy)
