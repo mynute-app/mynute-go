@@ -213,7 +213,7 @@ func DeleteServiceImage(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID		header	string	true	"X-Company-ID"
 //	@Param			id					path	string	true	"Service ID"
-//	@Param			timezone			query	string	true	"Client Time Zone (IANA format, e.g., America/New_York)"
+//	@Param			timezone			query	string	false	"Client Time Zone (IANA format, e.g., America/New_York)"
 //	@Param			date_forward_start	query	number	true	"The start date for the forward search in number format"
 //	@Param			date_forward_end	query	number	true	"The end date for the forward search in number format"
 //	@Produce		json
@@ -266,6 +266,9 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	}
 
 	timezone := c.Query("timezone")
+	if timezone == "" {
+		timezone = "UTC"
+	}
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid timezone: %s", timezone))
@@ -276,8 +279,11 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	startDate := time.Now().In(loc).AddDate(0, 0, dfs)
-	endDate := time.Now().In(loc).AddDate(0, 0, dfe).Add(24 * time.Hour) // Para incluir o dia final inteiro
+	// Truncate to midnight in the target timezone to avoid partial day inclusion
+	now := time.Now().In(loc)
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	startDate := midnight.AddDate(0, 0, dfs)
+	endDate := midnight.AddDate(0, 0, dfe).Add(24 * time.Hour) // Para incluir o dia final inteiro
 
 	// =========================================================================
 	// Step 2: Fetch all necessary data in fewer, more efficient queries
@@ -382,10 +388,42 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 			for branchID, empRangesInBranch := range branchesForDay {
 				for _, empRange := range empRangesInBranch {
 					emp := empRange.Employee // Already preloaded
+					if emp.SlotTimeDiff <= 0 {
+						continue // Use continue to proceed with the next range
+					}
 
-					// Generate slots for this employee's work range
-					slot := time.Date(d.Year(), d.Month(), d.Day(), empRange.StartTime.Hour(), empRange.StartTime.Minute(), 0, 0, loc)
-					endOfDay := time.Date(d.Year(), d.Month(), d.Day(), empRange.EndTime.Hour(), empRange.EndTime.Minute(), 0, 0, loc)
+					// --- Timezone-Correct Shift Calculation ---
+					// 1. Load the branch's specific timezone. Default to UTC if invalid or missing.
+					branchLoc, err := time.LoadLocation(empRange.Branch.TimeZone)
+					if err != nil {
+						branchLoc = time.UTC // Fallback to UTC
+					}
+
+					// 2. Construct the shift start and end times in the branch's actual timezone.
+					shiftStartInBranchTZ := time.Date(d.Year(), d.Month(), d.Day(), empRange.StartTime.Hour(), empRange.StartTime.Minute(), 0, 0, branchLoc)
+					shiftEndInBranchTZ := time.Date(d.Year(), d.Month(), d.Day(), empRange.EndTime.Hour(), empRange.EndTime.Minute(), 0, 0, branchLoc)
+
+					// 3. Convert the branch's shift times to the user's requested timezone for the loop.
+					slot := shiftStartInBranchTZ.In(loc)
+					endOfDay := shiftEndInBranchTZ.In(loc)
+
+					// 4. For today's date, ensure we don't show slots from the past.
+					if dfs == 0 && d.Year() == now.Year() && d.Month() == now.Month() && d.Day() == now.Day() {
+						if slot.Before(now) {
+							slot = now
+						}
+					}
+
+					// 5. Align the final start time to the next valid slot boundary.
+					if emp.SlotTimeDiff > 0 {
+						// Calculate alignment based on the user's timezone view of the slot.
+						minutesSinceMidnight := slot.Hour()*60 + slot.Minute()
+						slotDiff := int(emp.SlotTimeDiff)
+						if remainder := minutesSinceMidnight % slotDiff; remainder != 0 {
+							minutesToAdd := slotDiff - remainder
+							slot = slot.Add(time.Duration(minutesToAdd) * time.Minute)
+						}
+					}
 
 					for slot.Before(endOfDay) {
 
@@ -490,7 +528,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		branchInfo = append(branchInfo, b)
 	}
 
-	return lib.ResponseFactory(c).Send(200, &DTO.ServiceAvailability{
+	return lib.ResponseFactory(c).Send(200, DTO.ServiceAvailability{
 		ServiceID:      serviceID,
 		AvailableDates: availableDates,
 		EmployeeInfo:   employeeInfo,
