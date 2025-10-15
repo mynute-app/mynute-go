@@ -1261,11 +1261,6 @@ const docTemplate = `{
         },
         "/client/email/{email}": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Retrieve an client by its email",
                 "produces": [
                     "application/json"
@@ -1275,13 +1270,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get client by email",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Client Email",
@@ -1302,9 +1290,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             }

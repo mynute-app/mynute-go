@@ -245,14 +245,23 @@ func (s *Service) GetAvailability(status int, x_company_id *string, from, to int
 	return nil
 }
 
-func (s *Service) FindValidRandomAppointmentSlot() (*FoundAppointmentSlot, error) {
+type RandomAppointmentSlot struct {
+	StartTimeRFC3339 string
+	CompanyID        string
+	BranchID         string
+	EmployeeID       string
+	ServiceID        string
+	TimeZone         string
+}
+
+func (s *Service) FindValidRandomAppointmentSlot() (*RandomAppointmentSlot, error) {
 	cID := s.Company.Created.ID.String()
 	x_auth_token := s.Company.Owner.X_Auth_Token
 
 	http := handler.NewHttpClient()
 	http.Method("GET")
 	http.ExpectedStatus(200)
-	url := fmt.Sprintf("/service/%s/availability?date_forward_start=%d&date_forward_end=%d", s.Created.ID.String(), time.Now().Unix(), time.Now().Add(30*24*time.Hour).Unix())
+	url := fmt.Sprintf("/service/%s/availability?date_forward_start=%d&date_forward_end=%d", s.Created.ID.String(), 0, 30)
 	http.URL(url)
 	http.Header(namespace.HeadersKey.Company, cID)
 	http.Header(namespace.HeadersKey.Auth, x_auth_token)
@@ -266,12 +275,13 @@ func (s *Service) FindValidRandomAppointmentSlot() (*FoundAppointmentSlot, error
 		return nil, fmt.Errorf("no available slots found for service %s", s.Created.Name)
 	}
 	// Pick a random available date
-	randomAvailableDate := availability.AvailableDates[lib.GenerateRandomInt(len(availability.AvailableDates))]
+	randomAvailableDate := availability.AvailableDates[lib.GenerateRandomIntFromRange(0, len(availability.AvailableDates)-1)]
 	BranchID := randomAvailableDate.BranchID.String()
 	dateStr := randomAvailableDate.Date
-	randomAvailableTime := randomAvailableDate.AvailableTimes[lib.GenerateRandomInt(len(randomAvailableDate.AvailableTimes))]
+	randomAvailableTime := randomAvailableDate.AvailableTimes[lib.GenerateRandomIntFromRange(0, len(randomAvailableDate.AvailableTimes)-1)]
 	timeStr := randomAvailableTime.Time
 	StartTimeRFC3339 := fmt.Sprintf("%sT%s:00Z", dateStr, timeStr)
+	EmployeeID := randomAvailableTime.EmployeesID[lib.GenerateRandomIntFromRange(0, len(randomAvailableTime.EmployeesID)-1)].String()
 	// Find the Branch TimeZone
 	TimeZone := ""
 	for _, b := range availability.BranchInfo {
@@ -284,9 +294,11 @@ func (s *Service) FindValidRandomAppointmentSlot() (*FoundAppointmentSlot, error
 		return nil, fmt.Errorf("branch time zone not found for branch ID %s", BranchID)
 	}
 
-	return &FoundAppointmentSlot{
+	return &RandomAppointmentSlot{
 		StartTimeRFC3339: StartTimeRFC3339,
+		CompanyID:        cID,
 		BranchID:         BranchID,
+		EmployeeID:       EmployeeID,
 		ServiceID:        s.Created.ID.String(),
 		TimeZone:         TimeZone,
 	}, nil
