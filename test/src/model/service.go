@@ -3,12 +3,11 @@ package model
 import (
 	"bytes"
 	"fmt"
-	DTO "mynute-go/core/src/config/api/dto"
+	"mynute-go/core/src/config/api/dto"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
 	"mynute-go/test/src/handler"
-	"time"
 )
 
 type Service struct {
