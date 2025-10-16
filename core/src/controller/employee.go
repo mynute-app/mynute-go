@@ -23,7 +23,7 @@ import (
 //
 //	@Summary		Create employee
 //	@Description	Create an employee
-//	@Tags			Employee - CRUD
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -51,7 +51,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 //
 //	@Summary		Get employee by ID
 //	@Description	Retrieve an employee by its ID
-//	@Tags			Employee - CRUD
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -78,7 +78,7 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //
 //	@Summary		Get employee by email
 //	@Description	Retrieve an employee by its email
-//	@Tags			Employee - CRUD
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -103,7 +103,7 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //
 //	@Summary		Update employee
 //	@Description	Update an employee
-//	@Tags			Employee - CRUD
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -130,7 +130,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete employee by ID
 //	@Description	Delete an employee by its ID
-//	@Tags			Employee - CRUD
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -148,7 +148,7 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //
 //	@Summary		Login
 //	@Description	Log in an client
-//	@Tags			Employee - Auth
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
@@ -171,7 +171,7 @@ func LoginEmployee(c *fiber.Ctx) error {
 //
 //	@Summary		Verify email
 //	@Description	Verify an employee's email
-//	@Tags			Employee - Auth
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
@@ -189,7 +189,7 @@ func VerifyEmployeeEmail(c *fiber.Ctx) error {
 //
 //	@Summary		Reset employee password to a random value
 //	@Description	Sets a random password of an employee using its email
-//	@Tags			Employee - Auth
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
@@ -211,7 +211,7 @@ func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {
 //
 //	@Summary		Update employee images
 //	@Description	Update the images of an employee
-//	@Tags			Employee - Images
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -239,7 +239,7 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 //
 //	@Summary		Delete employee image
 //	@Description	Delete an image of an employee
-//	@Tags			Employee - Images
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -265,7 +265,7 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //
 //	@Summary		Create work schedule
 //	@Description	Create a work schedule for an employee
-//	@Tags			Employee - WorkSchedule
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil		"Unauthorized"
@@ -351,7 +351,7 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 //
 //	@Summary		Get all employee's work ranges
 //	@Description	Retrieve all work ranges for an employee
-//	@Tags			Employee - WorkSchedule
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -391,7 +391,7 @@ func GetEmployeeWorkSchedule(c *fiber.Ctx) error {
 //
 //	@Summary		Get work range by ID
 //	@Description	Retrieve a work range for an employee
-//	@Tags			Employee - WorkSchedule
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -434,7 +434,7 @@ func GetEmployeeWorkRangeById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete work schedule
 //	@Description	Delete a work schedule for an employee
-//	@Tags			Employee - WorkSchedule
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil		"Unauthorized"
@@ -497,7 +497,7 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 //
 //	@Summary		Update work range
 //	@Description	Update a work range for an employee
-//	@Tags			Employee - WorkSchedule
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -589,7 +589,7 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //
 //	@Summary		Add services to employee's work range
 //	@Description	Add services to an employee's work range
-//	@Tags			Employee - WorkSchedule - Services
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -659,7 +659,7 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //
 //	@Summary		Remove service from employee's work range
 //	@Description	Remove a service from an employee's work range
-//	@Tags			Employee - WorkSchedule - Services
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -724,7 +724,7 @@ func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
 //
 //	@Summary		Add service to employee
 //	@Description	Add a service to an employee
-//	@Tags			Employee - Services
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -771,7 +771,7 @@ func AddServiceToEmployee(c *fiber.Ctx) error {
 //
 //	@Summary		Remove service from employee
 //	@Description	Remove a service from an employee
-//	@Tags			Employee - Services
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -816,7 +816,7 @@ func RemoveServiceFromEmployee(c *fiber.Ctx) error {
 //
 //	@Summary		Add employee to branch
 //	@Description	Add an employee to a branch
-//	@Tags			Employee - Branches
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -861,7 +861,7 @@ func AddBranchToEmployee(c *fiber.Ctx) error {
 //
 //	@Summary		Remove employee from branch
 //	@Description	Remove an employee from a branch
-//	@Tags			Employee - Branches
+//	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
@@ -962,6 +962,66 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetEmployeeAppointments retrieves appointments for a specific employee with pagination
+//
+//	@Summary		Get employee appointments
+//	@Description	Retrieve appointments for a specific employee with pagination
+//	@Tags			Employee
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Failure		401				{object}	nil		"Unauthorized"
+//	@Param			id				path		string	true	"Employee ID"
+//	@Produce		json
+//	@Param			page			query		int		false	"Page number"		default(1)
+//	@Param			page_size		query		int		false	"Number of items per page"	default(10)
+//	@Success		200	{object}	DTO.AppointmentList
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/{id}/appointments [get]
+func GetEmployeeAppointments(c *fiber.Ctx) error {
+	employee_id := c.Params("id")
+
+	var appointments []model.Appointment
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 10)
+	offset := (page - 1) * pageSize
+
+	if err := tx.
+		Where("employee_id = ?", employee_id).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&appointments).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointments not found"))
+	}
+
+	bytes, err := json.Marshal(appointments)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	var appointmentsDTO []DTO.Appointment
+	if err := json.Unmarshal(bytes, &appointmentsDTO); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	AppointmentList := DTO.AppointmentList{
+		Appointments: appointmentsDTO,
+		Page:         page,
+		PageSize:     pageSize,
+		TotalCount:   len(appointments),
+	}
+
+	if err := lib.ResponseFactory(c).Send(200, &AppointmentList); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
 func Employee(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
@@ -986,5 +1046,6 @@ func Employee(Gorm *handler.Gorm) {
 		UpdateEmployeeWorkRange,
 		AddEmployeeWorkRangeServices,
 		DeleteEmployeeWorkRangeService,
+		GetEmployeeAppointments,
 	})
 }

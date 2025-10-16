@@ -765,6 +765,66 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 	return nil
 }
 
+// GetBranchAppointments retrieves all appointments for a branch with pagination
+//
+//	@Summary		Get all branch appointments
+//	@Description	Retrieve all appointments for a branch with pagination
+//	@Tags			Branch
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			branch_id		path	string	true	"Branch ID"
+//	@Param			page			query	int		false	"Page number"		default(1)
+//	@Param			page_size		query	int		false	"Page size"			default(10)
+//	@Produce		json
+//	@Success		200	{object}	DTO.AppointmentList
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/branch/{branch_id}/appointments [get]
+func GetBranchAppointments(c *fiber.Ctx) error {
+	branch_id := c.Params("branch_id")
+
+	var appointments []model.Appointment
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 10)
+	offset := (page - 1) * pageSize
+
+	if err := tx.
+		Where("branch_id = ?", branch_id).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&appointments).Error; err != nil {
+		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointments not found"))
+	}
+
+	bytes, err := json.Marshal(appointments)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	var appointmentsDTO []DTO.Appointment
+	if err := json.Unmarshal(bytes, &appointmentsDTO); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	AppointmentList := DTO.AppointmentList{
+		Appointments: appointmentsDTO,
+		Page:         page,
+		PageSize:     pageSize,
+		TotalCount:   len(appointments),
+	}
+
+	if err := lib.ResponseFactory(c).Send(200, &AppointmentList); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
+}
+
+
 // CreateBranch creates a branch
 func Branch(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}

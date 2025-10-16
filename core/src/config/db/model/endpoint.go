@@ -253,6 +253,15 @@ var DeleteBranchWorkRangeService = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         BranchResource,
 }
+var GetBranchAppointmentsById = &EndPoint{
+	Path:             "/branch/:id/appointments",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetBranchAppointmentsById",
+	Description:      "View appointments for a branch",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         BranchResource,
+}
 
 // --- Client Endpoints --- //
 
@@ -619,6 +628,15 @@ var RemoveRoleFromEmployee = &EndPoint{
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
 	Resource:         RoleResource,
+}
+var GetEmployeeAppointmentsById = &EndPoint{
+	Path:             "/employee/:id/appointments",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetEmployeeAppointmentsById",
+	Description:      "View appointments for an employee",
+	NeedsCompanyId:   true,
+	DenyUnauthorized: true,
+	Resource:         EmployeeResource,
 }
 
 // --- Holiday Endpoints --- //

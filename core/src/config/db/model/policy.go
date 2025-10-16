@@ -840,7 +840,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 			},
 		}),
 	}
-	
+
 	var AllowGetBranchWorkRangeById = &PolicyRule{
 		Name:        "SDP: CanViewBranchWorkRangeById",
 		Description: "Allows company members to view branch work schedules by ID.",
@@ -929,6 +929,21 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Description: "Allows company Owner, General Manager, or assigned Branch Manager to delete branch images.",
 		Effect:      "Allow",
 		EndPointID:  DeleteBranchImage.ID,
+		Conditions: JsonRawMessage(ConditionNode{
+			Description: "Admin or Assigned Branch Manager Delete Access",
+			LogicType:   "OR",
+			Children: []ConditionNode{
+				company_admin_check,                          // Owner/GM can delete images in any branch
+				company_branch_manager_assigned_branch_check, // BM can delete images in their own branch
+			},
+		}),
+	}
+
+	AllowGetBranchAppointmentsById := &PolicyRule{
+		Name:        "SDP: CanViewBranchAppointmentsById",
+		Description: "Allows company Owner, General Manager, or assigned Branch Manager to view appointments within a branch.",
+		Effect:      "Allow",
+		EndPointID:  GetBranchAppointmentsById.ID,
 		Conditions: JsonRawMessage(ConditionNode{
 			Description: "Admin or Assigned Branch Manager Delete Access",
 			LogicType:   "OR",
@@ -1198,6 +1213,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can delete own images
 	}
 
+	var AllowGetEmployeeAppointmentsById = &PolicyRule{
+		Name:        "SDP: CanViewEmployeeAppointmentsById",
+		Description: "Allows employees to view their own appointments, or company managers (Owner, GM, BM) to view employee appointments.",
+		Effect:      "Allow",
+		EndPointID:  GetEmployeeAppointmentsById.ID,
+		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check),
+	}
+
 	// --- Holiday Policies ---
 
 	var AllowCreateHoliday = &PolicyRule{
@@ -1334,6 +1357,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetBranchWorkRangeById,
 		AllowAddBranchWorkRangeService,
 		AllowDeleteBranchWorkRangeService,
+		AllowGetBranchAppointmentsById,
 
 		// Clients (Self-Management focused)
 		AllowGetClientByEmail,
@@ -1369,6 +1393,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowDeleteEmployeeWorkRangeService,
 		AllowUpdateEmployeeImages,
 		AllowDeleteEmployeeImage,
+		AllowGetEmployeeAppointmentsById,
 
 		// Holidays
 		AllowCreateHoliday,

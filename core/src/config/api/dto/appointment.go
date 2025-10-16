@@ -2,7 +2,6 @@ package DTO
 
 import (
 	dJSON "mynute-go/core/src/config/api/dto/json"
-
 	"github.com/google/uuid"
 )
 
@@ -43,4 +42,11 @@ type Appointment struct {
 	IsConfirmedByClient   bool                     `json:"is_confirmed_by_client" example:"true"`
 	History               dJSON.AppointmentHistory `json:"history"`
 	Comments              dJSON.Comments           `json:"comments"`
+}
+
+type AppointmentList struct {
+	Appointments []Appointment `json:"appointments"`
+	TotalCount   int           `json:"total_count" example:"100"`
+	Page         int           `json:"page" example:"1"`
+	PageSize     int           `json:"page_size" example:"10"`
 }
