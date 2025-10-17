@@ -254,13 +254,13 @@ type RandomAppointmentSlot struct {
 	TimeZone         string
 }
 
-func (s *Service) FindValidRandomAppointmentSlot(timezone string) (*RandomAppointmentSlot, error) {
+func (s *Service) FindValidRandomAppointmentSlot(timezone string, client_public_id *string) (*RandomAppointmentSlot, error) {
 	cID := s.Company.Created.ID.String()
 	x_auth_token := s.Company.Owner.X_Auth_Token
 	http := handler.NewHttpClient()
 	http.Method("GET")
 	http.ExpectedStatus(200)
-	query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", 0, 30, timezone)
+	query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s&client_public_id=%s", 0, 30, timezone, *client_public_id)
 	endpoint := fmt.Sprintf("/service/%s/availability", s.Created.ID.String())
 	url := fmt.Sprintf("%s?%s", endpoint, query)
 	http.URL(url)

@@ -10,6 +10,7 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
+	"mynute-go/debug"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -259,6 +260,7 @@ func CreateBranchWorkSchedule(c *fiber.Ctx) error {
 		if err := tx.Create(&wr).Error; err != nil {
 			return lib.Error.General.CreatedError.WithError(err)
 		}
+		debug.Output("controller_CreateBranchWorkSchedule", wr)
 	}
 
 	var bwr []model.BranchWorkRange
@@ -780,7 +782,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/appointments [get]
-func GetBranchAppointments(c *fiber.Ctx) error {
+func GetBranchAppointmentsById(c *fiber.Ctx) error {
 	branch_id := c.Params("branch_id")
 
 	var appointments []model.Appointment
@@ -845,5 +847,6 @@ func Branch(Gorm *handler.Gorm) {
 		DeleteBranchWorkRange,
 		AddBranchWorkRangeServices,
 		DeleteBranchWorkRangeService,
+		GetBranchAppointmentsById,
 	})
 }

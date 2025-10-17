@@ -10,6 +10,7 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
+	"mynute-go/debug"
 	"strconv"
 	"time"
 
@@ -37,7 +38,9 @@ func CreateService(c *fiber.Ctx) error {
 	if err := Create(c, &service); err != nil {
 		return err
 	}
-
+	if err := debug.Output("controller_CreateService", service); err != nil {
+		return err
+	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &service, &DTO.Service{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -293,6 +296,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	var empRanges []model.EmployeeWorkRange
 	err = tx.
 		Joins("JOIN employee_work_range_services es ON es.employee_work_range_id = employee_work_ranges.id").
+		Joins("JOIN employee_branches eb ON eb.employee_id = employee_work_ranges.employee_id AND eb.branch_id = employee_work_ranges.branch_id").
 		Where("es.service_id = ?", serviceID).
 		Preload("Employee"). // Preload Employee data to get SlotTimeDiff and density
 		Preload("Branch").   // Preload Branch data for the response
@@ -302,17 +306,8 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	}
 
 	// --- 2b. Fetch all appointments for the relevant employees and date range in ONE query.
-	// This is the single most important optimization.
-	type appointmentCountResult struct {
-		EmployeeID uuid.UUID
-		StartTime  time.Time
-		Count      int64
-	}
-	var appointmentCounts []appointmentCountResult
 
-	// Extrai os IDs dos funcionários para filtrar a query de agendamentos
-	// --- Extrai os IDs ÚNICOS dos funcionários para filtrar a query de agendamentos ---
-	// Usamos um map como um "set" para garantir que cada ID apareça apenas uma vez.
+	// Extrai os IDs dos funcionários para filtrar a query de agendamentos.
 	employeeIDSet := make(map[uuid.UUID]struct{})
 	for _, er := range empRanges {
 		employeeIDSet[er.EmployeeID] = struct{}{}
@@ -323,6 +318,17 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	for id := range employeeIDSet {
 		employeeIDs = append(employeeIDs, id)
 	}
+
+	// TODO: Add pagination
+	// TODO: Add caching
+
+	type appointmentCountResult struct {
+		EmployeeID uuid.UUID
+		StartTime  time.Time
+		Count      int64
+	}
+	
+	var appointmentCounts []appointmentCountResult
 
 	if len(employeeIDs) > 0 {
 		err = tx.Model(&model.Appointment{}).
@@ -484,6 +490,34 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 
 	availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}
 
+	client_public_id := c.Query("client_public_id")
+	var clientAppointments []model.ClientAppointment
+	if client_public_id != "" {
+		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+			return err
+		}
+		if err := tx.Model(&model.ClientAppointment{}).
+			Where("client_id = ? AND is_cancelled = ?", client_public_id, false).
+			Where("start_time >= ? AND start_time < ?", startDate, endDate).
+			Find(&clientAppointments).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+		if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+			return err
+		}
+	}
+
+	// Get service duration to help with conflict checking
+	var serviceDuration uint16
+	if client_public_id != "" {
+		if err := tx.
+		Model(&model.Service{}).
+		Where("id = ?", serviceID).
+		Pluck("duration", &serviceDuration).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
 	for date, branches := range availabilityMap {
 		if _, ok := availableDateMap[date]; !ok {
 			availableDateMap[date] = map[uuid.UUID]*DTO.AvailableDate{}
@@ -498,7 +532,35 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 				}
 			}
 
+			slotLoop:
 			for timeStr, empIDs := range slots {
+				// Filter out times where the client already has an appointment
+				if client_public_id != "" {
+					// Create a time object for the current slot
+					slotTime_RFC3339 := fmt.Sprintf("%sT%s:00", date, timeStr)
+					slotTime, err := time.Parse("2006-01-02T15:04:05", slotTime_RFC3339)
+					if err != nil {
+						return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to parse slot time: %w", err))
+					}
+
+					for _, appt := range clientAppointments {
+						// Same start time means conflict
+						if appt.StartTime.Equal(slotTime) {
+							continue slotLoop
+						}
+						// If slotTime is between appt.StartTime and appt.EndTime then there is a conflict
+						if appt.StartTime.Before(slotTime) && appt.EndTime.After(slotTime) {
+							continue slotLoop
+						}
+						// If appt.StartTime is After slotTime 
+						// AND 
+						// appt.StartTime is Before slotTime + service duration then there is a conflict
+						slotTime_end := slotTime.Add(time.Minute * time.Duration(serviceDuration))
+						if appt.StartTime.After(slotTime) && appt.StartTime.Before(slotTime_end) {
+							continue slotLoop
+						}
+					}
+				}
 				availableDateMap[date][branchID].AvailableTimes = append(
 					availableDateMap[date][branchID].AvailableTimes,
 					DTO.AvailableTime{
@@ -528,12 +590,16 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		branchInfo = append(branchInfo, b)
 	}
 
-	return lib.ResponseFactory(c).Send(200, DTO.ServiceAvailability{
+	Availability := DTO.ServiceAvailability{
 		ServiceID:      serviceID,
 		AvailableDates: availableDates,
 		EmployeeInfo:   employeeInfo,
 		BranchInfo:     branchInfo,
-	})
+	}
+
+	debug.Output("controller_GetServiceAvailability", Availability)
+
+	return lib.ResponseFactory(c).Send(200, Availability)
 }
 
 // Service returns a service_controller

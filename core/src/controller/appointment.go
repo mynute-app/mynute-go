@@ -8,6 +8,7 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
+	"mynute-go/debug"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -29,6 +30,9 @@ import (
 func CreateAppointment(c *fiber.Ctx) error {
 	var appointment model.Appointment
 	if err := Create(c, &appointment); err != nil {
+		return err
+	}
+	if err := debug.Output("controller_CreateAppointment", appointment); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {

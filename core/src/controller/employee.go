@@ -11,6 +11,7 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
+	"mynute-go/debug"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -261,7 +262,7 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).SendDTO(200, &Design.Images, &dJSON.Images{})
 }
 
-// AddEmployeeWorkSchedule creates a work schedule for an employee
+// CreateEmployeeWorkSchedule creates a work schedule for an employee
 //
 //	@Summary		Create work schedule
 //	@Description	Create a work schedule for an employee
@@ -276,7 +277,7 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //	@Success		200				{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/work_schedule [post]
-func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
+func CreateEmployeeWorkSchedule(c *fiber.Ctx) error {
 	var input DTO.CreateEmployeeWorkSchedule
 	if err := c.BodyParser(&input); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -327,6 +328,7 @@ func AddEmployeeWorkSchedule(c *fiber.Ctx) error {
 		if err := tx.Create(&ewr).Error; err != nil {
 			return lib.Error.General.CreatedError.WithError(err)
 		}
+		debug.Output("controller_CreateEmployeeWorkSchedule", ewr)
 	}
 
 	var ewr []model.EmployeeWorkRange
@@ -978,7 +980,7 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/appointments [get]
-func GetEmployeeAppointments(c *fiber.Ctx) error {
+func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
 
 	var appointments []model.Appointment
@@ -1039,13 +1041,13 @@ func Employee(Gorm *handler.Gorm) {
 		ResetEmployeePasswordByEmail,
 		UpdateEmployeeImages,
 		DeleteEmployeeImage,
-		AddEmployeeWorkSchedule,
+		CreateEmployeeWorkSchedule,
 		GetEmployeeWorkSchedule,
 		GetEmployeeWorkRangeById,
 		DeleteEmployeeWorkRange,
 		UpdateEmployeeWorkRange,
 		AddEmployeeWorkRangeServices,
 		DeleteEmployeeWorkRangeService,
-		GetEmployeeAppointments,
+		GetEmployeeAppointmentsById,
 	})
 }

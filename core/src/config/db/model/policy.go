@@ -1113,7 +1113,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Name:        "SDP: CanCreateEmployeeWorkSchedule",
 		Description: "Allows employees, or company managers (Owner, GM, BM), to create their own work schedules.",
 		Effect:      "Allow",
-		EndPointID:  AddEmployeeWorkSchedule.ID,
+		EndPointID:  CreateEmployeeWorkSchedule.ID,
 		Conditions:  JsonRawMessage(company_admin_or_employee_himself_check), // Employee can create own schedule
 	}
 

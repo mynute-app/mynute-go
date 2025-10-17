@@ -504,10 +504,10 @@ var DeleteEmployeeImage = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         EmployeeResource,
 }
-var AddEmployeeWorkSchedule = &EndPoint{
+var CreateEmployeeWorkSchedule = &EndPoint{
 	Path:             "/employee/:id/work_schedule",
 	Method:           namespace.CreateActionMethod,
-	ControllerName:   "AddEmployeeWorkSchedule",
+	ControllerName:   "CreateEmployeeWorkSchedule",
 	Description:      "Add work schedule to employee",
 	NeedsCompanyId:   true,
 	DenyUnauthorized: true,
@@ -824,6 +824,7 @@ var endpoints = []*EndPoint{
 	UpdateBranchWorkRange,
 	AddBranchWorkRangeServices,
 	DeleteBranchWorkRangeService,
+	GetBranchAppointmentsById,
 	// Client
 	CreateClient,
 	LoginClient,
@@ -862,13 +863,14 @@ var endpoints = []*EndPoint{
 	RemoveBranchFromEmployee,
 	UpdateEmployeeImages,
 	DeleteEmployeeImage,
-	AddEmployeeWorkSchedule,
+	CreateEmployeeWorkSchedule,
 	GetEmployeeWorkSchedule,
 	GetEmployeeWorkRange,
 	DeleteEmployeeWorkRange,
 	UpdateEmployeeWorkRange,
 	AddEmployeeWorkRangeServices,
 	DeleteEmployeeWorkRangeService,
+	GetEmployeeAppointmentsById,
 	// Holiday
 	CreateHoliday,
 	GetHolidayById,

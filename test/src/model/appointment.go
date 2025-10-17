@@ -6,6 +6,7 @@ import (
 	coreModel "mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
+	"mynute-go/debug"
 	"mynute-go/test/src/handler"
 	"slices"
 	"time"
@@ -200,6 +201,7 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 		StartTime:  *startTime,
 		TimeZone:   tz,
 	}
+	debug.Output("test_e2e_CreateAppointment_Payload", A)
 	if err := http.Send(A).Error; err != nil {
 		return fmt.Errorf("failed to create appointment: %w", err)
 	}

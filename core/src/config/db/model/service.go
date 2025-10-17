@@ -16,7 +16,7 @@ type Service struct {
 	Description string             `gorm:"type:text" validate:"required,min=3,max=1000" json:"description"`
 	Price       int64              `gorm:"not null" validate:"required,min=0" json:"price"`
 	Currency    string             `gorm:"type:varchar(3);default:'BRL'" json:"currency"` // Default currency is BRL
-	Duration    uint               `gorm:"not null" json:"duration"`                      // Duration in minutes
+	Duration    uint16             `gorm:"not null" json:"duration"`                      // In minutes                    // Duration in minutes
 	CompanyID   uuid.UUID          `gorm:"not null;index" json:"company_id"`
 	Company     *Company           `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" json:"company"`
 	Employees   []*Employee        `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"employees"` // Many-to-many relation with Employee

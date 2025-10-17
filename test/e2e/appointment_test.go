@@ -3,10 +3,12 @@ package e2e_test
 import (
 	"fmt"
 	"mynute-go/core"
+	"mynute-go/core/src/lib"
 	"mynute-go/test/src/handler"
 	testModel "mynute-go/test/src/model"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,16 +23,27 @@ func Test_Appointment(t *testing.T) {
 		t.Fatal("APP_ENV is not set to 'test'. Aborting tests to prevent data loss.")
 	}
 
-	ct := &testModel.Client{}
-	cy := &testModel.Company{}
+	TimeZone := "America/Sao_Paulo"
 
+	ct := &testModel.Client{}
 	tt.Describe("Client creation").Test(ct.Set())
-	tt.Describe("Company setup").Test(cy.Set())
+
+	var cys []*testModel.Company
+	companiesToCreate := 2
+
+	for i := range companiesToCreate {
+		_ = &testModel.Company{}
+		min := 2
+		max := 4
+		empN := lib.GenerateRandomIntFromRange(min, max)
+		branchN := lib.GenerateRandomIntFromRange(min, max)
+		serviceN := lib.GenerateRandomIntFromRange(min, max)
+		cy := &testModel.Company{}
+		tt.Describe(fmt.Sprintf("Company Random Setup [%d]", i)).Test(cy.CreateCompanyRandomly(empN, branchN, serviceN))
+		cys = append(cys, cy)
+	}
 
 	Appointments := []*testModel.Appointment{}
-
-	service, err := cy.GetRandomService()
-	tt.Describe("Getting random service from company services").Test(err)
 
 	GetBranchByID := func(branchID string, company *testModel.Company) (*testModel.Branch, error) {
 		for _, branch := range company.Branches {
@@ -50,37 +63,29 @@ func Test_Appointment(t *testing.T) {
 		return nil, fmt.Errorf("employee not found")
 	}
 
-	TimeZone := "America/Sao_Paulo"
+	// Test Case 0: Creating multiple appointments for a single customer.
 
-	// Test Case 0: Successful appointment creation
-	slot0, err := service.FindValidRandomAppointmentSlot(TimeZone)
-	tt.Describe("Finding valid appointment slot for service - a[0]").Test(err)
+	appointmentsToCreate := 50
+	client_public_id := ct.Created.ID.String()
+	for _, cy := range cys {
+		for _, service := range cy.Services {
+			for i := range appointmentsToCreate {
+				slot, err := service.FindValidRandomAppointmentSlot(TimeZone, &client_public_id)
+				tt.Describe(fmt.Sprintf("Finding valid appointment slot for service - a[%d]", i)).Test(err)
 
-	slot0Branch, err := GetBranchByID(slot0.BranchID, cy)
-	tt.Describe("Getting branch for slot0").Test(err)
-	slot0Employee, err := GetEmployeeByID(slot0.EmployeeID, cy)
-	tt.Describe("Getting employee for slot0").Test(err)
+				slotBranch, err := GetBranchByID(slot.BranchID, cy)
+				tt.Describe(fmt.Sprintf("Getting branch for slot[%d]", i)).Test(err)
+				slotEmployee, err := GetEmployeeByID(slot.EmployeeID, cy)
+				tt.Describe(fmt.Sprintf("Getting employee for slot[%d]", i)).Test(err)
 
-	var a0 testModel.Appointment
-	a0_creation_error := a0.Create(200, ct.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, slot0Branch, slot0Employee, service, cy, ct)
-	tt.Describe("Creating appointment a[0]").Test(a0_creation_error)
+				var appointment testModel.Appointment
+				appointment_creation_error := appointment.Create(200, ct.X_Auth_Token, nil, &slot.StartTimeRFC3339, slot.TimeZone, slotBranch, slotEmployee, service, cy, ct)
+				tt.Describe(fmt.Sprintf("Creating appointment a[%d]", i)).Test(appointment_creation_error)
 
-	Appointments = append(Appointments, &a0)
-
-	// Test Case 1: Successful appointment creation
-	slot1, err := service.FindValidRandomAppointmentSlot(TimeZone)
-	tt.Describe("Finding valid appointment slot for service - a[1]").Test(err)
-
-	slot1Branch, err := GetBranchByID(slot1.BranchID, cy)
-	tt.Describe("Getting branch for slot1").Test(err)
-	slot1Employee, err := GetEmployeeByID(slot1.EmployeeID, cy)
-	tt.Describe("Getting employee for slot1").Test(err)
-
-	var a1 testModel.Appointment
-	a1_creation_error := a1.Create(200, ct.X_Auth_Token, nil, &slot1.StartTimeRFC3339, slot1.TimeZone, slot1Branch, slot1Employee, service, cy, ct)
-	tt.Describe("Creating appointment a[1]").Test(a1_creation_error)
-
-	Appointments = append(Appointments, &a1)
+				Appointments = append(Appointments, &appointment)
+			}
+		}
+	}
 
 	// Test Case 2: Equal conflicting appointment creation for employee at slot 0
 
@@ -88,10 +93,12 @@ func Test_Appointment(t *testing.T) {
 		t.Fatalf("Setup failed: a[0] is nil, cannot test conflict")
 	}
 
-	var a2 testModel.Appointment
-	a2_creation_error := a2.Create(400, slot0Employee.X_Auth_Token, nil, &slot0.StartTimeRFC3339, slot0.TimeZone, slot0Branch, slot0Employee, service, cy, ct)
-	tt.Describe("Creating conflicting appointment a[2] with employee token").Test(a2_creation_error)
+	slot0 := Appointments[0]
+	slot0StartTimeRFC3339 := slot0.Created.StartTime.Format(time.RFC3339)
 
+	var a2 testModel.Appointment
+	a2_creation_error := a2.Create(400, slot0.Employee.X_Auth_Token, nil, &slot0StartTimeRFC3339, slot0.Created.TimeZone, slot0.Branch, slot0.Employee, slot0.Service, slot0.Company, ct)
+	tt.Describe("Creating conflicting appointment a[2] with employee token").Test(a2_creation_error)
 }
 
 // func Test_Appointment(t *testing.T) {

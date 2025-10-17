@@ -10,6 +10,7 @@ import (
 	"mynute-go/core/src/lib"
 	myUploader "mynute-go/core/src/lib/cloud_uploader"
 	"mynute-go/core/src/middleware"
+	"mynute-go/debug"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +41,7 @@ func NewServer() *Server {
 	if err := myUploader.StartProvider(); err != nil {
 		panic(err)
 	}
+	debug.Clear()
 	return &Server{App: app, Db: db}
 }
 
