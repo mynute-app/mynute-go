@@ -134,10 +134,6 @@ definitions:
   DTO.BranchFull:
     description: Branch Full DTO
     properties:
-      appointments:
-        items:
-          $ref: '#/definitions/DTO.Appointment'
-        type: array
       city:
         example: New York
         type: string
@@ -610,10 +606,6 @@ definitions:
   DTO.EmployeeFull:
     description: Employee Full DTO
     properties:
-      appointments:
-        items:
-          $ref: '#/definitions/DTO.Appointment'
-        type: array
       branches:
         items:
           $ref: '#/definitions/DTO.BranchBase'

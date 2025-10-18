@@ -4742,12 +4742,6 @@ const docTemplate = `{
             "description": "Branch Full DTO",
             "type": "object",
             "properties": {
-                "appointments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
-                    }
-                },
                 "city": {
                     "type": "string",
                     "example": "New York"
@@ -5389,12 +5383,6 @@ const docTemplate = `{
             "description": "Employee Full DTO",
             "type": "object",
             "properties": {
-                "appointments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
-                    }
-                },
                 "branches": {
                     "type": "array",
                     "items": {
