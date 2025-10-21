@@ -45,7 +45,7 @@ func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
 func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	return jwt.MapClaims{
 		"data": data,
-		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+		"exp":  time.Now().Add(time.Hour * 2160).Unix(), // 90 days
 	}
 }
 
