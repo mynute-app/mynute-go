@@ -743,13 +743,29 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 	numRanges := 1 + rand.Intn(2)
 	lastEndHour := 0
 	lastEndMinute := 0
-	lastEndTimeStr := "00:00"
 
-	for r := range numRanges {
-		var startHour, startMinute, endHour, endMinute int
+	getMinutes := func() int {
+		fifteenMinOpts := []int{0, 15, 30, 45}
+		return fifteenMinOpts[rand.Intn(4)]
+	}
 
-		if employee != nil && len(branchWorkRangesForDay) > 0 {
-			// Select a random branch work range for the day
+	type AcceptableHours struct {
+		min int
+		max int
+	}
+
+	acceptableHours := AcceptableHours{
+		min: 6,
+		max: 23,
+	}
+
+	for range numRanges {
+		startHour := 0
+		startMinute := 0
+		endHour := 0
+		endMinute := 0
+
+		if employee != nil {
 			branchRange := branchWorkRangesForDay[rand.Intn(len(branchWorkRangesForDay))]
 			loc, err := time.LoadLocation(branchRange.TimeZone)
 			if err != nil {
@@ -759,97 +775,97 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			branchStartTime := branchRange.StartTime.In(loc)
 			branchEndTime := branchRange.EndTime.In(loc)
 
-			// Generate start time within the branch's work range
-			startHour = branchStartTime.Hour() + rand.Intn(max(1, branchEndTime.Hour()-branchStartTime.Hour()-1))
-			startMinute = []int{0, 15, 30, 45}[rand.Intn(4)]
-
-			// Ensure start time is not before branch start time
-			if startHour < branchStartTime.Hour() || (startHour == branchStartTime.Hour() && startMinute < branchStartTime.Minute()) {
-				startHour = branchStartTime.Hour()
-				startMinute = branchStartTime.Minute()
+			if lastEndHour >= branchEndTime.Hour() {
+				continue // No more valid ranges can be created for this branch on this day
 			}
 
-			// Generate end time, ensuring it's after start time and within branch hours
-			durationHours := 1 + rand.Intn(3)
-			endHour = min(startHour+durationHours, branchEndTime.Hour())
-			endMinute = min([]int{0, 15, 30, 45}[rand.Intn(4)], branchEndTime.Minute())
+			if lastEndHour == 0 {
+				lastEndHour = branchStartTime.Hour()
+				lastEndMinute = branchStartTime.Minute()
+			}
 
-			if endHour > branchEndTime.Hour() || (endHour == branchEndTime.Hour() && endMinute > branchEndTime.Minute()) {
+			// Generate start time within the branch's work range
+			startHour = lastEndHour + rand.Intn(max(1, branchEndTime.Hour()-lastEndHour-1))
+			startMinute = getMinutes()
+
+			if startHour == lastEndHour {
+				startHour = startHour + 1
+				startMinute = lastEndMinute
+			}
+			// Generate end time, ensuring it's after start time and within branch hours
+
+			if startHour >= branchEndTime.Hour()-1 {
+				continue // Cannot create a valid range if start hour is the same as branch end hour
+			}
+
+			durationHours := 1 + rand.Intn(max(1, branchEndTime.Hour()-startHour))
+
+			endHour = min(startHour+durationHours, branchEndTime.Hour())
+			if endHour == startHour {
+				endHour++
+			}
+			endMinute = getMinutes()
+
+			if endHour >= branchStartTime.Hour() {
 				endHour = branchEndTime.Hour()
 				endMinute = branchEndTime.Minute()
 			}
 
-			// Final check to ensure end time is after start time
-			if endHour < startHour || (endHour == startHour && endMinute <= startMinute) {
-				endHour = startHour + 1
-				if endHour > branchEndTime.Hour() {
-					return fmt.Errorf("unable to generate valid end time for employee %s on day %d within branch hours", employee.Created.Email, weekday)
-				}
+			if endHour >= 24 && endMinute > 0 {
+				continue // Skip invalid end hours
+			}
+
+			if startHour >= endHour {
+				return fmt.Errorf("for some reason the branch start hour generated (%d) is bigger than the end hour generated (%d). This should not happen", startHour, endHour)
 			}
 		} else {
 			// Original logic for branch work schedule generation (no employee)
-			startHourLower := 7
-			if r > 0 {
-				var hourPart, minutePart int
-				fmt.Sscanf(lastEndTimeStr, "%02d:%02d", &hourPart, &minutePart)
-				startHourLower = hourPart
-				if minutePart > 0 {
-					startHourLower++
-				}
-				startHourLower++
-				if startHourLower < 13 && hourPart >= 12 {
-					startHourLower = 13
-				}
-			}
-			if startHourLower > 19 {
-				continue
+
+			if lastEndHour == 0 {
+				lastEndHour = acceptableHours.min
+				lastEndMinute = 0
 			}
 
-			startHour = startHourLower + rand.Intn(2)
-			startMinute = []int{0, 15, 30, 45}[rand.Intn(4)]
-			startTimeStr := fmt.Sprintf("%02d:%02d", startHour, startMinute)
-			
-			if r > 0 && startTimeStr <= lastEndTimeStr {
-				startHour++
-				if startHour > 20 {
-					continue
-				}
+			startHour = lastEndHour + rand.Intn(2)
+			startMinute = getMinutes()
+
+			if startHour == lastEndHour {
+				startHour = startHour + 1
+				startMinute = lastEndMinute
 			}
 
-			durationHours := 2 + rand.Intn(4)
-			endHour = min(startHour+durationHours, 22)
-			endMinute = []int{0, 15, 30, 45}[rand.Intn(4)]
-			endTimeStr := fmt.Sprintf("%02d:%02d", endHour, endMinute)
+			if startHour >= acceptableHours.max-1 {
+				continue // Cannot create a valid range if start hour is the same as max hour
+			}
 
-			if endTimeStr <= startTimeStr {
-				if endHour < startHour {
-					endHour = startHour + rand.Intn(2) + 1
-				} else if endHour == startHour {
-					endHour++
-				}
+			duration := 1 + rand.Intn(max(1, acceptableHours.max-startHour-1))
 
-				if endHour > 22 {
-					endHour = 22
-					endMinute = 59
-				}
-				endTimeStr = fmt.Sprintf("%02d:%02d", endHour, endMinute)
+			endHour = min(startHour+duration, acceptableHours.max)
+			if endHour == startHour {
+				endHour++
+			}
+			endMinute = getMinutes()
 
-				if endTimeStr <= startTimeStr {
-					endTimeStr = fmt.Sprintf("%02d:59", endHour)
-				}
+			if endHour >= 24 && endMinute > 0 {
+				continue // Skip invalid end hours
+			}
+
+			if startHour >= endHour {
+				return fmt.Errorf("for some reason the branch start hour generated (%d) is bigger than the end hour generated (%d). This should not happen", startHour, endHour)
 			}
 		}
 
-		loc, err := branch.Created.GetTimeZone()
-		if err != nil {
-			panic(err)
-		}
-		startTime := time.Date(1, 1, 1, startHour, startMinute, 0, 0, loc).UTC()
-		endTime := time.Date(1, 1, 1, endHour, endMinute, 0, 0, loc).UTC()
+		lastEndHour = endHour
+		lastEndMinute = endMinute
+
+		log.Printf("Found startHour: %d, startMinute: %d, endHour: %d, endMinute: %d, weekday: %d, branchID: %s", startHour, startMinute, endHour, endMinute, weekday, branch.Created.ID)
+
+		startTime := time.Date(2020, 1, 1, startHour, startMinute, 0, 0, time.UTC).UTC()
+		endTime := time.Date(2020, 1, 1, endHour, endMinute, 0, 0, time.UTC).UTC()
 		finalStartTimeStr := startTime.Format("15:04")
 		finalEndTimeStr := endTime.Format("15:04")
 
-		if finalEndTimeStr <= finalStartTimeStr {
+		if startTime.After(endTime) || startTime.Equal(endTime) {
 			continue // Skip invalid ranges
 		}
 
@@ -879,8 +895,11 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			continue
 		}
 
+		// Log generated start and end times for debugging
+
 		switch rgs := ranges.(type) {
 		case *[]DTO.CreateBranchWorkRange:
+			log.Printf("Generated work range for branch (%s) on weekday %d: %s - %s\n", branch.Created.ID, weekday, finalStartTimeStr, finalEndTimeStr)
 			*rgs = append(*rgs, DTO.CreateBranchWorkRange{
 				Weekday:                 uint8(weekday),
 				StartTime:               finalStartTimeStr,
@@ -890,6 +909,7 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 				BranchWorkRangeServices: DTO.BranchWorkRangeServices{Services: commonServices},
 			})
 		case *[]DTO.CreateEmployeeWorkRange:
+			log.Printf("Generated work range for employee (%s) on weekday %d: %s - %s\n", employee.Created.ID, weekday, finalStartTimeStr, finalEndTimeStr)
 			*rgs = append(*rgs, DTO.CreateEmployeeWorkRange{
 				Weekday:                   uint8(weekday),
 				StartTime:                 finalStartTimeStr,
@@ -900,7 +920,6 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{Services: commonServices},
 			})
 		}
-		lastEndTimeStr = finalEndTimeStr
 	}
 	return nil
 }

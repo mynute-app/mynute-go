@@ -61,8 +61,9 @@ func (wr *WorkRangeBase) ValidateTime() error {
 	if wr.StartTime.Equal(wr.EndTime) {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start time cannot be equal to end time"))
 	}
-	if wr.StartTime.After(wr.EndTime) {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start time cannot be after end time"))
+	// If end time is not at midnight, start time cannot be after end time
+	if wr.StartTime.After(wr.EndTime) && !(wr.EndTime.Hour() == 0 && wr.EndTime.Minute() == 0) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("start time (%s) cannot be after end time (%s)", wr.StartTime, wr.EndTime))
 	}
 	if wr.Weekday < 0 || wr.Weekday > 6 {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid weekday %d", wr.Weekday))

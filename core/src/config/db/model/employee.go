@@ -4,6 +4,7 @@ import (
 	"fmt"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
+	"mynute-go/debug"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -260,6 +261,10 @@ func (e *Employee) AddService(tx *gorm.DB, service *Service) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+	debugText := fmt.Sprintf("Added service %s to employee %s", sID, eID)
+	if err := debug.Output("model_Employee.AddService", debugText); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -287,6 +292,10 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	debugText := fmt.Sprintf("Removed service %s from employee %s", sID, eID)
+	if err := debug.Output("model_Employee.RemoveService", debugText); err != nil {
+		return err
 	}
 	return nil
 }
@@ -328,6 +337,10 @@ func (e *Employee) AddBranch(tx *gorm.DB, branch *Branch) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+	debugText := fmt.Sprintf("Added branch %s to employee %s", bID, eID)
+	if err := debug.Output("model_Employee.AddBranch", debugText); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -355,6 +368,10 @@ func (e *Employee) RemoveBranch(tx *gorm.DB, branch *Branch) error {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("employee not found"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	debugText := fmt.Sprintf("Removed branch %s from employee %s", bID, eID)
+	if err := debug.Output("model_Employee.RemoveBranch", debugText); err != nil {
+		return err
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
+	"mynute-go/debug"
 	"strings"
 	"time"
 
@@ -101,6 +102,10 @@ func (b *Branch) AddService(tx *gorm.DB, service *Service) error {
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+	debugText := fmt.Sprintf("Added service %s to branch %s", sID, bID)
+	if err := debug.Output("model_Branch.AddService", debugText); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -126,6 +131,10 @@ func (b *Branch) RemoveService(tx *gorm.DB, service *Service) error {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("branch not found"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
+	}
+	debugText := fmt.Sprintf("Removed service %s from branch %s", sID, bID)
+	if err := debug.Output("model_Branch.RemoveService", debugText); err != nil {
+		return err
 	}
 	return nil
 }

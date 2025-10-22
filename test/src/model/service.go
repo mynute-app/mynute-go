@@ -292,8 +292,18 @@ func (s *Service) FindValidRandomAppointmentSlot(timezone string, client_public_
 		return nil, fmt.Errorf("failed to parse time: %w", err)
 	}
 
+	if len(randomAvailableTime.EmployeesID) == 0 {
+		return nil, fmt.Errorf("time slot %s on date %s has no available employees, which should not happen. Probable backend issue", timeStr, dateStr)
+	}
+
+	var EmployeeID string
+	if len(randomAvailableTime.EmployeesID) == 1 {
+		EmployeeID = randomAvailableTime.EmployeesID[0].String()
+	} else {
+		EmployeeID = randomAvailableTime.EmployeesID[lib.GenerateRandomIntFromRange(0, len(randomAvailableTime.EmployeesID)-1)].String()
+	}
+
 	StartTimeRFC3339 := parsedTime.Format(time.RFC3339)
-	EmployeeID := randomAvailableTime.EmployeesID[lib.GenerateRandomIntFromRange(0, len(randomAvailableTime.EmployeesID)-1)].String()
 
 	return &RandomAppointmentSlot{
 		StartTimeRFC3339: StartTimeRFC3339,

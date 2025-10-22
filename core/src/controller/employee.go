@@ -41,6 +41,10 @@ func CreateEmployee(c *fiber.Ctx) error {
 		return err
 	}
 
+	if err := debug.Output("controller_CreateEmployee", employee); err != nil {
+		return err
+	}
+
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}

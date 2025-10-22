@@ -39,6 +39,11 @@ func CreateBranch(c *fiber.Ctx) error {
 	if err := Create(c, &branch); err != nil {
 		return err
 	}
+
+	if err := debug.Output("controller_CreateBranch", branch); err != nil {
+		return err
+	}
+
 	if err := lib.ResponseFactory(c).SendDTO(200, &branch, &DTO.BranchFull{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -825,7 +830,6 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 
 	return nil
 }
-
 
 // CreateBranch creates a branch
 func Branch(Gorm *handler.Gorm) {
