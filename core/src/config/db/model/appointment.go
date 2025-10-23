@@ -287,13 +287,13 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 		Where("start_time <= ? AND end_time >= ? AND weekday = ?", aStartTimeHHMMUTC, aEndTimeHHMMUTC, weekday).
 		Count(&count).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) on day (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), weekday, a.EmployeeID, a.BranchID))
 		}
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("error querying work schedule: %w", err))
 	}
 
 	if count == 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.EmployeeID, a.BranchID))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no work schedule was found that could contain the appointment from (%s) to (%s) on day (%s) for employee %s at branch %s", a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), weekday, a.EmployeeID, a.BranchID))
 	}
 
 	ChangeSchema := func(schema string) error {

@@ -720,6 +720,12 @@ func GenerateRandomEmployeeWorkRanges(validBranches []*Branch, employee *Employe
 //   - Returns a slice of CreateEmployeeWorkRange DTOs.
 //   - If the employee is nil, it generates ranges without employee-specific services (for branches).
 func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Employee, weekday model.Weekday, workProbability float32) error {
+	if employee == nil {
+		log.Printf("Generating work range for branch on weekday %d\n", weekday)
+	} else {
+		log.Printf("Generating work range for employee %d (%s) on weekday %d\n", employee.Created.ID, employee.Created.Email, weekday)
+	}
+	
 	if rand.Float32() > workProbability || len(validBranches) == 0 {
 		return nil // Does not work this day or no valid branches
 	}
