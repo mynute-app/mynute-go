@@ -34,14 +34,17 @@ func TestTemplateRenderer_RenderEmail(t *testing.T) {
 	// Create test translations
 	translationContent := `{
 		"en": {
+			"subject": "Welcome Email",
 			"title": "Welcome",
 			"message": "Hello World"
 		},
 		"pt": {
+			"subject": "Email de Boas-vindas",
 			"title": "Bem-vindo",
 			"message": "Olá Mundo"
 		},
 		"es": {
+			"subject": "Correo de Bienvenida",
 			"title": "Bienvenido",
 			"message": "Hola Mundo"
 		}
@@ -52,69 +55,77 @@ func TestTemplateRenderer_RenderEmail(t *testing.T) {
 	renderer := NewTemplateRenderer(templateDir, translationDir)
 
 	t.Run("should render email with English translations by default", func(t *testing.T) {
-		html, err := renderer.RenderEmail("test_email", "", TemplateData{
+		result, err := renderer.RenderEmail("test_email", "", TemplateData{
 			"code": "12345",
 		})
 
 		assert.NoError(t, err)
-		assert.Contains(t, html, "<h1>Welcome</h1>")
-		assert.Contains(t, html, "<p>Hello World</p>")
-		assert.Contains(t, html, "<p>Code: 12345</p>")
+		assert.NotNil(t, result)
+		assert.Equal(t, "Welcome Email", result.Subject)
+		assert.Contains(t, result.HTMLBody, "<h1>Welcome</h1>")
+		assert.Contains(t, result.HTMLBody, "<p>Hello World</p>")
+		assert.Contains(t, result.HTMLBody, "<p>Code: 12345</p>")
 	})
 
 	t.Run("should render email with Portuguese translations", func(t *testing.T) {
-		html, err := renderer.RenderEmail("test_email", "pt", TemplateData{
+		result, err := renderer.RenderEmail("test_email", "pt", TemplateData{
 			"code": "67890",
 		})
 
 		assert.NoError(t, err)
-		assert.Contains(t, html, "<h1>Bem-vindo</h1>")
-		assert.Contains(t, html, "<p>Olá Mundo</p>")
-		assert.Contains(t, html, "<p>Code: 67890</p>")
+		assert.NotNil(t, result)
+		assert.Equal(t, "Email de Boas-vindas", result.Subject)
+		assert.Contains(t, result.HTMLBody, "<h1>Bem-vindo</h1>")
+		assert.Contains(t, result.HTMLBody, "<p>Olá Mundo</p>")
+		assert.Contains(t, result.HTMLBody, "<p>Code: 67890</p>")
 	})
 
 	t.Run("should render email with Spanish translations", func(t *testing.T) {
-		html, err := renderer.RenderEmail("test_email", "es", TemplateData{
+		result, err := renderer.RenderEmail("test_email", "es", TemplateData{
 			"code": "ABCDE",
 		})
 
 		assert.NoError(t, err)
-		assert.Contains(t, html, "<h1>Bienvenido</h1>")
-		assert.Contains(t, html, "<p>Hola Mundo</p>")
-		assert.Contains(t, html, "<p>Code: ABCDE</p>")
+		assert.NotNil(t, result)
+		assert.Equal(t, "Correo de Bienvenida", result.Subject)
+		assert.Contains(t, result.HTMLBody, "<h1>Bienvenido</h1>")
+		assert.Contains(t, result.HTMLBody, "<p>Hola Mundo</p>")
+		assert.Contains(t, result.HTMLBody, "<p>Code: ABCDE</p>")
 	})
 
 	t.Run("should allow custom data to override translations", func(t *testing.T) {
-		html, err := renderer.RenderEmail("test_email", "en", TemplateData{
+		result, err := renderer.RenderEmail("test_email", "en", TemplateData{
 			"title": "Custom Title",
 			"code":  "99999",
 		})
 
 		assert.NoError(t, err)
-		assert.Contains(t, html, "<h1>Custom Title</h1>")
-		assert.Contains(t, html, "<p>Hello World</p>")
-		assert.Contains(t, html, "<p>Code: 99999</p>")
+		assert.NotNil(t, result)
+		assert.Equal(t, "Welcome Email", result.Subject)
+		assert.Contains(t, result.HTMLBody, "<h1>Custom Title</h1>")
+		assert.Contains(t, result.HTMLBody, "<p>Hello World</p>")
+		assert.Contains(t, result.HTMLBody, "<p>Code: 99999</p>")
 	})
 
 	t.Run("should return error for unsupported language", func(t *testing.T) {
-		html, err := renderer.RenderEmail("test_email", "fr", TemplateData{
+		result, err := renderer.RenderEmail("test_email", "fr", TemplateData{
 			"code": "12345",
 		})
 
 		assert.Error(t, err)
-		assert.Empty(t, html)
+		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "language 'fr' not found")
 	})
 
 	t.Run("should return error for non-existent template", func(t *testing.T) {
 		// Create translation file but not template file
 		noTemplateTrans := filepath.Join(translationDir, "non_existent.json")
-		require.NoError(t, os.WriteFile(noTemplateTrans, []byte(`{"en": {"test": "value"}}`), 0644))
+		require.NoError(t, os.WriteFile(noTemplateTrans, []byte(`{"en": {"subject": "Test", "test": "value"}}`), 0644))
 
-		html, err := renderer.RenderEmail("non_existent", "en", TemplateData{})
+		result, err := renderer.RenderEmail("non_existent", "en", TemplateData{})
 
 		assert.Error(t, err)
-		assert.Empty(t, html)
+		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "failed to parse template")
 	})
 
@@ -123,10 +134,10 @@ func TestTemplateRenderer_RenderEmail(t *testing.T) {
 		noTransPath := filepath.Join(templateDir, "no_trans.html")
 		require.NoError(t, os.WriteFile(noTransPath, []byte("<html><body>{{.test}}</body></html>"), 0644))
 
-		html, err := renderer.RenderEmail("no_trans", "en", TemplateData{})
+		result, err := renderer.RenderEmail("no_trans", "en", TemplateData{})
 
 		assert.Error(t, err)
-		assert.Empty(t, html)
+		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "failed to load translations")
 	})
 }
@@ -255,35 +266,38 @@ func TestTemplateRenderer_RealLoginValidation(t *testing.T) {
 	renderer := NewTemplateRenderer(staticPath, translationPath)
 
 	t.Run("should render login_validation email in English", func(t *testing.T) {
-		html, err := renderer.RenderEmail("login_validation", "en", TemplateData{
+		result, err := renderer.RenderEmail("login_validation", "en", TemplateData{
 			"ValidationCode": "123456",
 		})
 
 		require.NoError(t, err)
-		assert.Contains(t, html, "Login Validation Code")
-		assert.Contains(t, html, "123456")
-		assert.Contains(t, html, "Your Login Validation Code")
+		assert.NotNil(t, result)
+		assert.Contains(t, result.HTMLBody, "Login Validation Code")
+		assert.Contains(t, result.HTMLBody, "123456")
+		assert.Contains(t, result.HTMLBody, "Your Login Validation Code")
 	})
 
 	t.Run("should render login_validation email in Portuguese", func(t *testing.T) {
-		html, err := renderer.RenderEmail("login_validation", "pt", TemplateData{
+		result, err := renderer.RenderEmail("login_validation", "pt", TemplateData{
 			"ValidationCode": "654321",
 		})
 
 		require.NoError(t, err)
-		assert.Contains(t, html, "Código de Validação de Login")
-		assert.Contains(t, html, "654321")
-		assert.Contains(t, html, "Seu Código de Validação de Login")
+		assert.NotNil(t, result)
+		assert.Contains(t, result.HTMLBody, "Código de Validação de Login")
+		assert.Contains(t, result.HTMLBody, "654321")
+		assert.Contains(t, result.HTMLBody, "Seu Código de Validação de Login")
 	})
 
 	t.Run("should render login_validation email in Spanish", func(t *testing.T) {
-		html, err := renderer.RenderEmail("login_validation", "es", TemplateData{
+		result, err := renderer.RenderEmail("login_validation", "es", TemplateData{
 			"ValidationCode": "ABCDEF",
 		})
 
 		require.NoError(t, err)
-		assert.Contains(t, html, "Código de Validación de Inicio de Sesión")
-		assert.Contains(t, html, "ABCDEF")
-		assert.Contains(t, html, "Su Código de Validación de Inicio de Sesión")
+		assert.NotNil(t, result)
+		assert.Contains(t, result.HTMLBody, "Código de Validación de Inicio de Sesión")
+		assert.Contains(t, result.HTMLBody, "ABCDEF")
+		assert.Contains(t, result.HTMLBody, "Su Código de Validación de Inicio de Sesión")
 	})
 }
