@@ -14,7 +14,7 @@ func TestNewProvider(t *testing.T) {
 		defer os.Unsetenv("RESEND_API_KEY")
 		defer os.Unsetenv("RESEND_DEFAULT_FROM")
 
-		provider, err := NewProvider("resend")
+		provider, err := NewProvider(&ProviderOpts{Provider: "resend"})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, provider)
@@ -23,7 +23,7 @@ func TestNewProvider(t *testing.T) {
 	})
 
 	t.Run("should return MailHog adapter when provider is mailhog", func(t *testing.T) {
-		provider, err := NewProvider("mailhog")
+		provider, err := NewProvider(&ProviderOpts{Provider: "mailhog"})
 
 		assert.NoError(t, err)
 		assert.NotNil(t, provider)
@@ -32,7 +32,7 @@ func TestNewProvider(t *testing.T) {
 	})
 
 	t.Run("should return error for unsupported provider", func(t *testing.T) {
-		provider, err := NewProvider("unsupported")
+		provider, err := NewProvider(&ProviderOpts{Provider: "unsupported"})
 
 		assert.Error(t, err)
 		assert.Nil(t, provider)

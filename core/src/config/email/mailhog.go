@@ -61,7 +61,7 @@ func (m *MailHogAdapter) Send(ctx context.Context, data EmailData) error {
 
 	// Connect to MailHog SMTP server
 	addr := fmt.Sprintf("%s:%s", m.host, m.port)
-	
+
 	// MailHog doesn't require authentication
 	err := smtp.SendMail(
 		addr,
@@ -70,7 +70,7 @@ func (m *MailHogAdapter) Send(ctx context.Context, data EmailData) error {
 		data.To,
 		[]byte(message),
 	)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to send email via mailhog: %w", err)
 	}
@@ -92,7 +92,7 @@ func (m *MailHogAdapter) buildMessage(from string, data EmailData) string {
 	if len(data.Cc) > 0 {
 		builder.WriteString(fmt.Sprintf("Cc: %s\r\n", strings.Join(data.Cc, ", ")))
 	}
-	
+
 	if len(data.Bcc) > 0 {
 		builder.WriteString(fmt.Sprintf("Bcc: %s\r\n", strings.Join(data.Bcc, ", ")))
 	}
@@ -108,7 +108,7 @@ func (m *MailHogAdapter) buildMessage(from string, data EmailData) string {
 
 	// MIME headers for HTML email
 	builder.WriteString("MIME-Version: 1.0\r\n")
-	
+
 	if data.Html != "" {
 		builder.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
 		builder.WriteString("\r\n")

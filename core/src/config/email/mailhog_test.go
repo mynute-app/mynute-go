@@ -80,7 +80,7 @@ func TestMailHogAdapter_Send(t *testing.T) {
 			from = adapter.defaultFrom
 		}
 		message := adapter.buildMessage(from, data)
-		
+
 		// Verify the from address is set to default
 		assert.Contains(t, message, "From: default@example.com")
 	})

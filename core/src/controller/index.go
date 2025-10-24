@@ -90,7 +90,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 	
 	if err := tx.Model(model).Where("email = ?", user_email).First(&model).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
+			return lib.Error.General.RecordNotFound
 		}
 		return err
 	}
@@ -110,7 +110,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 	}
 
 	// Initialize email provider
-	provider, err := email.NewProvider("resend")
+	provider, err := email.NewProvider(nil)
 	if err != nil {
 		return fmt.Errorf("failed to initialize email provider: %w", err)
 	}
@@ -121,6 +121,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 		Subject: renderedEmail.Subject,
 		Html:    renderedEmail.HTMLBody,
 	})
+	
 	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}

@@ -3,6 +3,7 @@ package email
 import (
 	"context"
 	"fmt"
+	"os"
 )
 
 // Attachment is the public struct used for adding attachments to emails
@@ -37,18 +38,18 @@ type Tag struct {
 
 // EmailData holds all the necessary information for an email.
 type EmailData struct {
-	From          string            `json:"from"`
-	To            []string          `json:"to"`
-	Subject       string            `json:"subject"`
-	Bcc           []string          `json:"bcc,omitempty"`
-	Cc            []string          `json:"cc,omitempty"`
-	ReplyTo       string            `json:"reply_to,omitempty"`
-	Html          string            `json:"html,omitempty"`
-	Text          string            `json:"text,omitempty"`
-	Tags          []Tag             `json:"tags,omitempty"`
-	Attachments   []*Attachment     `json:"attachments,omitempty"`
-	Headers       map[string]string `json:"headers,omitempty"`
-	ScheduledAt   string            `json:"scheduled_at,omitempty"`
+	From        string            `json:"from"`
+	To          []string          `json:"to"`
+	Subject     string            `json:"subject"`
+	Bcc         []string          `json:"bcc,omitempty"`
+	Cc          []string          `json:"cc,omitempty"`
+	ReplyTo     string            `json:"reply_to,omitempty"`
+	Html        string            `json:"html,omitempty"`
+	Text        string            `json:"text,omitempty"`
+	Tags        []Tag             `json:"tags,omitempty"`
+	Attachments []*Attachment     `json:"attachments,omitempty"`
+	Headers     map[string]string `json:"headers,omitempty"`
+	ScheduledAt string            `json:"scheduled_at,omitempty"`
 }
 
 // Sender defines the contract for any email sending service.
@@ -57,13 +58,27 @@ type Sender interface {
 	Send(ctx context.Context, data EmailData) error
 }
 
-func NewProvider(provider string) (Sender, error) {
-	switch provider {
+type ProviderOpts struct {
+	Provider string
+}
+
+func NewProvider(opts *ProviderOpts) (Sender, error) {
+	if opts == nil {
+		APP_ENV := os.Getenv("APP_ENV")
+		switch APP_ENV {
+		case "dev", "test":
+			return MailHog()
+		case "prod":
+			return Resend()
+		}
+		return nil, fmt.Errorf("email provider not specified and APP_ENV (%s) is not set to a known value", APP_ENV)
+	}
+	switch opts.Provider {
 	case "resend":
 		return Resend()
 	case "mailhog":
 		return MailHog()
 	default:
-		return nil, fmt.Errorf("email provider (%s) not implemented", provider)
+		return nil, fmt.Errorf("email provider (%s) not implemented", opts.Provider)
 	}
 }
