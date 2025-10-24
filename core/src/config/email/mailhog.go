@@ -2,12 +2,16 @@ package email
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/smtp"
 	"os"
+	"regexp"
 	"strings"
+	"time"
 )
 
 // --- MailHog Implementation ---
@@ -124,3 +128,223 @@ func (m *MailHogAdapter) buildMessage(from string, data EmailData) string {
 
 	return builder.String()
 }
+
+// --- MailHog API Client for E2E Testing ---
+
+// MailHogMessage represents an email message from MailHog API
+type MailHogMessage struct {
+	ID      string                 `json:"ID"`
+	From    MailHogPath            `json:"From"`
+	To      []MailHogPath          `json:"To"`
+	Content MailHogContent         `json:"Content"`
+	Created time.Time              `json:"Created"`
+	MIME    *MailHogMIME           `json:"MIME"`
+	Raw     map[string]interface{} `json:"Raw"`
+}
+
+// MailHogPath represents an email address
+type MailHogPath struct {
+	Relays  interface{} `json:"Relays"`
+	Mailbox string      `json:"Mailbox"`
+	Domain  string      `json:"Domain"`
+	Params  string      `json:"Params"`
+}
+
+// MailHogContent represents email content
+type MailHogContent struct {
+	Headers map[string][]string `json:"Headers"`
+	Body    string              `json:"Body"`
+	Size    int                 `json:"Size"`
+	MIME    interface{}         `json:"MIME"`
+}
+
+// MailHogMIME represents MIME content
+type MailHogMIME struct {
+	Parts []MailHogMIMEPart `json:"Parts"`
+}
+
+// MailHogMIMEPart represents a MIME part
+type MailHogMIMEPart struct {
+	Headers map[string][]string `json:"Headers"`
+	Body    string              `json:"Body"`
+	Size    int                 `json:"Size"`
+	MIME    interface{}         `json:"MIME"`
+}
+
+// MailHogMessagesResponse represents the API response
+type MailHogMessagesResponse struct {
+	Total    int              `json:"total"`
+	Count    int              `json:"count"`
+	Start    int              `json:"start"`
+	Messages []MailHogMessage `json:"items"`
+}
+
+// GetAPIURL returns the MailHog API URL
+func (m *MailHogAdapter) GetAPIURL() string {
+	apiPort := os.Getenv("MAILHOG_API_PORT")
+	if apiPort == "" {
+		apiPort = "8025" // Default MailHog API port
+	}
+	return fmt.Sprintf("http://%s:%s/api", m.host, apiPort)
+}
+
+// GetMessages retrieves all messages from MailHog
+func (m *MailHogAdapter) GetMessages() ([]MailHogMessage, error) {
+	url := fmt.Sprintf("%s/v2/messages", m.GetAPIURL())
+	
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get messages from mailhog: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("mailhog API returned status %d", resp.StatusCode)
+	}
+
+	var result MailHogMessagesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode mailhog response: %w", err)
+	}
+
+	return result.Messages, nil
+}
+
+// GetLatestMessageTo retrieves the latest message sent to a specific email address
+func (m *MailHogAdapter) GetLatestMessageTo(email string) (*MailHogMessage, error) {
+	messages, err := m.GetMessages()
+	if err != nil {
+		return nil, err
+	}
+
+	// Search from most recent to oldest
+	for i := len(messages) - 1; i >= 0; i-- {
+		msg := messages[i]
+		for _, to := range msg.To {
+			recipientEmail := fmt.Sprintf("%s@%s", to.Mailbox, to.Domain)
+			if recipientEmail == email {
+				return &msg, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("no message found for recipient: %s", email)
+}
+
+// GetMessageBody returns the email body (HTML or plain text)
+func (msg *MailHogMessage) GetMessageBody() string {
+	// Try to get HTML body first
+	if msg.MIME != nil && len(msg.MIME.Parts) > 0 {
+		for _, part := range msg.MIME.Parts {
+			contentType := part.Headers["Content-Type"]
+			if len(contentType) > 0 && strings.Contains(contentType[0], "text/html") {
+				return part.Body
+			}
+		}
+		// Fallback to first part
+		if len(msg.MIME.Parts) > 0 {
+			return msg.MIME.Parts[0].Body
+		}
+	}
+	
+	// Fallback to raw body
+	return msg.Content.Body
+}
+
+// GetSubject returns the email subject
+func (msg *MailHogMessage) GetSubject() string {
+	if subject, ok := msg.Content.Headers["Subject"]; ok && len(subject) > 0 {
+		return subject[0]
+	}
+	return ""
+}
+
+// ExtractCode extracts a numeric code from the email body using a regex pattern
+// Default pattern matches 4-6 digit codes
+func (msg *MailHogMessage) ExtractCode(pattern ...string) (string, error) {
+	body := msg.GetMessageBody()
+	
+	// Default pattern: 4-6 digit code
+	regexPattern := `\b\d{4,6}\b`
+	if len(pattern) > 0 {
+		regexPattern = pattern[0]
+	}
+	
+	re := regexp.MustCompile(regexPattern)
+	matches := re.FindStringSubmatch(body)
+	
+	if len(matches) == 0 {
+		return "", fmt.Errorf("no code found matching pattern: %s", regexPattern)
+	}
+	
+	return matches[0], nil
+}
+
+// ExtractValidationCode is a convenience method for extracting validation codes
+// It looks for common patterns like "123456" or "ABC123"
+func (msg *MailHogMessage) ExtractValidationCode() (string, error) {
+	body := msg.GetMessageBody()
+	
+	// Try numeric code first (most common)
+	patterns := []string{
+		`\b\d{6}\b`,           // 6-digit code
+		`\b\d{4,8}\b`,         // 4-8 digit code
+		`\b[A-Z0-9]{6}\b`,     // 6-character alphanumeric
+		`\b[A-Z]{3}\d{3}\b`,   // 3 letters + 3 digits
+	}
+	
+	for _, pattern := range patterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(body)
+		if len(matches) > 0 {
+			return matches[0], nil
+		}
+	}
+	
+	return "", fmt.Errorf("no validation code found in email body")
+}
+
+// DeleteMessage deletes a specific message from MailHog
+func (m *MailHogAdapter) DeleteMessage(messageID string) error {
+	url := fmt.Sprintf("%s/v1/messages/%s", m.GetAPIURL(), messageID)
+	
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create delete request: %w", err)
+	}
+	
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete message: %w", err)
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("mailhog API returned status %d", resp.StatusCode)
+	}
+	
+	return nil
+}
+
+// DeleteAllMessages deletes all messages from MailHog
+func (m *MailHogAdapter) DeleteAllMessages() error {
+	url := fmt.Sprintf("%s/v1/messages", m.GetAPIURL())
+	
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create delete request: %w", err)
+	}
+	
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete messages: %w", err)
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("mailhog API returned status %d", resp.StatusCode)
+	}
+	
+	return nil
+}
+

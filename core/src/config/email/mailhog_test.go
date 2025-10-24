@@ -2,11 +2,16 @@ package email
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMailHog(t *testing.T) {
@@ -275,3 +280,372 @@ func TestMailHogAdapter_BuildMessage(t *testing.T) {
 		assert.Contains(t, message, "\r\n\r\n")
 	})
 }
+
+// --- MailHog API Tests ---
+
+func TestMailHogAdapter_GetAPIURL(t *testing.T) {
+	t.Run("should return default API URL", func(t *testing.T) {
+		adapter := &MailHogAdapter{
+			host: "localhost",
+			port: "1025",
+		}
+
+		url := adapter.GetAPIURL()
+		assert.Equal(t, "http://localhost:8025/api", url)
+	})
+
+	t.Run("should use custom API port from environment", func(t *testing.T) {
+		os.Setenv("MAILHOG_API_PORT", "9025")
+		defer os.Unsetenv("MAILHOG_API_PORT")
+
+		adapter := &MailHogAdapter{
+			host: "mailhog-server",
+			port: "1025",
+		}
+
+		url := adapter.GetAPIURL()
+		assert.Equal(t, "http://mailhog-server:9025/api", url)
+	})
+}
+
+func TestMailHogAdapter_GetMessages(t *testing.T) {
+	t.Run("should retrieve messages successfully", func(t *testing.T) {
+		// Create mock server
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/api/v2/messages", r.URL.Path)
+			
+			response := MailHogMessagesResponse{
+				Total: 2,
+				Count: 2,
+				Start: 0,
+				Messages: []MailHogMessage{
+					{
+						ID: "msg1",
+						From: MailHogPath{Mailbox: "sender", Domain: "example.com"},
+						To: []MailHogPath{
+							{Mailbox: "recipient", Domain: "example.com"},
+						},
+						Created: time.Now(),
+						Content: MailHogContent{
+							Headers: map[string][]string{
+								"Subject": {"Test Subject"},
+							},
+							Body: "Test Body",
+						},
+					},
+					{
+						ID: "msg2",
+						From: MailHogPath{Mailbox: "sender2", Domain: "example.com"},
+						To: []MailHogPath{
+							{Mailbox: "recipient2", Domain: "example.com"},
+						},
+						Created: time.Now(),
+						Content: MailHogContent{
+							Headers: map[string][]string{
+								"Subject": {"Test Subject 2"},
+							},
+							Body: "Test Body 2",
+						},
+					},
+				},
+			}
+			
+			json.NewEncoder(w).Encode(response)
+		}))
+		defer server.Close()
+
+		// Set API URL to mock server
+		os.Setenv("MAILHOG_API_PORT", strings.Split(server.URL, ":")[2])
+		defer os.Unsetenv("MAILHOG_API_PORT")
+
+		adapter := &MailHogAdapter{
+			host: "localhost",
+			port: "1025",
+		}
+
+		messages, err := adapter.GetMessages()
+		
+		require.NoError(t, err)
+		assert.Len(t, messages, 2)
+		assert.Equal(t, "msg1", messages[0].ID)
+		assert.Equal(t, "msg2", messages[1].ID)
+	})
+
+	t.Run("should return error on HTTP failure", func(t *testing.T) {
+		adapter := &MailHogAdapter{
+			host: "invalid-host",
+			port: "1025",
+		}
+
+		_, err := adapter.GetMessages()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get messages")
+	})
+}
+
+func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := MailHogMessagesResponse{
+			Total: 3,
+			Count: 3,
+			Start: 0,
+			Messages: []MailHogMessage{
+				{
+					ID: "msg1",
+					To: []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
+					Content: MailHogContent{Body: "First email"},
+				},
+				{
+					ID: "msg2",
+					To: []MailHogPath{{Mailbox: "user2", Domain: "example.com"}},
+					Content: MailHogContent{Body: "Second email"},
+				},
+				{
+					ID: "msg3",
+					To: []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
+					Content: MailHogContent{Body: "Third email"},
+				},
+			},
+		}
+		json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	os.Setenv("MAILHOG_API_PORT", strings.Split(server.URL, ":")[2])
+	defer os.Unsetenv("MAILHOG_API_PORT")
+
+	adapter := &MailHogAdapter{host: "localhost", port: "1025"}
+
+	t.Run("should get latest message for recipient", func(t *testing.T) {
+		msg, err := adapter.GetLatestMessageTo("user1@example.com")
+		
+		require.NoError(t, err)
+		assert.Equal(t, "msg3", msg.ID)
+		assert.Equal(t, "Third email", msg.Content.Body)
+	})
+
+	t.Run("should return error for non-existent recipient", func(t *testing.T) {
+		msg, err := adapter.GetLatestMessageTo("nonexistent@example.com")
+		
+		assert.Error(t, err)
+		assert.Nil(t, msg)
+		assert.Contains(t, err.Error(), "no message found")
+	})
+}
+
+func TestMailHogMessage_GetMessageBody(t *testing.T) {
+	t.Run("should return HTML body from MIME parts", func(t *testing.T) {
+		msg := &MailHogMessage{
+			MIME: &MailHogMIME{
+				Parts: []MailHogMIMEPart{
+					{
+						Headers: map[string][]string{
+							"Content-Type": {"text/html; charset=UTF-8"},
+						},
+						Body: "<h1>HTML Content</h1>",
+					},
+				},
+			},
+			Content: MailHogContent{
+				Body: "Fallback body",
+			},
+		}
+
+		body := msg.GetMessageBody()
+		assert.Equal(t, "<h1>HTML Content</h1>", body)
+	})
+
+	t.Run("should return first MIME part when no HTML", func(t *testing.T) {
+		msg := &MailHogMessage{
+			MIME: &MailHogMIME{
+				Parts: []MailHogMIMEPart{
+					{
+						Headers: map[string][]string{
+							"Content-Type": {"text/plain; charset=UTF-8"},
+						},
+						Body: "Plain text content",
+					},
+				},
+			},
+			Content: MailHogContent{
+				Body: "Fallback body",
+			},
+		}
+
+		body := msg.GetMessageBody()
+		assert.Equal(t, "Plain text content", body)
+	})
+
+	t.Run("should fallback to raw body", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "Raw body content",
+			},
+		}
+
+		body := msg.GetMessageBody()
+		assert.Equal(t, "Raw body content", body)
+	})
+}
+
+func TestMailHogMessage_GetSubject(t *testing.T) {
+	t.Run("should return subject from headers", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Headers: map[string][]string{
+					"Subject": {"Test Email Subject"},
+				},
+			},
+		}
+
+		subject := msg.GetSubject()
+		assert.Equal(t, "Test Email Subject", subject)
+	})
+
+	t.Run("should return empty string when no subject", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Headers: map[string][]string{},
+			},
+		}
+
+		subject := msg.GetSubject()
+		assert.Equal(t, "", subject)
+	})
+}
+
+func TestMailHogMessage_ExtractCode(t *testing.T) {
+	t.Run("should extract 6-digit code with default pattern", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "Your validation code is: 123456. Please use it to login.",
+			},
+		}
+
+		code, err := msg.ExtractCode()
+		require.NoError(t, err)
+		assert.Equal(t, "123456", code)
+	})
+
+	t.Run("should extract code with custom pattern", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "Your code is ABC123 for verification.",
+			},
+		}
+
+		code, err := msg.ExtractCode(`[A-Z]{3}\d{3}`)
+		require.NoError(t, err)
+		assert.Equal(t, "ABC123", code)
+	})
+
+	t.Run("should return error when no code found", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "No code in this email",
+			},
+		}
+
+		code, err := msg.ExtractCode()
+		assert.Error(t, err)
+		assert.Equal(t, "", code)
+		assert.Contains(t, err.Error(), "no code found")
+	})
+}
+
+func TestMailHogMessage_ExtractValidationCode(t *testing.T) {
+	t.Run("should extract 6-digit validation code", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "<h1>Your code is 987654</h1>",
+			},
+		}
+
+		code, err := msg.ExtractValidationCode()
+		require.NoError(t, err)
+		assert.Equal(t, "987654", code)
+	})
+
+	t.Run("should extract alphanumeric code", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "Verification code: ABC123",
+			},
+		}
+
+		code, err := msg.ExtractValidationCode()
+		require.NoError(t, err)
+		assert.Equal(t, "ABC123", code)
+	})
+
+	t.Run("should extract from HTML body", func(t *testing.T) {
+		msg := &MailHogMessage{
+			MIME: &MailHogMIME{
+				Parts: []MailHogMIMEPart{
+					{
+						Headers: map[string][]string{
+							"Content-Type": {"text/html"},
+						},
+						Body: "<div>Code: <strong>456789</strong></div>",
+					},
+				},
+			},
+		}
+
+		code, err := msg.ExtractValidationCode()
+		require.NoError(t, err)
+		assert.Equal(t, "456789", code)
+	})
+
+	t.Run("should return error when no validation code found", func(t *testing.T) {
+		msg := &MailHogMessage{
+			Content: MailHogContent{
+				Body: "Just plain text with no code",
+			},
+		}
+
+		code, err := msg.ExtractValidationCode()
+		assert.Error(t, err)
+		assert.Equal(t, "", code)
+		assert.Contains(t, err.Error(), "no validation code found")
+	})
+}
+
+func TestMailHogAdapter_DeleteMessage(t *testing.T) {
+	t.Run("should delete message successfully", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodDelete, r.Method)
+			assert.Equal(t, "/api/v1/messages/msg123", r.URL.Path)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		os.Setenv("MAILHOG_API_PORT", strings.Split(server.URL, ":")[2])
+		defer os.Unsetenv("MAILHOG_API_PORT")
+
+		adapter := &MailHogAdapter{host: "localhost", port: "1025"}
+		err := adapter.DeleteMessage("msg123")
+		
+		assert.NoError(t, err)
+	})
+}
+
+func TestMailHogAdapter_DeleteAllMessages(t *testing.T) {
+	t.Run("should delete all messages successfully", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodDelete, r.Method)
+			assert.Equal(t, "/api/v1/messages", r.URL.Path)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		os.Setenv("MAILHOG_API_PORT", strings.Split(server.URL, ":")[2])
+		defer os.Unsetenv("MAILHOG_API_PORT")
+
+		adapter := &MailHogAdapter{host: "localhost", port: "1025"}
+		err := adapter.DeleteAllMessages()
+		
+		assert.NoError(t, err)
+	})
+}
+

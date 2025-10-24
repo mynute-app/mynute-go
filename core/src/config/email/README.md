@@ -177,6 +177,131 @@ os.Setenv("EMAIL_PROVIDER", "mailhog")
 docker-compose -f docker-compose.dev.yml stop mailhog
 ```
 
+### Programmatic Email Verification
+
+MailHog provides an API client for programmatic email verification in E2E tests:
+
+```go
+// Initialize MailHog adapter
+provider, _ := email.NewProvider("mailhog")
+mailhog := provider.(*email.MailHogAdapter)
+
+// Send test email
+err := mailhog.Send(ctx, email.EmailData{
+    To:      []string{"test@example.com"},
+    Subject: "Validation Code",
+    Html:    "<h1>Your code is 123456</h1>",
+})
+
+// Retrieve the email
+msg, err := mailhog.GetLatestMessageTo("test@example.com")
+if err != nil {
+    t.Fatal("Email not received")
+}
+
+// Extract validation code
+code, err := msg.ExtractValidationCode()
+assert.Equal(t, "123456", code)
+
+// Verify subject
+assert.Equal(t, "Validation Code", msg.GetSubject())
+
+// Clean up after test
+mailhog.DeleteAllMessages()
+```
+
+### MailHog API Methods
+
+#### Retrieve Messages
+```go
+// Get all messages
+messages, err := mailhog.GetMessages()
+
+// Get latest message to specific recipient
+msg, err := mailhog.GetLatestMessageTo("user@example.com")
+```
+
+#### Extract Information
+```go
+// Get email body (HTML or plain text)
+body := msg.GetMessageBody()
+
+// Get email subject
+subject := msg.GetSubject()
+
+// Extract validation code (tries multiple patterns)
+code, err := msg.ExtractValidationCode()
+
+// Extract code with custom regex pattern
+code, err := msg.ExtractCode(`\b[A-Z]{3}\d{3}\b`)
+```
+
+#### Clean Up
+```go
+// Delete specific message
+err := mailhog.DeleteMessage(messageID)
+
+// Delete all messages
+err := mailhog.DeleteAllMessages()
+```
+
+### Complete E2E Test Example
+
+```go
+func TestUserRegistration(t *testing.T) {
+    // Setup
+    provider, _ := email.NewProvider("mailhog")
+    mailhog := provider.(*email.MailHogAdapter)
+    
+    // Clean mailbox before test
+    mailhog.DeleteAllMessages()
+    
+    // Trigger registration (sends email)
+    userEmail := "newuser@example.com"
+    RegisterUser(userEmail)
+    
+    // Wait briefly for email to arrive
+    time.Sleep(100 * time.Millisecond)
+    
+    // Retrieve the registration email
+    msg, err := mailhog.GetLatestMessageTo(userEmail)
+    require.NoError(t, err)
+    
+    // Verify email content
+    assert.Contains(t, msg.GetSubject(), "Welcome")
+    assert.Contains(t, msg.GetMessageBody(), "registration")
+    
+    // Extract and use validation code
+    code, err := msg.ExtractValidationCode()
+    require.NoError(t, err)
+    
+    // Verify registration with code
+    err = VerifyRegistration(userEmail, code)
+    assert.NoError(t, err)
+    
+    // Cleanup
+    mailhog.DeleteAllMessages()
+}
+```
+
+### Code Extraction Patterns
+
+The `ExtractValidationCode()` method tries multiple patterns automatically:
+- 6-digit codes: `123456`
+- 4-8 digit codes: `1234`, `12345678`
+- 6-character alphanumeric: `ABC123`
+- 3 letters + 3 digits: `XYZ789`
+
+For custom patterns, use `ExtractCode(pattern)`:
+```go
+// Extract UUID
+code, _ := msg.ExtractCode(`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
+
+// Extract token
+token, _ := msg.ExtractCode(`token=[A-Za-z0-9]{32}`)
+```
+
+
 ## Environment Setup
 
 ### Development (.env)
