@@ -54,7 +54,7 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		From:    from,
 		To:      data.To,
 		Subject: data.Subject,
-		Html:    data.HTMLBody,
+		Html:    data.Html,
 	}
 
 	sent, err := r.client.Emails.SendWithContext(ctx, params)

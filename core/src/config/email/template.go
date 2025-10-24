@@ -29,11 +29,18 @@ func NewTemplateRenderer(templateDir, translationDir string) *TemplateRenderer {
 	}
 }
 
+type RenderedEmail struct {
+	HTMLBody string
+	Subject  string
+}
+
+
+
 // RenderEmail renders an email template with translations and custom data
 // templateName: name of the HTML template file (without extension)
 // language: language code (e.g., "en", "pt", "es"). Defaults to "en" if empty
 // customData: additional data to merge with translations
-func (r *TemplateRenderer) RenderEmail(templateName, language string, customData TemplateData) (string, error) {
+func (r *TemplateRenderer) RenderEmail(templateName, language string, customData TemplateData) (*RenderedEmail, error) {
 	// Default to English if no language specified
 	if language == "" {
 		language = r.defaultLanguage
@@ -42,26 +49,34 @@ func (r *TemplateRenderer) RenderEmail(templateName, language string, customData
 	// Load translations
 	translations, err := r.loadTranslations(templateName, language)
 	if err != nil {
-		return "", fmt.Errorf("failed to load translations: %w", err)
+		return nil, fmt.Errorf("failed to load translations: %w", err)
 	}
 
 	// Merge custom data with translations
+	subject, ok := translations["subject"].(string)
+	if !ok {
+		return nil, fmt.Errorf("failed to get email subject from translations")
+	}
+
 	templateData := r.mergeData(translations, customData)
 
 	// Load and parse template
 	templatePath := filepath.Join(r.templateDir, templateName+".html")
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse template %s: %w", templateName, err)
+		return nil, fmt.Errorf("failed to parse template %s: %w", templateName, err)
 	}
 
 	// Execute template
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, templateData); err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
+		return nil, fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	return buf.String(), nil
+	return &RenderedEmail{
+		HTMLBody: buf.String(),
+		Subject:  subject,
+	}, nil
 }
 
 // loadTranslations loads translations from the JSON file for the specified template and language

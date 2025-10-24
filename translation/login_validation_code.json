@@ -1,5 +1,6 @@
 {
   "en": {
+    "subject": "Your Login Validation Code",
     "title": "Login Validation Code",
     "preheader": "Your login validation code is here.",
     "heading": "Your Login Validation Code",
@@ -9,6 +10,7 @@
     "footer_do_not_reply": "Please do not reply."
   },
   "pt": {
+    "subject": "Seu Código de Validação de Login",
     "title": "Código de Validação de Login",
     "preheader": "Seu código de validação de login está aqui.",
     "heading": "Seu Código de Validação de Login",
@@ -18,6 +20,7 @@
     "footer_do_not_reply": "Por favor, não responda."
   },
   "es": {
+    "subject": "Su Código de Validación de Inicio de Sesión",
     "title": "Código de Validación de Inicio de Sesión",
     "preheader": "Su código de validación de inicio de sesión está aquí.",
     "heading": "Su Código de Validación de Inicio de Sesión",

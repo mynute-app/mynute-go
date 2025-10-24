@@ -159,7 +159,7 @@ func TestResendAdapter_Send(t *testing.T) {
 		data := EmailData{
 			To:       []string{},
 			Subject:  "Test",
-			HTMLBody: "<h1>Test</h1>",
+			Html: "<h1>Test</h1>",
 		}
 
 		err := adapter.Send(context.Background(), data)
@@ -180,14 +180,14 @@ func TestResendAdapter_Send(t *testing.T) {
 		data := EmailData{
 			To:       []string{"recipient@example.com"},
 			Subject:  "Test",
-			HTMLBody: "<h1>Test</h1>",
+			Html: "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
 			From:    defaultFrom,
 			To:      data.To,
 			Subject: data.Subject,
-			Html:    data.HTMLBody,
+			Html:    data.Html,
 		}
 
 		mockEmailsService.On("SendWithContext", context.Background(), expectedParams).Return(&resend.SendEmailResponse{Id: "test-id"}, nil)
@@ -211,14 +211,14 @@ func TestResendAdapter_Send(t *testing.T) {
 			From:     "custom@example.com",
 			To:       []string{"recipient@example.com"},
 			Subject:  "Test",
-			HTMLBody: "<h1>Test</h1>",
+			Html: "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
 			From:    data.From,
 			To:      data.To,
 			Subject: data.Subject,
-			Html:    data.HTMLBody,
+			Html:    data.Html,
 		}
 
 		mockEmailsService.On("SendWithContext", context.Background(), expectedParams).Return(&resend.SendEmailResponse{Id: "test-id"}, nil)
@@ -241,14 +241,14 @@ func TestResendAdapter_Send(t *testing.T) {
 		data := EmailData{
 			To:       []string{"recipient@example.com"},
 			Subject:  "Test",
-			HTMLBody: "<h1>Test</h1>",
+			Html: "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
 			From:    defaultFrom,
 			To:      data.To,
 			Subject: data.Subject,
-			Html:    data.HTMLBody,
+			Html:    data.Html,
 		}
 		sendErr := errors.New("send failed")
 

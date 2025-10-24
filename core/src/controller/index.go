@@ -1,14 +1,17 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	mJSON "mynute-go/core/src/config/db/model/json"
+	"mynute-go/core/src/config/email"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/service"
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func Create(c *fiber.Ctx, model any) error {
@@ -70,6 +73,59 @@ func ResetPasswordByEmail(c *fiber.Ctx, model any) (DTO.PasswordReseted, error) 
 	defer Service.DeferDB(err)
 	new_pass, err := Service.SetModel(model).ResetPasswordByEmail(email)
 	return new_pass, err
+}
+
+func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
+	user_email := c.Query("email")
+	language := c.Query("lang", "en")
+
+	if user_email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+	
+	if err := tx.Model(model).Where("email = ?", user_email).First(&model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.Client.NotFound
+		}
+		return err
+	}
+
+	// Initialize renderer
+	renderer := email.NewTemplateRenderer("./static", "./translation")
+
+	LoginValidationCode := lib.GenerateRandomInt(6)
+
+	// Render email template
+	renderedEmail, err := renderer.RenderEmail("login_validation_code", language, email.TemplateData{
+		"LoginValidationCode": LoginValidationCode,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to render email: %w", err)
+	}
+
+	// Initialize email provider
+	provider, err := email.NewProvider("resend")
+	if err != nil {
+		return fmt.Errorf("failed to initialize email provider: %w", err)
+	}
+
+	// Send email
+	err = provider.Send(context.Background(), email.EmailData{
+		To:      []string{user_email},
+		Subject: renderedEmail.Subject,
+		Html:    renderedEmail.HTMLBody,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
 }
 
 func VerifyEmail(c *fiber.Ctx, model any) error {
