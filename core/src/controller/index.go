@@ -5,8 +5,8 @@ import (
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	mJSON "mynute-go/core/src/config/db/model/json"
-	"mynute-go/core/src/config/email"
 	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/email"
 	"mynute-go/core/src/service"
 	"reflect"
 
