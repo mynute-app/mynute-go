@@ -313,14 +313,14 @@ func TestMailHogAdapter_GetMessages(t *testing.T) {
 		// Create mock server
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v2/messages", r.URL.Path)
-			
+
 			response := MailHogMessagesResponse{
 				Total: 2,
 				Count: 2,
 				Start: 0,
 				Messages: []MailHogMessage{
 					{
-						ID: "msg1",
+						ID:   "msg1",
 						From: MailHogPath{Mailbox: "sender", Domain: "example.com"},
 						To: []MailHogPath{
 							{Mailbox: "recipient", Domain: "example.com"},
@@ -334,7 +334,7 @@ func TestMailHogAdapter_GetMessages(t *testing.T) {
 						},
 					},
 					{
-						ID: "msg2",
+						ID:   "msg2",
 						From: MailHogPath{Mailbox: "sender2", Domain: "example.com"},
 						To: []MailHogPath{
 							{Mailbox: "recipient2", Domain: "example.com"},
@@ -349,7 +349,7 @@ func TestMailHogAdapter_GetMessages(t *testing.T) {
 					},
 				},
 			}
-			
+
 			json.NewEncoder(w).Encode(response)
 		}))
 		defer server.Close()
@@ -364,7 +364,7 @@ func TestMailHogAdapter_GetMessages(t *testing.T) {
 		}
 
 		messages, err := adapter.GetMessages()
-		
+
 		require.NoError(t, err)
 		assert.Len(t, messages, 2)
 		assert.Equal(t, "msg1", messages[0].ID)
@@ -391,18 +391,18 @@ func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
 			Start: 0,
 			Messages: []MailHogMessage{
 				{
-					ID: "msg1",
-					To: []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
+					ID:      "msg1",
+					To:      []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
 					Content: MailHogContent{Body: "First email"},
 				},
 				{
-					ID: "msg2",
-					To: []MailHogPath{{Mailbox: "user2", Domain: "example.com"}},
+					ID:      "msg2",
+					To:      []MailHogPath{{Mailbox: "user2", Domain: "example.com"}},
 					Content: MailHogContent{Body: "Second email"},
 				},
 				{
-					ID: "msg3",
-					To: []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
+					ID:      "msg3",
+					To:      []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
 					Content: MailHogContent{Body: "Third email"},
 				},
 			},
@@ -418,7 +418,7 @@ func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
 
 	t.Run("should get latest message for recipient", func(t *testing.T) {
 		msg, err := adapter.GetLatestMessageTo("user1@example.com")
-		
+
 		require.NoError(t, err)
 		assert.Equal(t, "msg3", msg.ID)
 		assert.Equal(t, "Third email", msg.Content.Body)
@@ -426,7 +426,7 @@ func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
 
 	t.Run("should return error for non-existent recipient", func(t *testing.T) {
 		msg, err := adapter.GetLatestMessageTo("nonexistent@example.com")
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, msg)
 		assert.Contains(t, err.Error(), "no message found")
@@ -625,7 +625,7 @@ func TestMailHogAdapter_DeleteMessage(t *testing.T) {
 
 		adapter := &MailHogAdapter{host: "localhost", port: "1025"}
 		err := adapter.DeleteMessage("msg123")
-		
+
 		assert.NoError(t, err)
 	})
 }
@@ -644,8 +644,7 @@ func TestMailHogAdapter_DeleteAllMessages(t *testing.T) {
 
 		adapter := &MailHogAdapter{host: "localhost", port: "1025"}
 		err := adapter.DeleteAllMessages()
-		
+
 		assert.NoError(t, err)
 	})
 }
-

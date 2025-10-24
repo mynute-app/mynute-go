@@ -191,7 +191,7 @@ func (m *MailHogAdapter) GetAPIURL() string {
 // GetMessages retrieves all messages from MailHog
 func (m *MailHogAdapter) GetMessages() ([]MailHogMessage, error) {
 	url := fmt.Sprintf("%s/v2/messages", m.GetAPIURL())
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get messages from mailhog: %w", err)
@@ -246,7 +246,7 @@ func (msg *MailHogMessage) GetMessageBody() string {
 			return msg.MIME.Parts[0].Body
 		}
 	}
-	
+
 	// Fallback to raw body
 	return msg.Content.Body
 }
@@ -263,20 +263,20 @@ func (msg *MailHogMessage) GetSubject() string {
 // Default pattern matches 4-6 digit codes
 func (msg *MailHogMessage) ExtractCode(pattern ...string) (string, error) {
 	body := msg.GetMessageBody()
-	
+
 	// Default pattern: 4-6 digit code
 	regexPattern := `\b\d{4,6}\b`
 	if len(pattern) > 0 {
 		regexPattern = pattern[0]
 	}
-	
+
 	re := regexp.MustCompile(regexPattern)
 	matches := re.FindStringSubmatch(body)
-	
+
 	if len(matches) == 0 {
 		return "", fmt.Errorf("no code found matching pattern: %s", regexPattern)
 	}
-	
+
 	return matches[0], nil
 }
 
@@ -284,15 +284,15 @@ func (msg *MailHogMessage) ExtractCode(pattern ...string) (string, error) {
 // It looks for common patterns like "123456" or "ABC123"
 func (msg *MailHogMessage) ExtractValidationCode() (string, error) {
 	body := msg.GetMessageBody()
-	
+
 	// Try numeric code first (most common)
 	patterns := []string{
-		`\b\d{6}\b`,           // 6-digit code
-		`\b\d{4,8}\b`,         // 4-8 digit code
-		`\b[A-Z0-9]{6}\b`,     // 6-character alphanumeric
-		`\b[A-Z]{3}\d{3}\b`,   // 3 letters + 3 digits
+		`\b\d{6}\b`,         // 6-digit code
+		`\b\d{4,8}\b`,       // 4-8 digit code
+		`\b[A-Z0-9]{6}\b`,   // 6-character alphanumeric
+		`\b[A-Z]{3}\d{3}\b`, // 3 letters + 3 digits
 	}
-	
+
 	for _, pattern := range patterns {
 		re := regexp.MustCompile(pattern)
 		matches := re.FindStringSubmatch(body)
@@ -300,51 +300,50 @@ func (msg *MailHogMessage) ExtractValidationCode() (string, error) {
 			return matches[0], nil
 		}
 	}
-	
+
 	return "", fmt.Errorf("no validation code found in email body")
 }
 
 // DeleteMessage deletes a specific message from MailHog
 func (m *MailHogAdapter) DeleteMessage(messageID string) error {
 	url := fmt.Sprintf("%s/v1/messages/%s", m.GetAPIURL(), messageID)
-	
+
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create delete request: %w", err)
 	}
-	
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to delete message: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("mailhog API returned status %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
 
 // DeleteAllMessages deletes all messages from MailHog
 func (m *MailHogAdapter) DeleteAllMessages() error {
 	url := fmt.Sprintf("%s/v1/messages", m.GetAPIURL())
-	
+
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create delete request: %w", err)
 	}
-	
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to delete messages: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("mailhog API returned status %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }
-
