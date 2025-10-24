@@ -3,7 +3,7 @@ package email
 // Example usage of TemplateRenderer
 //
 // This file demonstrates how to use the email template rendering system
-// to send emails with multi-language support.
+// to send emails with multi-language support using either Resend or MailHog.
 
 /*
 
@@ -34,7 +34,7 @@ if err != nil {
 	// handle error
 }
 
-// Example 4: Send the rendered email using Resend
+// Example 4: Send the rendered email using Resend (production)
 provider, err := email.NewProvider("resend")
 if err != nil {
 	// handle error
@@ -43,7 +43,22 @@ if err != nil {
 err = provider.Send(context.Background(), email.EmailData{
 	To:       []string{"user@example.com"},
 	Subject:  "Login Validation Code",
-	HTMLBody: htmlBody,
+	Html: htmlBody,
+})
+if err != nil {
+	// handle error
+}
+
+// Example 5: Send the rendered email using MailHog (testing/development)
+provider, err := email.NewProvider("mailhog")
+if err != nil {
+	// handle error
+}
+
+err = provider.Send(context.Background(), email.EmailData{
+	To:       []string{"test@example.com"},
+	Subject:  "Login Validation Code",
+	Html: htmlBody,
 })
 if err != nil {
 	// handle error
@@ -62,7 +77,7 @@ func SendLoginValidationEmail(userEmail, code, language string) error {
 		return fmt.Errorf("failed to render email: %w", err)
 	}
 
-	// Initialize email provider
+	// Initialize email provider (use "mailhog" for testing, "resend" for production)
 	provider, err := email.NewProvider("resend")
 	if err != nil {
 		return fmt.Errorf("failed to initialize email provider: %w", err)
@@ -72,7 +87,7 @@ func SendLoginValidationEmail(userEmail, code, language string) error {
 	err = provider.Send(context.Background(), email.EmailData{
 		To:       []string{userEmail},
 		Subject:  "Login Validation Code",
-		HTMLBody: htmlBody,
+		Html: htmlBody,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)

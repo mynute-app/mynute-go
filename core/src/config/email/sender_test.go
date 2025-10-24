@@ -22,6 +22,15 @@ func TestNewProvider(t *testing.T) {
 		assert.True(t, ok)
 	})
 
+	t.Run("should return MailHog adapter when provider is mailhog", func(t *testing.T) {
+		provider, err := NewProvider("mailhog")
+
+		assert.NoError(t, err)
+		assert.NotNil(t, provider)
+		_, ok := provider.(*MailHogAdapter)
+		assert.True(t, ok)
+	})
+
 	t.Run("should return error for unsupported provider", func(t *testing.T) {
 		provider, err := NewProvider("unsupported")
 

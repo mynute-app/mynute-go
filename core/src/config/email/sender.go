@@ -61,6 +61,8 @@ func NewProvider(provider string) (Sender, error) {
 	switch provider {
 	case "resend":
 		return Resend()
+	case "mailhog":
+		return MailHog()
 	default:
 		return nil, fmt.Errorf("email provider (%s) not implemented", provider)
 	}
