@@ -516,7 +516,7 @@ func (e *Employee) UploadImages(status int, files map[string][]byte, x_auth_toke
 		Header(namespace.HeadersKey.Auth, t).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(fileMap).
-		ParseResponse(&e.Created.Design.Images).
+		ParseResponse(&e.Created.Meta.Design.Images).
 		Error; err != nil {
 		return fmt.Errorf("failed to upload employee images: %w", err)
 	}
@@ -575,11 +575,11 @@ func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token s
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
-		http.ParseResponse(&e.Created.Design.Images)
+		http.ParseResponse(&e.Created.Meta.Design.Images)
 		if http.Error != nil {
 			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}
-		url := e.Created.Design.Images.GetImageURL(image_type)
+		url := e.Created.Meta.Design.Images.GetImageURL(image_type)
 		if url != "" {
 			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
 		}

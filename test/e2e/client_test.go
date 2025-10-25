@@ -3,7 +3,7 @@ package e2e_test
 import (
 	"mynute-go/core"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/file_bytes"
+	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
 
@@ -49,15 +49,15 @@ func Test_Client(t *testing.T) {
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil))
 
-	tt.Describe("Get profile image").Test(client.GetImage(200, client.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+	tt.Describe("Get profile image").Test(client.GetImage(200, client.Created.Meta.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
 
 	tt.Describe("Overwrite profile image").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_3,
 	}, nil))
 
-	tt.Describe("Get overwritten profile image").Test(client.GetImage(200, client.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+	tt.Describe("Get overwritten profile image").Test(client.GetImage(200, client.Created.Meta.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
-	img_url := client.Created.Design.Images.Profile.URL
+	img_url := client.Created.Meta.Design.Images.Profile.URL
 
 	tt.Describe("Delete profile image").Test(client.DeleteImages(200, []string{"profile"}, nil))
 

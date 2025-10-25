@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"mynute-go/core"
-	"mynute-go/core/src/config/api/dto"
+	DTO "mynute-go/core/src/config/api/dto"
+	coreModel "mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/file_bytes"
+	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
-	coreModel "mynute-go/core/src/config/db/model"
 	"testing"
 
 	"github.com/google/uuid"
@@ -147,13 +147,13 @@ func Test_Employee(t *testing.T) {
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil, nil))
 
-	tt.Describe("Get profile image").Test(employee.GetImage(200, employee.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
+	tt.Describe("Get profile image").Test(employee.GetImage(200, employee.Created.Meta.Design.Images.Profile.URL, &FileBytes.PNG_FILE_1))
 
 	tt.Describe("Overwrite profile image").Test(employee.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_3,
 	}, nil, nil))
 
-	tt.Describe("Get overwritten profile image").Test(employee.GetImage(200, employee.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+	tt.Describe("Get overwritten profile image").Test(employee.GetImage(200, employee.Created.Meta.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
 	tt.Describe("Employee deletion").Test(employee.Delete(200, nil, nil))
 

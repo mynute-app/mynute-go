@@ -186,7 +186,7 @@ func (c *Client) UploadImages(status int, files map[string][]byte, x_auth_token 
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, t).
 		Send(fileMap).
-		ParseResponse(&c.Created.Design.Images).
+		ParseResponse(&c.Created.Meta.Design.Images).
 		Error; err != nil {
 		return fmt.Errorf("failed to upload client images: %w", err)
 	}
@@ -243,11 +243,11 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
 		http.Send(nil)
-		http.ParseResponse(&c.Created.Design.Images)
+		http.ParseResponse(&c.Created.Meta.Design.Images)
 		if http.Error != nil {
 			return fmt.Errorf("failed to delete image %s: %w", image_type, http.Error)
 		}
-		url := c.Created.Design.Images.GetImageURL(image_type)
+		url := c.Created.Meta.Design.Images.GetImageURL(image_type)
 		if url != "" {
 			return fmt.Errorf("image %s was not deleted successfully, expected empty URL but got %s", image_type, url)
 		}
