@@ -5,10 +5,12 @@ import (
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	database "mynute-go/core/src/config/db"
+	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"net/url"
 	"reflect"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -209,7 +211,7 @@ func (s *service) ForceDeleteOneById(model any) *service {
 	return s
 }
 
-func (s *service) Login(user_type string) (string, error) {
+func (s *service) LoginByPassword(user_type string) (string, error) {
 	if s.Error != nil {
 		return "", s.Error
 	}
@@ -250,6 +252,99 @@ func (s *service) Login(user_type string) (string, error) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
 
+	userBytes, err := json.Marshal(s.Model)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	var claims DTO.Claims
+	if err := json.Unmarshal(userBytes, &claims); err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	claims.Type = user_type
+	token, err := handler.JWT(s.Context).Encode(&claims)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *service) LoginByEmailCode(user_type string) (string, error) {
+	if s.Error != nil {
+		return "", s.Error
+	}
+	var err error
+	var body DTO.LoginByEmailCode
+	if err := s.Context.BodyParser(&body); err != nil {
+		return "", err
+	}
+
+	// Find user by email
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", body.Email).
+		First(s.Model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", lib.Error.Client.NotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	val := reflect.ValueOf(s.Model)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	verifiedField := val.FieldByName("Verified")
+	metaField := val.FieldByName("Meta")
+
+	if !verifiedField.IsValid() || !metaField.IsValid() {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("model must have Verified and Meta fields"))
+	}
+
+	// Get the Meta field and extract validation code info
+	metaValue := metaField.Interface().(mJSON.UserMeta)
+
+	// Check if code field is nil or empty
+	if metaValue.LoginValidationCode == nil {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
+	}
+
+	// Check if expiry field is nil
+	if metaValue.LoginValidationExpiry == nil {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+	}
+
+	storedCode := *metaValue.LoginValidationCode
+	expiryTime := *metaValue.LoginValidationExpiry
+
+	// Check if code has expired
+	if time.Now().After(expiryTime) {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+	}
+
+	// Validate the code
+	if storedCode != body.Code {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+	}
+
+	verified := verifiedField.Bool()
+
+	// Verifies the user in case not verified
+	if !verified {
+		verifiedField.SetBool(true)
+	}
+
+	// Clear the validation code after successful login
+	metaValue.LoginValidationCode = nil
+	metaValue.LoginValidationExpiry = nil
+	metaField.Set(reflect.ValueOf(metaValue))
+
+	// Update the model to clear the validation code
+	if err := s.MyGorm.DB.Model(s.Model).Where("email = ?", body.Email).Updates(s.Model).Error; err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Generate JWT token
 	userBytes, err := json.Marshal(s.Model)
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
