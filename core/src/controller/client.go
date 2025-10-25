@@ -44,10 +44,10 @@ func CreateClient(c *fiber.Ctx) error {
 	return nil
 }
 
-// LoginClient logs an client in
+// LoginClientByPassword logs an client in
 //
 //	@Summary		Login
-//	@Description	Log in an client
+//	@Description	Log in an client using password
 //	@Tags			Client
 //	@Accept			json
 //	@Produce		json
@@ -55,8 +55,28 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/login [post]
-func LoginClient(c *fiber.Ctx) error {
-	token, err := Login(namespace.ClientKey.Name, &model.Client{}, c)
+func LoginClientByPassword(c *fiber.Ctx) error {
+	token, err := LoginByPassword(namespace.ClientKey.Name, &model.Client{}, c)
+	if err != nil {
+		return err
+	}
+	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
+	return nil
+}
+
+// LoginClientByEmailCode logs in a client using email and validation code
+//
+//	@Summary		Login client by email code
+//	@Description	Login client using email and validation code
+//	@Tags			client/auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body	DTO.LoginByEmailCode	true	"Login credentials"
+//	@Success		200
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/login-with-code [post]
+func LoginClientByEmailCode(c *fiber.Ctx) error {
+	token, err := LoginByEmailCode(namespace.ClientKey.Name, &model.Client{}, c)
 	if err != nil {
 		return err
 	}
@@ -330,8 +350,7 @@ func ResetClientPasswordByEmail(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/send-login-code/email/{email} [post]
 func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
-	err := SendLoginValidationCodeByEmail(c, &model.Client{})
-	if err != nil {
+	if err := SendLoginValidationCodeByEmail(c, &model.Client{}); err != nil {
 		return err
 	}
 	return nil
@@ -341,7 +360,8 @@ func Client(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		CreateClient,
-		LoginClient,
+		LoginClientByPassword,
+		LoginClientByEmailCode,
 		VerifyClientEmail,
 		ResetClientPasswordByEmail,
 		GetClientByEmail,
@@ -351,5 +371,6 @@ func Client(Gorm *handler.Gorm) {
 		DeleteClientById,
 		UpdateClientImages,
 		DeleteClientImage,
+		SendClientLoginValidationCodeByEmail,
 	})
 }
