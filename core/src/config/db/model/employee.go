@@ -32,7 +32,7 @@ type Employee struct {
 	TimeZone            string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	TotalServiceDensity uint32              `gorm:"not null;default:1" json:"total_service_density"`                             // Total service density for the employee
 	Verified            bool                `gorm:"default:false" json:"verified"`
-	Design              mJSON.DesignConfig  `gorm:"type:jsonb" json:"design"`
+	Meta                mJSON.UserMeta      `gorm:"type:jsonb" json:"meta"`
 }
 
 func (Employee) TableName() string  { return "employees" }
