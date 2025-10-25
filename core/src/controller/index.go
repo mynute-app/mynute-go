@@ -9,10 +9,8 @@ import (
 	"mynute-go/core/src/lib/email"
 	"mynute-go/core/src/service"
 	"reflect"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 func Create(c *fiber.Ctx, model any) error {
@@ -75,73 +73,78 @@ func LoginByEmailCode(user_type string, model any, c *fiber.Ctx) (string, error)
 	return token, err
 }
 
-func ResetPasswordByEmail(c *fiber.Ctx, model any) (DTO.PasswordReseted, error) {
+func ResetLoginvalidationCode(c *fiber.Ctx, user_email string, model any) (string, error) {
 	var err error
-	email := c.Params("email")
 	Service := service.New(c)
 	defer Service.DeferDB(err)
-	new_pass, err := Service.SetModel(model).ResetPasswordByEmail(email)
-	return new_pass, err
+	return Service.SetModel(model).ResetLoginCodeByEmail(user_email)
 }
 
 func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
-	user_email := c.Query("email")
-	language := c.Query("lang", "en")
-
+	user_email := c.Params("email")
 	if user_email == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
 	}
 
-	tx, err := lib.Session(c)
+	LoginValidationCode, err := ResetLoginvalidationCode(c, user_email, model)
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Model(model).Where("email = ?", user_email).First(&model).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.RecordNotFound
-		}
-		return err
-	}
+	language := c.Query("language", "en")
 
 	// Initialize renderer
 	renderer := email.NewTemplateRenderer("./static", "./translation")
 
-	LoginValidationCode := lib.GenerateRandomInt(6)
-	codeString := fmt.Sprintf("%d", LoginValidationCode)
-
-	// Set code expiration to 15 minutes from now
-	expiryTime := time.Now().Add(15 * time.Minute)
-
-	// Store the code in the database using reflection
-	modelValue := reflect.ValueOf(model)
-	if modelValue.Kind() == reflect.Ptr {
-		modelValue = modelValue.Elem()
-	}
-
-	metaField := modelValue.FieldByName("Meta")
-	if !metaField.IsValid() || !metaField.CanSet() {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
-	}
-
-	// Get the current Meta value or create a new one if nil
-	metaValue := metaField.Interface().(mJSON.UserMeta)
-
-	// Set the validation code and expiry
-	metaValue.LoginValidationCode = &codeString
-	metaValue.LoginValidationExpiry = &expiryTime
-
-	// Set the updated Meta back to the model
-	metaField.Set(reflect.ValueOf(metaValue))
-
-	// Update the model in database
-	if err := tx.Model(model).Where("email = ?", user_email).Updates(model).Error; err != nil {
-		return fmt.Errorf("failed to store validation code: %w", err)
-	}
-
 	// Render email template
 	renderedEmail, err := renderer.RenderEmail("login_validation_code", language, email.TemplateData{
 		"LoginValidationCode": LoginValidationCode,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to render email: %w", err)
+	}
+
+	// Initialize email provider
+	provider, err := email.NewProvider(nil)
+	if err != nil {
+		return fmt.Errorf("failed to initialize email provider: %w", err)
+	}
+
+	// Send email
+	err = provider.Send(context.Background(), email.EmailData{
+		To:      []string{user_email},
+		Subject: renderedEmail.Subject,
+		Html:    renderedEmail.HTMLBody,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
+}
+
+func ResetPasswordByEmail(c *fiber.Ctx, user_email string, model any) (*DTO.PasswordReseted, error) {
+	var err error
+	Service := service.New(c)
+	defer Service.DeferDB(err)
+	return Service.SetModel(model).ResetPasswordByEmail(user_email)
+}
+
+func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
+	password, err := ResetPasswordByEmail(c, user_email, model)
+	if err != nil {
+		return err
+	}
+
+	renderer := email.NewTemplateRenderer("./static", "./translation")
+
+	language := c.Query("language", "en")
+
+	// Render email template
+	renderedEmail, err := renderer.RenderEmail("new_password", language, email.TemplateData{
+		"NewPassword": password.Password,
 	})
 
 	if err != nil {
