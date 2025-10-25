@@ -197,6 +197,7 @@ type GeneralErrors struct {
 	AuthError             ErrorStruct
 	SessionNotFound       ErrorStruct // New: For missing session in DB
 	DatabaseError         ErrorStruct // New: General DB error
+	TooManyRequests       ErrorStruct // New: For rate limiting
 }
 
 type RoleErrors struct {
@@ -287,6 +288,7 @@ var Error = ErrorCategory{
 		AuthError:             NewError("Internal Server Error while authenticating", "Erro Interno de Servidor enquanto autenticando", fiber.StatusInternalServerError),
 		SessionNotFound:       NewError("Database session not found in context", "Sessão de banco de dados não encontrada no contexto", fiber.StatusInternalServerError),
 		DatabaseError:         NewError("An internal error occurred regarding the database", "Ocorreu um erro interno relacionado ao banco de dados", fiber.StatusInternalServerError),
+		TooManyRequests:       NewError("Too many requests, please try again later", "Muitas requisições, por favor tente novamente mais tarde", fiber.StatusTooManyRequests),
 	},
 	Role: RoleErrors{
 		NameReserved: NewError("This role name is reserved for system usage", "Esse nome de cargo é reservado para uso do sistema", fiber.StatusBadRequest),
