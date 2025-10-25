@@ -192,24 +192,6 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 	return nil
 }
 
-// VerifyEmployeeEmail Does the email verification for an employee
-//
-//	@Summary		Verify email
-//	@Description	Verify an employee's email
-//	@Tags			Employee
-//	@Security		ApiKeyAuth
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Accept			json
-//	@Produce		json
-//	@Param			email	path		string	true	"Employee Email"
-//	@Param			code	path		string	true	"Verification Code"
-//	@Success		200		{object}	nil
-//	@Failure		404		{object}	nil
-//	@Router			/employee/verify-email/{email}/{code} [post]
-func VerifyEmployeeEmail(c *fiber.Ctx) error {
-	return VerifyEmail(c, &model.Employee{})
-}
-
 // SendEmployeeLoginValidationCodeByEmail sends a login validation code to an employee's email
 //
 //	@Summary		Send login validation code to employee email
@@ -243,12 +225,14 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
 func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {
-	var employee model.Employee
-	password, err := ResetPasswordByEmail(c, &employee)
-	if err != nil {
+	email := c.Params("email")
+	if email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+	if err := SendNewPasswordByEmail(c, email, &model.Employee{}); err != nil {
 		return err
 	}
-	return lib.ResponseFactory(c).Send(200, &password)
+	return lib.ResponseFactory(c).Http200(nil)
 }
 
 // UpdateEmployeeImages updates the images of an employee
@@ -1081,7 +1065,6 @@ func Employee(Gorm *handler.Gorm) {
 		RemoveBranchFromEmployee,
 		LoginEmployeeByPassword,
 		LoginEmployeeByEmailCode,
-		VerifyEmployeeEmail,
 		SendEmployeeLoginValidationCodeByEmail,
 		ResetEmployeePasswordByEmail,
 		UpdateEmployeeImages,

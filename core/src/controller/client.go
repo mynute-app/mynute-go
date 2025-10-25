@@ -84,20 +84,21 @@ func LoginClientByEmailCode(c *fiber.Ctx) error {
 	return nil
 }
 
-// VerifyClientEmail Does the email verification for an client
+// SendClientLoginValidationCodeByEmail sends a login validation code to a client's email
 //
-//	@Summary		Verify email
-//	@Description	Verify an client's email
+//	@Summary		Send client login validation code by email
+//	@Description	Send a login validation code to a client's email
 //	@Tags			Client
-//	@Accept			json
-//	@Produce		json
 //	@Param			email	path		string	true	"Client Email"
-//	@Param			code	path		string	true	"Verification Code"
-//	@Success		200		{object}	nil
-//	@Failure		404		{object}	nil
-//	@Router			/client/verify-email/{email}/{code} [post]
-func VerifyClientEmail(c *fiber.Ctx) error {
-	return VerifyEmail(c, &model.Client{})
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/send-login-code/email/{email} [post]
+func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
+	if err := SendLoginValidationCodeByEmail(c, &model.Client{}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetClientByEmail retrieves an client by email
@@ -331,29 +332,14 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/reset-password/{email} [post]
 func ResetClientPasswordByEmail(c *fiber.Ctx) error {
-	var client model.Client
-	password, err := ResetPasswordByEmail(c, &client)
-	if err != nil {
+	email := c.Params("email")
+	if email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+	if err := SendNewPasswordByEmail(c, email, &model.Client{}); err != nil {
 		return err
 	}
-	return lib.ResponseFactory(c).Send(200, &password)
-}
-
-// SendClientLoginValidationCodeByEmail sends a login validation code to a client's email
-//
-//	@Summary		Send client login validation code by email
-//	@Description	Send a login validation code to a client's email
-//	@Tags			Client
-//	@Param			email	path		string	true	"Client Email"
-//	@Produce		json
-//	@Success		200	{object}	nil
-//	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/client/send-login-code/email/{email} [post]
-func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
-	if err := SendLoginValidationCodeByEmail(c, &model.Client{}); err != nil {
-		return err
-	}
-	return nil
+	return lib.ResponseFactory(c).Http200(nil)
 }
 
 func Client(Gorm *handler.Gorm) {
@@ -362,7 +348,7 @@ func Client(Gorm *handler.Gorm) {
 		CreateClient,
 		LoginClientByPassword,
 		LoginClientByEmailCode,
-		VerifyClientEmail,
+		SendClientLoginValidationCodeByEmail,
 		ResetClientPasswordByEmail,
 		GetClientByEmail,
 		GetClientById,
@@ -371,6 +357,5 @@ func Client(Gorm *handler.Gorm) {
 		DeleteClientById,
 		UpdateClientImages,
 		DeleteClientImage,
-		SendClientLoginValidationCodeByEmail,
 	})
 }
