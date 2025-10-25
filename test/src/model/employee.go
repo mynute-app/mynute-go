@@ -365,23 +365,23 @@ func (e *Employee) Login(s int, x_company_id *string) error {
 	return nil
 }
 
-func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
-	companyIDStr := e.Company.Created.ID.String()
-	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
-	if err != nil {
-		return err
-	}
-	if err := handler.NewHttpClient().
-		Method("POST").
-		URL(fmt.Sprintf("/employee/verify-email/%s/%s", e.Created.Email, "12345")).
-		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Company, cID).
-		Send(nil).
-		Error; err != nil {
-		return fmt.Errorf("failed to verify employee email: %w", err)
-	}
-	return nil
-}
+// func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
+// 	companyIDStr := e.Company.Created.ID.String()
+// 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if err := handler.NewHttpClient().
+// 		Method("POST").
+// 		URL(fmt.Sprintf("/employee/verify-email/%s/%s", e.Created.Email, "12345")).
+// 		ExpectedStatus(s).
+// 		Header(namespace.HeadersKey.Company, cID).
+// 		Send(nil).
+// 		Error; err != nil {
+// 		return fmt.Errorf("failed to verify employee email: %w", err)
+// 	}
+// 	return nil
+// }
 
 func (e *Employee) CreateBranch(s int) error {
 	Branch := &Branch{}

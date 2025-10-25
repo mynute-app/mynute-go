@@ -7,6 +7,7 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/email"
 	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"reflect"
@@ -22,9 +23,10 @@ func (u *Client) Set() error {
 	if err := u.Create(200); err != nil {
 		return err
 	}
-	if err := u.VerifyEmail(200); err != nil {
-		return err
-	}
+	// TODO: Need to implement email verification flow in tests using login by email code instead.
+	// if err := u.VerifyEmail(200); err != nil {
+	// 	return err
+	// }
 	if err := u.Login(200); err != nil {
 		return err
 	}
@@ -104,18 +106,18 @@ func (u *Client) Delete(s int) error {
 	return nil
 }
 
-func (u *Client) VerifyEmail(s int) error {
-	if err := handler.NewHttpClient().
-		Method("POST").
-		URL(fmt.Sprintf("/client/verify-email/%v/%s", u.Created.Email, "12345")).
-		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
-		Send(nil).
-		Error; err != nil {
-		return fmt.Errorf("failed to verify client email: %w", err)
-	}
-	return nil
-}
+// func (u *Client) VerifyEmail(s int) error {
+// 	if err := handler.NewHttpClient().
+// 		Method("POST").
+// 		URL(fmt.Sprintf("/client/verify-email/%v/%s", u.Created.Email, "12345")).
+// 		ExpectedStatus(s).
+// 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
+// 		Send(nil).
+// 		Error; err != nil {
+// 		return fmt.Errorf("failed to verify client email: %w", err)
+// 	}
+// 	return nil
+// }
 
 func (u *Client) Login(s int) error {
 	login := DTO.LoginClient{
@@ -137,6 +139,82 @@ func (u *Client) Login(s int) error {
 	u.X_Auth_Token = auth[0]
 	if err := u.GetByEmail(200); err != nil {
 		return fmt.Errorf("failed to get client by email after login: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) SendLoginCode(s int) error {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return err
+	}
+
+	// Clear any existing emails to avoid interference
+	if err := mailhog.DeleteAllMessages(); err != nil {
+		return err
+	}
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/client/send-login-code/email/%s?lang=en", u.Created.Email)).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send login code to client: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) GetLoginCodeFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the client
+	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the validation code from the email
+	code, err := message.ExtractValidationCode()
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
+}
+
+func (u *Client) LoginByEmailCode(s int, code string) error {
+	loginData := DTO.LoginByEmailCode{
+		Email: u.Created.Email,
+		Code:  code,
+	}
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL("/client/login/code").
+		ExpectedStatus(s).
+		Send(loginData).Error; err != nil {
+		return fmt.Errorf("failed to login client by email code: %w", err)
+	}
+
+	if s == 200 {
+		auth := http.ResHeaders[namespace.HeadersKey.Auth]
+		if len(auth) == 0 {
+			return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
+		}
+		u.X_Auth_Token = auth[0]
+		if err := u.GetByEmail(200); err != nil {
+			return fmt.Errorf("failed to get client by email after login by code: %w", err)
+		}
 	}
 	return nil
 }
