@@ -274,14 +274,20 @@ var CreateClient = &EndPoint{
 var LoginClient = &EndPoint{
 	Path:           "/client/login",
 	Method:         namespace.CreateActionMethod,
-	ControllerName: "LoginClient",
+	ControllerName: "LoginClientByPassword",
 	Description:    "Login client",
 }
-var VerifyClientEmail = &EndPoint{
-	Path:           "/client/verify-email/:email/:code",
+var LoginClientByEmailCode = &EndPoint{
+	Path:           "/client/login-with-code",
 	Method:         namespace.CreateActionMethod,
-	ControllerName: "VerifyClientEmail",
-	Description:    "Verify client email",
+	ControllerName: "LoginClientByEmailCode",
+	Description:    "Login client by email code",
+}
+var SendLoginCodeToClientEmail = &EndPoint{
+	Path:           "/client/send-login-code/email/:email",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "SendClientLoginValidationCodeByEmail",
+	Description:    "Send login code to client email",
 }
 var ResetClientPasswordByEmail = &EndPoint{
 	Path:           "/client/reset-password/:email",
@@ -441,16 +447,21 @@ var CreateEmployee = &EndPoint{
 var LoginEmployee = &EndPoint{
 	Path:           "/employee/login",
 	Method:         namespace.CreateActionMethod,
-	ControllerName: "LoginEmployee",
+	ControllerName: "LoginEmployeeByPassword",
 	Description:    "Login employee",
 	NeedsCompanyId: true,
 }
-var VerifyEmployeeEmail = &EndPoint{
-	Path:           "/employee/verify-email/:email/:code",
+var LoginEmployeeByEmailCode = &EndPoint{
+	Path:           "/employee/login-with-code",
 	Method:         namespace.CreateActionMethod,
-	ControllerName: "VerifyEmployeeEmail",
-	Description:    "Verify employee email",
-	NeedsCompanyId: true,
+	ControllerName: "LoginEmployeeByEmailCode",
+	Description:    "Login employee by email code",
+}
+var SendLoginCodeToEmployeeEmail = &EndPoint{
+	Path:           "/employee/send-login-code/email/:email",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "SendEmployeeLoginValidationCodeByEmail",
+	Description:    "Send login code to employee email",
 }
 var ResetEmployeePasswordByEmail = &EndPoint{
 	Path:           "/employee/reset-password/:email",
@@ -828,7 +839,8 @@ var endpoints = []*EndPoint{
 	// Client
 	CreateClient,
 	LoginClient,
-	VerifyClientEmail,
+	LoginClientByEmailCode,
+	SendLoginCodeToClientEmail,
 	ResetClientPasswordByEmail,
 	GetClientByEmail,
 	GetClientById,
@@ -851,7 +863,8 @@ var endpoints = []*EndPoint{
 	// Employee
 	CreateEmployee,
 	LoginEmployee,
-	VerifyEmployeeEmail,
+	LoginEmployeeByEmailCode,
+	SendLoginCodeToEmployeeEmail,
 	ResetEmployeePasswordByEmail,
 	GetEmployeeById,
 	GetEmployeeByEmail,
