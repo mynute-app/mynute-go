@@ -149,10 +149,10 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Employee{})
 }
 
-// LoginEmployee logs an employee in
+// LoginEmployeeByPassword logs an employee in
 //
 //	@Summary		Login
-//	@Description	Log in an client
+//	@Description	Log in an employee using password
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -163,8 +163,28 @@ func DeleteEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Failure		401	{object}	nil
 //	@Router			/employee/login [post]
-func LoginEmployee(c *fiber.Ctx) error {
-	token, err := Login(namespace.EmployeeKey.Name, &model.Employee{}, c)
+func LoginEmployeeByPassword(c *fiber.Ctx) error {
+	token, err := LoginByPassword(namespace.EmployeeKey.Name, &model.Employee{}, c)
+	if err != nil {
+		return err
+	}
+	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
+	return nil
+}
+
+// LoginEmployeeByEmailCode logs in an employee using email and validation code
+//
+//	@Summary		Login employee by email code
+//	@Description	Login employee using email and validation code
+//	@Tags			Employee
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body	DTO.LoginByEmailCode	true	"Login credentials"
+//	@Success		200
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/login-with-code [post]
+func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
+	token, err := LoginByEmailCode(namespace.EmployeeKey.Name, &model.Employee{}, c)
 	if err != nil {
 		return err
 	}
@@ -188,6 +208,25 @@ func LoginEmployee(c *fiber.Ctx) error {
 //	@Router			/employee/verify-email/{email}/{code} [post]
 func VerifyEmployeeEmail(c *fiber.Ctx) error {
 	return VerifyEmail(c, &model.Employee{})
+}
+
+// SendEmployeeLoginValidationCodeByEmail sends a login validation code to an employee's email
+//
+//	@Summary		Send login validation code to employee email
+//	@Description	Sends a 6-digit login validation code to the employee's email
+//	@Tags			Employee
+//	@Accept			json
+//	@Produce		json
+//	@Param			email	path	string	true	"Employee Email"
+//	@Param			lang	query	string	false	"Language code (default: en)"
+//	@Success		200
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/send-login-code/email/{email} [post]
+func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
+	if err := SendLoginValidationCodeByEmail(c, &model.Employee{}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ResetEmployeePasswordByEmail sets a random password of an employee using its email
@@ -1040,8 +1079,10 @@ func Employee(Gorm *handler.Gorm) {
 		RemoveServiceFromEmployee,
 		AddBranchToEmployee,
 		RemoveBranchFromEmployee,
-		LoginEmployee,
+		LoginEmployeeByPassword,
+		LoginEmployeeByEmailCode,
 		VerifyEmployeeEmail,
+		SendEmployeeLoginValidationCodeByEmail,
 		ResetEmployeePasswordByEmail,
 		UpdateEmployeeImages,
 		DeleteEmployeeImage,
