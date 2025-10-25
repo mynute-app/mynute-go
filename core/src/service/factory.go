@@ -305,17 +305,17 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 	metaValue := metaField.Interface().(mJSON.UserMeta)
 
 	// Check if code field is nil or empty
-	if metaValue.LoginValidationCode == nil {
+	if metaValue.Login.ValidationCode == nil {
 		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
 	}
 
 	// Check if expiry field is nil
-	if metaValue.LoginValidationExpiry == nil {
+	if metaValue.Login.ValidationExpiry == nil {
 		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
 	}
 
-	storedCode := *metaValue.LoginValidationCode
-	expiryTime := *metaValue.LoginValidationExpiry
+	storedCode := *metaValue.Login.ValidationCode
+	expiryTime := *metaValue.Login.ValidationExpiry
 
 	// Check if code has expired
 	if time.Now().After(expiryTime) {
@@ -335,8 +335,9 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 	}
 
 	// Clear the validation code after successful login
-	metaValue.LoginValidationCode = nil
-	metaValue.LoginValidationExpiry = nil
+	metaValue.Login.ValidationCode = nil
+	metaValue.Login.ValidationExpiry = nil
+	metaValue.Login.ValidationRequestedAt = nil
 	metaField.Set(reflect.ValueOf(metaValue))
 
 	// Update the model to clear the validation code
@@ -361,11 +362,11 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 	return token, nil
 }
 
-func (s *service) prepare_email(email string) (string, error) {
-	if email == "" {
+func (s *service) prepare_email(user_email string) (string, error) {
+	if user_email == "" {
 		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("email parameter is empty"))
 	}
-	cleanedEmail, err := url.QueryUnescape(email)
+	cleanedEmail, err := url.QueryUnescape(user_email)
 	if err != nil {
 		return "", lib.Error.General.BadRequest.WithError(err)
 	}
@@ -379,22 +380,147 @@ func (s *service) prepare_email(email string) (string, error) {
 	return cleanedEmail, nil
 }
 
-func (s *service) ResetPasswordByEmail(email string) (DTO.PasswordReseted, error) {
-	if s.Error != nil {
-		return DTO.PasswordReseted{}, s.Error
-	}
-	email, err := s.prepare_email(email)
+func (s *service) ResetLoginCodeByEmail(user_email string) (string, error) {
+	user_email, err := s.prepare_email(user_email)
 	if err != nil {
-		return DTO.PasswordReseted{}, lib.Error.General.BadRequest.WithError(err)
+		return "", lib.Error.General.BadRequest.WithError(err)
 	}
-	newPassword := lib.GenerateValidPassword()
+	if err := s.MyGorm.DB.Model(s.Model).Where("email = ?", user_email).First(&s.Model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", lib.Error.General.RecordNotFound
+		}
+		return "", err
+	}
+
+	// Store the code in the database using reflection
+	modelValue := reflect.ValueOf(s.Model)
+	if modelValue.Kind() == reflect.Ptr {
+		modelValue = modelValue.Elem()
+	}
+
+	metaField := modelValue.FieldByName("Meta")
+	if !metaField.IsValid() || !metaField.CanSet() {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
+	}
+
+	metaValue := metaField.Interface().(mJSON.UserMeta)
+
+	if metaValue.Login.ValidationRequestedAt != nil && metaValue.Login.ValidationRequestsCount != nil {
+		waitTime := time.Minute
+		if *metaValue.Login.ValidationRequestsCount > 3 {
+			waitTime = 5 * time.Minute
+		}
+		if time.Since(*metaValue.Login.ValidationRequestedAt) < waitTime {
+			return "", lib.Error.General.TooManyRequests.WithError(fmt.Errorf("a validation code was sent recently; please wait before requesting another"))
+		}
+	}
+
+	LoginValidationCode := lib.GenerateRandomInt(6)
+	codeString := fmt.Sprintf("%d", LoginValidationCode)
+
+	// Set code expiration to 15 minutes from now
+	expiryTime := time.Now().Add(15 * time.Minute)
+
+	// Set the validation code and expiry
+	metaValue.Login.ValidationCode = &codeString
+	metaValue.Login.ValidationExpiry = &expiryTime
+	now := time.Now()
+	metaValue.Login.ValidationRequestedAt = &now
+
+	// Increment request count
+	if metaValue.Login.ValidationRequestsCount == nil {
+		count := 1
+		metaValue.Login.ValidationRequestsCount = &count
+	} else {
+		*metaValue.Login.ValidationRequestsCount++
+	}
+
+	// Set the updated Meta back to the model
+	metaField.Set(reflect.ValueOf(metaValue))
+
+	// Update the model in database
 	if err := s.MyGorm.DB.
 		Model(s.Model).
-		Where("email = ?", email).
-		Update("password", newPassword).Error; err != nil {
-		return DTO.PasswordReseted{}, lib.Error.General.InternalError.WithError(err)
+		Where("email = ?", user_email).
+		Updates(s.Model).Error; err != nil {
+		return "", fmt.Errorf("failed to store validation code: %w", err)
 	}
-	return DTO.PasswordReseted{Password: newPassword}, nil
+
+	return codeString, nil
+}
+
+func (s *service) ResetPasswordByEmail(user_email string) (*DTO.PasswordReseted, error) {
+	if s.Error != nil {
+		return nil, s.Error
+	}
+	user_email, err := s.prepare_email(user_email)
+	if err != nil {
+		return nil, lib.Error.General.BadRequest.WithError(err)
+	}
+	// Get the user by email
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", user_email).
+		First(s.Model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, lib.Error.General.RecordNotFound
+		}
+		return nil, lib.Error.General.InternalError.WithError(err)
+	}
+
+	modelValue := reflect.ValueOf(s.Model)
+	if modelValue.Kind() == reflect.Ptr {
+		modelValue = modelValue.Elem()
+	}
+
+	metaField := modelValue.FieldByName("Meta")
+	if !metaField.IsValid() || !metaField.CanSet() {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
+	}
+
+	// Get the current Meta value or create a new one if nil
+	metaValue := metaField.Interface().(mJSON.UserMeta)
+
+	if metaValue.Login.NewPasswordRequestedAt != nil && metaValue.Login.NewPasswordRequestsCount != nil {
+		waitTime := time.Minute
+		if *metaValue.Login.NewPasswordRequestsCount > 3 {
+			waitTime = 5 * time.Minute
+		}
+		if time.Since(*metaValue.Login.NewPasswordRequestedAt) < waitTime {
+			return nil, lib.Error.General.TooManyRequests.WithError(fmt.Errorf("a validation code was sent recently; please wait before requesting another"))
+		}
+	}
+
+	passwordField := modelValue.FieldByName("Password")
+	if !passwordField.IsValid() || !passwordField.CanSet() {
+		return nil, lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Password field"))
+	}
+	newPassword := lib.GenerateValidPassword()
+	passwordField.SetString(newPassword)
+
+	// Update request tracking
+	now := time.Now()
+	metaValue.Login.NewPasswordRequestedAt = &now
+
+	// Increment request count
+	if metaValue.Login.NewPasswordRequestsCount == nil {
+		count := 1
+		metaValue.Login.NewPasswordRequestsCount = &count
+	} else {
+		*metaValue.Login.NewPasswordRequestsCount++
+	}
+
+	// Set the updated Meta back to the model
+	metaField.Set(reflect.ValueOf(metaValue))
+
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", user_email).
+		Updates(s.Model).Error; err != nil {
+		return nil, lib.Error.General.InternalError.WithError(err)
+	}
+
+	return &DTO.PasswordReseted{Password: newPassword}, nil
 }
 
 func (s *service) VerifyEmail(email string) error {
