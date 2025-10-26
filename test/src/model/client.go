@@ -10,6 +10,7 @@ import (
 	"mynute-go/core/src/lib/email"
 	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
+	"net/url"
 	"reflect"
 )
 
@@ -214,7 +215,7 @@ func (u *Client) SendLoginCode(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/send-login-code/email/%s?lang=en", u.Created.Email)).
+		URL(fmt.Sprintf("/client/send-login-code/email/%s?lang=en", url.PathEscape(u.Created.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send login code to client: %w", err)
@@ -264,7 +265,7 @@ func (u *Client) SendPasswordResetEmail(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/reset-password/%s?lang=en", u.Created.Email)).
+		URL(fmt.Sprintf("/client/reset-password/%s?lang=en", url.PathEscape(u.Created.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send password reset email to client: %w", err)
@@ -335,7 +336,7 @@ func (u *Client) SendVerificationEmail(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/send-verification-code/email/%s?language=en", u.Created.Email)).
+		URL(fmt.Sprintf("/client/send-verification-code/email/%s?language=en", url.PathEscape(u.Created.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send verification email to client: %w", err)
@@ -374,7 +375,7 @@ func (u *Client) VerifyEmailByCode(s int, code string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("GET").
-		URL(fmt.Sprintf("/client/verify-email/%s/%s", u.Created.Email, code)).
+		URL(fmt.Sprintf("/client/verify-email/%s/%s", url.PathEscape(u.Created.Email), code)).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to verify client email: %w", err)

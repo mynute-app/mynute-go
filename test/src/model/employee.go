@@ -9,6 +9,7 @@ import (
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/lib/email"
 	"mynute-go/test/src/handler"
+	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -301,7 +302,7 @@ func (e *Employee) GetByEmail(s int, x_auth_token *string, x_company_id *string)
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(fmt.Sprintf("/employee/email/%s", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/email/%s", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, t).
@@ -455,7 +456,7 @@ func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/employee/send-login-code/email/%s?lang=en", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/send-login-code/email/%s?lang=en", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
@@ -513,7 +514,7 @@ func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/employee/reset-password/%s?lang=en", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/reset-password/%s?lang=en", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
@@ -592,7 +593,7 @@ func (e *Employee) SendVerificationEmail(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/employee/send-verification-code/email/%s/%s?language=en", e.Created.Email, cID)).
+		URL(fmt.Sprintf("/employee/send-verification-code/email/%s/%s?language=en", url.PathEscape(e.Created.Email), cID)).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
@@ -638,7 +639,7 @@ func (e *Employee) VerifyEmailByCode(s int, code string, x_company_id *string) e
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("GET").
-		URL(fmt.Sprintf("/employee/verify-email/%s/%s/%s", e.Created.Email, code, cID)).
+		URL(fmt.Sprintf("/employee/verify-email/%s/%s/%s", url.PathEscape(e.Created.Email), code, cID)).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
