@@ -9,11 +9,14 @@ import (
 
 var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+// GenerateRandomIntFromRange generates a random integer in the range [min, max].
+// Both min and max are INCLUSIVE - they can both be returned.
+// For example, GenerateRandomIntFromRange(0, 1) can return either 0 or 1 (50/50 chance).
 func GenerateRandomIntFromRange(min, max int) int {
-	if min >= max {
-		panic("min must be less than max")
+	if min > max {
+		panic("min must be less than or equal to max")
 	}
-	return rnd.Intn(max-min) + min
+	return rnd.Intn(max-min+1) + min
 }
 
 // Generates a random name with the format: "Test <str> <random_number>"
@@ -53,7 +56,7 @@ func GenerateRandomEmail(name string) string {
 	return fmt.Sprintf("%v%v", nick, provider)
 }
 
-// Generates an integer in the range [10^(length-1), 10^length - 1]. 
+// Generates an integer in the range [10^(length-1), 10^length - 1].
 // For example, if length is 3, it will generate a number between 100 and 999.
 func GenerateRandomInt(length int) int {
 	// Define the lower and upper bounds based on the desired length
@@ -118,7 +121,7 @@ func GenerateDate(params ...int) time.Time {
 	return myTime
 }
 
-// GenerateDateRFC3339 creates a date in RFC3339 format 
+// GenerateDateRFC3339 creates a date in RFC3339 format
 // eg. "2021-01-01T09:00:00Z" and also accepts optional parameters.
 // Expected order of arguments: year, month, day, hour, minute.
 func GenerateDateRFC3339(params ...int) string {
@@ -138,7 +141,7 @@ func GenerateValidPassword() string {
 		all     = lower + upper + digits + special
 	)
 
-	length := GenerateRandomIntFromRange(8, 17)
+	length := GenerateRandomIntFromRange(8, 16)
 
 	// Garante pelo menos um de cada tipo
 	password := []byte{
@@ -160,5 +163,3 @@ func GenerateValidPassword() string {
 
 	return string(password)
 }
-
-
