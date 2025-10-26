@@ -138,7 +138,7 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 		return err
 	}
 
-	renderer := email.NewTemplateRenderer("./static/page", "./translation")
+	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
 
 	language := c.Query("language", "en")
 
