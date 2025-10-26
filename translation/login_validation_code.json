@@ -1,0 +1,32 @@
+{
+  "en": {
+    "subject": "Your Login Validation Code",
+    "title": "Login Validation Code",
+    "preheader": "Your login validation code is here.",
+    "heading": "Your Login Validation Code",
+    "instruction": "Please use the following code to complete your login process:",
+    "notice": "This code will expire in a short period. If you did not request this code, please ignore this email.",
+    "footer_automated": "This is an automated message.",
+    "footer_do_not_reply": "Please do not reply."
+  },
+  "pt": {
+    "subject": "Seu Código de Validação de Login",
+    "title": "Código de Validação de Login",
+    "preheader": "Seu código de validação de login está aqui.",
+    "heading": "Seu Código de Validação de Login",
+    "instruction": "Por favor, use o código a seguir para completar seu processo de login:",
+    "notice": "Este código expirará em um curto período. Se você não solicitou este código, por favor, ignore este e-mail.",
+    "footer_automated": "Esta é uma mensagem automática.",
+    "footer_do_not_reply": "Por favor, não responda."
+  },
+  "es": {
+    "subject": "Su Código de Validación de Inicio de Sesión",
+    "title": "Código de Validación de Inicio de Sesión",
+    "preheader": "Su código de validación de inicio de sesión está aquí.",
+    "heading": "Su Código de Validación de Inicio de Sesión",
+    "instruction": "Por favor, use el siguiente código para completar su proceso de inicio de sesión:",
+    "notice": "Este código expirará en un corto período. Si no solicitó este código, ignore este correo electrónico.",
+    "footer_automated": "Este es un mensaje automático.",
+    "footer_do_not_reply": "Por favor no responda."
+  }
+}
