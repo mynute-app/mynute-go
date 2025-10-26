@@ -91,6 +91,9 @@ func (c *Company) Set() error {
 		if err := employee.LoginWithEmailCode(200, nil); err != nil {
 			return err
 		}
+		if err := employee.LoginWithPassword(200, nil); err != nil {
+			return err
+		}
 		if err := employee.GetById(200, nil, nil); err != nil {
 			return err
 		}
