@@ -329,24 +329,30 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 
 	verified := verifiedField.Bool()
 
-	// Verifies the user in case not verified
-	if !verified {
-		verifiedField.SetBool(true)
-	}
-
 	// Clear the validation code after successful login
 	metaValue.Login.ValidationCode = nil
 	metaValue.Login.ValidationExpiry = nil
 	metaValue.Login.ValidationRequestedAt = nil
-	metaField.Set(reflect.ValueOf(metaValue))
 
-	// Update the model to clear the validation code
-	// Only update Meta and Verified fields, not Password
-	if err := s.MyGorm.DB.Model(s.Model).
+	// Update the model to clear the validation code and set verified to true
+	// Use a fresh model instance to avoid BeforeUpdate hook issues (CompanyID constraint)
+	modelType := reflect.TypeOf(s.Model).Elem()
+	freshModel := reflect.New(modelType).Interface()
+
+	updateData := map[string]interface{}{
+		"meta":     metaValue,
+		"verified": true, // Always set to true on successful login
+	}
+	if err := s.MyGorm.DB.Model(freshModel).
 		Where("email = ?", body.Email).
-		Select("Meta", "Verified").
-		Updates(s.Model).Error; err != nil {
+		Updates(updateData).Error; err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Update the in-memory model to reflect the changes
+	metaField.Set(reflect.ValueOf(metaValue))
+	if !verified {
+		verifiedField.SetBool(true)
 	}
 
 	// Generate JWT token
@@ -439,16 +445,20 @@ func (s *service) ResetLoginCodeByEmail(user_email string) (string, error) {
 		*metaValue.Login.ValidationRequestsCount++
 	}
 
-	// Set the updated Meta back to the model
-	metaField.Set(reflect.ValueOf(metaValue))
+	// Update the model in database (only update Meta field to avoid BeforeUpdate hook errors)
+	// Use a fresh model instance to avoid BeforeUpdate hook checking CompanyID from the loaded model
+	modelType := reflect.TypeOf(s.Model).Elem()
+	freshModel := reflect.New(modelType).Interface()
 
-	// Update the model in database
 	if err := s.MyGorm.DB.
-		Model(s.Model).
+		Model(freshModel).
 		Where("email = ?", user_email).
-		Updates(s.Model).Error; err != nil {
+		Updates(map[string]interface{}{"meta": metaValue}).Error; err != nil {
 		return "", fmt.Errorf("failed to store validation code: %w", err)
 	}
+
+	// Set the updated Meta back to the in-memory model
+	metaField.Set(reflect.ValueOf(metaValue))
 
 	return codeString, nil
 }
