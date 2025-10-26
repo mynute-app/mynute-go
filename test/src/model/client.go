@@ -83,9 +83,8 @@ func (u *Client) Update(s int, changes map[string]any) error {
 func (u *Client) GetByEmail(s int) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL("/client/email/"+u.Created.Email).
+		URL("/client/email/" + u.Created.Email).
 		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
 		ParseResponse(&u.Created).Error; err != nil {
 		return fmt.Errorf("failed to get client by email: %w", err)
@@ -237,6 +236,77 @@ func (u *Client) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	return code, nil
+}
+
+func (u *Client) SendPasswordResetEmail(s int) error {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return err
+	}
+
+	// Clear any existing emails to avoid interference
+	if err := mailhog.DeleteAllMessages(); err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/client/reset-password/%s?lang=en", u.Created.Email)).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send password reset email to client: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) GetNewPasswordFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the client
+	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the new password from the email
+	password, err := message.ExtractPassword()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract password: %w", err)
+	}
+
+	return password, nil
+}
+
+func (u *Client) ResetPasswordByEmail(s int) error {
+	if err := u.SendPasswordResetEmail(s); err != nil {
+		return fmt.Errorf("failed to send password reset email: %w", err)
+	}
+
+	newPassword, err := u.GetNewPasswordFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get new password from email: %w", err)
+	}
+
+	// Update the password in memory
+	u.Created.Password = newPassword
+
+	// Try to login with the new password
+	if err := u.LoginByPassword(200, newPassword); err != nil {
+		return fmt.Errorf("failed to login with new password: %w", err)
+	}
+
+	return nil
 }
 
 func ValidateUpdateChanges(modelName string, v any, changes map[string]any) error {
