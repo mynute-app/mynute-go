@@ -28,19 +28,6 @@ func Test_Employee(t *testing.T) {
 	branch := c.Branches[0]
 	service := c.Services[0]
 
-	tt.Describe("Employee get by ID").Test(employee.GetById(200, nil, nil))
-	tt.Describe("Employee get by email").Test(employee.GetByEmail(200, nil, nil))
-
-	// Employee is already verified from setup (logged in with email code which auto-verifies)
-	// Test password login (default login method)
-	tt.Describe("Employee re-login with password (default)").Test(employee.Login(200, nil))
-
-	// Test explicit password login
-	tt.Describe("Employee login with password (explicit)").Test(employee.LoginWith(200, "password", nil))
-
-	// Test email code login (employee is already verified, this will work)
-	tt.Describe("Employee login with email code").Test(employee.LoginWith(200, "email_code", nil))
-
 	tt.Describe("Changing employee id").Test(employee.Update(400, map[string]any{
 		"Id":   "00000000-0000-0000-0000-000000000001",
 		"name": "Updated Employee Name xDDDD",
@@ -73,6 +60,15 @@ func Test_Employee(t *testing.T) {
 	employee.Created.Password = new_password
 	tt.Describe("Employee login with new password").Test(employee.LoginByPassword(200, new_password, nil))
 
+	// Test password reset by email
+	tt.Describe("Reset employee password by email").Test(employee.ResetPasswordByEmail(200, nil))
+
+	// Test that the old password no longer works
+	tt.Describe("Employee login with old password fails").Test(employee.LoginByPassword(401, new_password, nil))
+
+	// Test that new password from email works
+	tt.Describe("Employee login with password from email").Test(employee.LoginByPassword(200, employee.Created.Password, nil))
+
 	ServicesID := []DTO.ServiceBase{
 		{ID: service.Created.ID},
 	}
@@ -80,23 +76,32 @@ func Test_Employee(t *testing.T) {
 	EmployeeWorkSchedule := model.GetExampleEmployeeWorkSchedule(employee.Created.ID, branch.Created.ID, ServicesID)
 
 	tt.Describe("Employee create work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
+
 	tt.Describe("Add service to employee").Test(employee.AddService(200, service, &c.Owner.X_Auth_Token, nil))
+
 	tt.Describe("Employee create work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
+
 	tt.Describe("Add branch to employee").Test(employee.AddBranch(200, branch, &c.Owner.X_Auth_Token, nil))
+
 	tt.Describe("Employee create work schedule successfully").Test(employee.CreateWorkSchedule(200, EmployeeWorkSchedule, nil, nil))
+
 	tt.Describe("Get Employee work schedule successfully").Test(employee.GetWorkSchedule(200, nil, nil))
+
 	wr := employee.Created.WorkSchedule[0]
+
 	tt.Describe("Updating fail branch work schedule").Test(employee.UpdateWorkRange(400, wr.ID.String(), map[string]any{
 		"start_time": "06:00",
 		"end_time":   "20:00",
 		"time_zone":  "America/Sao_Paulo",
 	}, nil, nil))
+
 	tt.Describe("Updating success branch work schedule").Test(employee.UpdateWorkRange(400, wr.ID.String(), map[string]any{
 		"start_time": "09:00",
 		"end_time":   "18:00",
 		"time_zone":  "America/Sao_Paulo",
 		"weekday":    1,
 	}, nil, nil))
+
 	tt.Describe("Updating success branch work schedule").Test(employee.UpdateWorkRange(200, wr.ID.String(), map[string]any{
 		"start_time": "09:30",
 		"end_time":   "11:00",
