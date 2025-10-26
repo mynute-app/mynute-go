@@ -524,13 +524,26 @@ func (s *service) ResetPasswordByEmail(user_email string) (*DTO.PasswordReseted,
 		*metaValue.Login.NewPasswordRequestsCount++
 	}
 
-	// Set the updated Meta back to the model
-	metaField.Set(reflect.ValueOf(metaValue))
+	// Hash the password before storing
+	hashedPassword, err := handler.HashPassword(newPassword)
+	if err != nil {
+		return nil, lib.Error.General.InternalError.WithError(fmt.Errorf("failed to hash password: %w", err))
+	}
+
+	// Update the model in database using fresh model instance
+	// to avoid BeforeUpdate hook checking CompanyID from the loaded model
+	modelType := reflect.TypeOf(s.Model).Elem()
+	freshModel := reflect.New(modelType).Interface()
+
+	updateData := map[string]interface{}{
+		"password": hashedPassword,
+		"meta":     metaValue,
+	}
 
 	if err := s.MyGorm.DB.
-		Model(s.Model).
+		Model(freshModel).
 		Where("email = ?", user_email).
-		Updates(s.Model).Error; err != nil {
+		Updates(updateData).Error; err != nil {
 		return nil, lib.Error.General.InternalError.WithError(err)
 	}
 
