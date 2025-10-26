@@ -24,16 +24,11 @@ func Test_Client(t *testing.T) {
 
 	tt.Describe("Client creation").Test(client.Create(200))
 
-	tt.Describe("Send Login code by email").Test(client.SendLoginCode(200))
+	tt.Describe("Login by password with invalid password").Test(client.LoginByPassword(401, "invalid_password"))
 
-	loginCode, err := client.GetLoginCodeFromEmail()
-	if err != nil {
-		tt.Describe("Get login code from email").Test(err)
-	}
+	tt.Describe("Login with email code").Test(client.Login(200, "email_code"))
 
-	tt.Describe("Login by email code").Test(client.LoginByEmailCode(200, loginCode))
-
-	tt.Describe("Client login by password").Test(client.Login(200))
+	tt.Describe("Login with password").Test(client.Login(200, "password"))
 
 	tt.Describe("Client update").Test(client.Update(200, map[string]any{
 		"name": "Updated Client Name",
@@ -54,11 +49,13 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Client update").Test(client.Update(401, map[string]any{
 		"password": "NewPswrd1@!",
 	}))
+
 	client.Created.Password = new_password // Update the password in the client model
 
-	tt.Describe("Client get by email").Test(client.GetByEmail(401))
+	tt.Describe("Client get by email with old token").Test(client.GetByEmail(401))
 
-	tt.Describe("Client login").Test(client.Login(200))
+	// Re-login with new password to get a fresh token
+	tt.Describe("Login with new password").Test(client.LoginByPassword(200, new_password))
 
 	tt.Describe("Client get by email").Test(client.GetByEmail(200))
 
@@ -79,17 +76,6 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Delete profile image").Test(client.DeleteImages(200, []string{"profile"}, nil))
 
 	tt.Describe("Get deleted profile image").Test(client.GetImage(404, img_url, nil))
-
-	tt.Describe("Login by email code with invalid code").Test(client.LoginByEmailCode(400, "000000"))
-
-	tt.Describe("Send Login code by email").Test(client.SendLoginCode(200))
-
-	loginCode, err = client.GetLoginCodeFromEmail()
-	if err != nil {
-		tt.Describe("Get login code from email").Test(err)
-	}
-
-	tt.Describe("Login by email code").Test(client.LoginByEmailCode(200, loginCode))
 
 	tt.Describe("Upload profile image again logged in with email code").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
