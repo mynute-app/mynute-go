@@ -199,8 +199,9 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Accept			json
 //	@Produce		json
-//	@Param			email	path	string	true	"Employee Email"
-//	@Param			lang	query	string	false	"Language code (default: en)"
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
+//	@Param			email			path	string	true	"Employee Email"
+//	@Param			lang			query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/send-login-code/email/{email} [post]

@@ -456,12 +456,14 @@ var LoginEmployeeByEmailCode = &EndPoint{
 	Method:         namespace.CreateActionMethod,
 	ControllerName: "LoginEmployeeByEmailCode",
 	Description:    "Login employee by email code",
+	NeedsCompanyId: true,
 }
 var SendLoginCodeToEmployeeEmail = &EndPoint{
 	Path:           "/employee/send-login-code/email/:email",
 	Method:         namespace.CreateActionMethod,
 	ControllerName: "SendEmployeeLoginValidationCodeByEmail",
 	Description:    "Send login code to employee email",
+	NeedsCompanyId: true,
 }
 var ResetEmployeePasswordByEmail = &EndPoint{
 	Path:           "/employee/reset-password/:email",
