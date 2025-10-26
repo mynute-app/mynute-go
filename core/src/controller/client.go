@@ -342,6 +342,34 @@ func ResetClientPasswordByEmail(c *fiber.Ctx) error {
 	return lib.ResponseFactory(c).Http200(nil)
 }
 
+// SendClientVerificationCodeByEmail sends a verification code to a client's email
+//
+//	@Summary		Send client verification code by email
+//	@Description	Send a verification code to a client's email
+//	@Tags			Client
+//	@Param			email	path	string	true	"Client Email"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/send-verification-code/email/{email} [post]
+func SendClientVerificationCodeByEmail(c *fiber.Ctx) error {
+	return SendVerificationCodeByEmail(c, &model.Client{})
+}
+
+// VerifyClientEmail verifies a client's email
+//
+//	@Summary		Verify client email
+//	@Description	Verify a client's email
+//	@Tags			Client
+//	@Param			email	path	string	true	"Client Email"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/verify-email/{email}/{code} [get]
+func VerifyClientEmail(c *fiber.Ctx) error {
+	return VerifyEmail(c, &model.Client{})
+}
+
 func Client(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{

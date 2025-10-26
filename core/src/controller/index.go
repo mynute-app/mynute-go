@@ -94,7 +94,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 	language := c.Query("language", "en")
 
 	// Initialize renderer
-	renderer := email.NewTemplateRenderer("./static", "./translation")
+	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
 
 	// Render email template
 	renderedEmail, err := renderer.RenderEmail("login_validation_code", language, email.TemplateData{
@@ -138,7 +138,7 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 		return err
 	}
 
-	renderer := email.NewTemplateRenderer("./static", "./translation")
+	renderer := email.NewTemplateRenderer("./static/page", "./translation")
 
 	language := c.Query("language", "en")
 
@@ -171,12 +171,96 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 	return nil
 }
 
+func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
+	user_email := c.Params("email")
+	if user_email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+
+	company_id := c.Params("company_id", "")
+	if company_id != "" {
+		if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+			return lib.Error.General.BadRequest.WithError(err)
+		}
+	} else {
+		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+			return lib.Error.General.BadRequest.WithError(err)
+		}
+	}
+
+	code, err := service.New(c).SetModel(model).GetVerificationCodeByEmail(user_email)
+	if err != nil {
+		return err
+	}
+
+	language := c.Query("language", "en")
+
+	// Build verification link with code included
+	protocol := c.Protocol()
+	host := c.Hostname()
+	var verificationLink string
+	if company_id != "" {
+		verificationLink = fmt.Sprintf("%s://%s/verify-email?email=%s&company_id=%s&type=employee&lang=%s&code=%s", protocol, host, user_email, company_id, language, code)
+	} else {
+		verificationLink = fmt.Sprintf("%s://%s/verify-email?email=%s&type=client&lang=%s&code=%s", protocol, host, user_email, language, code)
+	}
+
+	// Initialize renderer
+	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
+
+	// Render email template
+	renderedEmail, err := renderer.RenderEmail("email_verification_code", language, email.TemplateData{
+		"VerificationCode": code,
+		"VerificationLink": verificationLink,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to render email: %w", err)
+	}
+
+	// Initialize email provider
+	provider, err := email.NewProvider(nil)
+	if err != nil {
+		return fmt.Errorf("failed to initialize email provider: %w", err)
+	}
+
+	// Send email
+	err = provider.Send(context.Background(), email.EmailData{
+		To:      []string{user_email},
+		Subject: renderedEmail.Subject,
+		Html:    renderedEmail.HTMLBody,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
+}
+
 func VerifyEmail(c *fiber.Ctx, model any) error {
 	var err error
 	email := c.Params("email")
+	if email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
 	Service := service.New(c)
 	defer Service.DeferDB(err)
-	return Service.SetModel(model).VerifyEmail(email)
+	company_id := c.Params("company_id", "")
+	if company_id != "" {
+		if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
+			return lib.Error.General.BadRequest.WithError(err)
+		}
+	} else {
+		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
+			return lib.Error.General.BadRequest.WithError(err)
+		}
+	}
+	code := c.Params("code", "")
+	if code == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'code' at params route"))
+	}
+	return Service.SetModel(model).VerifyEmail(email, code)
 }
 
 func UpdateImagesById(c *fiber.Ctx, model_table_name string, model any, img_types_allowed map[string]bool) (*mJSON.DesignConfig, error) {
