@@ -23,11 +23,8 @@ func (u *Client) Set() error {
 	if err := u.Create(200); err != nil {
 		return err
 	}
-	// TODO: Need to implement email verification flow in tests using login by email code instead.
-	// if err := u.VerifyEmail(200); err != nil {
-	// 	return err
-	// }
-	if err := u.LoginWithPassword(200); err != nil {
+	// Use login by email code instead of password since client is not verified yet
+	if err := u.LoginWithEmailCode(200); err != nil {
 		return err
 	}
 	if err := u.UploadImages(200, map[string][]byte{
