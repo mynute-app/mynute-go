@@ -1,0 +1,53 @@
+{
+  "en": {
+    "page_title": "Email Verification",
+    "logo_text": "Mynute",
+    "heading_verifying": "Verifying Your Email",
+    "heading_success": "Email Verified!",
+    "heading_error": "Verification Failed",
+    "message_verifying": "Please wait while we verify your email address...",
+    "message_success": "Your email has been successfully verified. You can now close this page.",
+    "message_no_email": "No email provided",
+    "message_no_code": "No verification code provided",
+    "message_verification_failed": "Verification failed. The code may be invalid or expired.",
+    "message_error": "An error occurred during verification. Please try again later.",
+    "message_code_resent": "A new verification code has been sent to your email. Please check your inbox.",
+    "message_resend_failed": "Failed to send verification code. Please try again.",
+    "button_retry": "Request New Code",
+    "button_sending": "Sending..."
+  },
+  "pt": {
+    "page_title": "Verificação de E-mail",
+    "logo_text": "Mynute",
+    "heading_verifying": "Verificando Seu E-mail",
+    "heading_success": "E-mail Verificado!",
+    "heading_error": "Falha na Verificação",
+    "message_verifying": "Por favor, aguarde enquanto verificamos seu endereço de e-mail...",
+    "message_success": "Seu e-mail foi verificado com sucesso. Você pode fechar esta página agora.",
+    "message_no_email": "Nenhum e-mail fornecido",
+    "message_no_code": "Nenhum código de verificação fornecido",
+    "message_verification_failed": "Verificação falhou. O código pode ser inválido ou expirado.",
+    "message_error": "Ocorreu um erro durante a verificação. Por favor, tente novamente mais tarde.",
+    "message_code_resent": "Um novo código de verificação foi enviado para seu e-mail. Por favor, verifique sua caixa de entrada.",
+    "message_resend_failed": "Falha ao enviar código de verificação. Por favor, tente novamente.",
+    "button_retry": "Solicitar Novo Código",
+    "button_sending": "Enviando..."
+  },
+  "es": {
+    "page_title": "Verificación de Correo Electrónico",
+    "logo_text": "Mynute",
+    "heading_verifying": "Verificando Su Correo Electrónico",
+    "heading_success": "¡Correo Electrónico Verificado!",
+    "heading_error": "Verificación Fallida",
+    "message_verifying": "Por favor, espere mientras verificamos su dirección de correo electrónico...",
+    "message_success": "Su correo electrónico ha sido verificado con éxito. Puede cerrar esta página ahora.",
+    "message_no_email": "No se proporcionó correo electrónico",
+    "message_no_code": "No se proporcionó código de verificación",
+    "message_verification_failed": "Verificación fallida. El código puede ser inválido o haber expirado.",
+    "message_error": "Ocurrió un error durante la verificación. Por favor, intente nuevamente más tarde.",
+    "message_code_resent": "Se ha enviado un nuevo código de verificación a su correo electrónico. Por favor, revise su bandeja de entrada.",
+    "message_resend_failed": "Error al enviar código de verificación. Por favor, intente nuevamente.",
+    "button_retry": "Solicitar Nuevo Código",
+    "button_sending": "Enviando..."
+  }
+}

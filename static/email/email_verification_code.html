@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <!-- The preheader text is hidden in the email body but displayed in the inbox preview. -->
+    <div style="display: none; max-height: 0; overflow: hidden;">
+        {{.preheader}}
+    </div>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;">
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="color: #333333; margin: 0;">{{.heading}}</h1>
+                            <p style="color: #555555; font-size: 16px; margin: 20px 0 0;">{{.instruction}}</p>
+                            <div style="font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 2px; margin: 20px 0; padding: 10px; border: 1px dashed #007bff; border-radius: 4px; display: inline-block;">{{.VerificationCode}}</div>
+                            <p style="color: #555555; font-size: 16px; margin: 20px 0 0;">{{.or_click_link}}</p>
+                            <a href="{{.VerificationLink}}" style="display: inline-block; padding: 15px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; margin: 20px 0;">{{.button_text}}</a>
+                            <p style="color: #555555; font-size: 14px; margin: 20px 0 0;">{{.link_expiry}}</p>
+                            <p style="color: #888888; font-size: 12px; margin: 10px 0 0;">{{.notice}}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f9f9f9; padding: 20px; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="color: #888888; font-size: 12px; margin: 0;">
+                                {{.footer_automated}}
+                            </p>
+                            <p style="color: #888888; font-size: 12px; margin: 5px 0 0;">
+                                {{.footer_do_not_reply}}
+                            </p>
+                            <p style="color: #888888; font-size: 12px; margin: 5px 0 0;">
+                                Mynute App, 1234 Street Name, City, State, 12345
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
