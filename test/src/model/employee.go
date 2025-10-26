@@ -7,6 +7,7 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/email"
 	"mynute-go/test/src/handler"
 
 	"github.com/google/uuid"
@@ -336,33 +337,163 @@ func (e *Employee) Delete(s int, x_auth_token *string, x_company_id *string) err
 }
 
 func (e *Employee) Login(s int, x_company_id *string) error {
-	http := handler.NewHttpClient()
+	// Default to password login for backward compatibility
+	return e.LoginWithPassword(s, x_company_id)
+}
+
+func (e *Employee) LoginWith(s int, login_type string, x_company_id *string) error {
+	if login_type == "password" {
+		return e.LoginWithPassword(s, x_company_id)
+	} else if login_type == "email_code" {
+		return e.LoginWithEmailCode(s, x_company_id)
+	}
+	return fmt.Errorf("invalid login type: %s", login_type)
+}
+
+func (e *Employee) LoginWithPassword(s int, x_company_id *string) error {
+	if err := e.LoginByPassword(s, e.Created.Password, x_company_id); err != nil {
+		return fmt.Errorf("failed to login with password: %w", err)
+	}
+	return nil
+}
+
+func (e *Employee) LoginByPassword(s int, password string, x_company_id *string) error {
 	login := DTO.LoginEmployee{
 		Email:    e.Created.Email,
-		Password: e.Created.Password,
+		Password: password,
 	}
 	companyIDStr := e.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
 		return err
 	}
+	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
 		URL("/employee/login").
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(login).Error; err != nil {
-		return fmt.Errorf("failed to login employee: %w", err)
+		return fmt.Errorf("failed to login employee by password: %w", err)
 	}
-	auth := http.ResHeaders[namespace.HeadersKey.Auth]
-	if len(auth) == 0 {
-		return fmt.Errorf("authentication token not found in response headers")
-	}
-	e.X_Auth_Token = auth[0]
-	if err := e.GetById(200, nil, nil); err != nil {
-		return fmt.Errorf("failed to get employee by ID after login: %w", err)
+
+	if s == 200 {
+		auth := http.ResHeaders[namespace.HeadersKey.Auth]
+		if len(auth) == 0 {
+			return fmt.Errorf("authentication token not found in response headers")
+		}
+		e.X_Auth_Token = auth[0]
+		if err := e.GetById(200, nil, nil); err != nil {
+			return fmt.Errorf("failed to get employee by ID after login by password: %w", err)
+		}
 	}
 	return nil
+}
+
+func (e *Employee) LoginWithEmailCode(s int, x_company_id *string) error {
+	if err := e.SendLoginCode(s, x_company_id); err != nil {
+		return fmt.Errorf("failed to send login code: %w", err)
+	}
+	code, err := e.GetLoginCodeFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get login code from email: %w", err)
+	}
+	if err := e.LoginByEmailCode(s, code, x_company_id); err != nil {
+		return fmt.Errorf("failed to login by email code: %w", err)
+	}
+	return nil
+}
+
+func (e *Employee) LoginByEmailCode(s int, code string, x_company_id *string) error {
+	loginData := DTO.LoginByEmailCode{
+		Email: e.Created.Email,
+		Code:  code,
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL("/employee/login-with-code").
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(loginData).Error; err != nil {
+		return fmt.Errorf("failed to login employee by email code: %w", err)
+	}
+
+	if s == 200 {
+		auth := http.ResHeaders[namespace.HeadersKey.Auth]
+		if len(auth) == 0 {
+			return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
+		}
+		e.X_Auth_Token = auth[0]
+		if err := e.GetById(200, nil, nil); err != nil {
+			return fmt.Errorf("failed to get employee by email after login by code: %w", err)
+		}
+	}
+	return nil
+}
+
+func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return err
+	}
+
+	// Clear any existing emails to avoid interference
+	if err := mailhog.DeleteAllMessages(); err != nil {
+		return err
+	}
+
+	// Note: The employee send-login-code endpoint DOES require X-Company-ID header
+	// to switch to the correct company schema before querying for the employee
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/employee/send-login-code/email/%s?lang=en", e.Created.Email)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send login code to employee: %w", err)
+	}
+	return nil
+}
+
+func (e *Employee) GetLoginCodeFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the employee
+	message, err := mailhog.GetLatestMessageTo(e.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the validation code from the email
+	code, err := message.ExtractValidationCode()
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
 }
 
 // func (e *Employee) VerifyEmail(s int, x_company_id *string) error {

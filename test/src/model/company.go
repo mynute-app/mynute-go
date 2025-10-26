@@ -87,11 +87,8 @@ func (c *Company) Set() error {
 		if err := employee.Create(200, &cOwnerToken, nil); err != nil {
 			return err
 		}
-		// TODO: Need to implement email verification flow in tests using login by email code instead.
-		// if err := employee.VerifyEmail(200, nil); err != nil {
-		// 	return err
-		// }
-		if err := employee.Login(200, nil); err != nil {
+		// Use email code login for first login to verify the employee
+		if err := employee.LoginWithEmailCode(200, nil); err != nil {
 			return err
 		}
 		if err := employee.GetById(200, nil, nil); err != nil {
@@ -287,11 +284,8 @@ func (c *Company) GenerateEmployees(n int) error {
 		if employee.Created.ID == uuid.Nil {
 			return fmt.Errorf("failed to create employee %d/%d or retrieve ID", i+1, n)
 		}
-		// TODO: Need to implement email verification flow in tests using login by email code instead.
-		// if err := employee.VerifyEmail(200, nil); err != nil {
-		// 	return err
-		// }
-		if err := employee.Login(200, nil); err != nil {
+		// Use email code login for first login to verify the employee
+		if err := employee.LoginWithEmailCode(200, nil); err != nil {
 			return err
 		}
 
@@ -968,11 +962,8 @@ func (c *Company) Create(status int) error {
 		Created: &owner,
 	}
 	c.Owner.Created.Email = ownerEmail
-	// TODO: Need to implement email verification flow in tests using login by email code instead.
-	// if err := c.Owner.VerifyEmail(200, nil); err != nil {
-	// 	return fmt.Errorf("failed to verify owner email: %w", err)
-	// }
-	if err := c.Owner.Login(200, nil); err != nil {
+	// Use email code login for first login to verify the owner
+	if err := c.Owner.LoginWithEmailCode(200, nil); err != nil {
 		return fmt.Errorf("failed to login owner: %w", err)
 	}
 	c.Employees = append(c.Employees, c.Owner)

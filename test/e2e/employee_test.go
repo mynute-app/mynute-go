@@ -31,6 +31,16 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Employee get by ID").Test(employee.GetById(200, nil, nil))
 	tt.Describe("Employee get by email").Test(employee.GetByEmail(200, nil, nil))
 
+	// Employee is already verified from setup (logged in with email code which auto-verifies)
+	// Test password login (default login method)
+	tt.Describe("Employee re-login with password (default)").Test(employee.Login(200, nil))
+
+	// Test explicit password login
+	tt.Describe("Employee login with password (explicit)").Test(employee.LoginWith(200, "password", nil))
+
+	// Test email code login (employee is already verified, this will work)
+	tt.Describe("Employee login with email code").Test(employee.LoginWith(200, "email_code", nil))
+
 	tt.Describe("Changing employee id").Test(employee.Update(400, map[string]any{
 		"Id":   "00000000-0000-0000-0000-000000000001",
 		"name": "Updated Employee Name xDDDD",
@@ -51,19 +61,17 @@ func Test_Employee(t *testing.T) {
 
 	new_password := lib.GenerateValidPassword()
 
-	tt.Describe("Employee update").Test(employee.Update(200, map[string]any{
+	tt.Describe("Employee update password").Test(employee.Update(200, map[string]any{
 		"name":     "Should Succeed Update on Employee Name",
 		"password": new_password,
 	}, nil, nil))
 
-	tt.Describe("Employee update").Test(employee.Update(401, map[string]any{
-		"password": "NewPswrd1@!",
-	}, nil, nil))
+	// Test that old password fails after password change
+	tt.Describe("Employee fail to login with old password").Test(employee.LoginByPassword(401, employee.Created.Password, nil))
 
-	employee.Created.Password = new_password // Update the password in the employee model
-	tt.Describe("Employee get by email").Test(employee.GetByEmail(401, nil, nil))
-
-	tt.Describe("Employee login").Test(employee.Login(200, nil))
+	// Update password in memory and test new password works
+	employee.Created.Password = new_password
+	tt.Describe("Employee login with new password").Test(employee.LoginByPassword(200, new_password, nil))
 
 	ServicesID := []DTO.ServiceBase{
 		{ID: service.Created.ID},
