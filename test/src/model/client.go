@@ -27,7 +27,7 @@ func (u *Client) Set() error {
 	// if err := u.VerifyEmail(200); err != nil {
 	// 	return err
 	// }
-	if err := u.Login(200); err != nil {
+	if err := u.LoginWithPassword(200); err != nil {
 		return err
 	}
 	if err := u.UploadImages(200, map[string][]byte{
@@ -106,23 +106,26 @@ func (u *Client) Delete(s int) error {
 	return nil
 }
 
-// func (u *Client) VerifyEmail(s int) error {
-// 	if err := handler.NewHttpClient().
-// 		Method("POST").
-// 		URL(fmt.Sprintf("/client/verify-email/%v/%s", u.Created.Email, "12345")).
-// 		ExpectedStatus(s).
-// 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
-// 		Send(nil).
-// 		Error; err != nil {
-// 		return fmt.Errorf("failed to verify client email: %w", err)
-// 	}
-// 	return nil
-// }
+func (u *Client) Login(s int, login_type string) error {
+	if login_type == "password" {
+		return u.LoginWithPassword(s)
+	} else if login_type == "email_code" {
+		return u.LoginWithEmailCode(s)
+	}
+	return fmt.Errorf("invalid login type: %s", login_type)
+}
 
-func (u *Client) Login(s int) error {
+func (u *Client) LoginWithPassword(s int) error {
+	if err := u.LoginByPassword(s, u.Created.Password); err != nil {
+		return fmt.Errorf("failed to login with password: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) LoginByPassword(s int, password string) error {
 	login := DTO.LoginClient{
 		Email:    u.Created.Email,
-		Password: u.Created.Password,
+		Password: password,
 	}
 	http := handler.NewHttpClient()
 	if err := http.
@@ -130,15 +133,59 @@ func (u *Client) Login(s int) error {
 		URL("/client/login").
 		ExpectedStatus(s).
 		Send(login).Error; err != nil {
-		return fmt.Errorf("failed to login client: %w", err)
+		return fmt.Errorf("failed to login client by password: %w", err)
 	}
-	auth := http.ResHeaders[namespace.HeadersKey.Auth]
-	if len(auth) == 0 {
-		return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
+
+	if s == 200 {
+		auth := http.ResHeaders[namespace.HeadersKey.Auth]
+		if len(auth) == 0 {
+			return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
+		}
+		u.X_Auth_Token = auth[0]
+		if err := u.GetByEmail(200); err != nil {
+			return fmt.Errorf("failed to get client by email after login by password: %w", err)
+		}
 	}
-	u.X_Auth_Token = auth[0]
-	if err := u.GetByEmail(200); err != nil {
-		return fmt.Errorf("failed to get client by email after login: %w", err)
+	return nil
+}
+
+func (u *Client) LoginWithEmailCode(s int) error {
+	if err := u.SendLoginCode(s); err != nil {
+		return fmt.Errorf("failed to send login code: %w", err)
+	}
+	code, err := u.GetLoginCodeFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get login code from email: %w", err)
+	}
+	if err := u.LoginByEmailCode(s, code); err != nil {
+		return fmt.Errorf("failed to login by email code: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) LoginByEmailCode(s int, code string) error {
+	loginData := DTO.LoginByEmailCode{
+		Email: u.Created.Email,
+		Code:  code,
+	}
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL("/client/login-with-code").
+		ExpectedStatus(s).
+		Send(loginData).Error; err != nil {
+		return fmt.Errorf("failed to login client by email code: %w", err)
+	}
+
+	if s == 200 {
+		auth := http.ResHeaders[namespace.HeadersKey.Auth]
+		if len(auth) == 0 {
+			return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
+		}
+		u.X_Auth_Token = auth[0]
+		if err := u.GetByEmail(200); err != nil {
+			return fmt.Errorf("failed to get client by email after login by code: %w", err)
+		}
 	}
 	return nil
 }
@@ -190,33 +237,6 @@ func (u *Client) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	return code, nil
-}
-
-func (u *Client) LoginByEmailCode(s int, code string) error {
-	loginData := DTO.LoginByEmailCode{
-		Email: u.Created.Email,
-		Code:  code,
-	}
-	http := handler.NewHttpClient()
-	if err := http.
-		Method("POST").
-		URL("/client/login/code").
-		ExpectedStatus(s).
-		Send(loginData).Error; err != nil {
-		return fmt.Errorf("failed to login client by email code: %w", err)
-	}
-
-	if s == 200 {
-		auth := http.ResHeaders[namespace.HeadersKey.Auth]
-		if len(auth) == 0 {
-			return fmt.Errorf("authorization header '%s' not found", namespace.HeadersKey.Auth)
-		}
-		u.X_Auth_Token = auth[0]
-		if err := u.GetByEmail(200); err != nil {
-			return fmt.Errorf("failed to get client by email after login by code: %w", err)
-		}
-	}
-	return nil
 }
 
 func ValidateUpdateChanges(modelName string, v any, changes map[string]any) error {
