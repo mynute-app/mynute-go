@@ -65,6 +65,22 @@ definitions:
         example: America/New_York
         type: string
     type: object
+  DTO.AppointmentList:
+    properties:
+      appointments:
+        items:
+          $ref: '#/definitions/DTO.Appointment'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_count:
+        example: 100
+        type: integer
+    type: object
   DTO.AvailableDate:
     properties:
       branch_id:
@@ -740,6 +756,15 @@ definitions:
         example: Public
         type: string
     type: object
+  DTO.LoginByEmailCode:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+    type: object
   DTO.LoginClient:
     properties:
       email:
@@ -1307,6 +1332,51 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create branch
+      tags:
+      - Branch
+  /branch/{branch_id}/appointments:
+    get:
+      description: Retrieve all appointments for a branch with pagination
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AppointmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branch appointments
       tags:
       - Branch
   /branch/{branch_id}/employee/{employee_id}/services:
@@ -2168,7 +2238,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Log in an client
+      description: Log in an client using password
       parameters:
       - description: Client
         in: body
@@ -2188,6 +2258,30 @@ paths:
       summary: Login
       tags:
       - Client
+  /client/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login client using email and validation code
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Login client by email code
+      tags:
+      - client/auth
   /client/reset-password/{email}:
     post:
       description: Reset the password of a client by its email
@@ -2220,20 +2314,13 @@ paths:
       summary: Reset client password by email
       tags:
       - Client
-  /client/verify-email/{email}/{code}:
+  /client/send-login-code/email/{email}:
     post:
-      consumes:
-      - application/json
-      description: Verify an client's email
+      description: Send a login validation code to a client's email
       parameters:
       - description: Client Email
         in: path
         name: email
-        required: true
-        type: string
-      - description: Verification Code
-        in: path
-        name: code
         required: true
         type: string
       produces:
@@ -2241,9 +2328,11 @@ paths:
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
-      summary: Verify email
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Send client login validation code by email
       tags:
       - Client
   /company:
@@ -2647,7 +2736,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create employee
       tags:
-      - Employee - CRUD
+      - Employee
   /employee/{employee_id}/branch/{branch_id}:
     delete:
       description: Remove an employee from a branch
@@ -2689,7 +2778,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove employee from branch
       tags:
-      - Employee - Branches
+      - Employee
     post:
       description: Add an employee to a branch
       parameters:
@@ -2730,7 +2819,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add employee to branch
       tags:
-      - Employee - Branches
+      - Employee
   /employee/{employee_id}/service/{service_id}:
     delete:
       description: Remove a service from an employee
@@ -2772,7 +2861,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove service from employee
       tags:
-      - Employee - Services
+      - Employee
     post:
       consumes:
       - application/json
@@ -2815,7 +2904,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add service to employee
       tags:
-      - Employee - Services
+      - Employee
   /employee/{employee_id}/work_range/{work_range_id}/service/{service_id}:
     delete:
       consumes:
@@ -2864,7 +2953,7 @@ paths:
       - ApiKeyAuth: []
       summary: Remove service from employee's work range
       tags:
-      - Employee - WorkSchedule - Services
+      - Employee
   /employee/{employee_id}/work_range/{work_range_id}/services:
     post:
       consumes:
@@ -2914,7 +3003,7 @@ paths:
       - ApiKeyAuth: []
       summary: Add services to employee's work range
       tags:
-      - Employee - WorkSchedule - Services
+      - Employee
   /employee/{id}:
     delete:
       description: Delete an employee by its ID
@@ -2951,7 +3040,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete employee by ID
       tags:
-      - Employee - CRUD
+      - Employee
     get:
       description: Retrieve an employee by its ID
       parameters:
@@ -2987,7 +3076,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get employee by ID
       tags:
-      - Employee - CRUD
+      - Employee
     patch:
       consumes:
       - application/json
@@ -3031,7 +3120,54 @@ paths:
       - ApiKeyAuth: []
       summary: Update employee
       tags:
-      - Employee - CRUD
+      - Employee
+  /employee/{id}/appointments:
+    get:
+      description: Retrieve appointments for a specific employee with pagination
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AppointmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee appointments
+      tags:
+      - Employee
   /employee/{id}/design/images:
     patch:
       consumes:
@@ -3074,7 +3210,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update employee images
       tags:
-      - Employee - Images
+      - Employee
   /employee/{id}/design/images/{image_type}:
     delete:
       description: Delete an image of an employee
@@ -3116,7 +3252,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete employee image
       tags:
-      - Employee - Images
+      - Employee
   /employee/{id}/work_range/{work_range_id}:
     delete:
       description: Delete a work schedule for an employee
@@ -3158,7 +3294,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete work schedule
       tags:
-      - Employee - WorkSchedule
+      - Employee
     get:
       description: Retrieve a work range for an employee
       parameters:
@@ -3199,7 +3335,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get work range by ID
       tags:
-      - Employee - WorkSchedule
+      - Employee
     put:
       consumes:
       - application/json
@@ -3248,7 +3384,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update work range
       tags:
-      - Employee - WorkSchedule
+      - Employee
   /employee/{id}/work_schedule:
     get:
       description: Retrieve all work ranges for an employee
@@ -3285,7 +3421,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get all employee's work ranges
       tags:
-      - Employee - WorkSchedule
+      - Employee
     post:
       consumes:
       - application/json
@@ -3327,7 +3463,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create work schedule
       tags:
-      - Employee - WorkSchedule
+      - Employee
   /employee/email/{email}:
     get:
       description: Retrieve an employee by its email
@@ -3364,12 +3500,12 @@ paths:
       - ApiKeyAuth: []
       summary: Get employee by email
       tags:
-      - Employee - CRUD
+      - Employee
   /employee/login:
     post:
       consumes:
       - application/json
-      description: Log in an client
+      description: Log in an employee using password
       parameters:
       - description: X-Company-ID
         in: header
@@ -3397,7 +3533,31 @@ paths:
       - ApiKeyAuth: []
       summary: Login
       tags:
-      - Employee - Auth
+      - Employee
+  /employee/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login employee using email and validation code
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Login employee by email code
+      tags:
+      - Employee
   /employee/reset-password/{email}:
     post:
       consumes:
@@ -3429,12 +3589,12 @@ paths:
       - ApiKeyAuth: []
       summary: Reset employee password to a random value
       tags:
-      - Employee - Auth
-  /employee/verify-email/{email}/{code}:
+      - Employee
+  /employee/send-login-code/email/{email}:
     post:
       consumes:
       - application/json
-      description: Verify an employee's email
+      description: Sends a 6-digit login validation code to the employee's email
       parameters:
       - description: X-Company-ID
         in: header
@@ -3446,23 +3606,22 @@ paths:
         name: email
         required: true
         type: string
-      - description: Verification Code
-        in: path
-        name: code
-        required: true
+      - description: 'Language code (default: en)'
+        in: query
+        name: lang
         type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
-      security:
-      - ApiKeyAuth: []
-      summary: Verify email
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Send login validation code to employee email
       tags:
-      - Employee - Auth
+      - Employee
   /holidays:
     post:
       consumes:
@@ -3938,7 +4097,6 @@ paths:
       - description: Client Time Zone (IANA format, e.g., America/New_York)
         in: query
         name: timezone
-        required: true
         type: string
       - description: The start date for the forward search in number format
         in: query

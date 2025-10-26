@@ -300,6 +300,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/branch/{branch_id}/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all appointments for a branch with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch"
+                ],
+                "summary": "Get all branch appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Branch ID",
+                        "name": "branch_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.AppointmentList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/branch/{branch_id}/employee/{employee_id}/services": {
             "get": {
                 "security": [
@@ -1296,7 +1364,7 @@ const docTemplate = `{
         },
         "/client/login": {
             "post": {
-                "description": "Log in an client",
+                "description": "Log in an client using password",
                 "consumes": [
                     "application/json"
                 ],
@@ -1315,6 +1383,43 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/DTO.LoginClient"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/login-with-code": {
+            "post": {
+                "description": "Login client using email and validation code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client/auth"
+                ],
+                "summary": "Login client by email code",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.LoginByEmailCode"
                         }
                     }
                 ],
@@ -1381,31 +1486,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/client/verify-email/{email}/{code}": {
+        "/client/send-login-code/email/{email}": {
             "post": {
-                "description": "Verify an client's email",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Send a login validation code to a client's email",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Client"
                 ],
-                "summary": "Verify email",
+                "summary": "Send client login validation code by email",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Client Email",
                         "name": "email",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Verification Code",
-                        "name": "code",
                         "in": "path",
                         "required": true
                     }
@@ -1414,8 +1509,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
-                    "404": {
-                        "description": "Not Found"
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -2301,7 +2399,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - CRUD"
+                    "Employee"
                 ],
                 "summary": "Create employee",
                 "parameters": [
@@ -2360,7 +2458,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - CRUD"
+                    "Employee"
                 ],
                 "summary": "Get employee by email",
                 "parameters": [
@@ -2412,7 +2510,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Log in an client",
+                "description": "Log in an employee using password",
                 "consumes": [
                     "application/json"
                 ],
@@ -2420,7 +2518,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Auth"
+                    "Employee"
                 ],
                 "summary": "Login",
                 "parameters": [
@@ -2457,6 +2555,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/login-with-code": {
+            "post": {
+                "description": "Login employee using email and validation code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Login employee by email code",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.LoginByEmailCode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employee/reset-password/{email}": {
             "post": {
                 "security": [
@@ -2472,7 +2607,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Auth"
+                    "Employee"
                 ],
                 "summary": "Reset employee password to a random value",
                 "parameters": [
@@ -2507,14 +2642,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/verify-email/{email}/{code}": {
+        "/employee/send-login-code/email/{email}": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Verify an employee's email",
+                "description": "Sends a 6-digit login validation code to the employee's email",
                 "consumes": [
                     "application/json"
                 ],
@@ -2522,9 +2652,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Auth"
+                    "Employee"
                 ],
-                "summary": "Verify email",
+                "summary": "Send login validation code to employee email",
                 "parameters": [
                     {
                         "type": "string",
@@ -2542,18 +2672,20 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Verification Code",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
+                        "description": "Language code (default: en)",
+                        "name": "lang",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK"
                     },
-                    "404": {
-                        "description": "Not Found"
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -2570,7 +2702,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Branches"
+                    "Employee"
                 ],
                 "summary": "Add employee to branch",
                 "parameters": [
@@ -2632,7 +2764,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Branches"
+                    "Employee"
                 ],
                 "summary": "Remove employee from branch",
                 "parameters": [
@@ -2699,7 +2831,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Services"
+                    "Employee"
                 ],
                 "summary": "Add service to employee",
                 "parameters": [
@@ -2761,7 +2893,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Services"
+                    "Employee"
                 ],
                 "summary": "Remove service from employee",
                 "parameters": [
@@ -2828,7 +2960,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule - Services"
+                    "Employee"
                 ],
                 "summary": "Remove service from employee's work range",
                 "parameters": [
@@ -2902,7 +3034,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule - Services"
+                    "Employee"
                 ],
                 "summary": "Add services to employee's work range",
                 "parameters": [
@@ -2975,7 +3107,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - CRUD"
+                    "Employee"
                 ],
                 "summary": "Get employee by ID",
                 "parameters": [
@@ -3030,7 +3162,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - CRUD"
+                    "Employee"
                 ],
                 "summary": "Delete employee by ID",
                 "parameters": [
@@ -3088,7 +3220,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - CRUD"
+                    "Employee"
                 ],
                 "summary": "Update employee",
                 "parameters": [
@@ -3142,6 +3274,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/{id}/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve appointments for a specific employee with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get employee appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.AppointmentList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/employee/{id}/design/images": {
             "patch": {
                 "security": [
@@ -3157,7 +3360,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Images"
+                    "Employee"
                 ],
                 "summary": "Update employee images",
                 "parameters": [
@@ -3220,7 +3423,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - Images"
+                    "Employee"
                 ],
                 "summary": "Delete employee image",
                 "parameters": [
@@ -3284,7 +3487,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule"
+                    "Employee"
                 ],
                 "summary": "Get work range by ID",
                 "parameters": [
@@ -3349,7 +3552,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule"
+                    "Employee"
                 ],
                 "summary": "Update work range",
                 "parameters": [
@@ -3420,7 +3623,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule"
+                    "Employee"
                 ],
                 "summary": "Delete work schedule",
                 "parameters": [
@@ -3484,7 +3687,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule"
+                    "Employee"
                 ],
                 "summary": "Get all employee's work ranges",
                 "parameters": [
@@ -3539,7 +3742,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee - WorkSchedule"
+                    "Employee"
                 ],
                 "summary": "Create work schedule",
                 "parameters": [
@@ -4396,8 +4599,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Client Time Zone (IANA format, e.g., America/New_York)",
                         "name": "timezone",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "number",
@@ -4642,6 +4844,29 @@ const docTemplate = `{
                 "time_zone": {
                     "type": "string",
                     "example": "America/New_York"
+                }
+            }
+        },
+        "DTO.AppointmentList": {
+            "type": "object",
+            "properties": {
+                "appointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.Appointment"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },
@@ -5562,6 +5787,19 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "Public"
+                }
+            }
+        },
+        "DTO.LoginByEmailCode": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 }
             }
         },

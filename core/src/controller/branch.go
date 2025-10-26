@@ -781,8 +781,8 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			branch_id		path	string	true	"Branch ID"
-//	@Param			page			query	int		false	"Page number"		default(1)
-//	@Param			page_size		query	int		false	"Page size"			default(10)
+//	@Param			page			query	int		false	"Page number"	default(1)
+//	@Param			page_size		query	int		false	"Page size"		default(10)
 //	@Produce		json
 //	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse

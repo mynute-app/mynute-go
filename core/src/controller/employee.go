@@ -1003,10 +1003,10 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Param			page			query		int		false	"Page number"		default(1)
-//	@Param			page_size		query		int		false	"Number of items per page"	default(10)
-//	@Success		200	{object}	DTO.AppointmentList
-//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Param			page		query		int	false	"Page number"				default(1)
+//	@Param			page_size	query		int	false	"Number of items per page"	default(10)
+//	@Success		200			{object}	DTO.AppointmentList
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/appointments [get]
 func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	employee_id := c.Params("id")

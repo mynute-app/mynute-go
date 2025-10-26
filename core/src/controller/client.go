@@ -89,7 +89,7 @@ func LoginClientByEmailCode(c *fiber.Ctx) error {
 //	@Summary		Send client login validation code by email
 //	@Description	Send a login validation code to a client's email
 //	@Tags			Client
-//	@Param			email	path		string	true	"Client Email"
+//	@Param			email	path	string	true	"Client Email"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
