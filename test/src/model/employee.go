@@ -336,11 +336,6 @@ func (e *Employee) Delete(s int, x_auth_token *string, x_company_id *string) err
 	return nil
 }
 
-func (e *Employee) Login(s int, x_company_id *string) error {
-	// Default to password login for backward compatibility
-	return e.LoginWithPassword(s, x_company_id)
-}
-
 func (e *Employee) LoginWith(s int, login_type string, x_company_id *string) error {
 	if login_type == "password" {
 		return e.LoginWithPassword(s, x_company_id)
@@ -494,6 +489,85 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	return code, nil
+}
+
+func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return err
+	}
+
+	// Clear any existing emails to avoid interference
+	if err := mailhog.DeleteAllMessages(); err != nil {
+		return err
+	}
+
+	// Note: The employee reset-password endpoint requires X-Company-ID header
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/employee/reset-password/%s?lang=en", e.Created.Email)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send password reset email to employee: %w", err)
+	}
+	return nil
+}
+
+func (e *Employee) GetNewPasswordFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the employee
+	message, err := mailhog.GetLatestMessageTo(e.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the new password from the email
+	password, err := message.ExtractPassword()
+	if err != nil {
+		return "", err
+	}
+
+	return password, nil
+}
+
+func (e *Employee) ResetPasswordByEmail(s int, x_company_id *string) error {
+	if err := e.SendPasswordResetEmail(s, x_company_id); err != nil {
+		return fmt.Errorf("failed to send password reset email: %w", err)
+	}
+
+	newPassword, err := e.GetNewPasswordFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get new password from email: %w", err)
+	}
+
+	// Update the password in memory
+	e.Created.Password = newPassword
+
+	// Try to login with the new password
+	if err := e.LoginByPassword(200, newPassword, x_company_id); err != nil {
+		return fmt.Errorf("failed to login with new password: %w", err)
+	}
+
+	return nil
 }
 
 // func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
