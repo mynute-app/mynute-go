@@ -341,7 +341,11 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 	metaField.Set(reflect.ValueOf(metaValue))
 
 	// Update the model to clear the validation code
-	if err := s.MyGorm.DB.Model(s.Model).Where("email = ?", body.Email).Updates(s.Model).Error; err != nil {
+	// Only update Meta and Verified fields, not Password
+	if err := s.MyGorm.DB.Model(s.Model).
+		Where("email = ?", body.Email).
+		Select("Meta", "Verified").
+		Updates(s.Model).Error; err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
 
