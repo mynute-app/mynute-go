@@ -1109,5 +1109,7 @@ func Employee(Gorm *handler.Gorm) {
 		AddEmployeeWorkRangeServices,
 		DeleteEmployeeWorkRangeService,
 		GetEmployeeAppointmentsById,
+		SendEmployeeVerificationEmail,
+		VerifyEmployeeEmail,
 	})
 }

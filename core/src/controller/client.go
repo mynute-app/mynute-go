@@ -385,5 +385,7 @@ func Client(Gorm *handler.Gorm) {
 		DeleteClientById,
 		UpdateClientImages,
 		DeleteClientImage,
+		SendClientVerificationCodeByEmail,
+		VerifyClientEmail,
 	})
 }
