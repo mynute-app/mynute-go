@@ -300,7 +300,7 @@ var GetClientByEmail = &EndPoint{
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetClientByEmail",
 	Description:      "View client by email",
-	DenyUnauthorized: true,
+	DenyUnauthorized: false,
 	Resource:         ClientResource,
 }
 var GetClientById = &EndPoint{
