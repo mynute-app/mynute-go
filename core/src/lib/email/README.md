@@ -52,7 +52,7 @@ The package includes a template renderer for creating multi-language emails.
 
 ```go
 // Initialize renderer
-renderer := email.NewTemplateRenderer("./static", "./translation")
+renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
 
 // Render email in Portuguese
 htmlBody, err := renderer.RenderEmail("login_validation", "pt", email.TemplateData{
@@ -113,7 +113,7 @@ import (
 
 func SendLoginCode(userEmail, code, language string) error {
     // Render email template
-    renderer := email.NewTemplateRenderer("./static", "./translation")
+    renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
     htmlBody, err := renderer.RenderEmail("login_validation", language, email.TemplateData{
         "ValidationCode": code,
     })
