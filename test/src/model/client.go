@@ -23,10 +23,24 @@ func (u *Client) Set() error {
 	if err := u.Create(200); err != nil {
 		return err
 	}
-	// Use login by email code instead of password since client is not verified yet
-	if err := u.LoginWithEmailCode(200); err != nil {
-		return err
+
+	// 50/50 chance to verify email either by VerifyEmail or LoginWithEmailCode
+	// Both methods verify the email, but LoginWithEmailCode also logs in
+	if lib.GenerateRandomIntFromRange(0, 1) == 0 {
+		// Option 1: Verify email and then login
+		if err := u.VerifyEmail(200); err != nil {
+			return err
+		}
+		if err := u.LoginWithPassword(200); err != nil {
+			return err
+		}
+	} else {
+		// Option 2: Login with email code (also verifies email)
+		if err := u.LoginWithEmailCode(200); err != nil {
+			return err
+		}
 	}
+
 	if err := u.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
 	}, nil); err != nil {
@@ -301,6 +315,93 @@ func (u *Client) ResetPasswordByEmail(s int) error {
 	// Try to login with the new password
 	if err := u.LoginByPassword(200, newPassword); err != nil {
 		return fmt.Errorf("failed to login with new password: %w", err)
+	}
+
+	return nil
+}
+
+func (u *Client) SendVerificationEmail(s int) error {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return err
+	}
+
+	// Clear any existing emails to avoid interference
+	if err := mailhog.DeleteAllMessages(); err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/client/send-verification-code/email/%s?language=en", u.Created.Email)).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send verification email to client: %w", err)
+	}
+	return nil
+}
+
+func (u *Client) GetVerificationCodeFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the client
+	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the verification code from the email
+	code, err := message.ExtractValidationCode()
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
+}
+
+func (u *Client) VerifyEmailByCode(s int, code string) error {
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("GET").
+		URL(fmt.Sprintf("/client/verify-email/%s/%s", u.Created.Email, code)).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to verify client email: %w", err)
+	}
+
+	if s == 200 {
+		// Update the verified status in memory
+		u.Created.Verified = true
+		if err := u.GetByEmail(200); err != nil {
+			return fmt.Errorf("failed to get client by email after verification: %w", err)
+		}
+	}
+	return nil
+}
+
+func (u *Client) VerifyEmail(s int) error {
+	if err := u.SendVerificationEmail(s); err != nil {
+		return fmt.Errorf("failed to send verification email: %w", err)
+	}
+
+	code, err := u.GetVerificationCodeFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get verification code from email: %w", err)
+	}
+
+	if err := u.VerifyEmailByCode(s, code); err != nil {
+		return fmt.Errorf("failed to verify email with code: %w", err)
 	}
 
 	return nil
