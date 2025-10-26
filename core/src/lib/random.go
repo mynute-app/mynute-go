@@ -53,7 +53,7 @@ func GenerateRandomEmail(name string) string {
 	return fmt.Sprintf("%v%v", nick, provider)
 }
 
-// Generates a random integer of a specified length.
+// Generates an integer in the range [10^(length-1), 10^length - 1]. 
 // For example, if length is 3, it will generate a number between 100 and 999.
 func GenerateRandomInt(length int) int {
 	// Define the lower and upper bounds based on the desired length
