@@ -285,10 +285,29 @@ func (msg *MailHogMessage) ExtractCode(pattern ...string) (string, error) {
 func (msg *MailHogMessage) ExtractValidationCode() (string, error) {
 	body := msg.GetMessageBody()
 
-	// Try numeric code first (most common)
+	// Try to find 6-digit codes that are not hex colors
+	// Pattern: find all 6-digit numbers
+	re := regexp.MustCompile(`\b\d{6}\b`)
+	matches := re.FindAllStringIndex(body, -1)
+
+	for _, match := range matches {
+		start := match[0]
+		end := match[1]
+		code := body[start:end]
+
+		// Check if this is preceded by a # (hex color)
+		if start > 0 && body[start-1] == '#' {
+			continue // Skip hex colors
+		}
+
+		// Found a valid code!
+		return code, nil
+	}
+
+	// Try other patterns if 6-digit numeric didn't work
 	patterns := []string{
-		`\b\d{6}\b`,         // 6-digit code
-		`\b\d{4,8}\b`,       // 4-8 digit code
+		`\b\d{4,5}\b`,       // 4-5 digit code
+		`\b\d{7,8}\b`,       // 7-8 digit code
 		`\b[A-Z0-9]{6}\b`,   // 6-character alphanumeric
 		`\b[A-Z]{3}\d{3}\b`, // 3 letters + 3 digits
 	}
