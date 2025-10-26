@@ -275,11 +275,35 @@ func (s *Service) FindValidRandomAppointmentSlot(timezone string, client_public_
 	if len(availability.AvailableDates) == 0 {
 		return nil, fmt.Errorf("no available slots found for service %s", s.Created.Name)
 	}
+
+	// Filter out dates with no available times
+	var validDates []DTO.AvailableDate
+	for _, date := range availability.AvailableDates {
+		if len(date.AvailableTimes) > 0 {
+			validDates = append(validDates, date)
+		}
+	}
+
+	if len(validDates) == 0 {
+		return nil, fmt.Errorf("no available time slots found for service %s", s.Created.Name)
+	}
+
 	// Pick a random available date
-	randomAvailableDate := availability.AvailableDates[lib.GenerateRandomIntFromRange(0, len(availability.AvailableDates)-1)]
+	var randomAvailableDate DTO.AvailableDate
+	if len(validDates) == 1 {
+		randomAvailableDate = validDates[0]
+	} else {
+		randomAvailableDate = validDates[lib.GenerateRandomIntFromRange(0, len(validDates)-1)]
+	}
 	BranchID := randomAvailableDate.BranchID.String()
 	dateStr := randomAvailableDate.Date
-	randomAvailableTime := randomAvailableDate.AvailableTimes[lib.GenerateRandomIntFromRange(0, len(randomAvailableDate.AvailableTimes)-1)]
+
+	var randomAvailableTime DTO.AvailableTime
+	if len(randomAvailableDate.AvailableTimes) == 1 {
+		randomAvailableTime = randomAvailableDate.AvailableTimes[0]
+	} else {
+		randomAvailableTime = randomAvailableDate.AvailableTimes[lib.GenerateRandomIntFromRange(0, len(randomAvailableDate.AvailableTimes)-1)]
+	}
 	timeStr := randomAvailableTime.Time
 
 	loc, err := time.LoadLocation(timezone)
