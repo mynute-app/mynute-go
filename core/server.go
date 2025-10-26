@@ -34,8 +34,19 @@ func NewServer() *Server {
 	db := database.Connect()
 	// session := handler.NewCookieStore(handler.SessionOpts())
 	// handler.NewAuth(session)
-	db.Migrate(model.GeneralModels)
-	db.InitialSeed()
+
+	// Only run migrations and seeding in dev/test environments
+	// Production migrations must be run manually before deployment
+	// See: docs/MIGRATIONS.md or run `make migrate-help`
+	app_env := os.Getenv("APP_ENV")
+	if app_env == "dev" || app_env == "test" {
+		db.Migrate(model.GeneralModels)
+		db.InitialSeed()
+	} else {
+		log.Println("Production environment detected - skipping automatic migrations and seeding")
+		log.Println("Run migrations manually with: make migrate-up (see docs/MIGRATIONS.md)")
+	}
+
 	app.Static("/", "./static")
 	routes.Build(db.Gorm, app)
 	if err := myUploader.StartProvider(); err != nil {
