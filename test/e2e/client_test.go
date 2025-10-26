@@ -20,13 +20,18 @@ func Test_Client(t *testing.T) {
 	defer server.Shutdown()
 
 	tt := handler.NewTestErrorHandler(t)
+
 	client := &model.Client{}
 
 	tt.Describe("Client creation").Test(client.Create(200))
 
-	tt.Describe("Login by password with invalid password").Test(client.LoginByPassword(401, "invalid_password"))
+	tt.Describe("Client get by email").Test(client.GetByEmail(200))
+
+	tt.Describe("Login with password").Test(client.Login(401, "password"))
 
 	tt.Describe("Login with email code").Test(client.Login(200, "email_code"))
+
+	tt.Describe("Login by password with invalid password").Test(client.LoginByPassword(401, "invalid_password"))
 
 	tt.Describe("Login with password").Test(client.Login(200, "password"))
 
@@ -52,12 +57,17 @@ func Test_Client(t *testing.T) {
 
 	client.Created.Password = new_password // Update the password in the client model
 
-	tt.Describe("Client get by email with old token").Test(client.GetByEmail(401))
-
 	// Re-login with new password to get a fresh token
 	tt.Describe("Login with new password").Test(client.LoginByPassword(200, new_password))
 
-	tt.Describe("Client get by email").Test(client.GetByEmail(200))
+	// Test password reset by email
+	tt.Describe("Reset password by email").Test(client.ResetPasswordByEmail(200))
+
+	// Test that the old password no longer works
+	tt.Describe("Login with old password fails").Test(client.LoginByPassword(401, new_password))
+
+	// Test that new password from email works
+	tt.Describe("Login with password from email").Test(client.LoginByPassword(200, client.Created.Password))
 
 	tt.Describe("Upload profile image").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
