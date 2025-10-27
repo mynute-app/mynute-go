@@ -680,11 +680,11 @@ func (s *service) VerifyEmail(email, code string) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid verification code"))
 	}
 
-	// Verify the email code
+	// Verify the email code using a map to avoid triggering BeforeUpdate hooks with CompanyID
 	if err := s.MyGorm.DB.
 		Model(s.Model).
 		Where("email = ?", email).
-		Update("verified", true).Error; err != nil {
+		Updates(map[string]interface{}{"verified": true}).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
