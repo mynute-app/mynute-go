@@ -1057,8 +1057,8 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 //	@Summary		Send employee verification email
 //	@Description	Send a verification email to an employee
 //	@Tags			Employee
-//	@Param			company_id	path		string	true	"Company ID"
-//	@Param			email		path		string	true	"Employee Email"
+//	@Param			company_id	path	string	true	"Company ID"
+//	@Param			email		path	string	true	"Employee Email"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -1072,9 +1072,9 @@ func SendEmployeeVerificationEmail(c *fiber.Ctx) error {
 //	@Summary		Verify employee email
 //	@Description	Verify an employee's email
 //	@Tags			Employee
-//	@Param			verification_code	query		string	true	"Verification Code"
-//	@Param			company_id			path		string	true	"Company ID"
-//	@Param			email				path		string	true	"Employee Email"
+//	@Param			verification_code	query	string	true	"Verification Code"
+//	@Param			company_id			path	string	true	"Company ID"
+//	@Param			email				path	string	true	"Employee Email"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
