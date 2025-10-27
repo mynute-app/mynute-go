@@ -568,6 +568,17 @@ func (s *service) GetVerificationCodeByEmail(email string) (string, error) {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
 
+	// Check if email is already verified
+	mv := reflect.ValueOf(s.Model)
+	if mv.Kind() == reflect.Ptr {
+		mv = mv.Elem()
+	}
+
+	verifiedField := mv.FieldByName("Verified")
+	if verifiedField.IsValid() && verifiedField.Bool() {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("email is already verified"))
+	}
+
 	code := lib.GenerateRandomInt(6)
 
 	codeString := fmt.Sprintf("%d", code)
@@ -585,7 +596,7 @@ func (s *service) GetVerificationCodeByEmail(email string) (string, error) {
 	if !metaField.IsValid() || !metaField.CanSet() {
 		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
 	}
-	
+
 	metaValue := metaField.Interface().(mJSON.UserMeta)
 
 	now := time.Now()
@@ -639,6 +650,12 @@ func (s *service) VerifyEmail(email, code string) error {
 		modelValue = modelValue.Elem()
 	}
 
+	// Check if email is already verified
+	verifiedField := modelValue.FieldByName("Verified")
+	if verifiedField.IsValid() && verifiedField.Bool() {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("email is already verified"))
+	}
+
 	metaField := modelValue.FieldByName("Meta")
 	if !metaField.IsValid() || !metaField.CanSet() {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
@@ -682,11 +699,21 @@ func (s *service) VerifyEmail(email, code string) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid verification code"))
 	}
 
+	// Clear the verification code and set verified to true
+	// Note: Clearing codes to prevent reuse
+	metaValue.Login.VerificationCode = nil
+	metaValue.Login.VerificationExpiry = nil
+	metaValue.Login.VerificationRequestedAt = nil
+	// Don't clear VerificationRequestsCount - keep it for rate limiting history
+
 	// Verify the email code using a map to avoid triggering BeforeUpdate hooks with CompanyID
 	if err := s.MyGorm.DB.
 		Model(s.Model).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{"verified": true}).Error; err != nil {
+		Updates(map[string]interface{}{
+			"verified": true,
+			"meta":     metaValue,
+		}).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
