@@ -453,7 +453,7 @@ func (s *service) ResetLoginCodeByEmail(user_email string) (string, error) {
 	if err := s.MyGorm.DB.
 		Model(freshModel).
 		Where("email = ?", user_email).
-		Updates(map[string]interface{}{"meta": metaValue}).Error; err != nil {
+		Updates(map[string]any{"meta": metaValue}).Error; err != nil {
 		return "", fmt.Errorf("failed to store validation code: %w", err)
 	}
 
@@ -580,10 +580,12 @@ func (s *service) GetVerificationCodeByEmail(email string) (string, error) {
 	if modelValue.Kind() == reflect.Ptr {
 		modelValue = modelValue.Elem()
 	}
+
 	metaField := modelValue.FieldByName("Meta")
 	if !metaField.IsValid() || !metaField.CanSet() {
 		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
 	}
+	
 	metaValue := metaField.Interface().(mJSON.UserMeta)
 
 	now := time.Now()
