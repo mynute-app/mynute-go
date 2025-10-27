@@ -177,6 +177,7 @@ func LoginEmployeeByPassword(c *fiber.Ctx) error {
 //	@Summary		Login employee by email code
 //	@Description	Login employee using email and validation code
 //	@Tags			Employee
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body	DTO.LoginByEmailCode	true	"Login credentials"
@@ -1059,6 +1060,7 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			company_id	path	string	true	"Company ID"
 //	@Param			email		path	string	true	"Employee Email"
+//	@Query			language	query	string	false	"Language for the email content"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse

@@ -348,6 +348,7 @@ func ResetClientPasswordByEmail(c *fiber.Ctx) error {
 //	@Description	Send a verification code to a client's email
 //	@Tags			Client
 //	@Param			email	path	string	true	"Client Email"
+//  @Query			language	query	string	false	"Language for the email content"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
