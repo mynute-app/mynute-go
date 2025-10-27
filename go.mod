@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/gofiber/swagger v1.1.1
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/joho/godotenv v1.5.1
