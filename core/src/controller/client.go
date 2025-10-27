@@ -327,6 +327,7 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
+//	@Query			lang								query		string	false	"Language code (default: en)"
 //	@Produce		json
 //	@Success		200	{object}	DTO.PasswordReseted
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -348,6 +349,7 @@ func ResetClientPasswordByEmail(c *fiber.Ctx) error {
 //	@Description	Send a verification code to a client's email
 //	@Tags			Client
 //	@Param			email	path	string	true	"Client Email"
+//	@Query			lang	string	false	"Language for the verification email"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse

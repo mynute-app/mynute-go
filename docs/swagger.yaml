@@ -3679,10 +3679,6 @@ paths:
         name: email
         required: true
         type: string
-      - description: 'Language code (default: en)'
-        in: query
-        name: lang
-        type: string
       produces:
       - application/json
       responses:

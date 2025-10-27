@@ -165,7 +165,7 @@
         // Load translations from the server
         async function loadTranslations() {
             try {
-                const response = await fetch(`/api/translations/page/verify-email?lang=${lang}`);
+                const response = await fetch(`/translations/page/verify-email?lang=${lang}`);
                 if (response.ok) {
                     translations = await response.json();
                     applyTranslations();

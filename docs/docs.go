@@ -2779,12 +2779,6 @@ const docTemplate = `{
                         "name": "email",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Language code (default: en)",
-                        "name": "lang",
-                        "in": "query"
                     }
                 ],
                 "responses": {
