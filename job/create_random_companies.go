@@ -1,7 +1,8 @@
-package job
-// This script creates a specified number of 
+package main
+
+// This script creates a specified number of
 // companies with random data for development purposes only.
-// To run the script, execute command below in 
+// To run the script, execute command below in
 // terminal at <repo_root> level:
 // go run job/create_random_companies.go 5
 
@@ -13,7 +14,7 @@ import (
 	"strconv"
 )
 
-func main(qtty int) {
+func run(qtty int) {
 	srcLib.LoadEnv()
 	app_env := os.Getenv("APP_ENV")
 	if app_env != "dev" {
@@ -36,7 +37,7 @@ func GetQuantityFromArgs() int {
 	return qtty
 }
 
-func init() {
+func main() {
 	qtty := GetQuantityFromArgs()
-	main(qtty)
+	run(qtty)
 }
