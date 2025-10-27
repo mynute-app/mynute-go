@@ -177,6 +177,7 @@ func LoginEmployeeByPassword(c *fiber.Ctx) error {
 //	@Summary		Login employee by email code
 //	@Description	Login employee using email and validation code
 //	@Tags			Employee
+//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body	DTO.LoginByEmailCode	true	"Login credentials"
@@ -201,7 +202,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Employee Email"
-//	@Query			lang							query	string	false	"Language code (default: en)"
+//	@Query			language											query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/send-login-code/email/{email} [post]
@@ -221,10 +222,10 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			email	path		string	true	"Employee Email"
-//	@Query			lang	query				string	false	"Language code (default: en)"
-//	@Success		200		{object}	DTO.PasswordReseted
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Param			email		path		string	true	"Employee Email"
+//	@Query			language	query							string	false	"Language code (default: en)"
+//	@Success		200			{object}	DTO.PasswordReseted
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
 func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {
 	email := c.Params("email")
@@ -1060,6 +1061,7 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 //	@Tags			Employee
 //	@Param			company_id	path	string	true	"Company ID"
 //	@Param			email		path	string	true	"Employee Email"
+//	@Query			language	query	string	false	"Language for the email content"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse

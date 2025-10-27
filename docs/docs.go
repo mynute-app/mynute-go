@@ -2680,6 +2680,13 @@ const docTemplate = `{
                 "summary": "Login employee by email code",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Login credentials",
                         "name": "body",
                         "in": "body",

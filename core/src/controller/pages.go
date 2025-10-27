@@ -35,7 +35,7 @@ func GetPageTranslations(c *fiber.Ctx) error {
 	}
 
 	page := c.Params("page")
-	lang := c.Query("lang", "en")
+	lang := c.Query("language", "en")
 
 	// Read the translation file
 	translationPath := fmt.Sprintf("%s/translation/page/%s.json", root, page)
