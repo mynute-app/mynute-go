@@ -287,9 +287,17 @@ func (c *Company) GenerateEmployees(n int) error {
 		if employee.Created.ID == uuid.Nil {
 			return fmt.Errorf("failed to create employee %d/%d or retrieve ID", i+1, n)
 		}
-		// Use email code login for first login to verify the employee
-		if err := employee.LoginWithEmailCode(200, nil); err != nil {
+		if err := employee.VerifyEmail(200, nil); err != nil {
 			return err
+		}
+		if lib.GenerateRandomIntFromRange(0, 1) == 1 {
+			if err := employee.LoginWithPassword(200, nil); err != nil {
+				return err
+			}
+		} else {
+			if err := employee.LoginWithEmailCode(200, nil); err != nil {
+				return err
+			}
 		}
 
 		if employee.X_Auth_Token == "" {
