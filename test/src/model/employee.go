@@ -434,17 +434,6 @@ func (e *Employee) LoginByEmailCode(s int, code string, x_company_id *string) er
 }
 
 func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	// Note: The employee send-login-code endpoint DOES require X-Company-ID header
 	// to switch to the correct company schema before querying for the employee
 	companyIDStr := e.Company.Created.ID.String()
@@ -472,19 +461,47 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 		return "", err
 	}
 
-	// Get the latest email sent to the employee
-	message, err := mailhog.GetLatestMessageTo(e.Created.Email)
+	// Get all messages to find the login validation email
+	messages, err := mailhog.GetMessages()
 	if err != nil {
 		return "", err
 	}
 
-	// Verify the email has a subject
-	if message.GetSubject() == "" {
-		return "", fmt.Errorf("email subject is empty")
+	// Search for the most recent login validation email (searching from newest to oldest)
+	var loginMessage *email.MailHogMessage
+	for i := len(messages) - 1; i >= 0; i-- {
+		msg := &messages[i]
+
+		// Check if this message is for the employee
+		isForEmployee := false
+		for _, to := range msg.To {
+			recipientEmail := fmt.Sprintf("%s@%s", to.Mailbox, to.Domain)
+			if recipientEmail == e.Created.Email {
+				isForEmployee = true
+				break
+			}
+		}
+
+		if !isForEmployee {
+			continue
+		}
+
+		// Check if this is a login validation email
+		subject := msg.GetSubject()
+		if subject == "Your Login Validation Code" ||
+			subject == "Seu Código de Validação de Login" ||
+			subject == "Su Código de Validación de Inicio de Sesión" {
+			loginMessage = msg
+			break
+		}
+	}
+
+	if loginMessage == nil {
+		return "", fmt.Errorf("no login validation email found for %s", e.Created.Email)
 	}
 
 	// Extract the validation code from the email
-	code, err := message.ExtractValidationCode()
+	code, err := loginMessage.ExtractValidationCode()
 	if err != nil {
 		return "", err
 	}
@@ -493,17 +510,6 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 }
 
 func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	// Note: The employee reset-password endpoint requires X-Company-ID header
 	companyIDStr := e.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
@@ -572,17 +578,6 @@ func (e *Employee) ResetPasswordByEmail(s int, x_company_id *string) error {
 }
 
 func (e *Employee) SendVerificationEmail(s int, x_company_id *string) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	// Note: The employee send-verification-code endpoint requires X-Company-ID header
 	companyIDStr := e.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
@@ -649,9 +644,6 @@ func (e *Employee) VerifyEmailByCode(s int, code string, x_company_id *string) e
 	if s == 200 {
 		// Update the verified status in memory
 		e.Created.Verified = true
-		if err := e.GetById(200, nil, nil); err != nil {
-			return fmt.Errorf("failed to get employee by ID after verification: %w", err)
-		}
 	}
 	return nil
 }
