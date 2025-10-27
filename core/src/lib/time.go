@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// GetTimestampVersion returns a timestamp string for migration versioning
+func GetTimestampVersion() string {
+	return time.Now().Format("20060102150405")
+}
+
 // TimeRangeResult encapsula o resultado corrigido com horário UTC
 type TimeRangeResult struct {
 	StartTime time.Time

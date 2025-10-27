@@ -1052,6 +1052,37 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	return nil
 }
 
+// SendEmployeeVerificationEmail sends a verification email to an employee
+//
+//	@Summary		Send employee verification email
+//	@Description	Send a verification email to an employee
+//	@Tags			Employee
+//	@Param			company_id	path		string	true	"Company ID"
+//	@Param			email		path		string	true	"Employee Email"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/employee/send-verification-code/email/{email}/{company_id} [post]
+func SendEmployeeVerificationEmail(c *fiber.Ctx) error {
+	return SendVerificationCodeByEmail(c, &model.Employee{})
+}
+
+// VerifyEmployeeEmail verifies an employee's email
+//
+//	@Summary		Verify employee email
+//	@Description	Verify an employee's email
+//	@Tags			Employee
+//	@Param			verification_code	query		string	true	"Verification Code"
+//	@Param			company_id			path		string	true	"Company ID"
+//	@Param			email				path		string	true	"Employee Email"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/client/verify-email/{email}/{code}/{company_id} [get]
+func VerifyEmployeeEmail(c *fiber.Ctx) error {
+	return VerifyEmail(c, &model.Employee{})
+}
+
 func Employee(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
@@ -1078,5 +1109,7 @@ func Employee(Gorm *handler.Gorm) {
 		AddEmployeeWorkRangeServices,
 		DeleteEmployeeWorkRangeService,
 		GetEmployeeAppointmentsById,
+		SendEmployeeVerificationEmail,
+		VerifyEmployeeEmail,
 	})
 }

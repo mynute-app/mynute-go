@@ -9,6 +9,7 @@ import (
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/lib/email"
 	"mynute-go/test/src/handler"
+	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -301,7 +302,7 @@ func (e *Employee) GetByEmail(s int, x_auth_token *string, x_company_id *string)
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(fmt.Sprintf("/employee/email/%s", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/email/%s", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, t).
@@ -433,17 +434,6 @@ func (e *Employee) LoginByEmailCode(s int, code string, x_company_id *string) er
 }
 
 func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	// Note: The employee send-login-code endpoint DOES require X-Company-ID header
 	// to switch to the correct company schema before querying for the employee
 	companyIDStr := e.Company.Created.ID.String()
@@ -455,7 +445,7 @@ func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/employee/send-login-code/email/%s?lang=en", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/send-login-code/email/%s?lang=en", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
@@ -471,19 +461,47 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 		return "", err
 	}
 
-	// Get the latest email sent to the employee
-	message, err := mailhog.GetLatestMessageTo(e.Created.Email)
+	// Get all messages to find the login validation email
+	messages, err := mailhog.GetMessages()
 	if err != nil {
 		return "", err
 	}
 
-	// Verify the email has a subject
-	if message.GetSubject() == "" {
-		return "", fmt.Errorf("email subject is empty")
+	// Search for the most recent login validation email (searching from newest to oldest)
+	var loginMessage *email.MailHogMessage
+	for i := len(messages) - 1; i >= 0; i-- {
+		msg := &messages[i]
+
+		// Check if this message is for the employee
+		isForEmployee := false
+		for _, to := range msg.To {
+			recipientEmail := fmt.Sprintf("%s@%s", to.Mailbox, to.Domain)
+			if recipientEmail == e.Created.Email {
+				isForEmployee = true
+				break
+			}
+		}
+
+		if !isForEmployee {
+			continue
+		}
+
+		// Check if this is a login validation email
+		subject := msg.GetSubject()
+		if subject == "Your Login Validation Code" ||
+			subject == "Seu Código de Validação de Login" ||
+			subject == "Su Código de Validación de Inicio de Sesión" {
+			loginMessage = msg
+			break
+		}
+	}
+
+	if loginMessage == nil {
+		return "", fmt.Errorf("no login validation email found for %s", e.Created.Email)
 	}
 
 	// Extract the validation code from the email
-	code, err := message.ExtractValidationCode()
+	code, err := loginMessage.ExtractValidationCode()
 	if err != nil {
 		return "", err
 	}
@@ -492,17 +510,6 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 }
 
 func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	// Note: The employee reset-password endpoint requires X-Company-ID header
 	companyIDStr := e.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
@@ -513,7 +520,7 @@ func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/employee/reset-password/%s?lang=en", e.Created.Email)).
+		URL(fmt.Sprintf("/employee/reset-password/%s?lang=en", url.PathEscape(e.Created.Email))).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Company, cID).
 		Send(nil).Error; err != nil {
@@ -565,6 +572,94 @@ func (e *Employee) ResetPasswordByEmail(s int, x_company_id *string) error {
 	// Try to login with the new password
 	if err := e.LoginByPassword(200, newPassword, x_company_id); err != nil {
 		return fmt.Errorf("failed to login with new password: %w", err)
+	}
+
+	return nil
+}
+
+func (e *Employee) SendVerificationEmail(s int, x_company_id *string) error {
+	// Note: The employee send-verification-code endpoint requires X-Company-ID header
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/employee/send-verification-code/email/%s/%s?language=en", url.PathEscape(e.Created.Email), cID)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send verification email to employee: %w", err)
+	}
+	return nil
+}
+
+func (e *Employee) GetVerificationCodeFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the employee
+	message, err := mailhog.GetLatestMessageTo(e.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the verification code from the email
+	code, err := message.ExtractValidationCode()
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
+}
+
+func (e *Employee) VerifyEmailByCode(s int, code string, x_company_id *string) error {
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return err
+	}
+
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("GET").
+		URL(fmt.Sprintf("/employee/verify-email/%s/%s/%s", url.PathEscape(e.Created.Email), code, cID)).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Company, cID).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to verify employee email: %w", err)
+	}
+
+	if s == 200 {
+		// Update the verified status in memory
+		e.Created.Verified = true
+	}
+	return nil
+}
+
+func (e *Employee) VerifyEmail(s int, x_company_id *string) error {
+	if err := e.SendVerificationEmail(s, x_company_id); err != nil {
+		return fmt.Errorf("failed to send verification email: %w", err)
+	}
+
+	code, err := e.GetVerificationCodeFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get verification code from email: %w", err)
+	}
+
+	if err := e.VerifyEmailByCode(s, code, x_company_id); err != nil {
+		return fmt.Errorf("failed to verify email with code: %w", err)
 	}
 
 	return nil

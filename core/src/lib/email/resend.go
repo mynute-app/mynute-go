@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/resend/resend-go/v2"
@@ -57,11 +56,10 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		Html:    data.Html,
 	}
 
-	sent, err := r.client.Emails.SendWithContext(ctx, params)
+	_, err := r.client.Emails.SendWithContext(ctx, params)
 	if err != nil {
 		return fmt.Errorf("failed to send email via resend: %w", err)
 	}
 
-	log.Printf("Email sent successfully to %v with ID: %s\n", data.To, sent.Id)
 	return nil
 }

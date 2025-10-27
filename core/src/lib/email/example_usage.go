@@ -8,7 +8,7 @@ package email
 /*
 
 // Initialize the template renderer
-renderer := email.NewTemplateRenderer("./static", "./translation")
+renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
 
 // Example 1: Render login validation email in English (default)
 htmlBody, err := renderer.RenderEmail("login_validation", "", email.TemplateData{
@@ -67,7 +67,7 @@ if err != nil {
 // Complete example: Render and send in one flow
 func SendLoginValidationEmail(userEmail, code, language string) error {
 	// Initialize renderer
-	renderer := email.NewTemplateRenderer("./static", "./translation")
+	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
 
 	// Render email template
 	htmlBody, err := renderer.RenderEmail("login_validation", language, email.TemplateData{

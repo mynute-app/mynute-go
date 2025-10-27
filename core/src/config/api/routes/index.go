@@ -29,6 +29,8 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	r := App.Group("/")
 
 	r.Get("/", controller.Home)
+	r.Get("/verify-email", controller.VerifyEmailPage)
+	r.Get("/translations/page/:page", controller.GetPageTranslations)
 
 	endpoints := &middleware.Endpoint{DB: Gorm}
 	if err := endpoints.Build(r); err != nil {

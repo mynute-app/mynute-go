@@ -1,0 +1,41 @@
+{
+  "en": {
+    "subject": "Verify Your Email Address",
+    "title": "Email Verification",
+    "preheader": "Please verify your email address to continue.",
+    "heading": "Email Verification",
+    "instruction": "Thank you for signing up!",
+    "or_click_link": "Click the button below to verify automatically:",
+    "button_text": "Verify Email",
+    "link_expiry": "This verification link will expire in 24 hours.",
+    "notice": "If you did not create an account, please ignore this email.",
+    "footer_automated": "This is an automated message.",
+    "footer_do_not_reply": "Please do not reply."
+  },
+  "pt": {
+    "subject": "Verifique Seu Endereço de E-mail",
+    "title": "Verificação de E-mail",
+    "preheader": "Por favor, verifique seu endereço de e-mail para continuar.",
+    "heading": "Verificação de E-mail",
+    "instruction": "Obrigado por se cadastrar!",
+    "or_click_link": "Clique no botão abaixo para verificar automaticamente:",
+    "button_text": "Verificar E-mail",
+    "link_expiry": "Este link de verificação expirará em 24 horas.",
+    "notice": "Se você não criou uma conta, por favor, ignore este e-mail.",
+    "footer_automated": "Esta é uma mensagem automática.",
+    "footer_do_not_reply": "Por favor, não responda."
+  },
+  "es": {
+    "subject": "Verifique Su Dirección de Correo Electrónico",
+    "title": "Verificación de Correo Electrónico",
+    "preheader": "Por favor, verifique su dirección de correo electrónico para continuar.",
+    "heading": "Verificación de Correo Electrónico",
+    "instruction": "¡Gracias por registrarse!",
+    "or_click_link": "Haga clic en el botón de abajo para verificar automáticamente:",
+    "button_text": "Verificar Correo",
+    "link_expiry": "Este enlace de verificación expirará en 24 horas.",
+    "notice": "Si no creó una cuenta, ignore este correo electrónico.",
+    "footer_automated": "Este es un mensaje automático.",
+    "footer_do_not_reply": "Por favor no responda."
+  }
+}

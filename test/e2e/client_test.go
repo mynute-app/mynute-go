@@ -29,6 +29,8 @@ func Test_Client(t *testing.T) {
 
 	tt.Describe("Login with password").Test(client.Login(401, "password"))
 
+	tt.Describe("Verify email").Test(client.VerifyEmail(200))
+
 	tt.Describe("Login with email code").Test(client.Login(200, "email_code"))
 
 	tt.Describe("Login by password with invalid password").Test(client.LoginByPassword(401, "invalid_password"))

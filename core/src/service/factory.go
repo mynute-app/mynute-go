@@ -453,7 +453,7 @@ func (s *service) ResetLoginCodeByEmail(user_email string) (string, error) {
 	if err := s.MyGorm.DB.
 		Model(freshModel).
 		Where("email = ?", user_email).
-		Updates(map[string]interface{}{"meta": metaValue}).Error; err != nil {
+		Updates(map[string]any{"meta": metaValue}).Error; err != nil {
 		return "", fmt.Errorf("failed to store validation code: %w", err)
 	}
 
@@ -550,7 +550,70 @@ func (s *service) ResetPasswordByEmail(user_email string) (*DTO.PasswordReseted,
 	return &DTO.PasswordReseted{Password: newPassword}, nil
 }
 
-func (s *service) VerifyEmail(email string) error {
+func (s *service) GetVerificationCodeByEmail(email string) (string, error) {
+	if s.Error != nil {
+		return "", s.Error
+	}
+	email, err := s.prepare_email(email)
+	if err != nil {
+		return "", lib.Error.General.BadRequest.WithError(err)
+	}
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", email).
+		First(s.Model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", lib.Error.General.RecordNotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	code := lib.GenerateRandomInt(6)
+
+	codeString := fmt.Sprintf("%d", code)
+
+	// Set code expiration to 15 minutes from now
+	expiryTime := time.Now().Add(15 * time.Minute)
+
+	// Store the code in the database using reflection
+	modelValue := reflect.ValueOf(s.Model)
+	if modelValue.Kind() == reflect.Ptr {
+		modelValue = modelValue.Elem()
+	}
+
+	metaField := modelValue.FieldByName("Meta")
+	if !metaField.IsValid() || !metaField.CanSet() {
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
+	}
+	
+	metaValue := metaField.Interface().(mJSON.UserMeta)
+
+	now := time.Now()
+	metaValue.Login.VerificationCode = &codeString
+	metaValue.Login.VerificationExpiry = &expiryTime
+	metaValue.Login.VerificationRequestedAt = &now
+
+	// Update the model in database (only update Meta field to avoid BeforeUpdate hook errors)
+	// Use a fresh model instance to avoid BeforeUpdate hook checking CompanyID from the loaded model
+	modelType := reflect.TypeOf(s.Model).Elem()
+	freshModel := reflect.New(modelType).Interface()
+
+	if err := s.MyGorm.DB.
+		Model(freshModel).
+		Where("email = ?", email).
+		Updates(map[string]interface{}{"meta": metaValue}).Error; err != nil {
+		return "", fmt.Errorf("failed to store verification code: %w", err)
+	}
+
+	// Set the updated Meta back to the in-memory model
+	metaField.Set(reflect.ValueOf(metaValue))
+
+	// Send the email with the verification code
+
+	return codeString, nil
+}
+
+func (s *service) VerifyEmail(email, code string) error {
 	if s.Error != nil {
 		return s.Error
 	}
@@ -558,11 +621,74 @@ func (s *service) VerifyEmail(email string) error {
 	if err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
+	// Get the user by email
+
 	if err := s.MyGorm.DB.
 		Model(s.Model).
 		Where("email = ?", email).
-		Update("verified", true).Error; err != nil {
+		First(s.Model).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return lib.Error.General.RecordNotFound
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
+	// Pickup user meta to verify code
+	modelValue := reflect.ValueOf(s.Model)
+	if modelValue.Kind() == reflect.Ptr {
+		modelValue = modelValue.Elem()
+	}
+
+	metaField := modelValue.FieldByName("Meta")
+	if !metaField.IsValid() || !metaField.CanSet() {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("model does not have a Meta field"))
+	}
+
+	metaValue := metaField.Interface().(mJSON.UserMeta)
+
+	// Check if code field is nil or empty
+	if metaValue.Login.VerificationCode == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("no verification code found"))
+	}
+
+	// Check if expiry field is nil
+	if metaValue.Login.VerificationExpiry == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("verification code has expired"))
+	}
+
+	requestedAt := metaValue.Login.VerificationRequestedAt
+	requestCount := metaValue.Login.VerificationRequestsCount
+
+	// Check for too many requests in a short period
+	if requestedAt != nil && requestCount != nil {
+		waitTime := time.Minute
+		if *requestCount > 3 {
+			waitTime = 5 * time.Minute
+		}
+		if time.Since(*requestedAt) < waitTime {
+			return lib.Error.General.TooManyRequests.WithError(fmt.Errorf("a verification code was sent recently; please wait before requesting another"))
+		}
+	}
+
+	expiryTime := *metaValue.Login.VerificationExpiry
+
+	if time.Now().After(expiryTime) {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("verification code has expired"))
+	}
+
+	storedCode := *metaValue.Login.VerificationCode
+
+	if storedCode != code {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid verification code"))
+	}
+
+	// Verify the email code using a map to avoid triggering BeforeUpdate hooks with CompanyID
+	if err := s.MyGorm.DB.
+		Model(s.Model).
+		Where("email = ?", email).
+		Updates(map[string]interface{}{"verified": true}).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	return nil
 }

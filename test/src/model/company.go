@@ -287,9 +287,17 @@ func (c *Company) GenerateEmployees(n int) error {
 		if employee.Created.ID == uuid.Nil {
 			return fmt.Errorf("failed to create employee %d/%d or retrieve ID", i+1, n)
 		}
-		// Use email code login for first login to verify the employee
-		if err := employee.LoginWithEmailCode(200, nil); err != nil {
+		if err := employee.VerifyEmail(200, nil); err != nil {
 			return err
+		}
+		if lib.GenerateRandomIntFromRange(0, 1) == 1 {
+			if err := employee.LoginWithPassword(200, nil); err != nil {
+				return err
+			}
+		} else {
+			if err := employee.LoginWithEmailCode(200, nil); err != nil {
+				return err
+			}
 		}
 
 		if employee.X_Auth_Token == "" {
@@ -644,7 +652,7 @@ func (c *Company) RandomlyAssignWorkScheduleToEmployees() error {
 		for {
 			if len(EmployeeWorkSchedule.WorkRanges) > 0 {
 				break
-			} else if scheduleCreationAttempts > 5 {
+			} else if scheduleCreationAttempts > 50 {
 				return fmt.Errorf("failed to generate a valid work schedule for employee %d (%s) after %d attempts", i, employee.Created.Email, scheduleCreationAttempts)
 			}
 			EmployeeWorkSchedule, err = GenerateRandomEmployeeWorkRanges(validEmployeeBranches, employee)
@@ -744,9 +752,11 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 		}
 	}
 
-	numRanges := 1 + rand.Intn(2)
-	lastEndHour := 0
-	lastEndMinute := 0
+	// Employees can have 1-2 ranges per day, branches can have 1-3
+	numRanges := 1 + rand.Intn(2) // 1 or 2 for employees
+	if employee == nil {
+		numRanges = 1 + rand.Intn(3) // 1, 2, or 3 for branches
+	}
 
 	getMinutes := func() int {
 		fifteenMinOpts := []int{0, 15, 30, 45}
@@ -763,14 +773,42 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 		max: 23,
 	}
 
+	// For branches, we want sequential non-overlapping ranges, so lastEndHour persists across iterations
+	branchLastEndHour := 0
+	branchLastEndMinute := 0
+	// For employees, also track sequential non-overlapping ranges
+	var employeeLastEndHour int
+	var employeeLastEndMinute int
+
 	for range numRanges {
-		startHour := 0
-		startMinute := 0
-		endHour := 0
-		endMinute := 0
+		var startHour int
+		var startMinute int
+		var endHour int
+		var endMinute int
 
 		if employee != nil {
-			branchRange := branchWorkRangesForDay[rand.Intn(len(branchWorkRangesForDay))]
+			// Employee work ranges must be sequential and non-overlapping
+			// Pick a branch range that can fit the employee's next sequential range
+			var branchRange *model.BranchWorkRange
+
+			for i := range branchWorkRangesForDay {
+				br := &branchWorkRangesForDay[i]
+				loc, _ := time.LoadLocation(br.TimeZone)
+				brEnd := br.EndTime.In(loc)
+
+				// Find a branch range that ends after the employee's last range ended
+				if employeeLastEndHour == 0 || brEnd.Hour() > employeeLastEndHour ||
+					(brEnd.Hour() == employeeLastEndHour && brEnd.Minute() > employeeLastEndMinute) {
+					branchRange = br
+					break
+				}
+			}
+
+			if branchRange == nil {
+				// No suitable branch range found
+				continue
+			}
+
 			loc, err := time.LoadLocation(branchRange.TimeZone)
 			if err != nil {
 				return fmt.Errorf("failed to load timezone for branch range: %v", err)
@@ -779,27 +817,61 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			branchStartTime := branchRange.StartTime.In(loc)
 			branchEndTime := branchRange.EndTime.In(loc)
 
-			if lastEndHour >= branchEndTime.Hour() {
-				continue // No more valid ranges can be created for this branch on this day
+			// Generate start and end times within this branch's range, after the last employee range
+			minStartHour := branchStartTime.Hour()
+			maxEndHour := branchEndTime.Hour()
+
+			// If this is the employee's second (or later) range, ensure it starts after the previous one
+			if employeeLastEndHour > 0 {
+				// Calculate minimum start based on last end time
+				if employeeLastEndMinute > 0 {
+					// If last range ended with minutes (e.g., 18:45), next can start in the next hour
+					minStartHour = max(minStartHour, employeeLastEndHour+1)
+				} else {
+					// If last range ended on the hour (e.g., 18:00), next can start same hour or later
+					minStartHour = max(minStartHour, employeeLastEndHour)
+				}
 			}
 
-			if lastEndHour == 0 {
-				lastEndHour = branchStartTime.Hour()
-				lastEndMinute = branchStartTime.Minute()
+			if maxEndHour-minStartHour < 1 {
+				continue // Not enough room in this branch range, skip
 			}
 
-			// Generate start time within the branch's work range
-			startHour = lastEndHour + rand.Intn(max(1, branchEndTime.Hour()-lastEndHour-1))
+			// Generate start time
+			startHour = minStartHour + rand.Intn(max(1, maxEndHour-minStartHour))
 			startMinute = getMinutes()
 
-			if startHour == lastEndHour {
-				startHour = startHour + 1
-				startMinute = lastEndMinute
+			// Ensure the start is within the branch range
+			if startHour < minStartHour || (startHour == minStartHour && startMinute < branchStartTime.Minute()) {
+				startHour = minStartHour
+				startMinute = branchStartTime.Minute()
+			}
+
+			// Ensure this range starts after the previous employee range ended
+			if employeeLastEndHour > 0 {
+				if startHour < employeeLastEndHour || (startHour == employeeLastEndHour && startMinute < employeeLastEndMinute) {
+					// Adjust start time to be after the last range ended
+					startHour = employeeLastEndHour
+					startMinute = employeeLastEndMinute
+					// Give a small gap (e.g., start at the next minute mark)
+					if startMinute < 45 {
+						startMinute += 15 // 15 minute gap
+					} else {
+						startHour++
+						startMinute = 0
+					}
+
+					// After adjustment, check if there's still enough time in this branch range
+					if startHour >= branchEndTime.Hour() {
+						continue // No room left in this branch range
+					}
+				}
 			}
 			// Generate end time, ensuring it's after start time and within branch hours
 
-			if startHour >= branchEndTime.Hour()-1 {
-				continue // Cannot create a valid range if start hour is the same as branch end hour
+			// Need at least 1 hour for a valid range
+			if startHour >= branchEndTime.Hour() {
+				continue // Cannot create a valid range
 			}
 
 			durationHours := 1 + rand.Intn(max(1, branchEndTime.Hour()-startHour))
@@ -810,7 +882,8 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			}
 			endMinute = getMinutes()
 
-			if endHour >= branchStartTime.Hour() {
+			// Ensure end time doesn't exceed branch end time
+			if endHour > branchEndTime.Hour() || (endHour == branchEndTime.Hour() && endMinute > branchEndTime.Minute()) {
 				endHour = branchEndTime.Hour()
 				endMinute = branchEndTime.Minute()
 			}
@@ -822,20 +895,24 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			if startHour >= endHour {
 				return fmt.Errorf("for some reason the branch start hour generated (%d) is bigger than the end hour generated (%d). This should not happen", startHour, endHour)
 			}
+
+			// Update the last end time for the next employee range selection
+			employeeLastEndHour = endHour
+			employeeLastEndMinute = endMinute
 		} else {
 			// Original logic for branch work schedule generation (no employee)
 
-			if lastEndHour == 0 {
-				lastEndHour = acceptableHours.min
-				lastEndMinute = 0
+			if branchLastEndHour == 0 {
+				branchLastEndHour = acceptableHours.min
+				branchLastEndMinute = 0
 			}
 
-			startHour = lastEndHour + rand.Intn(2)
+			startHour = branchLastEndHour + rand.Intn(2)
 			startMinute = getMinutes()
 
-			if startHour == lastEndHour {
+			if startHour == branchLastEndHour {
 				startHour = startHour + 1
-				startMinute = lastEndMinute
+				startMinute = branchLastEndMinute
 			}
 
 			if startHour >= acceptableHours.max-1 {
@@ -857,10 +934,10 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			if startHour >= endHour {
 				return fmt.Errorf("for some reason the branch start hour generated (%d) is bigger than the end hour generated (%d). This should not happen", startHour, endHour)
 			}
-		}
 
-		lastEndHour = endHour
-		lastEndMinute = endMinute
+			branchLastEndHour = endHour
+			branchLastEndMinute = endMinute
+		}
 
 		log.Printf("Found startHour: %d, startMinute: %d, endHour: %d, endMinute: %d, weekday: %d, branchID: %s", startHour, startMinute, endHour, endMinute, weekday, branch.Created.ID)
 

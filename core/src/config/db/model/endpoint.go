@@ -295,6 +295,18 @@ var ResetClientPasswordByEmail = &EndPoint{
 	ControllerName: "ResetClientPasswordByEmail",
 	Description:    "Reset client password by email",
 }
+var SendClientVerificationCodeByEmail = &EndPoint{
+	Path:           "/client/send-verification-code/email/:email",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "SendClientVerificationCodeByEmail",
+	Description:    "Send verification code to client email",
+}
+var VerifyClientEmail = &EndPoint{
+	Path:           "/client/verify-email/:email/:code",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "VerifyClientEmail",
+	Description:    "Verify client email code",
+}
 var GetClientByEmail = &EndPoint{
 	Path:             "/client/email/:email",
 	Method:           namespace.ViewActionMethod,
@@ -470,6 +482,20 @@ var ResetEmployeePasswordByEmail = &EndPoint{
 	Method:         namespace.CreateActionMethod,
 	ControllerName: "ResetEmployeePasswordByEmail",
 	Description:    "Reset employee password by email",
+	NeedsCompanyId: true,
+}
+var SendEmployeeVerificationCodeByEmail = &EndPoint{
+	Path:           "/employee/send-verification-code/email/:email/:company_id",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "SendEmployeeVerificationEmail",
+	Description:    "Send verification code to employee email",
+	NeedsCompanyId: true,
+}
+var VerifyEmployeeEmail = &EndPoint{
+	Path:           "/employee/verify-email/:email/:code/:company_id",
+	Method:         namespace.ViewActionMethod,
+	ControllerName: "VerifyEmployeeEmail",
+	Description:    "Verify employee email",
 	NeedsCompanyId: true,
 }
 var GetEmployeeById = &EndPoint{
@@ -843,6 +869,8 @@ var endpoints = []*EndPoint{
 	LoginClient,
 	LoginClientByEmailCode,
 	SendLoginCodeToClientEmail,
+	SendClientVerificationCodeByEmail,
+	VerifyClientEmail,
 	ResetClientPasswordByEmail,
 	GetClientByEmail,
 	GetClientById,
@@ -867,6 +895,8 @@ var endpoints = []*EndPoint{
 	LoginEmployee,
 	LoginEmployeeByEmailCode,
 	SendLoginCodeToEmployeeEmail,
+	SendEmployeeVerificationCodeByEmail,
+	VerifyEmployeeEmail,
 	ResetEmployeePasswordByEmail,
 	GetEmployeeById,
 	GetEmployeeByEmail,

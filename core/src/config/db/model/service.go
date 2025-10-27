@@ -28,7 +28,8 @@ func (Service) TableName() string  { return "services" }
 func (Service) SchemaType() string { return "company" }
 
 func (s *Service) BeforeUpdate(tx *gorm.DB) (err error) {
-	if s.CompanyID != uuid.Nil {
+	// Check if CompanyID is being changed
+	if tx.Statement.Changed("CompanyID") {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	return nil
