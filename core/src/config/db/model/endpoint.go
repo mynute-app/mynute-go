@@ -487,7 +487,7 @@ var ResetEmployeePasswordByEmail = &EndPoint{
 var SendEmployeeVerificationCodeByEmail = &EndPoint{
 	Path:           "/employee/send-verification-code/email/:email/:company_id",
 	Method:         namespace.CreateActionMethod,
-	ControllerName: "SendEmployeeVerificationCodeByEmail",
+	ControllerName: "SendEmployeeVerificationEmail",
 	Description:    "Send verification code to employee email",
 	NeedsCompanyId: true,
 }
@@ -869,6 +869,8 @@ var endpoints = []*EndPoint{
 	LoginClient,
 	LoginClientByEmailCode,
 	SendLoginCodeToClientEmail,
+	SendClientVerificationCodeByEmail,
+	VerifyClientEmail,
 	ResetClientPasswordByEmail,
 	GetClientByEmail,
 	GetClientById,
@@ -893,6 +895,8 @@ var endpoints = []*EndPoint{
 	LoginEmployee,
 	LoginEmployeeByEmailCode,
 	SendLoginCodeToEmployeeEmail,
+	SendEmployeeVerificationCodeByEmail,
+	VerifyEmployeeEmail,
 	ResetEmployeePasswordByEmail,
 	GetEmployeeById,
 	GetEmployeeByEmail,
