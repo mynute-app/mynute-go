@@ -54,7 +54,8 @@ func (b *Branch) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
-	if b.CompanyID != uuid.Nil {
+	// Check if CompanyID is being changed
+	if tx.Statement.Changed("CompanyID") {
 		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
 	}
 	var serviceDensity []BranchServiceDensity
