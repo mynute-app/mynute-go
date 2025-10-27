@@ -202,16 +202,6 @@ func (u *Client) LoginByEmailCode(s int, code string) error {
 }
 
 func (u *Client) SendLoginCode(s int) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
@@ -251,17 +241,6 @@ func (u *Client) GetLoginCodeFromEmail() (string, error) {
 }
 
 func (u *Client) SendPasswordResetEmail(s int) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
@@ -322,17 +301,6 @@ func (u *Client) ResetPasswordByEmail(s int) error {
 }
 
 func (u *Client) SendVerificationEmail(s int) error {
-	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return err
-	}
-
-	// Clear any existing emails to avoid interference
-	if err := mailhog.DeleteAllMessages(); err != nil {
-		return err
-	}
-
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
