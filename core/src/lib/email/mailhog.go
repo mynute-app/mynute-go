@@ -217,18 +217,29 @@ func (m *MailHogAdapter) GetLatestMessageTo(email string) (*MailHogMessage, erro
 		return nil, err
 	}
 
-	// Search from most recent to oldest
-	for i := len(messages) - 1; i >= 0; i-- {
+	var latestMessage *MailHogMessage
+	var latestTime time.Time
+
+	// Find the message with the latest timestamp for this recipient
+	for i := range messages {
 		msg := messages[i]
 		for _, to := range msg.To {
 			recipientEmail := fmt.Sprintf("%s@%s", to.Mailbox, to.Domain)
 			if recipientEmail == email {
-				return &msg, nil
+				if latestMessage == nil || msg.Created.After(latestTime) {
+					latestMessage = &msg
+					latestTime = msg.Created
+				}
+				break
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("no message found for recipient: %s", email)
+	if latestMessage == nil {
+		return nil, fmt.Errorf("no message found for recipient: %s", email)
+	}
+
+	return latestMessage, nil
 }
 
 // GetMessageBody returns the email body (HTML or plain text)
