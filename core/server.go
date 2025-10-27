@@ -95,8 +95,8 @@ func (s *Server) Run(in string) *Server {
 		app_env := os.Getenv("APP_ENV")
 		if app_env == "prod" {
 			log.Fatal("Server run for production can not be in parallel. For parallel running set APP_ENV=test or APP_ENV=dev at .env file")
-		} else if app_env != "test" {
-			log.Fatal("Server run for parallel can only be in test environment. For parallel running set APP_ENV=test at .env file")
+		} else if app_env != "test" && app_env != "dev" {
+			log.Fatal("Server run for parallel can only be in test or dev environment. For parallel running set APP_ENV=test or APP_ENV=dev at .env file")
 		}
 		s.parallel()
 	} else if in == "listen" {
