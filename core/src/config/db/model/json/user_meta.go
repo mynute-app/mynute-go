@@ -7,8 +7,8 @@ import (
 )
 
 type UserMeta struct {
-	Login  LoginConfig  `json:"login"`
-	Design DesignConfig `json:"design"`
+	Login  LoginConfig  `json:"login" gorm:"-"`
+	Design DesignConfig `json:"design" gorm:"-"`
 }
 
 // Scan implements the sql.Scanner interface for UserMeta
