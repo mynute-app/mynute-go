@@ -181,6 +181,32 @@ make migrate-version
 make migrate-down-n STEPS=3
 ```
 
+### Seeding
+
+Seed system data (roles, resources, endpoints, policies):
+
+```bash
+# Run seeding in development
+make seed
+
+# Build seed binary for production
+make seed-build
+
+# Show seeding help
+make seed-help
+```
+
+**Production Seeding:**
+```bash
+# 1. Build the binary
+make seed-build
+
+# 2. Deploy to server and run
+./bin/seed
+```
+
+See [docs/SEEDING.md](docs/SEEDING.md) for detailed production seeding guide.
+
 ### Smart Migration Tools
 
 Generate migrations automatically based on model changes:

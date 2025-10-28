@@ -10,6 +10,9 @@ endif
 # Migration commands
 .PHONY: migrate-up migrate-down migrate-create migrate-version migrate-force migrate-help
 
+# Seeding commands
+.PHONY: seed seed-help
+
 # Run all pending migrations
 migrate-up:
 	@echo "Running database migrations..."
@@ -131,3 +134,40 @@ test-migrate:
 test-migrate-interactive:
 	@echo "Running interactive migration tests..."
 	@pwsh -File scripts/test-migration.ps1
+
+# ============================================
+# SEEDING COMMANDS
+# ============================================
+
+# Run seeding (endpoints, policies, roles, resources)
+seed:
+	@echo "Running database seeding..."
+	@go run cmd/seed/main.go
+
+# Build seed binary for production
+seed-build:
+	@echo "Building seed binary..."
+	@go build -o bin/seed cmd/seed/main.go
+	@echo "✓ Binary created at: bin/seed"
+
+# Show seeding help
+seed-help:
+	@echo "Database Seeding Commands:"
+	@echo ""
+	@echo "Commands:"
+	@echo "  make seed              - Run seeding (endpoints, policies, roles, resources)"
+	@echo "  make seed-build        - Build seed binary for production deployment"
+	@echo ""
+	@echo "What gets seeded:"
+	@echo "  - System Resources (tables configuration)"
+	@echo "  - System Roles (Owner, General Manager, etc.)"
+	@echo "  - API Endpoints (all routes with permissions)"
+	@echo "  - Access Policies (RBAC/ABAC rules)"
+	@echo ""
+	@echo "Usage in production:"
+	@echo "  1. Build: make seed-build"
+	@echo "  2. Deploy bin/seed to production server"
+	@echo "  3. Run: ./bin/seed (or seed.exe on Windows)"
+	@echo ""
+	@echo "Note: Seeding is idempotent - safe to run multiple times"
+	@echo "      Updates existing records, creates new ones"
