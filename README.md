@@ -160,6 +160,16 @@ Access the interactive API documentation at: `http://localhost:4000/swagger/`
 
 ## 🗄️ Database Management
 
+### Important: Database Configuration
+
+⚠️ **Migration tools use `POSTGRES_DB` environment variable to determine the target database.**
+
+Set this explicitly in your `.env` file:
+- Development: `POSTGRES_DB=devdb`
+- Production: `POSTGRES_DB=maindb`
+
+See [docs/MIGRATION_DATABASE_CONFIG.md](docs/MIGRATION_DATABASE_CONFIG.md) for details.
+
 ### Migrations
 
 The project uses golang-migrate for database schema management:

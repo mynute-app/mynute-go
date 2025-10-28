@@ -109,13 +109,12 @@ func connectToDatabase() *gorm.DB {
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
 	port := os.Getenv("POSTGRES_PORT")
-	appEnv := os.Getenv("APP_ENV")
 
-	if appEnv == "test" {
-		dbName = os.Getenv("POSTGRES_DB_TEST")
-	} else if appEnv == "dev" {
-		dbName = os.Getenv("POSTGRES_DB_DEV")
+	if dbName == "" {
+		log.Fatal("POSTGRES_DB environment variable is required")
 	}
+
+	log.Printf("Connecting to database: %s\n", dbName)
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		host, user, password, dbName, port)
@@ -163,7 +162,7 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 		schemaType := getSchemaType(m)
 
 		upSQL.WriteString(fmt.Sprintf("-- Model: %s (Table: %s, Schema: %s)\n", modelName, tableName, schemaType))
-		upSQL.WriteString(fmt.Sprintf("-- Comparison: Go struct fields vs Current database columns\n"))
+		upSQL.WriteString("-- Comparison: Go struct fields vs Current database columns\n")
 		downSQL.WriteString(fmt.Sprintf("-- Rollback Model: %s\n", modelName))
 
 		// Get expected columns from GORM model
