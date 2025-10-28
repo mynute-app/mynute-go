@@ -120,7 +120,7 @@ func getModelsByNames(names []string) []interface{} {
 
 func generateUpSQL(models []interface{}) string {
 	var sql strings.Builder
-	sql.WriteString(fmt.Sprintf("-- Auto-generated migration\n"))
+	sql.WriteString("-- Auto-generated migration\n")
 	sql.WriteString(fmt.Sprintf("-- Generated at: %s\n", lib.GetTimestampVersion()))
 	sql.WriteString("-- ⚠️  REVIEW THIS SQL BEFORE APPLYING!\n\n")
 
@@ -162,7 +162,7 @@ func generateUpSQL(models []interface{}) string {
 
 func generateDownSQL(models []interface{}) string {
 	var sql strings.Builder
-	sql.WriteString(fmt.Sprintf("-- Auto-generated rollback migration\n"))
+	sql.WriteString("-- Auto-generated rollback migration\n")
 	sql.WriteString(fmt.Sprintf("-- Generated at: %s\n", lib.GetTimestampVersion()))
 	sql.WriteString("-- ⚠️  REVIEW THIS SQL BEFORE APPLYING!\n\n")
 
