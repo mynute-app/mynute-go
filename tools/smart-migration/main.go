@@ -90,10 +90,16 @@ func main() {
 	log.Printf("✅ Generated smart migration files:\n  %s\n  %s\n", upFile, downFile)
 	log.Println("\n💡 Changes detected and SQL generated automatically!")
 	log.Println("⚠️  IMPORTANT: Review the generated SQL before applying!")
-	log.Println("\n📋 Next steps:")
+	log.Println("\n� How this works:")
+	log.Println("   - Reads Go model struct definitions")
+	log.Println("   - Queries current database schema")
+	log.Println("   - Compares: Model fields vs Database columns")
+	log.Println("   - Does NOT track migration file history")
+	log.Println("\n�📋 Next steps:")
 	log.Println("   1. Review the generated SQL files")
-	log.Println("   2. Run: make test-migrate")
-	log.Println("   3. If tests pass, commit your changes!")
+	log.Println("   2. Verify these are truly new changes")
+	log.Println("   3. Run: make test-migrate")
+	log.Println("   4. If tests pass, commit your changes!")
 }
 
 func connectToDatabase() *gorm.DB {
@@ -136,7 +142,15 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 
 	upSQL.WriteString("-- Smart migration - Auto-detected changes\n")
 	upSQL.WriteString(fmt.Sprintf("-- Generated at: %s\n", lib.GetTimestampVersion()))
-	upSQL.WriteString(fmt.Sprintf("-- Compared against schema: %s\n\n", schemaName))
+	upSQL.WriteString(fmt.Sprintf("-- Compared against schema: %s\n", schemaName))
+	upSQL.WriteString("--\n")
+	upSQL.WriteString("-- ⚠️  IMPORTANT: This tool compares Go models against the CURRENT database schema.\n")
+	upSQL.WriteString("--     It does NOT track migration history. A 'new' column means:\n")
+	upSQL.WriteString("--     - The Go model has this field, AND\n")
+	upSQL.WriteString("--     - The database table does NOT have this column\n")
+	upSQL.WriteString("--\n")
+	upSQL.WriteString("--     Review carefully before applying!\n")
+	upSQL.WriteString("\n")
 
 	downSQL.WriteString("-- Smart migration rollback - Auto-detected changes\n")
 	downSQL.WriteString(fmt.Sprintf("-- Generated at: %s\n\n", lib.GetTimestampVersion()))
@@ -149,6 +163,7 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 		schemaType := getSchemaType(m)
 
 		upSQL.WriteString(fmt.Sprintf("-- Model: %s (Table: %s, Schema: %s)\n", modelName, tableName, schemaType))
+		upSQL.WriteString(fmt.Sprintf("-- Comparison: Go struct fields vs Current database columns\n"))
 		downSQL.WriteString(fmt.Sprintf("-- Rollback Model: %s\n", modelName))
 
 		// Get expected columns from GORM model
