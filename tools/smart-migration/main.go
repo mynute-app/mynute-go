@@ -156,7 +156,8 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 
 		// Get actual columns from database
 		fullTableName := tableName
-		if schemaType == "company" {
+		// Both "company" and "tenant" schema types should use company_* schemas
+		if schemaType == "company" || schemaType == "tenant" {
 			fullTableName = schemaName + "." + tableName
 		} else {
 			fullTableName = "public." + tableName
@@ -175,7 +176,8 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 		if len(addedCols) > 0 {
 			upSQL.WriteString(fmt.Sprintf("-- Adding %d new column(s)\n", len(addedCols)))
 
-			if schemaType == "company" {
+			// Both "company" and "tenant" schema types should use company_* schema pattern
+			if schemaType == "company" || schemaType == "tenant" {
 				upSQL.WriteString("DO $$\n")
 				upSQL.WriteString("DECLARE\n")
 				upSQL.WriteString("    schema_name TEXT;\n")
@@ -212,7 +214,8 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 		if len(removedCols) > 0 {
 			downSQL.WriteString(fmt.Sprintf("-- Removing %d column(s) that were added\n", len(addedCols)))
 
-			if schemaType == "company" {
+			// Both "company" and "tenant" schema types should use company_* schema pattern
+			if schemaType == "company" || schemaType == "tenant" {
 				downSQL.WriteString("DO $$\n")
 				downSQL.WriteString("DECLARE\n")
 				downSQL.WriteString("    schema_name TEXT;\n")
