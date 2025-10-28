@@ -67,13 +67,19 @@ endif
 migrate-smart:
 ifndef NAME
 	@echo "Error: NAME is required. Usage: make migrate-smart NAME=migration_name MODELS=Employee,Branch"
+	@echo "                            or: make migrate-smart NAME=migration_name MODELS=all"
 	@exit 1
 endif
 ifndef MODELS
 	@echo "Error: MODELS is required. Usage: make migrate-smart NAME=migration_name MODELS=Employee,Branch"
+	@echo "                            or: make migrate-smart NAME=migration_name MODELS=all"
 	@exit 1
 endif
+ifeq ($(MODELS),all)
+	@echo "Analyzing schema changes for ALL models..."
+else
 	@echo "Analyzing schema changes for models: $(MODELS)"
+endif
 	@go run tools/smart-migration/main.go -name=$(NAME) -models=$(MODELS)
 	@echo ""
 	@echo "💡 SQL generated based on detected changes!"
@@ -92,6 +98,7 @@ migrate-help:
 	@echo "  make migrate-create NAME=x              - Create empty migration files"
 	@echo "  make migrate-generate NAME=x MODELS=Y   - Generate template (no detection)"
 	@echo "  make migrate-smart NAME=x MODELS=Y      - Auto-detect changes (smart!)"
+	@echo "  make migrate-smart NAME=x MODELS=all    - Check ALL models for changes"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test-migrate            - Auto-test migration (up->down->up)"
@@ -103,6 +110,7 @@ migrate-help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make migrate-smart NAME=add_bio MODELS=Employee"
+	@echo "  make migrate-smart NAME=check_all MODELS=all"
 	@echo "  make migrate-generate NAME=add_fields MODELS=Branch,Service"
 	@echo "  make test-migrate"
 

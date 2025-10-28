@@ -33,12 +33,12 @@ func main() {
 	)
 
 	flag.StringVar(&migrationName, "name", "", "Migration name (required)")
-	flag.StringVar(&modelsStr, "models", "", "Comma-separated list of models to analyze (required)")
+	flag.StringVar(&modelsStr, "models", "", "Comma-separated list of models to analyze, or 'all' for all models (required)")
 	flag.StringVar(&schemaName, "schema", "", "Schema to compare (leave empty for first company schema)")
 	flag.Parse()
 
 	if migrationName == "" || modelsStr == "" {
-		log.Fatal("Error: -name and -models are required\nUsage: go run tools/smart-migration/main.go -name migration_name -models ModelName1,ModelName2")
+		log.Fatal("Error: -name and -models are required\nUsage: go run tools/smart-migration/main.go -name migration_name -models ModelName1,ModelName2\n       or: -models all")
 	}
 
 	lib.LoadEnv()
@@ -47,7 +47,13 @@ func main() {
 	db := connectToDatabase()
 
 	// Parse models
-	modelNames := strings.Split(modelsStr, ",")
+	var modelNames []string
+	if strings.ToLower(strings.TrimSpace(modelsStr)) == "all" {
+		modelNames = getAllModelNames()
+		log.Printf("🔍 Analyzing ALL models (%d total)\n", len(modelNames))
+	} else {
+		modelNames = strings.Split(modelsStr, ",")
+	}
 	modelsToAnalyze := getModelsByNames(modelNames)
 
 	if len(modelsToAnalyze) == 0 {
@@ -397,6 +403,32 @@ func getModelsByNames(names []string) []interface{} {
 		}
 	}
 	return result
+}
+
+func getAllModelNames() []string {
+	return []string{
+		"Employee",
+		"Branch",
+		"Service",
+		"Appointment",
+		"Client",
+		"Company",
+		"Sector",
+		"Holiday",
+		"Role",
+		"Resource",
+		"Property",
+		"EndPoint",
+		"PolicyRule",
+		"Subdomain",
+		"BranchWorkRange",
+		"EmployeeWorkRange",
+		"BranchServiceDensity",
+		"EmployeeServiceDensity",
+		"Payment",
+		"AppointmentArchive",
+		"ClientAppointment",
+	}
 }
 
 func getModelName(m interface{}) string {
