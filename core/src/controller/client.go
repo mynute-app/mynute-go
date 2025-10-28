@@ -9,6 +9,7 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -118,13 +119,19 @@ func GetClientByEmail(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
 	}
 
+	// URL decode the email parameter to handle encoded characters like %40 (@)
+	decodedEmail, err := url.QueryUnescape(email)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid email format: %w", err))
+	}
+
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
 	var client model.ClientMeta
-	if err := tx.Model(&model.Client{}).Where("email = ?", email).First(&client).Error; err != nil {
+	if err := tx.Model(&model.Client{}).Where("email = ?", decodedEmail).First(&client).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.Client.NotFound
 		}
