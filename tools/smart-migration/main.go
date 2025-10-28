@@ -95,7 +95,7 @@ func main() {
 	log.Println("   - Queries current database schema")
 	log.Println("   - Compares: Model fields vs Database columns")
 	log.Println("   - Does NOT track migration file history")
-	log.Println("\n�📋 Next steps:")
+	log.Println("\n�� Next steps:")
 	log.Println("   1. Review the generated SQL files")
 	log.Println("   2. Verify these are truly new changes")
 	log.Println("   3. Run: make test-migrate")

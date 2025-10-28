@@ -32,7 +32,7 @@ type MigrationConfig struct {
 // For dev/test migrations, set POSTGRES_DB=devdb or POSTGRES_DB=testdb in your .env
 func GetMigrationConfig() *MigrationConfig {
 	dbName := os.Getenv("POSTGRES_DB")
-	
+
 	if dbName == "" {
 		log.Fatal("POSTGRES_DB environment variable is required for migrations")
 	}
