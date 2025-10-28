@@ -973,3 +973,20 @@ func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 
 	return endpoints, deferFnc, nil
 }
+
+// LoadEndpointIDs loads the IDs of the endpoints from the database
+// and updates the endpoint variables with their corresponding IDs.
+// This should be called after seeding endpoints to ensure that
+// policies can reference the correct endpoint IDs.
+func LoadEndpointIDs(db *gorm.DB) error {
+	for _, ep := range endpoints {
+		var existing EndPoint
+		if err := db.
+			Where("method = ? AND path = ?", ep.Method, ep.Path).
+			First(&existing).Error; err != nil {
+			return fmt.Errorf("failed to load endpoint ID for %s %s: %w", ep.Method, ep.Path, err)
+		}
+		ep.ID = existing.ID
+	}
+	return nil
+}

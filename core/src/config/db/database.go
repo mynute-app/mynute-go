@@ -7,9 +7,11 @@ import (
 	"mynute-go/core/src/lib"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -143,6 +145,11 @@ func (db *Database) InitialSeed() {
 		panic(err)
 	}
 
+	// Load endpoint IDs from database so policies can reference them
+	if err := model.LoadEndpointIDs(tx); err != nil {
+		panic(fmt.Errorf("failed to load endpoint IDs: %w", err))
+	}
+
 	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
 	defer deferPolicies()
 	if err := db.
@@ -150,6 +157,8 @@ func (db *Database) InitialSeed() {
 		Error; err != nil {
 		panic(err)
 	}
+
+	log.Println("Seeding finished!")
 }
 
 // Migrate the database schema
@@ -192,6 +201,73 @@ func (db *Database) Migrate(models any) *Database {
 
 	log.Println("Migration finished!")
 	return db
+}
+
+// getUpdateableFields returns field names that should be updated during seeding.
+// It includes all fields except those that are zero-valued UUIDs or pointers to UUIDs
+// (to avoid overwriting valid foreign keys with zero values).
+// Boolean fields are always included to allow updating from true to false.
+func getUpdateableFields(modelVal reflect.Value) []string {
+	var fields []string
+	modelType := modelVal.Type()
+
+	for i := 0; i < modelVal.NumField(); i++ {
+		field := modelVal.Field(i)
+		fieldType := modelType.Field(i)
+
+		// Skip unexported fields
+		if !fieldType.IsExported() {
+			continue
+		}
+
+		// Get the gorm column name (check the gorm tag, default to field name)
+		columnName := fieldType.Name
+		if gormTag := fieldType.Tag.Get("gorm"); gormTag != "" {
+			// Simple parsing - just look for "column:" tag
+			for _, part := range strings.Split(gormTag, ";") {
+				if strings.HasPrefix(part, "column:") {
+					columnName = strings.TrimPrefix(part, "column:")
+					break
+				}
+			}
+		}
+
+		// Always include boolean fields (to allow true->false updates)
+		if field.Kind() == reflect.Bool {
+			fields = append(fields, columnName)
+			continue
+		}
+
+		// Check if it's a UUID type (by comparing with uuid.UUID)
+		if field.Type() == reflect.TypeOf(uuid.UUID{}) {
+			// Skip if it's a zero UUID
+			if field.Interface() == uuid.Nil {
+				continue
+			}
+			fields = append(fields, columnName)
+			continue
+		}
+
+		// Check if it's a pointer to UUID
+		if field.Kind() == reflect.Ptr && field.Type().Elem() == reflect.TypeOf(uuid.UUID{}) {
+			// Skip if it's nil or points to a zero UUID
+			if field.IsNil() {
+				continue
+			}
+			if field.Elem().Interface() == uuid.Nil {
+				continue
+			}
+			fields = append(fields, columnName)
+			continue
+		}
+
+		// Include all other non-zero fields
+		if !field.IsZero() {
+			fields = append(fields, columnName)
+		}
+	}
+
+	return fields
 }
 
 func (db *Database) Seed(name string, models any, query string, keys []string) *Database {
@@ -264,7 +340,13 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 			}
 		} else {
 			// Model exists, update it
-			if errUpdate := tx.Model(oldModel).Updates(newModel).Error; errUpdate != nil {
+			// Get fields to update (excludes zero-value UUIDs but includes booleans)
+			fieldsToUpdate := getUpdateableFields(newModelVal.Elem())
+			if len(fieldsToUpdate) == 0 {
+				// No fields to update, skip
+				continue
+			}
+			if errUpdate := tx.Model(oldModel).Select(fieldsToUpdate).Updates(newModel).Error; errUpdate != nil {
 				db.Error = fmt.Errorf("failed to update model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, errUpdate, name)
 				return db
 			}

@@ -91,7 +91,8 @@ func (s *Server) listen() *Server {
 //	@listen:	starts the server and listens for incoming requests. This is useful for production or normal dev.
 func (s *Server) Run(in string) *Server {
 	log.Printf("Starting server in '%s' mode...\n", in)
-	if in == "parallel" {
+	switch in {
+	case "parallel":
 		app_env := os.Getenv("APP_ENV")
 		if app_env == "prod" {
 			log.Fatal("Server run for production can not be in parallel. For parallel running set APP_ENV=test or APP_ENV=dev at .env file")
@@ -99,9 +100,9 @@ func (s *Server) Run(in string) *Server {
 			log.Fatal("Server run for parallel can only be in test or dev environment. For parallel running set APP_ENV=test or APP_ENV=dev at .env file")
 		}
 		s.parallel()
-	} else if in == "listen" {
+	case "listen":
 		s.listen()
-	} else {
+	default:
 		log.Fatal("Server run mode not recognized. Please, provide a valid argument")
 	}
 	return s
