@@ -12,7 +12,7 @@ type UserMeta struct {
 }
 
 // Scan implements the sql.Scanner interface for UserMeta
-func (m *UserMeta) Scan(value interface{}) error {
+func (m *UserMeta) Scan(value any) error {
 	if value == nil {
 		*m = UserMeta{}
 		return nil

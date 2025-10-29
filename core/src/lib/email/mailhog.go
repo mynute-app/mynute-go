@@ -139,12 +139,12 @@ type MailHogMessage struct {
 	Content MailHogContent         `json:"Content"`
 	Created time.Time              `json:"Created"`
 	MIME    *MailHogMIME           `json:"MIME"`
-	Raw     map[string]interface{} `json:"Raw"`
+	Raw     map[string]any `json:"Raw"`
 }
 
 // MailHogPath represents an email address
 type MailHogPath struct {
-	Relays  interface{} `json:"Relays"`
+	Relays  any `json:"Relays"`
 	Mailbox string      `json:"Mailbox"`
 	Domain  string      `json:"Domain"`
 	Params  string      `json:"Params"`
@@ -155,7 +155,7 @@ type MailHogContent struct {
 	Headers map[string][]string `json:"Headers"`
 	Body    string              `json:"Body"`
 	Size    int                 `json:"Size"`
-	MIME    interface{}         `json:"MIME"`
+	MIME    any         `json:"MIME"`
 }
 
 // MailHogMIME represents MIME content
@@ -168,7 +168,7 @@ type MailHogMIMEPart struct {
 	Headers map[string][]string `json:"Headers"`
 	Body    string              `json:"Body"`
 	Size    int                 `json:"Size"`
-	MIME    interface{}         `json:"MIME"`
+	MIME    any         `json:"MIME"`
 }
 
 // MailHogMessagesResponse represents the API response

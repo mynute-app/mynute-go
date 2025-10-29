@@ -430,7 +430,7 @@ type MyModel struct {
 
 # 2. Add to GeneralModels or TenantModels
 # core/src/config/db/model/general.go
-var GeneralModels = []interface{}{
+var GeneralModels = []any{
     // ... existing models ...
     &MyModel{},
 }

@@ -80,7 +80,7 @@ func (r *TemplateRenderer) RenderEmail(templateName, language string, customData
 }
 
 // loadTranslations loads translations from the JSON file for the specified template and language
-func (r *TemplateRenderer) loadTranslations(templateName, language string) (map[string]interface{}, error) {
+func (r *TemplateRenderer) loadTranslations(templateName, language string) (map[string]any, error) {
 	translationPath := filepath.Join(r.translationDir, templateName+".json")
 
 	// Read translation file
@@ -90,7 +90,7 @@ func (r *TemplateRenderer) loadTranslations(templateName, language string) (map[
 	}
 
 	// Parse JSON
-	var allTranslations map[string]map[string]interface{}
+	var allTranslations map[string]map[string]any
 	if err := json.Unmarshal(data, &allTranslations); err != nil {
 		return nil, fmt.Errorf("failed to parse translation JSON: %w", err)
 	}

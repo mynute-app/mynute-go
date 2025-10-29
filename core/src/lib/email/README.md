@@ -348,5 +348,5 @@ type Sender interface {
 
 ### TemplateData
 ```go
-type TemplateData map[string]interface{}
+type TemplateData map[string]any
 ```

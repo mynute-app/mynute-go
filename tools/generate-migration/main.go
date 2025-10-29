@@ -33,7 +33,7 @@ func main() {
 	lib.LoadEnv()
 
 	// Determine which models to include
-	var modelsToMigrate []interface{}
+	var modelsToMigrate []any
 	if modelsStr == "all" {
 		// All models from GeneralModels and TenantModels
 		modelsToMigrate = append(modelsToMigrate, model.GeneralModels...)
@@ -81,8 +81,8 @@ func main() {
 	log.Println("   3. If tests pass, commit your changes!")
 }
 
-func getModelsByNames(names []string) []interface{} {
-	modelMap := map[string]interface{}{
+func getModelsByNames(names []string) []any {
+	modelMap := map[string]any{
 		"Employee":               &model.Employee{},
 		"Branch":                 &model.Branch{},
 		"Service":                &model.Service{},
@@ -106,7 +106,7 @@ func getModelsByNames(names []string) []interface{} {
 		"ClientAppointment":      &model.ClientAppointment{},
 	}
 
-	var result []interface{}
+	var result []any
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if m, ok := modelMap[name]; ok {
@@ -118,7 +118,7 @@ func getModelsByNames(names []string) []interface{} {
 	return result
 }
 
-func generateUpSQL(models []interface{}) string {
+func generateUpSQL(models []any) string {
 	var sql strings.Builder
 	sql.WriteString("-- Auto-generated migration\n")
 	sql.WriteString(fmt.Sprintf("-- Generated at: %s\n", lib.GetTimestampVersion()))
@@ -160,7 +160,7 @@ func generateUpSQL(models []interface{}) string {
 	return sql.String()
 }
 
-func generateDownSQL(models []interface{}) string {
+func generateDownSQL(models []any) string {
 	var sql strings.Builder
 	sql.WriteString("-- Auto-generated rollback migration\n")
 	sql.WriteString(fmt.Sprintf("-- Generated at: %s\n", lib.GetTimestampVersion()))
@@ -194,14 +194,14 @@ func generateDownSQL(models []interface{}) string {
 	return sql.String()
 }
 
-func getModelName(m interface{}) string {
+func getModelName(m any) string {
 	// Extract type name without package prefix
 	typeStr := fmt.Sprintf("%T", m)
 	parts := strings.Split(typeStr, ".")
 	return strings.TrimPrefix(parts[len(parts)-1], "*")
 }
 
-func getTableName(m interface{}) string {
+func getTableName(m any) string {
 	// Check if model has TableName method
 	if tn, ok := m.(interface{ TableName() string }); ok {
 		tableName := tn.TableName()
@@ -214,7 +214,7 @@ func getTableName(m interface{}) string {
 	return strings.ToLower(modelName) + "s"
 }
 
-func getSchemaType(m interface{}) string {
+func getSchemaType(m any) string {
 	// Check if model has SchemaType method
 	if st, ok := m.(interface{ SchemaType() string }); ok {
 		return st.SchemaType()

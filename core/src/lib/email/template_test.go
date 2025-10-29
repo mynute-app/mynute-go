@@ -203,7 +203,7 @@ func TestTemplateRenderer_MergeData(t *testing.T) {
 	renderer := NewTemplateRenderer("", "")
 
 	t.Run("should merge translations with empty custom data", func(t *testing.T) {
-		translations := map[string]interface{}{
+		translations := map[string]any{
 			"key1": "value1",
 			"key2": "value2",
 		}
@@ -216,7 +216,7 @@ func TestTemplateRenderer_MergeData(t *testing.T) {
 	})
 
 	t.Run("should merge translations with custom data", func(t *testing.T) {
-		translations := map[string]interface{}{
+		translations := map[string]any{
 			"key1": "value1",
 			"key2": "value2",
 		}
@@ -232,7 +232,7 @@ func TestTemplateRenderer_MergeData(t *testing.T) {
 	})
 
 	t.Run("should allow custom data to override translations", func(t *testing.T) {
-		translations := map[string]interface{}{
+		translations := map[string]any{
 			"key1": "value1",
 			"key2": "value2",
 		}

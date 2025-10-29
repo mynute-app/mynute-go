@@ -136,7 +136,7 @@ func findFirstCompanySchema(db *gorm.DB) string {
 	return schemaName
 }
 
-func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName string) (string, string) {
+func generateSmartMigrations(db *gorm.DB, models []any, schemaName string) (string, string) {
 	var upSQL, downSQL strings.Builder
 
 	upSQL.WriteString("-- Smart migration - Auto-detected changes\n")
@@ -270,7 +270,7 @@ func generateSmartMigrations(db *gorm.DB, models []interface{}, schemaName strin
 	return upSQL.String(), downSQL.String()
 }
 
-func getGormColumns(db *gorm.DB, model interface{}) map[string]ColumnInfo {
+func getGormColumns(db *gorm.DB, model any) map[string]ColumnInfo {
 	stmt := &gorm.Statement{DB: db}
 	stmt.Parse(model)
 
@@ -385,8 +385,8 @@ func getPostgresType(field *schema.Field) string {
 	}
 }
 
-func getModelsByNames(names []string) []interface{} {
-	modelMap := map[string]interface{}{
+func getModelsByNames(names []string) []any {
+	modelMap := map[string]any{
 		"Employee":               &model.Employee{},
 		"Branch":                 &model.Branch{},
 		"Service":                &model.Service{},
@@ -410,7 +410,7 @@ func getModelsByNames(names []string) []interface{} {
 		"ClientAppointment":      &model.ClientAppointment{},
 	}
 
-	var result []interface{}
+	var result []any
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if m, ok := modelMap[name]; ok {
@@ -448,13 +448,13 @@ func getAllModelNames() []string {
 	}
 }
 
-func getModelName(m interface{}) string {
+func getModelName(m any) string {
 	typeStr := fmt.Sprintf("%T", m)
 	parts := strings.Split(typeStr, ".")
 	return strings.TrimPrefix(parts[len(parts)-1], "*")
 }
 
-func getTableName(m interface{}) string {
+func getTableName(m any) string {
 	if tn, ok := m.(interface{ TableName() string }); ok {
 		tableName := tn.TableName()
 		parts := strings.Split(tableName, ".")
@@ -464,7 +464,7 @@ func getTableName(m interface{}) string {
 	return strings.ToLower(modelName) + "s"
 }
 
-func getSchemaType(m interface{}) string {
+func getSchemaType(m any) string {
 	if st, ok := m.(interface{ SchemaType() string }); ok {
 		return st.SchemaType()
 	}

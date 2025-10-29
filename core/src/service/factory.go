@@ -339,7 +339,7 @@ func (s *service) LoginByEmailCode(user_type string) (string, error) {
 	modelType := reflect.TypeOf(s.Model).Elem()
 	freshModel := reflect.New(modelType).Interface()
 
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"meta":     metaValue,
 		"verified": true, // Always set to true on successful login
 	}
@@ -535,7 +535,7 @@ func (s *service) ResetPasswordByEmail(user_email string) (*DTO.PasswordReseted,
 	modelType := reflect.TypeOf(s.Model).Elem()
 	freshModel := reflect.New(modelType).Interface()
 
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"password": hashedPassword,
 		"meta":     metaValue,
 	}
@@ -612,7 +612,7 @@ func (s *service) GetVerificationCodeByEmail(email string) (string, error) {
 	if err := s.MyGorm.DB.
 		Model(freshModel).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{"meta": metaValue}).Error; err != nil {
+		Updates(map[string]any{"meta": metaValue}).Error; err != nil {
 		return "", fmt.Errorf("failed to store verification code: %w", err)
 	}
 
@@ -710,7 +710,7 @@ func (s *service) VerifyEmail(email, code string) error {
 	if err := s.MyGorm.DB.
 		Model(s.Model).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"verified": true,
 			"meta":     metaValue,
 		}).Error; err != nil {
