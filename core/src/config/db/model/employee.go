@@ -49,10 +49,18 @@ func (e *Employee) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
-	// Check if CompanyID is being changed
-	if tx.Statement.Changed("CompanyID") {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("the CompanyID cannot be changed after creation"))
+	// Prevent ID and company_id from being changed after creation
+	// The ID field is now populated by the handler before calling Updates()
+	if e.ID != uuid.Nil {
+		var existingEmployee Employee
+		if err := tx.Unscoped().Select("company_id").Where("id = ?", e.ID).Take(&existingEmployee).Error; err == nil {
+			// Check if CompanyID is being changed
+			if e.CompanyID != uuid.Nil && existingEmployee.CompanyID != e.CompanyID {
+				return lib.Error.General.UpdatedError.WithError(fmt.Errorf("the CompanyID cannot be changed after creation"))
+			}
+		}
 	}
+
 	if e.Password != "" {
 		var dbEmployee Employee
 		tx.First(&dbEmployee, "id = ?", e.ID)

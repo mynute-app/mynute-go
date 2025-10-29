@@ -54,10 +54,18 @@ func (b *Branch) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (b *Branch) BeforeUpdate(tx *gorm.DB) error {
-	// Check if CompanyID is being changed
-	if tx.Statement.Changed("CompanyID") {
-		return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+	// Check if CompanyID is being changed by comparing with the database value
+	if b.ID != uuid.Nil {
+		var existingBranch Branch
+		if err := tx.Model(&Branch{}).Select("company_id").Where("id = ?", b.ID).First(&existingBranch).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading existing branch: %w", err))
+		}
+		// If the CompanyID in the update doesn't match the existing one, reject the change
+		if b.CompanyID != uuid.Nil && b.CompanyID != existingBranch.CompanyID {
+			return lib.Error.General.UpdatedError.WithError(errors.New("the CompanyID cannot be changed after creation"))
+		}
 	}
+
 	var serviceDensity []BranchServiceDensity
 	if err := tx.Find(&serviceDensity, "branch_id = ?", b.ID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading branch service densities: %w", err))
