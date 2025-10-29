@@ -849,7 +849,7 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 
 			// Ensure this range starts after the previous employee range ended
 			if employeeLastEndHour > 0 {
-				if startHour < employeeLastEndHour || (startHour == employeeLastEndHour && startMinute < employeeLastEndMinute) {
+				if startHour < employeeLastEndHour || (startHour == employeeLastEndHour && startMinute <= employeeLastEndMinute) {
 					// Adjust start time to be after the last range ended
 					startHour = employeeLastEndHour
 					startMinute = employeeLastEndMinute
