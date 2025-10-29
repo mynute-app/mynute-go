@@ -3,7 +3,9 @@ package handler
 import (
 	"fmt"
 	"mynute-go/core/src/lib"
+	"reflect"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -33,6 +35,32 @@ func MyGormWrapper(db *gorm.DB) *Gorm {
 // UpdateOneById updates a single record by its ID and reloads it
 func (p *Gorm) UpdateOneById(value string, model any) error {
 	query := p.DB
+
+	// Parse the URL parameter ID
+	urlID, err := uuid.Parse(value)
+	if err != nil {
+		return fmt.Errorf("invalid ID format: %w", err)
+	}
+
+	// Check if ID field is being changed, and set it properly
+	modelValue := reflect.ValueOf(model)
+	if modelValue.Kind() == reflect.Ptr {
+		modelValue = modelValue.Elem()
+	}
+	if modelValue.Kind() == reflect.Struct {
+		idField := modelValue.FieldByName("ID")
+		if idField.IsValid() && idField.Type() == reflect.TypeOf(uuid.UUID{}) {
+			currentID := idField.Interface().(uuid.UUID)
+			// If ID is set in the request body and doesn't match URL parameter, reject
+			if currentID != uuid.Nil && currentID != urlID {
+				return fmt.Errorf("cannot change ID field")
+			}
+			// Set the ID to the URL parameter value so BeforeUpdate hooks can access it
+			if idField.CanSet() {
+				idField.Set(reflect.ValueOf(urlID))
+			}
+		}
+	}
 
 	if result := query.
 		Model(model).
