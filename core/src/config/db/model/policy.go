@@ -15,8 +15,6 @@ var AllowNilResourceID = false
 // --- PolicyRule (Represents a policy rule for access control) ---
 type PolicyRule struct {
 	BaseModel
-	PropertyID  *uuid.UUID      `json:"property_id"`
-	Property    *Property       `gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"property"`
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Effect      string          `json:"effect"` // "Allow" / "Deny"
@@ -53,13 +51,13 @@ type ConditionNode struct {
 
 // --- ConditionLeaf (Represents a single atomic check) ---
 type ConditionLeaf struct {
-	Attribute string `json:"attribute"` // The primary attribute (e.g., "subject.role_id"/"resource.employee_id/"path.employee_id"/"body.employee_id"/"query.employee_id"/"header.employee_id")
-	// The comparison operator
-	// Equals - "==", NotEquals - "!=", IsNull - "== null", IsNotNull - "!= null"
-	Operator    string `json:"operator"`
+	// Attribute is the primary attribute
+	// e.g., "subject.role_id"/"resource.employee_id"/"path.employee_id"/"body.employee_id"/"query.employee_id"/"header.employee_id"
+	Attribute string `json:"attribute"` 
+	Operator    string `json:"operator"` // Equals - "==", NotEquals - "!=", IsNull - "== null", IsNotNull - "!= null"
 	Description string `json:"description,omitempty"` // Optional human-readable description of the check
-
-	// Use EITHER Value OR ResourceAttribute for comparison. Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
+	// Use EITHER Value OR ResourceAttribute for comparison. 
+	// Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
 	Value             json.RawMessage `json:"value,omitempty"`              // Static value to compare against
 	ResourceAttribute string          `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
 }
