@@ -2,9 +2,10 @@ package e2e_test
 
 import (
 	"mynute-go/core"
+	"mynute-go/core/src/lib"
+	jobLib "mynute-go/job/lib"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
-	"mynute-go/job/lib"
 	"os"
 	"testing"
 )
@@ -30,6 +31,9 @@ func load_permissions_test_instance(t *testing.T) {
 }
 
 func Test_Setup_Permissions_Instance(t *testing.T) {
+	// Load environment variables first
+	lib.LoadEnv()
+
 	// Get APP_ENV from .env file
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv != "test" {
@@ -43,7 +47,7 @@ func Test_Setup_Permissions_Instance(t *testing.T) {
 		t.Fatal("Failed to start the server")
 	}
 
-	companies, err := lib.CreateCompaniesRandomly(2)
+	companies, err := jobLib.CreateCompaniesRandomly(2)
 	tt.Describe("Creating companies randomly").Test(err)
 
 	permissions_test_instance.company1 = companies[0]
