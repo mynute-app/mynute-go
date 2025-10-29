@@ -384,6 +384,7 @@ func TestMailHogAdapter_GetMessages(t *testing.T) {
 }
 
 func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
+	now := time.Now()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := MailHogMessagesResponse{
 			Total: 3,
@@ -394,16 +395,19 @@ func TestMailHogAdapter_GetLatestMessageTo(t *testing.T) {
 					ID:      "msg1",
 					To:      []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
 					Content: MailHogContent{Body: "First email"},
+					Created: now.Add(-2 * time.Minute),
 				},
 				{
 					ID:      "msg2",
 					To:      []MailHogPath{{Mailbox: "user2", Domain: "example.com"}},
 					Content: MailHogContent{Body: "Second email"},
+					Created: now.Add(-1 * time.Minute),
 				},
 				{
 					ID:      "msg3",
 					To:      []MailHogPath{{Mailbox: "user1", Domain: "example.com"}},
 					Content: MailHogContent{Body: "Third email"},
+					Created: now,
 				},
 			},
 		}
