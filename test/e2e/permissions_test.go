@@ -3,7 +3,6 @@ package e2e_test
 import (
 	"mynute-go/core"
 	"mynute-go/core/src/lib"
-	jobLib "mynute-go/job/lib"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
 	"os"
@@ -47,11 +46,13 @@ func Test_Setup_Permissions_Instance(t *testing.T) {
 		t.Fatal("Failed to start the server")
 	}
 
-	companies, err := jobLib.CreateCompaniesRandomly(2)
-	tt.Describe("Creating companies randomly").Test(err)
+	// Create company 1 with Set() method (more stable than random generation)
+	permissions_test_instance.company1 = &model.Company{}
+	tt.Describe("Setting up company 1").Test(permissions_test_instance.company1.Set())
 
-	permissions_test_instance.company1 = companies[0]
-	permissions_test_instance.company2 = companies[1]
+	// Create company 2 with Set() method (more stable than random generation)
+	permissions_test_instance.company2 = &model.Company{}
+	tt.Describe("Setting up company 2").Test(permissions_test_instance.company2.Set())
 
 	permissions_test_instance.client1 = &model.Client{}
 	tt.Describe("Setting up client 1").Test(permissions_test_instance.client1.Set())
