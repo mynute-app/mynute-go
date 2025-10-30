@@ -33,13 +33,26 @@ const indentStep = "  "
 
 // CanAccess evaluates if the subject can perform an action on a resource,
 // considering context from the request path, body, and query parameters.
-// subject: Information about the entity performing the action.
-// resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
-// path: Data extracted from URL path parameters. /employee_id/{id}
-// body: Data parsed from the request body.
-// query: Data extracted from URL query string parameters.
-// headers: Data extracted from request headers.
-// policy: The specific PolicyRule to evaluate.
+// - subject: Information about the entity performing the action.
+// - resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
+// - path: Data extracted from URL path parameters. /employee_id/{id}
+// - body: Data parsed from the request body.
+// - query: Data extracted from URL query string parameters.
+// - headers: Data extracted from request headers.
+// - policy: The specific PolicyRule to evaluate.
+
+/*
+CanAccess evaluates if the subject can perform an action on
+a resource, considering context from the request path, body,
+and query parameters.
+	- subject: Information about the entity performing the action.
+	- resource: Information about the entity being acted upon (e.g., fetched DB record). Can be nil.
+	- path: Data extracted from URL path parameters. /employee_id/{id}
+	- body: Data parsed from the request body.
+	- query: Data extracted from URL query string parameters.
+	- headers: Data extracted from request headers.
+	- policy: The specific PolicyRule to evaluate.
+*/
 func (p *Policy) CanAccess(subject, resource, path, body, query, headers map[string]any, policy *model.PolicyRule) AccessDecision {
 	decision := AccessDecision{}
 	if policy == nil {
@@ -410,7 +423,7 @@ func evalLeaf(leaf model.ConditionLeaf, subject, resource, path, body, query, he
 	return finalRes, finalReason, nil // No error occurred during comparison itself
 }
 
-// resolveAttr resolves attribute path against ALL provided context maps, including headers.
+// resolveAttr resolves attribute path against ALL provided context maps.
 func resolveAttr(attr string, subject, resource, path, body, query, headers map[string]any) (any, error) {
 	if attr == "" {
 		return nil, errors.New("attribute name cannot be empty")
