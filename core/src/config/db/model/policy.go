@@ -34,32 +34,43 @@ func (PolicyRule) Indexes() map[string]string {
 
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
 type ConditionNode struct {
-	// Description explains the purpose of this node (e.g., "Client Access Check", "Company Membership Check")
+	// Description explains the purpose of this node 
+	// (e.g., "Client Access Check", "Company Membership Check")
 	Description string `json:"description,omitempty"`
-
 	// --- Fields for Branch Nodes (Logical Operators: AND, OR, NOT) ---
-	// LogicType specifies how to evaluate Children ("AND", "OR"). Required for branch nodes.
-	LogicType string `json:"logic_type,omitempty"` // omitempty: Only present for branch nodes
-
-	// Children contains nested nodes to be evaluated. Required for branch nodes.
-	Children []ConditionNode `json:"children,omitempty"` // omitempty: Only present for branch nodes
-
+	// LogicType specifies how to evaluate Children ("AND", "OR"). 
+	// Required for branch nodes.
+	LogicType string `json:"logic_type,omitempty"` 
+	// Children contains nested nodes to be evaluated. 
+	// Required for branch nodes.
+	Children []ConditionNode `json:"children,omitempty"`
 	// --- Field for Leaf Nodes (Actual Condition Check) ---
-	// Leaf points to the actual condition details. Required for leaf nodes.
-	Leaf *ConditionLeaf `json:"leaf,omitempty"` // omitempty: Only present for leaf nodes
+	// Leaf points to the actual condition details. 
+	// Required for leaf nodes.
+	Leaf *ConditionLeaf `json:"leaf,omitempty"` 
 }
 
 // --- ConditionLeaf (Represents a single atomic check) ---
 type ConditionLeaf struct {
 	// Attribute is the primary attribute
-	// e.g., "subject.role_id"/"resource.employee_id"/"path.employee_id"/"body.employee_id"/"query.employee_id"/"header.employee_id"
+	// e.g., "subject.role_id","resource.employee_id",
+	// "path.employee_id","body.employee_id",
+	// "query.employee_id","header.employee_id"
 	Attribute string `json:"attribute"` 
-	Operator    string `json:"operator"` // Equals - "==", NotEquals - "!=", IsNull - "== null", IsNotNull - "!= null"
-	Description string `json:"description,omitempty"` // Optional human-readable description of the check
-	// Use EITHER Value OR ResourceAttribute for comparison. 
-	// Omitempty ensures only one (or neither for ops like IsNull) appears in JSON.
-	Value             json.RawMessage `json:"value,omitempty"`              // Static value to compare against
-	ResourceAttribute string          `json:"resource_attribute,omitempty"` // Other attribute's name to compare against
+	// Operator defines the comparison operation
+	// e.g., "Equals" - "==", "NotEquals" - "!=", 
+	// "IsNull" - "== null", "IsNotNull" - "!= null"
+	Operator    string `json:"operator"`
+	// Description is a human-readable explanation of 
+	// the check being performed.
+	// e.g., "Subject must be a Client"
+	Description string `json:"description,omitempty"` 
+	// --- Use EITHER Value OR ResourceAttribute ---
+	// Value is a static JSON value to compare against.
+	Value             json.RawMessage `json:"value,omitempty"`
+	// ResourceAttribute is the name of a dynamic attribute
+	// that can be used for comparison.
+	ResourceAttribute string          `json:"resource_attribute,omitempty"`
 }
 
 // GetConditionsNode parses and validates the stored JSON conditions
