@@ -98,6 +98,11 @@ var EmployeeKey = TypeStruct{
 	Model: "employee_model",
 }
 
+var AdminKey = TypeStruct{
+	Name:  "admin",
+	Model: "admin_model",
+}
+
 var ServiceKey = TypeStruct{
 	Name:  "service",
 	Model: "service_model",
