@@ -21,6 +21,28 @@ import (
 )
 
 func DenyUnauthorized(c *fiber.Ctx) error {
+	// --- Check for Admin Authentication First ---
+	// Admins bypass tenant-based restrictions
+	adminClaims := c.Locals(namespace.RequestKey.Auth_Claims + "_admin")
+	if adminClaim, ok := adminClaims.(*DTO.AdminClaims); ok && adminClaim != nil && adminClaim.IsAdmin {
+		// Verify admin is active
+		if !adminClaim.IsActive {
+			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin account is inactive"))
+		}
+
+		// Admins with superadmin role have full access
+		for _, role := range adminClaim.Roles {
+			if role == "superadmin" {
+				// Grant full access to superadmins
+				return c.Next()
+			}
+		}
+
+		// Other admin roles can be checked here if needed
+		// For now, all active admins have access
+		return c.Next()
+	}
+
 	// --- Get Database Session ---
 	tx, err := lib.Session(c)
 	if err != nil {
@@ -303,6 +325,17 @@ func WhoAreYou(c *fiber.Ctx) error {
 	if authorization == "" {
 		return c.Next()
 	}
+
+	// First check if it's an admin token
+	admin, err := handler.JWT(c).WhoAreYouAdmin()
+	if err != nil {
+		return err
+	} else if admin != nil {
+		c.Locals(namespace.RequestKey.Auth_Claims+"_admin", admin)
+		return c.Next()
+	}
+
+	// Otherwise check if it's a regular user token
 	user, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return err
