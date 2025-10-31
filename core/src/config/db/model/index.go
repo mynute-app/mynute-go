@@ -49,6 +49,8 @@ var GeneralModels = []any{
 	&Property{},
 	&Subdomain{},
 	&ClientAppointment{},
+	&Admin{},
+	&RoleAdmin{},
 }
 
 func GetModelFromTableName(tableName string) (any, string, error) {
