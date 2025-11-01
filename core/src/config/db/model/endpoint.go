@@ -98,6 +98,86 @@ var LogoutProvider = &EndPoint{
 	Description:    "Logout provider",
 }
 
+// --- Admin Auth Endpoints --- //
+
+var AdminLogin = &EndPoint{
+	Path:           "/admin/auth/login",
+	Method:         namespace.CreateActionMethod,
+	ControllerName: "AdminLogin",
+	Description:    "Admin login",
+}
+var AdminMe = &EndPoint{
+	Path:             "/admin/auth/me",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "AdminMe",
+	Description:      "Get current admin info",
+	DenyUnauthorized: true,
+}
+var AdminRefreshToken = &EndPoint{
+	Path:             "/admin/auth/refresh",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "AdminRefreshToken",
+	Description:      "Refresh admin token",
+	DenyUnauthorized: false,
+} // --- Admin Management Endpoints --- //
+
+var ListAdmins = &EndPoint{
+	Path:             "/admin",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "ListAdmins",
+	Description:      "List all admins",
+	DenyUnauthorized: true,
+}
+var CreateAdmin = &EndPoint{
+	Path:             "/admin",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "CreateAdmin",
+	Description:      "Create a new admin",
+	DenyUnauthorized: true,
+}
+var UpdateAdmin = &EndPoint{
+	Path:             "/admin/:id",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateAdmin",
+	Description:      "Update admin by ID",
+	DenyUnauthorized: true,
+}
+var DeleteAdmin = &EndPoint{
+	Path:             "/admin/:id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteAdmin",
+	Description:      "Delete admin by ID",
+	DenyUnauthorized: true,
+}
+var ListRoles = &EndPoint{
+	Path:             "/admin/role",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "ListRoles",
+	Description:      "List all admin roles",
+	DenyUnauthorized: true,
+}
+var CreateRole = &EndPoint{
+	Path:             "/admin/role",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "CreateRole",
+	Description:      "Create a new admin role",
+	DenyUnauthorized: true,
+}
+var UpdateRole = &EndPoint{
+	Path:             "/admin/role/:id",
+	Method:           namespace.PatchActionMethod,
+	ControllerName:   "UpdateRole",
+	Description:      "Update role by ID",
+	DenyUnauthorized: true,
+}
+var DeleteRole = &EndPoint{
+	Path:             "/admin/role/:id",
+	Method:           namespace.DeleteActionMethod,
+	ControllerName:   "DeleteRole",
+	Description:      "Delete role by ID",
+	DenyUnauthorized: true,
+}
+
 // --- Branch Endpoints --- //
 
 var CreateBranch = &EndPoint{
@@ -846,6 +926,19 @@ var endpoints = []*EndPoint{
 	BeginAuthProviderCallback,
 	GetAuthCallbackFunction,
 	LogoutProvider,
+	// Admin Auth
+	AdminLogin,
+	AdminMe,
+	AdminRefreshToken,
+	// Admin Management
+	ListAdmins,
+	CreateAdmin,
+	UpdateAdmin,
+	DeleteAdmin,
+	ListRoles,
+	CreateRole,
+	UpdateRole,
+	DeleteRole,
 	// Branch
 	CreateBranch,
 	GetBranchById,

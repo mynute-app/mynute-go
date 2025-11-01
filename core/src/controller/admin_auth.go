@@ -56,19 +56,19 @@ func AdminLogin(c *fiber.Ctx) error {
 		}).
 		First(&admin).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("invalid credentials"))
+			return lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid credentials"))
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	// Check if admin is active
 	if !admin.IsActive {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin account is inactive"))
+		return lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("admin account is inactive"))
 	}
 
 	// Verify password
-	if !admin.MatchPassword(admin.Password) {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("invalid credentials"))
+	if !admin.MatchPassword(loginReq.Password) {
+		return lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid credentials"))
 	}
 
 	// Extract role names
@@ -107,10 +107,7 @@ func AdminLogin(c *fiber.Ctx) error {
 		},
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 // AdminMe returns current admin information from JWT token

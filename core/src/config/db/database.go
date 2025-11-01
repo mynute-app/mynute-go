@@ -125,12 +125,17 @@ func (db *Database) InitialSeed() {
 	if err := db.
 		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
+		Seed("Admin Roles", model.RoleAdmins, "name = ?", []string{"Name"}).
 		Error; err != nil {
 		panic(err)
 	}
 
 	if err := model.LoadSystemRoleIDs(tx); err != nil {
 		panic(fmt.Errorf("failed to load system role IDs: %w", err))
+	}
+
+	if err := model.LoadAdminRoleIDs(tx); err != nil {
+		panic(fmt.Errorf("failed to load admin role IDs: %w", err))
 	}
 
 	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)

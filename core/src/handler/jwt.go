@@ -39,7 +39,7 @@ func (j *jsonWebToken) Encode(data any) (string, error) {
 // create token
 func (j *jsonWebToken) CreateToken(claims jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(mySecret)
+	return token.SignedString(getSecret())
 }
 
 func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
@@ -62,7 +62,7 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return mySecret, nil
+		return getSecret(), nil
 	}
 
 	token, err := jwt.Parse(auth_token, parseCallback)
@@ -111,7 +111,7 @@ func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return mySecret, nil
+		return getSecret(), nil
 	}
 
 	token, err := jwt.Parse(auth_token, parseCallback)
@@ -153,15 +153,12 @@ func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminClaims, error) {
 
 // getSecret retrieves the JWT secret from an environment variable
 func getSecret() []byte {
-	generateMySecret := func() []byte {
-		s := fmt.Sprintf("my_secret_is_%d!", lib.GenerateRandomInt(16))
-		return []byte(s)
-	}
 	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return generateMySecret() // Only for testing or development
+	if secret != "" {
+		return []byte(secret)
 	}
-	return []byte(secret)
-}
 
-var mySecret = getSecret()
+	// For testing/development, use a deterministic fallback
+	// This allows tests to work without setting JWT_SECRET
+	return []byte("default-test-secret-do-not-use-in-production-12345")
+}

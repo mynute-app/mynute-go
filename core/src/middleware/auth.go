@@ -21,6 +21,9 @@ import (
 )
 
 func DenyUnauthorized(c *fiber.Ctx) error {
+	method := c.Method()
+	routePath := c.Route().Path // Use routePath for consistency
+
 	// --- Check for Admin Authentication First ---
 	// Admins bypass tenant-based restrictions
 	adminClaims := c.Locals(namespace.RequestKey.Auth_Claims + "_admin")
@@ -32,15 +35,20 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 
 		// Admins with superadmin role have full access
 		for _, role := range adminClaim.Roles {
-			if role == "superadmin" {
-				// Grant full access to superadmins
-				return c.Next()
+			switch role {
+			case model.RoleAdminSuperAdmin.Name:
+				return c.Next() // Grant full access to superadmins
+			case model.RoleAdminSupport.Name:
+				if method == "GET" || method == "PATCH" || method == "PUT" {
+					return c.Next() // Grant support access to read and modify
+				}
+			case model.RoleAdminAuditor.Name:
+				if method == "GET" {
+					return c.Next() // Grant auditor access to read-only
+				}
 			}
 		}
-
-		// Other admin roles can be checked here if needed
-		// For now, all active admins have access
-		return c.Next()
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin does not have sufficient role permissions"))
 	}
 
 	// --- Get Database Session ---
@@ -48,8 +56,6 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
-	method := c.Method()
-	routePath := c.Route().Path // Use routePath for consistency
 
 	var EndPoint model.EndPoint
 	if err := tx.Where("method = ? AND path = ?", method, routePath).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {

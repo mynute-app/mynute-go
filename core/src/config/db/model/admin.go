@@ -57,9 +57,9 @@ func (a *Admin) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
-// MatchPassword compares the provided password with the hashed password
-func (a *Admin) MatchPassword(hashedPass string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(a.Password))
+// MatchPassword compares the provided plain text password with the hashed password
+func (a *Admin) MatchPassword(plainPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(plainPassword))
 	return err == nil
 }
 
@@ -127,6 +127,39 @@ func (r *RoleAdmin) BeforeUpdate(tx *gorm.DB) error {
 		if err := tx.Unscoped().Select("id").Where("id = ?", r.ID).Take(&existingRole).Error; err != nil {
 			return lib.Error.General.UpdatedError.WithError(fmt.Errorf("role not found"))
 		}
+	}
+	return nil
+}
+
+// Default admin roles
+var (
+	RoleAdminSuperAdmin = &RoleAdmin{
+		Name:        "superadmin",
+		Description: "Full system access with all privileges across all tenants",
+	}
+	RoleAdminSupport = &RoleAdmin{
+		Name:        "support",
+		Description: "Customer support role with read access to tenant data",
+	}
+	RoleAdminAuditor = &RoleAdmin{
+		Name:        "auditor",
+		Description: "Audit role with read-only access to system logs and reports",
+	}
+)
+
+var RoleAdmins = []*RoleAdmin{
+	RoleAdminSuperAdmin,
+	RoleAdminSupport,
+	RoleAdminAuditor,
+}
+
+func LoadAdminRoleIDs(db *gorm.DB) error {
+	for _, r := range RoleAdmins {
+		var existing RoleAdmin
+		if err := db.Where("name = ?", r.Name).First(&existing).Error; err != nil {
+			return err
+		}
+		r.ID = existing.ID
 	}
 	return nil
 }
