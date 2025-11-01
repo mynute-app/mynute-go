@@ -17,9 +17,15 @@ type Admin struct {
 	Name     string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
 	Email    string         `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
 	Password string         `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
+	Verified bool           `gorm:"default:true" json:"verified"`
 	IsActive bool           `gorm:"default:true" json:"is_active"`
 	Roles    []RoleAdmin    `gorm:"many2many:admin_role_admins;constraint:OnDelete:CASCADE;" json:"roles"`
 	Meta     mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
+}
+
+type AdminList struct {
+	Admins []Admin `json:"admins"`
+	Total  int     `json:"total" example:"1"`
 }
 
 func (Admin) TableName() string  { return "public.admins" }

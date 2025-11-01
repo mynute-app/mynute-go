@@ -49,7 +49,7 @@ func (a *Admin) Create(s int, roles ...string) error {
 	}
 
 	var response struct {
-		Data DTO.AdminDetail `json:"data"`
+		Data DTO.Admin `json:"data"`
 	}
 
 	if err := handler.NewHttpClient().
@@ -89,41 +89,36 @@ func (a *Admin) Login(s int, password string) error {
 		Password: password,
 	}
 
-	var loginResp DTO.AdminLoginResponse
-	if err := handler.NewHttpClient().
+	client := handler.NewHttpClient().
 		Method("POST").
 		URL("/admin/auth/login").
 		ExpectedStatus(s).
-		Send(loginReq).
-		ParseResponse(&loginResp).
-		Error; err != nil {
+		Send(loginReq)
+
+	if err := client.Error; err != nil {
 		return fmt.Errorf("failed to login admin: %w", err)
 	}
 
 	if s == 200 {
-		a.X_Auth_Token = loginResp.Token
-		if loginResp.Admin != nil {
-			a.Created.Name = loginResp.Admin.Name
-			a.Created.Email = loginResp.Admin.Email
-			a.Created.IsActive = loginResp.Admin.IsActive
-		}
+		// Extract token from response headers
+		a.X_Auth_Token = client.ResHeaders[namespace.HeadersKey.Auth][0]
 	}
 
 	return nil
 }
 
-// GetMe retrieves the current admin's information
+// GetMe retrieves the current admin's information using GetAdminByID
 func (a *Admin) GetMe(s int) error {
-	var adminDetail DTO.AdminDetail
+	var adminDetail DTO.Admin
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL("/admin/auth/me").
+		URL(fmt.Sprintf("/admin/%d", a.Created.ID)).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, a.X_Auth_Token).
 		Send(nil).
 		ParseResponse(&adminDetail).
 		Error; err != nil {
-		return fmt.Errorf("failed to get admin me: %w", err)
+		return fmt.Errorf("failed to get admin by id: %w", err)
 	}
 
 	if s == 200 {
@@ -166,7 +161,7 @@ func (a *Admin) Update(s int, adminID uuid.UUID, changes map[string]any) error {
 	}
 
 	var response struct {
-		Data DTO.AdminDetail `json:"data"`
+		Data DTO.Admin `json:"data"`
 	}
 
 	if err := handler.NewHttpClient().
@@ -234,7 +229,7 @@ func (a *Admin) Delete(s int, adminID uuid.UUID) error {
 // ListAdmins retrieves all admin users
 func (a *Admin) ListAdmins(s int) ([]model.Admin, error) {
 	var response struct {
-		Data []DTO.AdminDetail `json:"data"`
+		Data []DTO.Admin `json:"data"`
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
@@ -268,8 +263,8 @@ func (a *Admin) CreateRole(s int, name, description string) (*model.RoleAdmin, e
 	}
 
 	var response struct {
-		Success bool                `json:"success"`
-		Data    DTO.RoleAdminDetail `json:"data"`
+		Success bool          `json:"success"`
+		Data    DTO.AdminRole `json:"data"`
 	}
 	if err := handler.NewHttpClient().
 		Method("POST").
@@ -294,8 +289,8 @@ func (a *Admin) CreateRole(s int, name, description string) (*model.RoleAdmin, e
 // ListRoles retrieves all admin roles
 func (a *Admin) ListRoles(s int) ([]model.RoleAdmin, error) {
 	var response struct {
-		Success bool                  `json:"success"`
-		Data    []DTO.RoleAdminDetail `json:"data"`
+		Success bool            `json:"success"`
+		Data    []DTO.AdminRole `json:"data"`
 	}
 	if err := handler.NewHttpClient().
 		Method("GET").
@@ -327,8 +322,8 @@ func (a *Admin) UpdateRole(s int, roleID uuid.UUID, changes map[string]any) (*mo
 	}
 
 	var response struct {
-		Success bool                `json:"success"`
-		Data    DTO.RoleAdminDetail `json:"data"`
+		Success bool          `json:"success"`
+		Data    DTO.AdminRole `json:"data"`
 	}
 	if err := handler.NewHttpClient().
 		Method("PATCH").

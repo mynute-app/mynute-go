@@ -9,7 +9,6 @@ import (
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
-	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -113,29 +112,9 @@ func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	email := c.Params("email")
-
-	if email == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
-	}
-
-	// URL decode the email parameter to handle encoded characters like %40 (@)
-	decodedEmail, err := url.QueryUnescape(email)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid email format: %w", err))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
+	var client model.Client
+	if err := GetOneBy("email", c, &client, nil, &[]string{"Appointments"}); err != nil {
 		return err
-	}
-
-	var client model.ClientMeta
-	if err := tx.Model(&model.Client{}).Where("email = ?", decodedEmail).First(&client).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -149,33 +128,23 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Description	Retrieve an client by its ID
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header	string	true	"X-Auth-Token"
-//	@Param			id				path	string	true	"Client ID"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'id' at params route"))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
+	var client model.Client
+	if err := GetOneBy("id", c, &client, nil, &[]string{"Appointments"}); err != nil {
 		return err
 	}
 
-	var client model.ClientMeta
-	if err := tx.Model(&model.Client{}).Where("id = ?", id).First(&client).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
-		}
-		return lib.Error.General.InternalError.WithError(err)
-	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
+
 	return nil
 }
 
@@ -334,7 +303,7 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
-//	@Query			language													query		string	false	"Language code (default: en)"
+//	@Query			language																		query		string	false	"Language code (default: en)"
 //	@Produce		json
 //	@Success		200	{object}	DTO.PasswordReseted
 //	@Failure		400	{object}	DTO.ErrorResponse

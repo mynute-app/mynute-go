@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	"mynute-go/core/src/config/db/model"
@@ -11,25 +10,138 @@ import (
 	"mynute-go/core/src/middleware"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
+
+// =====================
+// ADMIN AUTH
+// =====================
+
+// AdminLoginByPassword handles admin authentication
+//
+//	@Summary		Admin login
+//	@Description	Authenticate admin user and return JWT token
+//	@Tags			Admin Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			login	body		DTO.AdminLoginRequest	true	"Admin login credentials"
+//	@Success		200		{object}	DTO.AdminLoginResponse
+//	@Failure		401		{object}	lib.ErrorResponse
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/admin/login [post]
+func AdminLoginByPassword(c *fiber.Ctx) error {
+	token, err := LoginByPassword(namespace.AdminKey.Name, &model.Admin{}, c)
+	if err != nil {
+		return err
+	}
+	c.Response().Header.Set(namespace.HeadersKey.Auth, token)
+	return nil
+}
 
 // =====================
 // ADMIN MANAGEMENT
 // =====================
 
+// CreateAdmin creates a new admin user
+//
+//	@Summary		Create admin
+//	@Description	Create a new admin user
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Accept			json
+//	@Produce		json
+//	@Param			admin	body		DTO.Admin	true	"Admin creation data"
+//	@Success		201		{object}	DTO.Admin
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/admin [post]
+func CreateAdmin(c *fiber.Ctx) error {
+	// Verify admin authentication (only superadmin can create admins)
+	if hasSuperAdmin, err := areThereAnySuperAdmin(c); err != nil {
+		return err
+	} else if hasSuperAdmin {
+		if err := requireSuperAdmin(c); err != nil {
+			return err
+		}
+	}
+
+	var admin model.Admin
+	if err := Create(c, &admin); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).SendDTO(201, &admin, &DTO.Admin{})
+}
+
+// GetAdminByID retrieves an admin by its ID
+//
+//	@Summary		Get admin by ID
+//	@Description	Retrieve an admin by its ID
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Param			id				path		string	true	"Admin ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Admin
+//	@Failure		404	{object}	lib.ErrorResponse
+//	@Router			/admin/{id} [get]
+func GetAdminByID(c *fiber.Ctx) error {
+	if err := requireAdmin(c); err != nil {
+		return err
+	}
+
+	var admin model.Admin
+	if err := GetOneBy("id", c, &admin, nil, nil); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{})
+}
+
+// GetAdminByEmail retrieves an admin by email
+//
+//	@Summary		Get admin by email
+//	@Description	Retrieve an admin by email address
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Param			email			path		string	true	"Admin email"
+//	@Produce		json
+//	@Success		200	{object}	DTO.Admin
+//	@Failure		404	{object}	lib.ErrorResponse
+//	@Router			/admin/email/{email} [get]
+func GetAdminByEmail(c *fiber.Ctx) error {
+	if err := requireAdmin(c); err != nil {
+		return err
+	}
+
+	var admin model.Admin
+	if err := GetOneBy("email", c, &admin, nil, nil); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{})
+}
+
 // ListAdmins returns all admin users
-// @Summary List all admins
-// @Description Get list of all admin users with their roles
-// @Tags Admin Management
-// @Produce json
-// @Success 200 {array} DTO.AdminDetail
-// @Failure 401 {object} lib.ErrorResponse
-// @Security BearerAuth
-// @Router /admin/list [get]
+//
+//	@Summary		List all admins
+//	@Description	Get list of all admin users with their roles
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Produce		json
+//	@Success		200	{array}	DTO.AdminList
+//	@Router			/admin [get]
 func ListAdmins(c *fiber.Ctx) error {
-	// Verify admin authentication
 	if err := requireAdmin(c); err != nil {
 		return err
 	}
@@ -48,305 +160,134 @@ func ListAdmins(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Convert to DTO
-	adminList := make([]DTO.AdminDetail, len(admins))
-	for i, admin := range admins {
-		roleNames := make([]string, len(admin.Roles))
-		for j, role := range admin.Roles {
-			roleNames[j] = role.Name
-		}
-		adminList[i] = DTO.AdminDetail{
-			ID:       admin.ID,
-			Name:     admin.Name,
-			Email:    admin.Email,
-			IsActive: admin.IsActive,
-			Roles:    roleNames,
-		}
+	adminList := model.AdminList{
+		Admins: admins,
+		Total:  len(admins),
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    adminList,
-	})
+	return lib.ResponseFactory(c).SendDTO(200, &adminList, &DTO.AdminList{})
 }
 
-// CreateAdmin creates a new admin user
-// @Summary Create admin
-// @Description Create a new admin user with specified roles
-// @Tags Admin Management
-// @Accept json
-// @Produce json
-// @Param admin body DTO.AdminCreateRequest true "Admin creation data"
-// @Success 201 {object} DTO.AdminDetail
-// @Failure 400 {object} lib.ErrorResponse
-// @Failure 401 {object} lib.ErrorResponse
-// @Security BearerAuth
-// @Router /admin/create [post]
-func CreateAdmin(c *fiber.Ctx) error {
-	// Verify admin authentication (only superadmin can create admins)
+// UpdateAdminByID updates an existing admin
+//
+//	@Summary		Update admin
+//	@Description	Update admin user information
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string		true	"Admin ID"
+//	@Param			admin	body		DTO.Admin	true	"Admin update data"
+//	@Success		200		{object}	DTO.Admin
+//	@Failure		400		{object}	lib.ErrorResponse
+//	@Failure		404		{object}	lib.ErrorResponse
+//	@Router			/admin/{id} [patch]
+func UpdateAdminByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
 	}
 
-	var req DTO.AdminCreateRequest
-	if err := c.BodyParser(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid request body: %w", err))
-	}
-
-	if err := lib.MyCustomStructValidator(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(err)
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Check if email already exists
-	var existingAdmin model.Admin
-	if err := tx.Where("email = ?", req.Email).First(&existingAdmin).Error; err == nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("admin with email %s already exists", req.Email))
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Create admin
-	admin := model.Admin{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: req.Password,
-		IsActive: req.IsActive,
-	}
-
-	// Start transaction
-	if err := tx.Transaction(func(tx *gorm.DB) error {
-		// Create admin
-		if err := tx.Create(&admin).Error; err != nil {
-			return err
-		}
-
-		// Assign roles if provided
-		if len(req.Roles) > 0 {
-			var roles []model.RoleAdmin
-			if err := tx.Where("name IN ?", req.Roles).Find(&roles).Error; err != nil {
-				return err
-			}
-
-			if len(roles) != len(req.Roles) {
-				return fmt.Errorf("some roles not found")
-			}
-
-			if err := tx.Model(&admin).Association("Roles").Append(&roles); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Reload admin with roles
-	if err := tx.Preload("Roles").First(&admin, admin.ID).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	roleNames := make([]string, len(admin.Roles))
-	for i, role := range admin.Roles {
-		roleNames[i] = role.Name
-	}
-
-	response := DTO.AdminDetail{
-		ID:       admin.ID,
-		Name:     admin.Name,
-		Email:    admin.Email,
-		IsActive: admin.IsActive,
-		Roles:    roleNames,
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
-}
-
-// UpdateAdmin updates an existing admin
-// @Summary Update admin
-// @Description Update admin user information
-// @Tags Admin Management
-// @Accept json
-// @Produce json
-// @Param id path string true "Admin ID"
-// @Param admin body DTO.AdminUpdateRequest true "Admin update data"
-// @Success 200 {object} DTO.AdminDetail
-// @Failure 400 {object} lib.ErrorResponse
-// @Failure 404 {object} lib.ErrorResponse
-// @Security BearerAuth
-// @Router /admin/{id} [patch]
-func UpdateAdmin(c *fiber.Ctx) error {
-	// Verify admin authentication
-	if err := requireSuperAdmin(c); err != nil {
-		return err
-	}
-
-	adminID := c.Params("id")
-	if adminID == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("admin ID required"))
-	}
-
-	adminUUID, err := uuid.Parse(adminID)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid admin ID"))
-	}
-
-	var req DTO.AdminUpdateRequest
-	if err := c.BodyParser(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid request body: %w", err))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Find admin
 	var admin model.Admin
-	if err := tx.Preload("Roles").First(&admin, adminUUID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("admin not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	if err := UpdateOneById(c, &admin, nil); err != nil {
+		return err
 	}
-
-	// Update fields
-	if req.Name != nil {
-		admin.Name = *req.Name
-	}
-	if req.Email != nil {
-		admin.Email = *req.Email
-	}
-	if req.Password != nil {
-		admin.Password = *req.Password
-	}
-	if req.IsActive != nil {
-		admin.IsActive = *req.IsActive
-	}
-
-	// Start transaction
-	if err := tx.Transaction(func(tx *gorm.DB) error {
-		// Save admin
-		if err := tx.Save(&admin).Error; err != nil {
-			return err
-		}
-
-		// Update roles if provided
-		if len(req.Roles) > 0 {
-			var roles []model.RoleAdmin
-			if err := tx.Where("name IN ?", req.Roles).Find(&roles).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&admin).Association("Roles").Replace(&roles); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Reload admin with roles
-	if err := tx.Preload("Roles").First(&admin, admin.ID).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	roleNames := make([]string, len(admin.Roles))
-	for i, role := range admin.Roles {
-		roleNames[i] = role.Name
-	}
-
-	response := DTO.AdminDetail{
-		ID:       admin.ID,
-		Name:     admin.Name,
-		Email:    admin.Email,
-		IsActive: admin.IsActive,
-		Roles:    roleNames,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
+	return lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{})
 }
 
-// DeleteAdmin soft deletes an admin
-// @Summary Delete admin
-// @Description Soft delete an admin user
-// @Tags Admin Management
-// @Param id path string true "Admin ID"
-// @Success 204
-// @Failure 404 {object} lib.ErrorResponse
-// @Security BearerAuth
-// @Router /admin/{id} [delete]
-func DeleteAdmin(c *fiber.Ctx) error {
-	// Verify admin authentication
+// DeleteAdminByID soft deletes an admin
+//	@Summary		Delete admin
+//	@Description	Soft delete an admin user
+//	@Tags			Admin
+//
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//
+//	@Param			id				path		string	true	"Admin ID"
+//	@Success		204
+//	@Failure		404	{object}	lib.ErrorResponse
+//	@Router			/admin/{id} [delete]
+func DeleteAdminByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
 	}
 
-	adminID := c.Params("id")
-	if adminID == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("admin ID required"))
+	if err := DeleteOneById(c, &model.Admin{}); err != nil {
+		return err
 	}
-
-	adminUUID, err := uuid.Parse(adminID)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid admin ID"))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Soft delete
-	result := tx.Delete(&model.Admin{}, adminUUID)
-	if result.Error != nil {
-		return lib.Error.General.InternalError.WithError(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("admin not found"))
-	}
-
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // =====================
-// ROLE MANAGEMENT
+// ADMIN ROLE MANAGEMENT
 // =====================
 
-// ListRoles returns all admin roles
-// @Summary List admin roles
-// @Description Get list of all admin roles
-// @Tags Admin Roles
-// @Produce json
-// @Success 200 {array} DTO.RoleAdminDetail
-// @Security BearerAuth
-// @Router /admin/roles [get]
-func ListRoles(c *fiber.Ctx) error {
+// CreateAdminRole creates a new admin role
+//
+//	@Summary		Create admin role
+//	@Description	Create a new admin role
+//	@Tags			Admin Role
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Accept			json
+//	@Produce		json
+//	@Param			role	body		DTO.RoleAdminCreateRequest	true	"Role data"
+//	@Success		201		{object}	DTO.AdminRole
+//	@Router			/admin/role [post]
+func CreateAdminRole(c *fiber.Ctx) error {
+	if err := requireSuperAdmin(c); err != nil {
+		return err
+	}
+
+	var role model.RoleAdmin
+	if err := Create(c, &role); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).SendDTO(201, &role, &DTO.AdminRole{})
+}
+
+// GetAdminRoleByID retrieves an admin role by its ID
+//
+//	@Summary		Get admin role by ID
+//	@Description	Retrieve an admin role by its ID
+//	@Tags			Admin Role
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Role ID"
+//	@Produce		json
+//	@Success		200	{object}	DTO.AdminRole
+//	@Failure		404	{object}	lib.ErrorResponse
+//	@Router			/admin/role/{id} [get]
+func GetAdminRoleByID(c *fiber.Ctx) error {
+	if err := requireAdmin(c); err != nil {
+		return err
+	}
+
+	var role model.RoleAdmin
+	if err := GetOneBy("id", c, &role, nil, nil); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).SendDTO(200, &role, &DTO.AdminRole{})
+}
+
+// ListAdminRoles returns all admin roles
+//
+//	@Summary		List admin roles
+//	@Description	Get list of all admin roles
+//	@Tags			Admin Role
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Produce		json
+//	@Success		200	{array}	DTO.AdminRole
+//	@Router			/admin/role [get]
+func ListAdminRoles(c *fiber.Ctx) error {
 	if err := requireAdmin(c); err != nil {
 		return err
 	}
@@ -365,9 +306,9 @@ func ListRoles(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	roleList := make([]DTO.RoleAdminDetail, len(roles))
+	roleList := make([]DTO.AdminRole, len(roles))
 	for i, role := range roles {
-		roleList[i] = DTO.RoleAdminDetail{
+		roleList[i] = DTO.AdminRole{
 			ID:          role.ID,
 			Name:        role.Name,
 			Description: role.Description,
@@ -376,182 +317,52 @@ func ListRoles(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    roleList,
-	})
+	return lib.ResponseFactory(c).Send(200, roleList)
 }
 
-// CreateRole creates a new admin role
-// @Summary Create admin role
-// @Description Create a new admin role
-// @Tags Admin Roles
-// @Accept json
-// @Produce json
-// @Param role body DTO.RoleAdminCreateRequest true "Role data"
-// @Success 201 {object} DTO.RoleAdminDetail
-// @Security BearerAuth
-// @Router /admin/roles [post]
-func CreateRole(c *fiber.Ctx) error {
+// UpdateAdminRoleByID updates an admin role
+//
+//	@Summary		Update admin role
+//	@Description	Update an existing admin role
+//	@Tags			Admin Role
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Role ID"
+//	@Param			role	body		DTO.RoleAdminUpdateRequest	true	"Role update data"
+//	@Success		200		{object}	DTO.AdminRole
+//	@Router			/admin/role/{id} [patch]
+func UpdateAdminRoleByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
-	}
-
-	var req DTO.RoleAdminCreateRequest
-	if err := c.BodyParser(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid request body: %w", err))
-	}
-
-	if err := lib.MyCustomStructValidator(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(err)
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	role := model.RoleAdmin{
-		Name:        req.Name,
-		Description: req.Description,
-	}
-
-	if err := tx.Create(&role).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	response := DTO.RoleAdminDetail{
-		ID:          role.ID,
-		Name:        role.Name,
-		Description: role.Description,
-		CreatedAt:   role.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:   role.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
-}
-
-// UpdateRole updates an admin role
-// @Summary Update admin role
-// @Description Update an existing admin role
-// @Tags Admin Roles
-// @Accept json
-// @Produce json
-// @Param id path string true "Role ID"
-// @Param role body DTO.RoleAdminUpdateRequest true "Role update data"
-// @Success 200 {object} DTO.RoleAdminDetail
-// @Security BearerAuth
-// @Router /admin/roles/{id} [patch]
-func UpdateRole(c *fiber.Ctx) error {
-	if err := requireSuperAdmin(c); err != nil {
-		return err
-	}
-
-	roleID := c.Params("id")
-	if roleID == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("role ID required"))
-	}
-
-	roleUUID, err := uuid.Parse(roleID)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid role ID"))
-	}
-
-	var req DTO.RoleAdminUpdateRequest
-	if err := c.BodyParser(&req); err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid request body: %w", err))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	var role model.RoleAdmin
-	if err := tx.First(&role, roleUUID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("role not found"))
-		}
-		return lib.Error.General.InternalError.WithError(err)
+	if err := UpdateOneById(c, &role, nil); err != nil {
+		return err
 	}
-
-	if req.Name != nil {
-		role.Name = *req.Name
-	}
-	if req.Description != nil {
-		role.Description = *req.Description
-	}
-
-	if err := tx.Save(&role).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	response := DTO.RoleAdminDetail{
-		ID:          role.ID,
-		Name:        role.Name,
-		Description: role.Description,
-		CreatedAt:   role.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:   role.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
+	return lib.ResponseFactory(c).SendDTO(200, &role, &DTO.AdminRole{})
 }
 
-// DeleteRole soft deletes an admin role
-// @Summary Delete admin role
-// @Description Soft delete an admin role
-// @Tags Admin Roles
-// @Param id path string true "Role ID"
-// @Success 204
-// @Security BearerAuth
-// @Router /admin/roles/{id} [delete]
-func DeleteRole(c *fiber.Ctx) error {
+// DeleteAdminRoleByID soft deletes an admin role
+//
+//	@Summary		Delete admin role by ID
+//	@Description	Soft delete an admin role
+//	@Tags			Admin Role
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Failure		401				{object}	nil
+//	@Param			id				path		string	true	"Role ID"
+//	@Success		204
+//	@Router			/admin/role/{id} [delete]
+func DeleteAdminRoleByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
 	}
 
-	roleID := c.Params("id")
-	if roleID == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("role ID required"))
-	}
-
-	roleUUID, err := uuid.Parse(roleID)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid role ID"))
-	}
-
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	if err := lib.ChangeToPublicSchema(tx); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	result := tx.Delete(&model.RoleAdmin{}, roleUUID)
-	if result.Error != nil {
-		return lib.Error.General.InternalError.WithError(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("role not found"))
-	}
-
-	return c.SendStatus(fiber.StatusNoContent)
+	return DeleteOneById(c, &model.RoleAdmin{})
 }
 
 // =====================
@@ -569,6 +380,27 @@ func requireAdmin(c *fiber.Ctx) error {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin account is inactive"))
 	}
 	return nil
+}
+
+func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
+	tx, err := lib.Session(c)
+	if err != nil {
+		return false, lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := lib.ChangeToPublicSchema(tx); err != nil {
+		return false, lib.Error.General.InternalError.WithError(err)
+	}
+
+	var count int64
+	if err := tx.Model(&model.Admin{}).
+		Joins("JOIN admin_role_admins ON admin_role_admins.admin_id = admins.id").
+		Joins("JOIN role_admins ON role_admins.id = admin_role_admins.role_admin_id").
+		Where("role_admins.name = ?", "superadmin").
+		Count(&count).Error; err != nil {
+		return false, lib.Error.General.InternalError.WithError(err)
+	}
+	return count > 0, nil
 }
 
 // requireSuperAdmin checks if the request is from a superadmin
@@ -593,13 +425,17 @@ func requireSuperAdmin(c *fiber.Ctx) error {
 func Admin(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
+		AdminLoginByPassword,
+		GetAdminByID,
+		GetAdminByEmail,
 		ListAdmins,
 		CreateAdmin,
-		UpdateAdmin,
-		DeleteAdmin,
-		ListRoles,
-		CreateRole,
-		UpdateRole,
-		DeleteRole,
+		UpdateAdminByID,
+		DeleteAdminByID,
+		ListAdminRoles,
+		CreateAdminRole,
+		GetAdminRoleByID,
+		UpdateAdminRoleByID,
+		DeleteAdminRoleByID,
 	})
 }

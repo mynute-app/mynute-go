@@ -24,33 +24,6 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	method := c.Method()
 	routePath := c.Route().Path // Use routePath for consistency
 
-	// --- Check for Admin Authentication First ---
-	// Admins bypass tenant-based restrictions
-	adminClaims := c.Locals(namespace.RequestKey.Auth_Claims + "_admin")
-	if adminClaim, ok := adminClaims.(*DTO.AdminClaims); ok && adminClaim != nil && adminClaim.IsAdmin {
-		// Verify admin is active
-		if !adminClaim.IsActive {
-			return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin account is inactive"))
-		}
-
-		// Admins with superadmin role have full access
-		for _, role := range adminClaim.Roles {
-			switch role {
-			case model.RoleAdminSuperAdmin.Name:
-				return c.Next() // Grant full access to superadmins
-			case model.RoleAdminSupport.Name:
-				if method == "GET" || method == "PATCH" || method == "PUT" {
-					return c.Next() // Grant support access to read and modify
-				}
-			case model.RoleAdminAuditor.Name:
-				if method == "GET" {
-					return c.Next() // Grant auditor access to read-only
-				}
-			}
-		}
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin does not have sufficient role permissions"))
-	}
-
 	// --- Get Database Session ---
 	tx, err := lib.Session(c)
 	if err != nil {
@@ -88,15 +61,16 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	}
 
 	change_schema := func(schema string) error {
-		if schema == "public" {
+		switch schema {
+		case "public":
 			if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
 				return lib.Error.General.InternalError.WithError(err)
 			}
-		} else if schema == "company" {
+		case "company":
 			if err := lib.ChangeToCompanySchemaByContext(c); err != nil {
 				return lib.Error.General.InternalError.WithError(err)
 			}
-		} else {
+		default:
 			return lib.Error.General.AuthError.WithError(fmt.Errorf("invalid schema type: %s", schema))
 		}
 		return nil
@@ -105,15 +79,20 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 	var user any
 	var userIs string
 	var schema string
-	if claim.Type == namespace.ClientKey.Name {
+	switch claim.Type {
+	case namespace.ClientKey.Name:
 		userIs = "client"
 		user = &model.Client{ClientMeta: model.ClientMeta{BaseModel: model.BaseModel{ID: claim.ID}}}
 		schema = "public"
-	} else if claim.Type == namespace.EmployeeKey.Name {
+	case namespace.EmployeeKey.Name:
 		userIs = "employee"
 		user = &model.Employee{BaseModel: model.BaseModel{ID: claim.ID}}
 		schema = "company"
-	} else {
+	case namespace.AdminKey.Name:
+		userIs = "admin"
+		user = &model.Admin{BaseModel: model.BaseModel{ID: claim.ID}}
+		schema = "public"
+	default:
 		return lib.Error.General.AuthError.WithError(fmt.Errorf("unknown user type: %s", claim.Type))
 	}
 

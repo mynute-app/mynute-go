@@ -17,7 +17,6 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	Gorm := &handler.Gorm{DB: DB}
 
 	controller.Admin(Gorm)
-	controller.AdminAuth(Gorm)
 	controller.Appointment(Gorm)
 	controller.Auth(Gorm)
 	controller.Branch(Gorm)
