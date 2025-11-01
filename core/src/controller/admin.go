@@ -199,6 +199,7 @@ func UpdateAdminByID(c *fiber.Ctx) error {
 }
 
 // DeleteAdminByID soft deletes an admin
+//
 //	@Summary		Delete admin
 //	@Description	Soft delete an admin user
 //	@Tags			Admin
