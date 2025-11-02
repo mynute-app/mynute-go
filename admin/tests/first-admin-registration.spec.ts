@@ -1,20 +1,48 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('First Admin Registration', () => {
-  test('should show registration form when no admin exists', async ({ page }) => {
-    // Mock the API to return no admins
-    await page.route('**/api/admin/are_there_any_superadmin', (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ has_superadmin: false }),
-      });
-    });
+/**
+ * CRITICAL: First Admin Registration Tests
+ * 
+ * These tests MUST run before login tests to ensure the database is in a clean state.
+ * If these tests fail because a login form appears instead of registration form,
+ * it means an admin already exists in the database.
+ * 
+ * To fix: Clear all admins from the database before running tests:
+ * - Run: psql -U postgres -d testdb -c "DELETE FROM public.admins;"
+ * - Or: Restart the test database with fresh migrations
+ */
 
+test.describe.serial('First Admin Registration', () => {
+  test('SETUP: should show registration form when no admin exists', async ({ page }) => {
+    // This is a critical setup test that verifies the database is clean
+    // If this fails, it means admins already exist in the database
+    
     await page.goto('');
     
+    // Wait for the page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Check if we see the registration form or login form
+    const registrationHeading = page.locator('h1:has-text("Welcome to Mynute Admin")');
+    const loginHeading = page.locator('h1:has-text("Mynute Admin")');
+    
+    const hasRegistrationForm = await registrationHeading.isVisible().catch(() => false);
+    const hasLoginForm = await loginHeading.isVisible().catch(() => false);
+    
+    if (hasLoginForm && !hasRegistrationForm) {
+      throw new Error(
+        '\n\n❌ SETUP ERROR: Login form detected instead of registration form!\n' +
+        '   This means an admin already exists in the database.\n\n' +
+        '   To fix this:\n' +
+        '   1. Clear admins from the test database:\n' +
+        '      psql -U postgres -d testdb -c "DELETE FROM public.admins;"\n' +
+        '   2. Or restart the database with fresh migrations\n' +
+        '   3. Make sure APP_ENV=test is set\n\n'
+      );
+    }
+    
     // Should show registration form
-    await expect(page.locator('h1')).toContainText('Welcome to Mynute Admin');
+    await expect(registrationHeading).toBeVisible();
     await expect(page.locator('text=Create your first admin account')).toBeVisible();
     
     // Check for all required fields

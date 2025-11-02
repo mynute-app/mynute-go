@@ -3,19 +3,29 @@ import { defineConfig, devices } from '@playwright/test';
 // Helper to check if running in CI
 const isCI = process.env.CI === 'true';
 
+// CRITICAL: Tests must only run in test environment
+const APP_ENV = process.env.APP_ENV || 'dev';
+
+if (APP_ENV !== 'test') {
+  console.error('\n❌ ERROR: Frontend tests can only run when APP_ENV=test');
+  console.error(`Current APP_ENV: ${APP_ENV}`);
+  console.error('\nTo run tests, set APP_ENV=test in your environment or .env file\n');
+  process.exit(1);
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false, // Changed to false to ensure proper test order
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: isCI,
   /* Retry on CI only */
   retries: isCI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: isCI ? 1 : undefined,
+  workers: 1, // Force single worker to ensure test order
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
