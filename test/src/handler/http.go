@@ -52,16 +52,16 @@ func (h *httpActions) URL(url string) *httpActions {
 	if strings.HasPrefix(url, "http://localhost:") || strings.HasPrefix(url, "https://localhost:") {
 		BaseUrl = ""
 	}
-	
+
 	// Auto-prepend /api for API endpoints (except public pages)
-	if !strings.HasPrefix(url, "/api") && 
-	   !strings.HasPrefix(url, "http") &&
-	   url != "/" && 
-	   url != "/verify-email" && 
-	   !strings.HasPrefix(url, "/translations") {
+	if !strings.HasPrefix(url, "/api") &&
+		!strings.HasPrefix(url, "http") &&
+		url != "/" &&
+		url != "/verify-email" &&
+		!strings.HasPrefix(url, "/translations") {
 		url = "/api" + url
 	}
-	
+
 	FullUrl := fmt.Sprintf(BaseUrl + url)
 	h.url = FullUrl
 	return h
