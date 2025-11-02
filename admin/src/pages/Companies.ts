@@ -20,7 +20,7 @@ export default function Companies() {
     };
 
     const handleView = (id: string) => {
-        route(`/admin/companies/${id}`);
+        route(`/companies/${id}`);
     };
 
     const filteredCompanies = companyStore.companies.value.filter((company: Company) =>

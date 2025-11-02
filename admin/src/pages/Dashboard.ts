@@ -27,21 +27,21 @@ export default function Dashboard() {
             value: companyStore.companies.value.length, 
             color: 'bg-purple-500',
             icon: '🏢',
-            onClick: () => route('/admin/companies')
+            onClick: () => route('/companies')
         },
         { 
             label: 'Total Clients', 
             value: clientStore.clients.value.length, 
             color: 'bg-blue-500',
             icon: '👥',
-            onClick: () => route('/admin/clients')
+            onClick: () => route('/clients')
         },
         { 
             label: 'Admin Users', 
             value: adminStore.admins.value.length, 
             color: 'bg-green-500',
             icon: '🔐',
-            onClick: () => route('/admin/users')
+            onClick: () => route('/users')
         },
         { 
             label: 'System Status', 
@@ -85,21 +85,21 @@ export default function Dashboard() {
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <div class="space-y-3">
                         <button
-                            onClick=${() => route('/admin/companies')}
+                            onClick=${() => route('/companies')}
                             class="w-full text-left px-4 py-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors"
                         >
                             <div class="font-medium text-purple-900">View All Companies</div>
                             <div class="text-sm text-purple-600">Manage tenants and their data</div>
                         </button>
                         <button
-                            onClick=${() => route('/admin/clients')}
+                            onClick=${() => route('/clients')}
                             class="w-full text-left px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
                         >
                             <div class="font-medium text-blue-900">View All Clients</div>
                             <div class="text-sm text-blue-600">Browse registered clients</div>
                         </button>
                         <button
-                            onClick=${() => route('/admin/users')}
+                            onClick=${() => route('/users')}
                             class="w-full text-left px-4 py-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
                         >
                             <div class="font-medium text-green-900">Manage Admins</div>
