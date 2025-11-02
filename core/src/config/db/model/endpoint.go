@@ -106,9 +106,6 @@ var AdminLoginByPassword = &EndPoint{
 	ControllerName: "AdminLoginByPassword",
 	Description:    "Admin login",
 }
-
-// --- Admin Management Endpoints --- //
-
 var GetAdminByID = &EndPoint{
 	Path:             "/admin/:id",
 	Method:           namespace.ViewActionMethod,

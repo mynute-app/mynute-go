@@ -485,6 +485,8 @@ func Admin(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
 	endpoint.BulkRegisterHandler([]fiber.Handler{
 		AdminLoginByPassword,
+		AreThereAnyAdmin,
+		CreateFirstAdmin,
 		GetAdminByID,
 		GetAdminByEmail,
 		ListAdmins,

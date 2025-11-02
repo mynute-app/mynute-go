@@ -194,9 +194,7 @@ func checkSuperAdminExists() (bool, error) {
 		Error
 
 	if err != nil {
-		// If we get an error, assume we need to try creating first superadmin
-		// This handles both: endpoint requires auth OR endpoint doesn't exist
-		return false, nil
+		return false, err
 	}
 
 	hasSuperAdmin, ok := response["has_superadmin"]
@@ -246,7 +244,11 @@ func (a *Admin) Create(s int, roles ...string) (*Admin, error) {
 	}
 
 	// Check if we should try creating the first superadmin
-	hasSuperAdmin, _ := checkSuperAdminExists()
+	hasSuperAdmin, err := checkSuperAdminExists()
+
+	if err != nil {
+		return nil, err
+	}
 
 	if !hasSuperAdmin && len(roles) == 1 && roles[0] == "superadmin" {
 		// Try creating as first superadmin (no auth required)
