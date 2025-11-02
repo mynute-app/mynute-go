@@ -41,6 +41,24 @@ func AdminLoginByPassword(c *fiber.Ctx) error {
 // ADMIN MANAGEMENT
 // =====================
 
+// AreThereAnyAdmin checks if there are any superadmin users in the system
+//
+//	@Summary		Check for superadmin existence
+//	@Description	Check if there are any superadmin users in the system
+//	@Tags			Admin
+//	@Produce		json
+//	@Success		200	{object}	map[string]bool
+//	@Router			/admin/are_there_any_superadmin [get]
+func AreThereAnyAdmin(c *fiber.Ctx) error {
+	hasAdmin, err := areThereAnySuperAdmin(c)
+	if err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).Send(200, map[string]bool{
+		"has_superadmin": hasAdmin,
+	})
+}
+
 // CreateFirstAdmin creates the first admin user in the system
 //
 //	@Summary		Create first admin
@@ -51,6 +69,7 @@ func AdminLoginByPassword(c *fiber.Ctx) error {
 //	@Param			admin	body		DTO.Admin	true	"Admin creation data"
 //	@Success		201		{object}	DTO.Admin
 //	@Failure		400		{object}	lib.ErrorResponse
+//	@Router			/admin/first_superadmin [post]
 func CreateFirstAdmin(c *fiber.Ctx) error {
 	hasSuperAdmin, err := areThereAnySuperAdmin(c)
 	if err != nil {

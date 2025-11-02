@@ -17,7 +17,7 @@ func Test_Admin(t *testing.T) {
 
 	// Initialize the admin model
 	admin := &model.Admin{}
-	
+
 	// Check if a superadmin exists
 	var superadmin *model.Admin
 	tt.Describe("Check if superadmin exists and create first admin").Test(func() error {

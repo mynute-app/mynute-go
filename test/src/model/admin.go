@@ -257,13 +257,13 @@ func (*Admin) CreateFirstSuperAdmin(s int) (*Admin, error) {
 func (a *Admin) Create(s int, roles ...string) (*Admin, error) {
 	// Try creating with the first_superadmin endpoint first (doesn't require auth)
 	// If it fails because a superadmin already exists, fall back to regular create
-	
+
 	// First, try to create as first superadmin
 	firstAdmin, err := a.createAsFirstSuperAdmin(s)
 	if err == nil {
 		return firstAdmin, nil
 	}
-	
+
 	// If that failed, try regular admin creation (requires authentication)
 	return a.createRegularAdmin(s, roles...)
 }
