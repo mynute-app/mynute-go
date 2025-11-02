@@ -19,14 +19,14 @@ import (
 // AdminLoginByPassword handles admin authentication
 //
 //	@Summary		Admin login
-//	@Description	Authenticate admin user and return JWT token
+//	@Description	Authenticate admin user and return JWT token in X-Auth-Token header
 //	@Tags			Admin Auth
 //	@Accept			json
 //	@Produce		json
 //	@Param			login	body		DTO.AdminLoginRequest	true	"Admin login credentials"
-//	@Success		200		{object}	DTO.AdminLoginResponse
-//	@Failure		401		{object}	lib.ErrorResponse
-//	@Failure		400		{object}	lib.ErrorResponse
+//	@Success		200		"Token returned in X-Auth-Token header"
+//	@Failure		401		{object}	DTO.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/login [post]
 func AdminLoginByPassword(c *fiber.Ctx) error {
 	token, err := LoginByPassword(namespace.AdminKey.Name, &model.Admin{}, c)
@@ -68,7 +68,7 @@ func AreThereAnyAdmin(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			admin	body		DTO.Admin	true	"Admin creation data"
 //	@Success		201		{object}	DTO.Admin
-//	@Failure		400		{object}	lib.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/first_superadmin [post]
 func CreateFirstAdmin(c *fiber.Ctx) error {
 	hasSuperAdmin, err := areThereAnySuperAdmin(c)
@@ -93,7 +93,7 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			admin	body		DTO.Admin	true	"Admin creation data"
 //	@Success		201		{object}	DTO.Admin
-//	@Failure		400		{object}	lib.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
@@ -153,7 +153,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Admin ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Admin
-//	@Failure		404	{object}	lib.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/admin/{id} [get]
 func GetAdminByID(c *fiber.Ctx) error {
 	if err := requireAdmin(c); err != nil {
@@ -178,7 +178,7 @@ func GetAdminByID(c *fiber.Ctx) error {
 //	@Param			email			path		string	true	"Admin email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Admin
-//	@Failure		404	{object}	lib.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/admin/email/{email} [get]
 func GetAdminByEmail(c *fiber.Ctx) error {
 	if err := requireAdmin(c); err != nil {
@@ -243,8 +243,8 @@ func ListAdmins(c *fiber.Ctx) error {
 //	@Param			id		path		string		true	"Admin ID"
 //	@Param			admin	body		DTO.Admin	true	"Admin update data"
 //	@Success		200		{object}	DTO.Admin
-//	@Failure		400		{object}	lib.ErrorResponse
-//	@Failure		404		{object}	lib.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/admin/{id} [patch]
 func UpdateAdminByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -268,7 +268,7 @@ func UpdateAdminByID(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Admin ID"
 //	@Success		204
-//	@Failure		404	{object}	lib.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/admin/{id} [delete]
 func DeleteAdminByID(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -321,7 +321,7 @@ func CreateAdminRole(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Role ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.AdminRole
-//	@Failure		404	{object}	lib.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/admin/role/{id} [get]
 func GetAdminRoleByID(c *fiber.Ctx) error {
 	if err := requireAdmin(c); err != nil {

@@ -18,6 +18,11 @@ const docTemplate = `{
     "paths": {
         "/admin": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get list of all admin users with their roles",
                 "produces": [
                     "application/json"
@@ -26,6 +31,15 @@ const docTemplate = `{
                     "Admin"
                 ],
                 "summary": "List all admins",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -35,10 +49,18 @@ const docTemplate = `{
                                 "$ref": "#/definitions/DTO.AdminList"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a new admin user",
                 "consumes": [
                     "application/json"
@@ -51,6 +73,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create admin",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Admin creation data",
                         "name": "admin",
@@ -73,12 +102,43 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/admin/are_there_any_superadmin": {
+            "get": {
+                "description": "Check if there are any superadmin users in the system",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Check for superadmin existence",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
                     }
                 }
             }
         },
         "/admin/email/{email}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an admin by email address",
                 "produces": [
                     "application/json"
@@ -88,6 +148,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get admin by email",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Admin email",
@@ -103,8 +170,51 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Admin"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/first_superadmin": {
+            "post": {
+                "description": "Create the first admin user in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Create first admin",
+                "parameters": [
+                    {
+                        "description": "Admin creation data",
+                        "name": "admin",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Admin"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.Admin"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
@@ -138,7 +248,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "X-Auth-Token header contains JWT token"
+                        "description": "Token returned in X-Auth-Token header"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -157,6 +267,11 @@ const docTemplate = `{
         },
         "/admin/role": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get list of all admin roles",
                 "produces": [
                     "application/json"
@@ -165,6 +280,15 @@ const docTemplate = `{
                     "Admin Role"
                 ],
                 "summary": "List admin roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -174,10 +298,18 @@ const docTemplate = `{
                                 "$ref": "#/definitions/DTO.AdminRole"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a new admin role",
                 "consumes": [
                     "application/json"
@@ -190,6 +322,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create admin role",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "Role data",
                         "name": "role",
@@ -206,12 +345,20 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.AdminRole"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/admin/role/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an admin role by its ID",
                 "produces": [
                     "application/json"
@@ -221,6 +368,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get admin role by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Role ID",
@@ -236,6 +390,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.AdminRole"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -245,12 +402,24 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Soft delete an admin role",
                 "tags": [
                     "Admin Role"
                 ],
                 "summary": "Delete admin role by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Role ID",
@@ -262,10 +431,18 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update an existing admin role",
                 "consumes": [
                     "application/json"
@@ -278,6 +455,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update admin role",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Role ID",
@@ -301,12 +485,20 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.AdminRole"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
         "/admin/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieve an admin by its ID",
                 "produces": [
                     "application/json"
@@ -316,6 +508,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Admin ID",
@@ -331,6 +530,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/DTO.Admin"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -340,12 +542,24 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Soft delete an admin user",
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Delete admin",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Admin ID",
@@ -358,6 +572,9 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content"
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -367,6 +584,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update admin user information",
                 "consumes": [
                     "application/json"
@@ -379,6 +601,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update admin",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Admin ID",
@@ -408,6 +637,9 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "Not Found",
