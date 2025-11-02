@@ -6,39 +6,185 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/email"
 	"mynute-go/test/src/handler"
+	"net/url"
 
 	"github.com/google/uuid"
 )
 
 type Admin struct {
 	Created      *model.Admin
-	Roles        []model.RoleAdmin
 	X_Auth_Token string
 }
 
 // Set creates and configures a complete admin user for testing
-func (a *Admin) Set() error {
-	if err := a.Create(200); err != nil {
+func (A *Admin) Set(roles []string, newAdmin *Admin) error {
+	if len(roles) == 0 {
+		roles = []string{"superadmin"}
+	}
+	var a *Admin
+	if newAdmin == nil {
+		a = A
+	} else {
+		a = newAdmin
+	}
+	a, err := a.Create(200, roles...)
+	if err != nil {
 		return err
 	}
-	if err := a.Login(200, a.Created.Password); err != nil {
+	if err := a.VerifyEmail(200); err != nil {
 		return err
 	}
-	if err := a.GetMe(200); err != nil {
+	if err := a.LoginByPassword(200, a.Created.Password); err != nil {
+		return err
+	}
+	if err := a.ResetPasswordByEmail(200); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Create creates a new admin user
-func (a *Admin) Create(s int, roles ...string) error {
-	pswd := lib.GenerateValidPassword()
-
-	// Default to support role if no roles specified
-	if len(roles) == 0 {
-		roles = []string{"support"}
+func (a *Admin) SendPasswordResetEmail(s int) error {
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("POST").
+		URL(fmt.Sprintf("/admin/reset-password/%s?lang=en", url.PathEscape(a.Created.Email))).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to send password reset email to client: %w", err)
 	}
+	return nil
+}
+
+func (a *Admin) GetNewPasswordFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the admin
+	message, err := mailhog.GetLatestMessageTo(a.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the new password from the email
+	password, err := message.ExtractPassword()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract password: %w", err)
+	}
+
+	return password, nil
+}
+
+func (a *Admin) ResetPasswordByEmail(s int) error {
+	if err := a.SendPasswordResetEmail(s); err != nil {
+		return fmt.Errorf("failed to send password reset email: %w", err)
+	}
+
+	newPassword, err := a.GetNewPasswordFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get new password from email: %w", err)
+	}
+
+	// Update the password in memory
+	a.Created.Password = newPassword
+
+	// Try to login with the new password
+	if err := a.LoginByPassword(200, a.Created.Password); err != nil {
+		return fmt.Errorf("failed to login with new password: %w", err)
+	}
+
+	return nil
+}
+
+func (a *Admin) SendVerificationEmail(s int) error {
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL(fmt.Sprintf("/admin/send-verification-code/email/%s?language=en", url.PathEscape(a.Created.Email))).
+		ExpectedStatus(s).
+		Header(namespace.HeadersKey.Auth, a.X_Auth_Token).
+		Send(nil).
+		Error; err != nil {
+		return fmt.Errorf("failed to send verification email: %w", err)
+	}
+	return nil
+}
+
+func (a *Admin) GetVerificationCodeFromEmail() (string, error) {
+	// Initialize MailHog client
+	mailhog, err := email.MailHog()
+	if err != nil {
+		return "", err
+	}
+
+	// Get the latest email sent to the client
+	message, err := mailhog.GetLatestMessageTo(a.Created.Email)
+	if err != nil {
+		return "", err
+	}
+
+	// Verify the email has a subject
+	if message.GetSubject() == "" {
+		return "", fmt.Errorf("email subject is empty")
+	}
+
+	// Extract the verification code from the email
+	code, err := message.ExtractValidationCode()
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
+}
+
+func (a *Admin) VerifyEmailByCode(s int, code string) error {
+	http := handler.NewHttpClient()
+	if err := http.
+		Method("GET").
+		URL(fmt.Sprintf("/admin/verify-email/%s/%s", url.PathEscape(a.Created.Email), code)).
+		ExpectedStatus(s).
+		Send(nil).Error; err != nil {
+		return fmt.Errorf("failed to verify admin email: %w", err)
+	}
+
+	if s == 200 {
+		// Refresh admin data after verification
+		if err := a.GetByID(200); err != nil {
+			return fmt.Errorf("failed to get admin by email after verification: %w", err)
+		}
+	}
+	return nil
+}
+
+func (a *Admin) VerifyEmail(s int) error {
+	if err := a.SendVerificationEmail(s); err != nil {
+		return fmt.Errorf("failed to send verification email: %w", err)
+	}
+
+	code, err := a.GetVerificationCodeFromEmail()
+	if err != nil {
+		return fmt.Errorf("failed to get verification code from email: %w", err)
+	}
+
+	if err := a.VerifyEmailByCode(s, code); err != nil {
+		return fmt.Errorf("failed to verify email with code: %w", err)
+	}
+
+	return nil
+}
+
+// Create creates a new admin user
+func (*Admin) Create(s int, roles ...string) (*Admin, error) {
+	var a Admin
+	pswd := lib.GenerateValidPassword()
 
 	createReq := DTO.AdminCreateRequest{
 		Name:     lib.GenerateRandomName("Admin"),
@@ -48,42 +194,57 @@ func (a *Admin) Create(s int, roles ...string) error {
 		Roles:    roles,
 	}
 
-	var response struct {
-		Data DTO.Admin `json:"data"`
-	}
-
-	if err := handler.NewHttpClient().
+	client := handler.NewHttpClient().
 		Method("POST").
 		URL("/admin").
-		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, a.X_Auth_Token).
-		Send(createReq).
-		ParseResponse(&response).
-		Error; err != nil {
-		return fmt.Errorf("failed to create admin: %w", err)
+		ExpectedStatus(s)
+
+	// Only add auth header if token is not empty
+	if a.X_Auth_Token != "" {
+		client.Header(namespace.HeadersKey.Auth, a.X_Auth_Token)
 	}
 
-	// Map the response to the admin model
-	if s >= 200 && s < 300 {
-		a.Created = &model.Admin{
-			BaseModel: model.BaseModel{ID: response.Data.ID},
-			Name:      response.Data.Name,
-			Email:     response.Data.Email,
-			Password:  pswd, // Store the plain password for future login tests
-			IsActive:  response.Data.IsActive,
+	// Parse response as DTO first
+	var dtoAdmin DTO.Admin
+	if err := client.Send(createReq).
+		ParseResponse(&dtoAdmin).
+		Error; err != nil {
+		return nil, fmt.Errorf("failed to create admin: %w", err)
+	}
+
+	// Convert DTO to model.Admin
+	a.Created = &model.Admin{
+		BaseModel: model.BaseModel{
+			ID: dtoAdmin.ID,
+		},
+		Name:     dtoAdmin.Name,
+		Email:    dtoAdmin.Email,
+		Password: pswd, // Store the password we used to create
+		IsActive: dtoAdmin.IsActive,
+		Roles:    make([]model.RoleAdmin, len(dtoAdmin.Roles)),
+	}
+
+	// Convert roles from DTO to model
+	for i, dtoRole := range dtoAdmin.Roles {
+		a.Created.Roles[i] = model.RoleAdmin{
+			BaseModel: model.BaseModel{
+				ID: dtoRole.ID,
+			},
+			Name:        dtoRole.Name,
+			Description: dtoRole.Description,
 		}
 	}
 
-	return nil
+	return &a, nil
 }
 
 // CreateSuperAdmin creates a new superadmin user
-func (a *Admin) CreateSuperAdmin(s int) error {
+func (a *Admin) CreateSuperAdmin(s int) (*Admin, error) {
 	return a.Create(s, "superadmin")
 }
 
 // Login authenticates an admin user
-func (a *Admin) Login(s int, password string) error {
+func (a *Admin) LoginByPassword(s int, password string) error {
 	loginReq := DTO.AdminLoginRequest{
 		Email:    a.Created.Email,
 		Password: password,
@@ -107,8 +268,8 @@ func (a *Admin) Login(s int, password string) error {
 	return nil
 }
 
-// GetMe retrieves the current admin's information using GetAdminByID
-func (a *Admin) GetMe(s int) error {
+// GetByID retrieves the admin's information by ID
+func (a *Admin) GetByID(s int) error {
 	var adminDetail DTO.Admin
 	if err := handler.NewHttpClient().
 		Method("GET").
@@ -125,30 +286,6 @@ func (a *Admin) GetMe(s int) error {
 		a.Created.Name = adminDetail.Name
 		a.Created.Email = adminDetail.Email
 		a.Created.IsActive = adminDetail.IsActive
-	}
-
-	return nil
-}
-
-// RefreshToken refreshes the admin's JWT token
-func (a *Admin) RefreshToken(s int) error {
-	var tokenResp struct {
-		Token string `json:"token"`
-	}
-
-	if err := handler.NewHttpClient().
-		Method("POST").
-		URL("/admin/auth/refresh").
-		ExpectedStatus(s).
-		Header(namespace.HeadersKey.Auth, a.X_Auth_Token).
-		Send(nil).
-		ParseResponse(&tokenResp).
-		Error; err != nil {
-		return fmt.Errorf("failed to refresh admin token: %w", err)
-	}
-
-	if s == 200 {
-		a.X_Auth_Token = tokenResp.Token
 	}
 
 	return nil
@@ -203,6 +340,19 @@ func (a *Admin) Update(s int, adminID uuid.UUID, changes map[string]any) error {
 		a.Created.Name = response.Data.Name
 		a.Created.Email = response.Data.Email
 		a.Created.IsActive = response.Data.IsActive
+
+		// Convert roles from DTO to model
+		a.Created.Roles = make([]model.RoleAdmin, len(response.Data.Roles))
+		for i, dtoRole := range response.Data.Roles {
+			a.Created.Roles[i] = model.RoleAdmin{
+				BaseModel: model.BaseModel{
+					ID: dtoRole.ID,
+				},
+				Name:        dtoRole.Name,
+				Description: dtoRole.Description,
+			}
+		}
+
 		// If password was updated, store the new plain password for future login tests
 		if newPass, ok := changes["password"].(string); ok {
 			a.Created.Password = newPass

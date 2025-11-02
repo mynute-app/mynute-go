@@ -59,7 +59,8 @@ func AdminLoginByPassword(c *fiber.Ctx) error {
 //	@Router			/admin [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
-	if hasSuperAdmin, err := areThereAnySuperAdmin(c); err != nil {
+	hasSuperAdmin, err := areThereAnySuperAdmin(c)
+	if err != nil {
 		return err
 	} else if hasSuperAdmin {
 		if err := requireSuperAdmin(c); err != nil {
@@ -71,6 +72,35 @@ func CreateAdmin(c *fiber.Ctx) error {
 	if err := Create(c, &admin); err != nil {
 		return err
 	}
+
+	if !hasSuperAdmin {
+		// If this is the first admin being created, assign superadmin role
+		tx, err := lib.Session(c)
+		if err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		// Find the superadmin role
+		var superadminRole model.RoleAdmin
+		if err := tx.Where("name = ?", "superadmin").First(&superadminRole).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		// Append the role to admin
+		if err := tx.Model(&admin).Association("Roles").Append(&superadminRole); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	// Reload admin with roles preloaded
+	tx, err := lib.Session(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if err := tx.Preload("Roles").First(&admin, admin.ID).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	return lib.ResponseFactory(c).SendDTO(201, &admin, &DTO.Admin{})
 }
 

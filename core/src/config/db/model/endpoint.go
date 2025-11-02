@@ -135,7 +135,7 @@ var CreateAdmin = &EndPoint{
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "CreateAdmin",
 	Description:      "Create a new admin",
-	DenyUnauthorized: true,
+	DenyUnauthorized: false, // Bootstrap case: allows first admin creation without auth
 }
 var UpdateAdminByID = &EndPoint{
 	Path:             "/admin/:id",

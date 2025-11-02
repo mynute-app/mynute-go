@@ -1,4 +1,64 @@
 definitions:
+  DTO.Admin:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/DTO.AdminRole'
+        type: array
+    type: object
+  DTO.AdminList:
+    properties:
+      admins:
+        items:
+          $ref: '#/definitions/DTO.Admin'
+        type: array
+      total:
+        example: 1
+        type: integer
+    type: object
+  DTO.AdminLoginRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  DTO.AdminRole:
+    properties:
+      created_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Full access to all resources
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: superadmin
+        type: string
+      updated_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+    type: object
   DTO.Appointment:
     properties:
       branch_id:
@@ -788,6 +848,30 @@ definitions:
       password:
         type: string
     type: object
+  DTO.RoleAdminCreateRequest:
+    properties:
+      description:
+        example: Customer support role with limited access
+        type: string
+      name:
+        example: support
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - name
+    type: object
+  DTO.RoleAdminUpdateRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      name:
+        example: support
+        maxLength: 100
+        minLength: 3
+        type: string
+    type: object
   DTO.RolePopulated:
     properties:
       company_id:
@@ -1146,6 +1230,271 @@ info:
   title: GO-Fiber API
   version: "1.0"
 paths:
+  /admin:
+    get:
+      description: Get list of all admin users with their roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/DTO.AdminList'
+            type: array
+      summary: List all admins
+      tags:
+      - Admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin user
+      parameters:
+      - description: Admin creation data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Admin'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/DTO.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Create admin
+      tags:
+      - Admin
+  /admin/{id}:
+    delete:
+      description: Soft delete an admin user
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Delete admin
+      tags:
+      - Admin
+    get:
+      description: Retrieve an admin by its ID
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get admin by ID
+      tags:
+      - Admin
+    patch:
+      consumes:
+      - application/json
+      description: Update admin user information
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Admin update data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Admin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Update admin
+      tags:
+      - Admin
+  /admin/email/{email}:
+    get:
+      description: Retrieve an admin by email address
+      parameters:
+      - description: Admin email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get admin by email
+      tags:
+      - Admin
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate admin user and return JWT token in X-Auth-Token header
+      parameters:
+      - description: Admin login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: X-Auth-Token header contains JWT token
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Admin Auth
+  /admin/role:
+    get:
+      description: Get list of all admin roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/DTO.AdminRole'
+            type: array
+      summary: List admin roles
+      tags:
+      - Admin Role
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin role
+      parameters:
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.RoleAdminCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/DTO.AdminRole'
+      summary: Create admin role
+      tags:
+      - Admin Role
+  /admin/role/{id}:
+    delete:
+      description: Soft delete an admin role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      summary: Delete admin role by ID
+      tags:
+      - Admin Role
+    get:
+      description: Retrieve an admin role by its ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AdminRole'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Get admin role by ID
+      tags:
+      - Admin Role
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing admin role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.RoleAdminUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AdminRole'
+      summary: Update admin role
+      tags:
+      - Admin Role
   /appointment:
     post:
       consumes:
@@ -2041,7 +2390,7 @@ paths:
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client ID
@@ -2060,6 +2409,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Get client by ID

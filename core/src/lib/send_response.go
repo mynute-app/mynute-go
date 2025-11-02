@@ -138,7 +138,6 @@ func (sr *SendResponseStruct) sendError(s int, err error) error {
 	})
 }
 
-
 func (sr *SendResponseStruct) sendStatus(s int) error {
 	if err := sr.Ctx.SendStatus(s); err != nil {
 		sr.saveError(err)
