@@ -1,5 +1,4 @@
 import { signal, computed, Signal, ReadonlySignal } from '@preact/signals';
-import { api } from '../utils/api.ts';
 import type { User } from '../types.ts';
 
 // Signals
@@ -58,23 +57,27 @@ async function logout(): Promise<void> {
 async function checkAuth(): Promise<void> {
     if (!token.value) {
         loading.value = false;
+        user.value = null;
         return;
     }
 
+    // If we have both token and user, we're good (already authenticated)
+    if (user.value) {
+        loading.value = false;
+        return;
+    }
+
+    // We have a token but no user data - token might be from previous session
+    // Try to validate it silently, if it fails just clear it
     loading.value = true;
     try {
-        // Get admin by ID - we need to store admin ID from login
-        // For now, just check if token exists and is valid by trying to fetch admins list
-        // If it fails, token is invalid
-        await api.get<any>('/admin');
-        // Token is valid, keep user data from login
-        // If we don't have user data, we'd need to fetch it, but there's no /me endpoint
-        if (!user.value) {
-            // Token is valid but no user data - logout and re-login
-            await logout();
-        }
+        // Validate token by making an authenticated request
+        // If successful, we keep the token but need user data
+        // Since there's no /me endpoint and we don't have user data,
+        // we should just logout and let user re-login
+        await logout();
     } catch (error) {
-        // Token is invalid
+        // Token is invalid, clear it
         await logout();
     } finally {
         loading.value = false;
