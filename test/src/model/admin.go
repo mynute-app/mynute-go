@@ -155,12 +155,8 @@ func (a *Admin) VerifyEmailByCode(s int, code string) error {
 		return fmt.Errorf("failed to verify admin email: %w", err)
 	}
 
-	if s == 200 {
-		// Refresh admin data after verification
-		if err := a.GetByID(200); err != nil {
-			return fmt.Errorf("failed to get admin by email after verification: %w", err)
-		}
-	}
+	// Note: Admin data will be refreshed after login, no need to fetch it here
+	// since we don't have an auth token yet
 	return nil
 }
 

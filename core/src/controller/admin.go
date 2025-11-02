@@ -132,7 +132,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 		Email:    req.Email,
 		Password: req.Password,
 		IsActive: req.IsActive,
-		Verified: true, // Admins are auto-verified (no email verification workflow)
+		Verified: false, // Admins must verify email before login
 	}
 
 	// Create admin in database (BeforeCreate hook will validate and hash password)

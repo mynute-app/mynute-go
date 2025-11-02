@@ -174,7 +174,7 @@ var SendAdminVerificationCodeByEmail = &EndPoint{
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "SendAdminVerificationCodeByEmail",
 	Description:      "Send verification code to admin email",
-	DenyUnauthorized: true,
+	DenyUnauthorized: false, // Public endpoint for email verification
 }
 var VerifyAdminEmail = &EndPoint{
 	Path:             "/admin/verify-email/:email/:code",

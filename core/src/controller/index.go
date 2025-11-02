@@ -203,9 +203,17 @@ func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
 	protocol := c.Protocol()
 	host := c.Hostname()
 	var verificationLink string
-	if company_id != "" {
+
+	// Detect if this is an admin by checking the model type
+	modelType := reflect.TypeOf(model).String()
+	if modelType == "*model.Admin" {
+		// Admin verification link
+		verificationLink = fmt.Sprintf("%s://%s/admin/verify-email/%s/%s?lang=%s", protocol, host, user_email, code, language)
+	} else if company_id != "" {
+		// Employee verification link
 		verificationLink = fmt.Sprintf("%s://%s/verify-email?email=%s&company_id=%s&type=employee&lang=%s&code=%s", protocol, host, user_email, company_id, language, code)
 	} else {
+		// Client verification link
 		verificationLink = fmt.Sprintf("%s://%s/verify-email?email=%s&type=client&lang=%s&code=%s", protocol, host, user_email, language, code)
 	}
 
