@@ -15,7 +15,7 @@ func Test_Admin(t *testing.T) {
 
 	tt := handler.NewTestErrorHandler(t)
 
-	var superadmin *model.Admin
+	superadmin := &model.Admin{}
 
 	// Create first admin - Set will automatically handle whether it's the first superadmin or not
 	tt.Describe("Create first admin").Test(superadmin.Set([]string{}, nil))
