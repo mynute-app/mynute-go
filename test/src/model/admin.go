@@ -192,7 +192,7 @@ func checkSuperAdminExists() (bool, error) {
 		Send(nil).
 		ParseResponse(&response).
 		Error
-	
+
 	if err != nil {
 		// If we get an error, assume we need to try creating first superadmin
 		// This handles both: endpoint requires auth OR endpoint doesn't exist
@@ -247,7 +247,7 @@ func (a *Admin) Create(s int, roles ...string) (*Admin, error) {
 
 	// Check if we should try creating the first superadmin
 	hasSuperAdmin, _ := checkSuperAdminExists()
-	
+
 	if !hasSuperAdmin && len(roles) == 1 && roles[0] == "superadmin" {
 		// Try creating as first superadmin (no auth required)
 		admin, err := a.createFirstSuperAdmin(s, roles)
@@ -276,6 +276,7 @@ func (a *Admin) createFirstSuperAdmin(s int, roles []string) (*Admin, error) {
 	var dtoAdmin DTO.Admin
 	if err := handler.NewHttpClient().
 		Method("POST").
+		ExpectedStatus(s).
 		URL("/admin/first_superadmin").
 		Send(createReq).
 		ParseResponse(&dtoAdmin).
