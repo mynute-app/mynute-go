@@ -12,6 +12,7 @@ import (
 	"mynute-go/core/src/middleware"
 	"mynute-go/debug"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -48,7 +49,19 @@ func NewServer() *Server {
 	}
 
 	app.Static("/", "./static")
-	app.Static("/admin", "./admin")
+	
+	// Serve admin panel with correct MIME types for TypeScript files
+	app.Static("/admin", "./admin", fiber.Static{
+		Browse: false,
+		// Ensure TypeScript files are served with correct MIME type
+		ModifyResponse: func(c *fiber.Ctx) error {
+			if strings.HasSuffix(c.Path(), ".ts") {
+				c.Set("Content-Type", "application/javascript; charset=utf-8")
+			}
+			return nil
+		},
+	})
+	
 	routes.Build(db.Gorm, app)
 
 	// Setup live reload for development (admin panel)
