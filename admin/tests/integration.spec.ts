@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 
 test.describe('Error Handling and Edge Cases', () => {
   test('should handle API errors on companies page', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     // Wait for potential error or loading state
     await page.waitForTimeout(2000);
@@ -16,7 +16,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should handle API errors on clients page', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(2000);
     
@@ -29,7 +29,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should show loading state on companies page', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     // Should briefly show loading or go straight to content
     const loadingVisible = await page.locator('text=/Loading companies/i').isVisible().catch(() => false);
@@ -39,7 +39,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should show loading state on clients page', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     // Should briefly show loading or go straight to content
     const loadingVisible = await page.locator('text=/Loading clients/i').isVisible().catch(() => false);
@@ -48,7 +48,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should handle empty search results on companies', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -62,7 +62,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should handle empty search results on clients', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -77,7 +77,7 @@ test.describe('Error Handling and Edge Cases', () => {
 
   test('should handle missing company data gracefully', async ({ authenticatedPage: page }) => {
     // Try to access company with very high ID
-    await page.goto('http://localhost:3000/admin/companies/999999');
+    await page.goto('/companies/999999');
     
     await page.waitForTimeout(1500);
     
@@ -91,7 +91,7 @@ test.describe('Error Handling and Edge Cases', () => {
 
   test('should handle network errors gracefully', async ({ authenticatedPage: page }) => {
     // This test checks if the app handles offline state
-    await page.goto('http://localhost:3000/admin/dashboard');
+    await page.goto('/dashboard');
     
     // Dashboard should load or show error
     const hasDashboard = await page.locator('h1:has-text("Dashboard")').isVisible();
@@ -99,7 +99,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should prevent navigation when modal is open', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -117,7 +117,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should handle rapid tab switching', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -134,7 +134,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should handle special characters in search', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -154,7 +154,7 @@ test.describe('Error Handling and Edge Cases', () => {
   });
 
   test('should maintain scroll position in tables', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -174,7 +174,7 @@ test.describe('Error Handling and Edge Cases', () => {
 test.describe('Data Consistency', () => {
   test('should show consistent company count across pages', async ({ authenticatedPage: page }) => {
     // Get count from dashboard
-    await page.goto('http://localhost:3000/admin/dashboard');
+    await page.goto('/dashboard');
     await page.waitForTimeout(1000);
     
     // Navigate to companies page
@@ -192,7 +192,7 @@ test.describe('Data Consistency', () => {
 
   test('should show consistent client count across pages', async ({ authenticatedPage: page }) => {
     // Get count from dashboard
-    await page.goto('http://localhost:3000/admin/dashboard');
+    await page.goto('/dashboard');
     await page.waitForTimeout(1000);
     
     // Navigate to clients page
@@ -208,7 +208,7 @@ test.describe('Data Consistency', () => {
   });
 
   test('should update stats after deletion', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/dashboard');
+    await page.goto('/dashboard');
     
     await page.waitForTimeout(1000);
     
@@ -222,7 +222,7 @@ test.describe('Data Consistency', () => {
 
 test.describe('Accessibility and UX', () => {
   test('should have accessible form inputs', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     const searchInput = page.locator('input[placeholder*="Search"]');
     
@@ -231,7 +231,7 @@ test.describe('Accessibility and UX', () => {
   });
 
   test('should have hover effects on cards', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -244,7 +244,7 @@ test.describe('Accessibility and UX', () => {
   });
 
   test('should have responsive layout classes', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -254,7 +254,7 @@ test.describe('Accessibility and UX', () => {
   });
 
   test('should have transition effects on buttons', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -267,7 +267,7 @@ test.describe('Accessibility and UX', () => {
   });
 
   test('should show proper cursor on clickable elements', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/dashboard');
+    await page.goto('/dashboard');
     
     const statCard = page.locator('text=Total Companies').locator('..');
     

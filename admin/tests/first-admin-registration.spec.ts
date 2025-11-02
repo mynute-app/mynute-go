@@ -11,7 +11,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Should show registration form
     await expect(page.locator('h1')).toContainText('Welcome to Mynute Admin');
@@ -37,7 +37,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Should show login form
     await expect(page.locator('h1')).toContainText('Mynute Admin');
@@ -54,7 +54,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Fill in form with mismatched passwords
     await page.fill('input[placeholder="John"]', 'John');
@@ -82,7 +82,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Fill in form with short password
     await page.fill('input[placeholder="John"]', 'John');
@@ -131,7 +131,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Fill in registration form
     await page.fill('input[placeholder="John"]', 'John');
@@ -188,7 +188,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Complete registration
     await page.fill('input[placeholder="John"]', 'John');
@@ -221,7 +221,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Page should eventually load registration form
     await expect(page.locator('h1')).toContainText('Welcome to Mynute Admin');
@@ -247,7 +247,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Fill in and submit registration form
     await page.fill('input[placeholder="John"]', 'John');
@@ -275,7 +275,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Check for required field indicators (asterisks)
     const requiredIndicators = page.locator('.text-red-500:has-text("*")');
@@ -295,7 +295,7 @@ test.describe('First Admin Registration', () => {
       });
     });
 
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Should show password hint
     await expect(page.locator('text=Must be at least 8 characters')).toBeVisible();

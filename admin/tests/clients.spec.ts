@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 
 test.describe('Clients Page', () => {
   test('should display clients list', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     await page.click('a[href="/clients"]');
     
     await expect(page).toHaveURL(/.*\/clients/);
@@ -13,7 +13,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display clients table', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     // Wait for clients to load
     await page.waitForTimeout(1000);
@@ -26,7 +26,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display table headers', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -43,7 +43,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should filter clients by search', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     const searchInput = page.locator('input[placeholder*="Search"]');
     await searchInput.fill('John');
@@ -63,7 +63,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should open client details modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     // Wait for clients to load
     await page.waitForTimeout(1000);
@@ -83,7 +83,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should close client details modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -104,7 +104,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display client information in modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -128,7 +128,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display client appointments in modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -150,7 +150,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should show delete button for clients', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -164,7 +164,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should clear search when input is empty', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     const searchInput = page.locator('input[placeholder*="Search"]');
     
@@ -183,7 +183,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should have working sidebar navigation', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     // Navigate to other pages from sidebar
     await page.click('a[href="/dashboard"]');
@@ -194,7 +194,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should close modal when clicking outside', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -215,7 +215,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display formatted dates', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -235,7 +235,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should show delete confirmation dialog', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -253,7 +253,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display client avatar with initial', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -272,7 +272,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display appointment counts in modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -289,7 +289,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display appointment status badges in modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -311,7 +311,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should show client surname if available', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     
@@ -328,7 +328,7 @@ test.describe('Clients Page', () => {
   });
 
   test('should display updated date in modal', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/clients');
+    await page.goto('/clients');
     
     await page.waitForTimeout(1000);
     

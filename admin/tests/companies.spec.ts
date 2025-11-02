@@ -2,8 +2,8 @@ import { test, expect } from './fixtures';
 
 test.describe('Companies Page', () => {
 
-  test('should display companies list', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin');
+  test('should display companies list', async ({ authenticatedPage: page }) => {
+    await page.goto('');
     await page.click('a[href="/companies"]');
     
     await expect(page).toHaveURL(/.*\/companies/);
@@ -16,8 +16,8 @@ test.describe('Companies Page', () => {
     await expect(page.locator('button:has-text("Add Company")')).toBeVisible();
   });
 
-  test('should display company cards', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should display company cards', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     // Wait for companies to load
     await page.waitForTimeout(1000);
@@ -29,8 +29,8 @@ test.describe('Companies Page', () => {
     expect(hasCards || hasEmptyState).toBeTruthy();
   });
 
-  test('should filter companies by search', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should filter companies by search', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     const searchInput = page.locator('input[placeholder*="Search"]');
     await searchInput.fill('Test Company');
@@ -49,8 +49,8 @@ test.describe('Companies Page', () => {
     }
   });
 
-  test('should navigate to company detail page', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should navigate to company detail page', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     // Wait for companies to load
     await page.waitForTimeout(1000);
@@ -66,8 +66,8 @@ test.describe('Companies Page', () => {
     }
   });
 
-  test('should show add company button', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should show add company button', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     const addButton = page.locator('button:has-text("Add Company")');
     await expect(addButton).toBeVisible();
@@ -75,8 +75,8 @@ test.describe('Companies Page', () => {
     // TODO: Add test for modal when create functionality is implemented
   });
 
-  test('should clear search when input is empty', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should clear search when input is empty', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     const searchInput = page.locator('input[placeholder*="Search"]');
     
@@ -94,8 +94,8 @@ test.describe('Companies Page', () => {
     expect(cardCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should display company information in cards', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+  test('should display company information in cards', async ({ authenticatedPage: page }) => {
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -112,7 +112,7 @@ test.describe('Companies Page', () => {
   });
 
   test('should have working sidebar navigation', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     // Navigate to other pages from sidebar
     await page.click('a[href="/dashboard"]');
@@ -123,7 +123,7 @@ test.describe('Companies Page', () => {
   });
 
   test('should show delete confirmation dialog', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -141,7 +141,7 @@ test.describe('Companies Page', () => {
   });
 
   test('should display company status badge', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -154,7 +154,7 @@ test.describe('Companies Page', () => {
   });
 
   test('should display tax ID in company cards', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     
@@ -167,7 +167,7 @@ test.describe('Companies Page', () => {
   });
 
   test('should display created date in company cards', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     await page.waitForTimeout(1000);
     

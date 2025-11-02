@@ -79,7 +79,7 @@ test.describe('Dashboard Page', () => {
   });
 
   test('should show loading state initially', async ({ page }) => {
-    await page.goto('http://localhost:3000/admin');
+    await page.goto('');
     
     // Should handle authentication
     await page.fill('input[type="email"]', 'admin@mynute.com');

@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 
 test.describe('Company Detail Page', () => {
   test('should display company detail page', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies');
+    await page.goto('/companies');
     
     // Wait for companies to load
     await page.waitForTimeout(1000);
@@ -22,7 +22,7 @@ test.describe('Company Detail Page', () => {
 
   test('should display all tabs', async ({ authenticatedPage: page }) => {
     // Navigate to a company detail page (assuming company ID 1 exists)
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -36,7 +36,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should switch between tabs', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -58,7 +58,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display overview tab content', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -75,7 +75,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display branches tab', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -91,7 +91,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display employees tab', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -107,7 +107,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display services tab', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -123,7 +123,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display subdomains tab', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -136,7 +136,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should navigate back to companies list', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -149,7 +149,7 @@ test.describe('Company Detail Page', () => {
 
   test('should handle non-existent company', async ({ authenticatedPage: page }) => {
     // Try to access a company that likely doesn't exist
-    await page.goto('http://localhost:3000/admin/companies/999999');
+    await page.goto('/companies/999999');
     
     await page.waitForTimeout(1000);
     
@@ -162,7 +162,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should maintain active tab on refresh', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -180,7 +180,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display tab counts', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -198,7 +198,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should show delete confirmation on company delete', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -215,7 +215,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display statistics in overview tab', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -228,7 +228,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should show delete buttons in nested resource tables', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
@@ -252,7 +252,7 @@ test.describe('Company Detail Page', () => {
   });
 
   test('should display company legal and trade names correctly', async ({ authenticatedPage: page }) => {
-    await page.goto('http://localhost:3000/admin/companies/1');
+    await page.goto('/companies/1');
     
     await page.waitForTimeout(1000);
     
