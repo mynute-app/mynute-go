@@ -11,10 +11,10 @@ export default function Sidebar() {
     const currentPath = window.location.pathname;
     
     const navItems: NavItem[] = [
-        { path: '/', label: 'Dashboard', icon: '📊' },
-        { path: '/companies', label: 'Companies', icon: '🏢' },
-        { path: '/clients', label: 'Clients', icon: '👥' },
-        { path: '/users', label: 'Admin Users', icon: '🔐' },
+        { path: '/admin', label: 'Dashboard', icon: '📊' },
+        { path: '/admin/companies', label: 'Companies', icon: '🏢' },
+        { path: '/admin/clients', label: 'Clients', icon: '👥' },
+        { path: '/admin/users', label: 'Admin Users', icon: '🔐' },
     ];
 
     const handleNavigate = (path: string) => {
@@ -22,8 +22,8 @@ export default function Sidebar() {
     };
 
     const isActive = (path: string) => {
-        if (path === '/') {
-            return currentPath === '/';
+        if (path === '/admin') {
+            return currentPath === '/admin' || currentPath === '/admin/';
         }
         return currentPath.startsWith(path);
     };

@@ -19,8 +19,8 @@ export default function Companies() {
         }
     };
 
-    const handleViewDetails = (id: string) => {
-        route(`/companies/${id}`);
+    const handleView = (id: string) => {
+        route(`/admin/companies/${id}`);
     };
 
     const filteredCompanies = companyStore.companies.value.filter((company: Company) =>
@@ -93,7 +93,7 @@ export default function Companies() {
 
                                 <div class="flex gap-2">
                                     <button
-                                        onClick=${() => handleViewDetails(company.id)}
+                                        onClick=${() => handleView(company.id)}
                                         class="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
                                     >
                                         View Details

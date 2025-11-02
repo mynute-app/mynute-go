@@ -36,7 +36,7 @@ export default function App() {
 
     return html`
         <${Layout}>
-            <${Router}>
+            <${Router} basepath="/admin">
                 <${Dashboard} path="/" />
                 <${Users} path="/users" />
                 <${Companies} path="/companies" />

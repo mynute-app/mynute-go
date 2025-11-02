@@ -51,7 +51,7 @@ export default function CompanyDetail({ id }: CompanyDetailProps) {
             <!-- Header -->
             <div class="mb-6">
                 <button
-                    onClick=${() => route('/companies')}
+                    onClick=${() => route('/admin/companies')}
                     class="text-primary hover:underline mb-4 flex items-center"
                 >
                     ← Back to Companies
@@ -71,7 +71,7 @@ export default function CompanyDetail({ id }: CompanyDetailProps) {
                             if (!confirm('Are you sure you want to delete this company and all associated data?')) return;
                             const result = await companyStore.deleteCompany(company.id);
                             if (result.success) {
-                                route('/companies');
+                                route('/admin/companies');
                             } else {
                                 alert('Failed to delete: ' + result.error);
                             }
