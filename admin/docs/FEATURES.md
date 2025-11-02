@@ -10,6 +10,12 @@
 - Error handling and validation
 - Loading states
 
+**Accessing the admin panel:**
+1. Start backend: `go run main.go` (default port 4000)
+2. Navigate to: `http://localhost:4000/admin`
+3. Backend serves admin panel from `./admin` directory
+4. Admin panel communicates with API at `/api` (same origin, no CORS)
+
 #### First Admin Registration (Automatic)
 **Triggered when no superadmin exists:**
 - Checks backend for existing superadmin via `GET /admin/are_there_any_superadmin`

@@ -4,15 +4,32 @@
 
 ### Step 1: Start Backend
 ```bash
-# In your mynute-go root directory
+# Windows PowerShell
+cd c:\code\mynute-go
 go run main.go
+
+# Linux/macOS
+cd /path/to/mynute-go
+go run main.go
+```
+
+The backend will start on port 4000 (configurable via `APP_PORT` environment variable).
+
+**Server output:**
+```
+Server is starting at http://localhost:4000
 ```
 
 ### Step 2: Access Admin Panel
 Open your browser and navigate to:
 ```
-http://localhost:3000/admin
+http://localhost:4000/admin
 ```
+
+**How it works:**
+- Backend serves the admin panel files from `./admin` directory at the `/admin` route
+- Admin panel makes API requests to `/api` (relative URL, same origin)
+- No CORS issues since both admin panel and API are served from the same backend (`:4000`)
 
 ### Step 3: Create First Admin (One-time)
 

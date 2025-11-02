@@ -26,8 +26,8 @@ type AuthFixtures = {
 export const test = base.extend<AuthFixtures>({
   // Auto-login fixture
   authenticatedPage: async ({ page }, use) => {
-    // Navigate to login page
-    await page.goto('/admin');
+    // Navigate to login page (baseURL is set to http://localhost:4000/admin in playwright.config.ts)
+    await page.goto('/');
     
     // Fill login form
     await page.fill('input[type="email"]', adminCredentials.email);
@@ -37,7 +37,7 @@ export const test = base.extend<AuthFixtures>({
     await page.click('button[type="submit"]');
     
     // Wait for navigation to dashboard
-    await page.waitForURL('/admin/', { timeout: 5000 });
+    await page.waitForURL('/', { timeout: 5000 });
     
     // Use the authenticated page
     await use(page);

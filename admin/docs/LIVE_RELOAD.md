@@ -18,9 +18,16 @@ The admin panel includes an automatic browser reload system that eliminates manu
 ## 🚀 Quick Start
 
 ```bash
-# Start the backend with dev environment (required for live reload)
+# Windows PowerShell
+$env:APP_ENV="dev"
+go run main.go
+
+# Linux/macOS
 export APP_ENV=dev
 go run main.go
+
+# Backend starts on port 4000 (configurable via APP_PORT)
+# Server output: "Server is starting at http://localhost:4000"
 
 # Open browser
 http://localhost:4000/admin
@@ -28,6 +35,12 @@ http://localhost:4000/admin
 # Edit any .ts file in admin/src/
 # Save → Browser reloads automatically! 🎉
 ```
+
+**Architecture:**
+- Backend serves admin panel at `/admin` → serves files from `./admin/` directory
+- Admin panel makes API calls to `/api` → handled by Go backend
+- Live reload endpoint at `/admin/dev/watch` → SSE notifications when files change
+- Same origin (both on `:4000`) → no CORS issues
 
 ## 📋 What Triggers Reload
 

@@ -12,15 +12,23 @@ A lightweight, modern admin panel built with:
 ## ⚡ Quick Start
 
 ```bash
-# Start the Go backend with dev environment (live reload enabled)
-export APP_ENV=dev
+# Start the Go backend (on Windows use PowerShell)
+# For live reload, set APP_ENV=dev
+$env:APP_ENV="dev"
 go run main.go
 
-# Open browser
-# http://localhost:4000/admin
+# Backend starts on port 4000 (default, configurable via APP_PORT)
+
+# Open browser and navigate to:
+http://localhost:4000/admin
 
 # Edit .ts files → Save → Browser reloads automatically! 🎉
 ```
+
+**How it works:**
+- Backend serves admin panel at `/admin` (maps to `./admin` directory)
+- Admin panel makes API calls to `/api` (relative URL, same origin)
+- Live reload watches `./admin/src/` and notifies browser via SSE when `APP_ENV=dev`
 
 ## Features
 
