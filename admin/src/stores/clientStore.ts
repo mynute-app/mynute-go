@@ -37,9 +37,11 @@ async function fetchClients(): Promise<void> {
   error.value = null;
   
   try {
-    // Note: We might need an admin endpoint to list all clients
-    const response = await api.get<Client[]>('/admin/clients');
-    clients.value = Array.isArray(response) ? response : (response as any).data || [];
+    // TODO: Backend doesn't have an endpoint to list all clients for admin
+    // For now, this will fail - need to create admin endpoint: GET /admin/clients
+    // Or admins might need to search/filter clients differently
+    error.value = 'Listing all clients not implemented - backend endpoint needed';
+    clients.value = [];
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to fetch clients';
     error.value = message;

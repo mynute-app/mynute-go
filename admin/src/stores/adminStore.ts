@@ -13,7 +13,7 @@ async function fetchAdmins(): Promise<void> {
     error.value = null;
     
     try {
-        const response = await api.get<Admin[]>('/admin/users');
+        const response = await api.get<Admin[]>('/admin');
         admins.value = Array.isArray(response) ? response : (response as any).data || [];
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to fetch admins';
@@ -25,7 +25,7 @@ async function fetchAdmins(): Promise<void> {
 
 async function createAdmin(adminData: Partial<Admin>): Promise<{ success: boolean; data?: Admin; error?: string }> {
     try {
-        const response = await api.post<Admin>('/admin/users', adminData);
+        const response = await api.post<Admin>('/admin', adminData);
         const newAdmin = (response as any).data || response;
         admins.value = [...admins.value, newAdmin];
         return { success: true, data: newAdmin };
@@ -37,7 +37,7 @@ async function createAdmin(adminData: Partial<Admin>): Promise<{ success: boolea
 
 async function updateAdmin(id: string, adminData: Partial<Admin>): Promise<{ success: boolean; error?: string }> {
     try {
-        const response = await api.put<Admin>(`/admin/users/${id}`, adminData);
+        const response = await api.patch<Admin>(`/admin/${id}`, adminData);
         const updatedAdmin = (response as any).data || response;
         admins.value = admins.value.map((admin: Admin) => 
             admin.id === id ? updatedAdmin : admin
@@ -51,7 +51,7 @@ async function updateAdmin(id: string, adminData: Partial<Admin>): Promise<{ suc
 
 async function deleteAdmin(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        await api.delete(`/admin/users/${id}`);
+        await api.delete(`/admin/${id}`);
         admins.value = admins.value.filter((admin: Admin) => admin.id !== id);
         return { success: true };
     } catch (err) {

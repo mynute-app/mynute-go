@@ -65,10 +65,11 @@ async function fetchCompanies(): Promise<void> {
   error.value = null;
   
   try {
-    // Note: We need an endpoint to list all companies for admin
-    // This might need to be created on the backend
-    const response = await api.get<Company[]>('/admin/companies');
-    companies.value = Array.isArray(response) ? response : (response as any).data || [];
+    // TODO: Backend doesn't have an endpoint to list all companies for admin
+    // For now, this will fail - need to create admin endpoint: GET /admin/companies
+    // Or admins might need to search/filter companies differently
+    error.value = 'Listing all companies not implemented - backend endpoint needed';
+    companies.value = [];
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to fetch companies';
     error.value = message;
