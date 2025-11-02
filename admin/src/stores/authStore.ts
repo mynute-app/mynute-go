@@ -88,7 +88,7 @@ async function checkAuth(): Promise<void> {
 
     // If we already have user data from localStorage, we're authenticated
     // No need to make API calls on every page load
-    if (user.value && user.value.email) {
+    if (user.value && user.value.email && user.value.id) {
         loading.value = false;
         return;
     }

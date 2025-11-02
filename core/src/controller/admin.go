@@ -214,7 +214,7 @@ func GetAdminByID(c *fiber.Ctx) error {
 func GetAdminByEmail(c *fiber.Ctx) error {
 	// Note: This endpoint is public (DenyUnauthorized: false) to allow
 	// fetching admin data after login without requiring authentication
-	
+
 	var admin model.Admin
 	if err := GetOneBy("email", c, &admin, nil, nil); err != nil {
 		return err
