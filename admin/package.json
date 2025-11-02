@@ -1,0 +1,20 @@
+{
+  "name": "admin",
+  "version": "1.0.0",
+  "description": "A lightweight admin panel built with:\r - **Preact** - Fast 3KB React alternative\r - **TypeScript** - Type safety without build step\r - **Preact Signals** - Reactive state management\r - **HTM** - JSX-like syntax in the browser\r - **Tailwind CSS** - Utility-first styling",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.9.2"
+  }
+}

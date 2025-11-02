@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mynute Admin</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Optional: Custom Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#8b5cf6',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Import map for cleaner imports -->
+  <script type="importmap">
+        {
+            "imports": {
+                "preact": "https://esm.sh/preact@10.19.3",
+                "preact/": "https://esm.sh/preact@10.19.3/",
+                "htm/preact": "https://esm.sh/htm@3.1.1/preact?deps=preact@10.19.3",
+                "@preact/signals": "https://esm.sh/@preact/signals@1.2.2?deps=preact@10.19.3",
+                "preact-router": "https://esm.sh/preact-router@4.1.2?deps=preact@10.19.3"
+            }
+        }
+    </script>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script type="module" src="./src/main.ts"></script>
+
+  <!-- Live Reload (Development Only) -->
+  <script>
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost) return;
+    console.log('🔄 Live reload enabled - watching for file changes...');
+    // Connect to backend SSE endpoint for file change notifications
+    const eventSource = new EventSource('/admin/dev/watch');
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.file) {
+        console.log(`🔄 File changed: ${data.file}`);
+        window.location.reload();
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.warn('⚠️ Live reload connection lost. Using fallback polling...');
+      eventSource.close();
+
+      // Fallback: Poll a single hash endpoint
+      let lastHash = null;
+
+      setInterval(async () => {
+        try {
+          const response = await fetch('/admin/dev/hash', { cache: 'no-cache' });
+          const data = await response.json();
+
+          if (lastHash === null) {
+            lastHash = data.hash;
+          } else if (lastHash !== data.hash) {
+            console.log('🔄 Files changed, reloading...');
+            window.location.reload();
+          }
+        } catch (err) {
+          // Silently fail if endpoint doesn't exist
+        }
+      }, 1000);
+    };
+
+  </script>
+</body>
+
+</html>
