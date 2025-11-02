@@ -1520,6 +1520,29 @@ paths:
       summary: Admin login
       tags:
       - Admin Auth
+  /admin/reset-password/{email}:
+    post:
+      description: Reset the password of an admin by its email
+      parameters:
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Reset admin password by email
+      tags:
+      - Admin
   /admin/role:
     get:
       description: Get list of all admin roles
@@ -1665,6 +1688,60 @@ paths:
       summary: Update admin role
       tags:
       - Admin Role
+  /admin/send-verification-code/email/{email}:
+    post:
+      description: Send a verification code to an admin's email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Send admin verification code by email
+      tags:
+      - Admin
+  /admin/verify-email/{email}/{code}:
+    get:
+      description: Verify an admin's email using the verification code
+      parameters:
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      - description: Verification Code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+      summary: Verify admin email
+      tags:
+      - Admin
   /appointment:
     post:
       consumes:

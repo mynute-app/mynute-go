@@ -271,7 +271,6 @@ func (a *Admin) createFirstSuperAdmin(s int, roles []string) (*Admin, error) {
 		Name:     lib.GenerateRandomName("Admin"),
 		Email:    lib.GenerateRandomEmail("admin"),
 		Password: pswd,
-		IsActive: true,
 		Roles:    roles,
 	}
 

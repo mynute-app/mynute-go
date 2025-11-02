@@ -162,6 +162,27 @@ var DeleteAdminByID = &EndPoint{
 	Description:      "Delete admin by ID",
 	DenyUnauthorized: true,
 }
+var ResetAdminPasswordByEmail = &EndPoint{
+	Path:             "/admin/reset-password/:email",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "ResetAdminPasswordByEmail",
+	Description:      "Reset admin password by email",
+	DenyUnauthorized: false, // Public endpoint for password reset
+}
+var SendAdminVerificationCodeByEmail = &EndPoint{
+	Path:             "/admin/send-verification-code/email/:email",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "SendAdminVerificationCodeByEmail",
+	Description:      "Send verification code to admin email",
+	DenyUnauthorized: true,
+}
+var VerifyAdminEmail = &EndPoint{
+	Path:             "/admin/verify-email/:email/:code",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "VerifyAdminEmail",
+	Description:      "Verify admin email with code",
+	DenyUnauthorized: false, // Public endpoint for email verification
+}
 var ListAdminRoles = &EndPoint{
 	Path:             "/admin/role",
 	Method:           namespace.ViewActionMethod,
@@ -957,6 +978,9 @@ var endpoints = []*EndPoint{
 	CreateAdmin,
 	UpdateAdminByID,
 	DeleteAdminByID,
+	ResetAdminPasswordByEmail,
+	SendAdminVerificationCodeByEmail,
+	VerifyAdminEmail,
 	ListAdminRoles,
 	CreateAdminRole,
 	GetAdminRoleByID,

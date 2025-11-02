@@ -112,6 +112,9 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
+	// Set default IsActive to false
+	req.IsActive = false
+
 	// Validate request
 	if err := lib.MyCustomStructValidator(req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
@@ -129,6 +132,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 		Email:    req.Email,
 		Password: req.Password,
 		IsActive: req.IsActive,
+		Verified: true, // Admins are auto-verified (no email verification workflow)
 	}
 
 	// Create admin in database (BeforeCreate hook will validate and hash password)
@@ -168,7 +172,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(201, &admin, &DTO.Admin{})
+	return lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{})
 }
 
 // GetAdminByID retrieves an admin by its ID
@@ -336,7 +340,7 @@ func CreateAdminRole(c *fiber.Ctx) error {
 	if err := Create(c, &role); err != nil {
 		return err
 	}
-	return lib.ResponseFactory(c).SendDTO(201, &role, &DTO.AdminRole{})
+	return lib.ResponseFactory(c).SendDTO(200, &role, &DTO.AdminRole{})
 }
 
 // GetAdminRoleByID retrieves an admin role by its ID
@@ -509,6 +513,60 @@ func requireSuperAdmin(c *fiber.Ctx) error {
 	return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("superadmin role required"))
 }
 
+// ResetAdminPasswordByEmail resets an admin's password and sends it by email
+//
+//	@Summary		Reset admin password by email
+//	@Description	Reset the password of an admin by its email
+//	@Tags			Admin
+//	@Param			email		path	string	true	"Admin Email"
+//	@Query			language	query	string	false	"Language code (default: en)"
+//	@Produce		json
+//	@Success		200	{object}	DTO.PasswordReseted
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/admin/reset-password/{email} [post]
+func ResetAdminPasswordByEmail(c *fiber.Ctx) error {
+	email := c.Params("email")
+	if email == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
+	}
+	if err := SendNewPasswordByEmail(c, email, &model.Admin{}); err != nil {
+		return err
+	}
+	return lib.ResponseFactory(c).Http200(nil)
+}
+
+// SendAdminVerificationCodeByEmail sends a verification code to an admin's email
+//
+//	@Summary		Send admin verification code by email
+//	@Description	Send a verification code to an admin's email
+//	@Tags			Admin
+//	@Security		ApiKeyAuth
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			email			path	string	true	"Admin Email"
+//	@Query			language		query	string	false	"Language for the email content"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/admin/send-verification-code/email/{email} [post]
+func SendAdminVerificationCodeByEmail(c *fiber.Ctx) error {
+	return SendVerificationCodeByEmail(c, &model.Admin{})
+}
+
+// VerifyAdminEmail verifies an admin's email
+//
+//	@Summary		Verify admin email
+//	@Description	Verify an admin's email using the verification code
+//	@Tags			Admin
+//	@Param			email	path	string	true	"Admin Email"
+//	@Param			code	path	string	true	"Verification Code"
+//	@Produce		json
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Router			/admin/verify-email/{email}/{code} [get]
+func VerifyAdminEmail(c *fiber.Ctx) error {
+	return VerifyEmail(c, &model.Admin{})
+}
+
 // Admin registers all admin management route handlers
 func Admin(Gorm *handler.Gorm) {
 	endpoint := &middleware.Endpoint{DB: Gorm}
@@ -522,6 +580,9 @@ func Admin(Gorm *handler.Gorm) {
 		CreateAdmin,
 		UpdateAdminByID,
 		DeleteAdminByID,
+		ResetAdminPasswordByEmail,
+		SendAdminVerificationCodeByEmail,
+		VerifyAdminEmail,
 		ListAdminRoles,
 		CreateAdminRole,
 		GetAdminRoleByID,
