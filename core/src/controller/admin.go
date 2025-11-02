@@ -87,13 +87,13 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Description	Create a new admin user
 //	@Tags			Admin
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin	body		DTO.Admin	true	"Admin creation data"
-//	@Success		201		{object}	DTO.Admin
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Param			admin			body		DTO.AdminCreateRequest	true	"Admin creation data"
+//	@Success		201				{object}	DTO.Admin
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/admin [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
@@ -106,35 +106,64 @@ func CreateAdmin(c *fiber.Ctx) error {
 		}
 	}
 
-	var admin model.Admin
-	if err := Create(c, &admin); err != nil {
-		return err
+	// Parse request body
+	var req DTO.AdminCreateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
 	}
 
+	// Validate request
+	if err := lib.MyCustomStructValidator(req); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Create admin model
+	admin := model.Admin{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+		IsActive: req.IsActive,
+	}
+
+	// Create admin in database (BeforeCreate hook will validate and hash password)
+	if err := tx.Create(&admin).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	// Handle roles
+	var rolesToAssign []string
 	if !hasSuperAdmin {
-		// If this is the first admin being created, assign superadmin role
-		tx, err := lib.Session(c)
-		if err != nil {
+		// If this is the first admin, force superadmin role
+		rolesToAssign = []string{"superadmin"}
+	} else {
+		// Use roles from request
+		rolesToAssign = req.Roles
+	}
+
+	// Find and assign roles
+	if len(rolesToAssign) > 0 {
+		var roles []model.RoleAdmin
+		if err := tx.Where("name IN ?", rolesToAssign).Find(&roles).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 
-		// Find the superadmin role
-		var superadminRole model.RoleAdmin
-		if err := tx.Where("name = ?", "superadmin").First(&superadminRole).Error; err != nil {
-			return lib.Error.General.InternalError.WithError(err)
+		if len(roles) != len(rolesToAssign) {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("one or more roles not found"))
 		}
 
-		// Append the role to admin
-		if err := tx.Model(&admin).Association("Roles").Append(&superadminRole); err != nil {
+		// Associate roles with admin
+		if err := tx.Model(&admin).Association("Roles").Append(&roles); err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
 
 	// Reload admin with roles preloaded
-	tx, err := lib.Session(c)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
 	if err := tx.Preload("Roles").First(&admin, admin.ID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
