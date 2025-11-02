@@ -51,7 +51,7 @@ func NewServer() *Server {
 
 	// Transpile TypeScript files on-the-fly (only for .ts files)
 	app.Use("/admin", middleware.TypeScriptTranspiler())
-	
+
 	// Serve admin panel static files
 	app.Static("/admin", "./admin")
 
