@@ -27,14 +27,16 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	controller.Sector(Gorm)
 	controller.Service(Gorm)
 
-	r := App.Group("/")
+	// Public routes (no /api prefix)
+	publicRoutes := App.Group("/")
+	publicRoutes.Get("/", controller.Home)
+	publicRoutes.Get("/verify-email", controller.VerifyEmailPage)
+	publicRoutes.Get("/translations/page/:page", controller.GetPageTranslations)
 
-	r.Get("/", controller.Home)
-	r.Get("/verify-email", controller.VerifyEmailPage)
-	r.Get("/translations/page/:page", controller.GetPageTranslations)
-
+	// API routes (with /api prefix)
+	apiRoutes := App.Group("/api")
 	endpoints := &middleware.Endpoint{DB: Gorm}
-	if err := endpoints.Build(r); err != nil {
+	if err := endpoints.Build(apiRoutes); err != nil {
 		panic(err)
 	}
 }

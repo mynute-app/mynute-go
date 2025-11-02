@@ -48,6 +48,7 @@ func NewServer() *Server {
 	}
 
 	app.Static("/", "./static")
+	app.Static("/admin", "./admin")
 	routes.Build(db.Gorm, app)
 
 	// Setup live reload for development (admin panel)
