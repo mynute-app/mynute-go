@@ -212,10 +212,9 @@ func GetAdminByID(c *fiber.Ctx) error {
 //	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/admin/email/{email} [get]
 func GetAdminByEmail(c *fiber.Ctx) error {
-	if err := requireAdmin(c); err != nil {
-		return err
-	}
-
+	// Note: This endpoint is public (DenyUnauthorized: false) to allow
+	// fetching admin data after login without requiring authentication
+	
 	var admin model.Admin
 	if err := GetOneBy("email", c, &admin, nil, nil); err != nil {
 		return err
