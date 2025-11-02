@@ -40,15 +40,17 @@
 <body>
   <div id="app"></div>
 
-  <script type="module" src="./src/main.ts"></script>
+  <script type="module" src="/admin/src/main.ts"></script>
 
   <!-- Live Reload (Development Only) -->
   <script>
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalhost) return;
-    console.log('🔄 Live reload enabled - watching for file changes...');
-    // Connect to backend SSE endpoint for file change notifications
-    const eventSource = new EventSource('/admin/dev/watch');
+    (function() {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isLocalhost) return;
+      
+      console.log('🔄 Live reload enabled - watching for file changes...');
+      // Connect to backend SSE endpoint for file change notifications
+      const eventSource = new EventSource('/admin/dev/watch');
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -81,6 +83,7 @@
         }
       }, 1000);
     };
+    })(); // Close IIFE
 
   </script>
 </body>
