@@ -67,4 +67,49 @@ test.describe('Login Page', () => {
     // Button should show loading text
     await expect(loginButton).toContainText(/Logging in/);
   });
+
+  test('should redirect to /admin after successful login, not /', async ({ page }) => {
+    // Fill login form
+    await page.fill('input[type="email"]', 'admin@mynute.com');
+    await page.fill('input[type="password"]', 'admin123');
+    
+    // Submit form
+    await page.click('button[type="submit"]');
+    
+    // Should redirect to /admin/ (or /admin), not to /
+    await page.waitForURL('/admin/', { timeout: 5000 });
+    
+    // Verify URL contains /admin
+    const url = page.url();
+    expect(url).toContain('/admin');
+    expect(url).not.toMatch(/^https?:\/\/[^\/]+\/$/); // Should not be just the root
+    
+    // Check for dashboard heading to confirm we're in admin panel
+    await expect(page.locator('h1')).toContainText('Dashboard');
+  });
+
+  test('should store auth token and user data in localStorage after login', async ({ page }) => {
+    // Fill login form
+    await page.fill('input[type="email"]', 'admin@mynute.com');
+    await page.fill('input[type="password"]', 'admin123');
+    
+    // Submit form
+    await page.click('button[type="submit"]');
+    
+    // Wait for redirect
+    await page.waitForURL('/admin/', { timeout: 5000 });
+    
+    // Check localStorage for token and user data
+    const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    const userData = await page.evaluate(() => localStorage.getItem('admin_user'));
+    
+    expect(token).toBeTruthy();
+    expect(token).not.toBe('null');
+    expect(userData).toBeTruthy();
+    expect(userData).not.toBe('null');
+    
+    // Verify user data is valid JSON with email
+    const user = JSON.parse(userData as string);
+    expect(user.email).toBe('admin@mynute.com');
+  });
 });

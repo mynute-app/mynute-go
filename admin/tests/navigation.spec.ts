@@ -68,6 +68,42 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*\/companies/);
     await expect(page.locator('h1')).toContainText('Companies');
   });
+
+  test('should stay within /admin scope when navigating', async ({ authenticatedPage: page }) => {
+    // All navigation should stay within /admin basepath
+    const routes = [
+      { text: 'Dashboard', url: '/admin/' },
+      { text: 'Companies', url: '/admin/companies' },
+      { text: 'Clients', url: '/admin/clients' },
+      { text: 'Admin Users', url: '/admin/users' },
+    ];
+
+    for (const route of routes) {
+      await page.click(`a:has-text("${route.text}")`);
+      await page.waitForURL(route.url, { timeout: 5000 });
+      
+      // Verify URL contains /admin
+      const url = page.url();
+      expect(url).toContain('/admin');
+    }
+  });
+
+  test('should navigate correctly with router basepath', async ({ authenticatedPage: page }) => {
+    // Test that clicking dashboard stat cards navigates correctly
+    await expect(page.locator('h1')).toContainText('Dashboard');
+    
+    // Click on "Total Companies" stat if visible
+    const companiesStat = page.locator('text=Total Companies').locator('..');
+    if (await companiesStat.isVisible()) {
+      await companiesStat.click();
+      await page.waitForTimeout(500);
+      
+      // Should navigate to /admin/companies, not /admin/admin/companies
+      const url = page.url();
+      expect(url).toContain('/admin/companies');
+      expect(url).not.toContain('/admin/admin/');
+    }
+  });
 });
 
 test.describe('Responsive Layout', () => {
@@ -102,6 +138,66 @@ test.describe('Authentication State', () => {
     await expect(page.locator('h1')).toContainText('Dashboard');
   });
 
+  test('should persist login at /admin after F5 reload', async ({ authenticatedPage: page }) => {
+    // Ensure we're on dashboard
+    await expect(page.locator('h1')).toContainText('Dashboard');
+    
+    // Press F5 to reload
+    await page.reload();
+    
+    // Should NOT show login form
+    await expect(page.locator('input[type="email"]')).not.toBeVisible();
+    
+    // Should still show dashboard
+    await expect(page.locator('h1')).toContainText('Dashboard');
+    
+    // Should stay on /admin URL
+    await expect(page).toHaveURL(/\/admin\/?$/);
+  });
+
+  test('should persist user data and token in localStorage across reloads', async ({ authenticatedPage: page }) => {
+    // Check localStorage has auth data
+    const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    const userData = await page.evaluate(() => localStorage.getItem('admin_user'));
+    
+    expect(token).toBeTruthy();
+    expect(userData).toBeTruthy();
+    
+    // Reload page
+    await page.reload();
+    
+    // LocalStorage should still have the data
+    const tokenAfter = await page.evaluate(() => localStorage.getItem('admin_token'));
+    const userDataAfter = await page.evaluate(() => localStorage.getItem('admin_user'));
+    
+    expect(tokenAfter).toBe(token);
+    expect(userDataAfter).toBe(userData);
+    
+    // Should still be authenticated
+    await expect(page.locator('h1')).toContainText('Dashboard');
+  });
+
+  test('should not make API calls on every page reload when already authenticated', async ({ authenticatedPage: page }) => {
+    // Set up request interception to count API calls
+    const apiCalls: string[] = [];
+    
+    page.on('request', (request) => {
+      if (request.url().includes('/api/')) {
+        apiCalls.push(request.url());
+      }
+    });
+    
+    // Reload the page
+    await page.reload();
+    
+    // Wait for page to be ready
+    await expect(page.locator('h1')).toContainText('Dashboard');
+    
+    // Should NOT call /api/admin/email/* on reload (data is in localStorage)
+    const emailAPICalls = apiCalls.filter(url => url.includes('/api/admin/email/'));
+    expect(emailAPICalls.length).toBe(0);
+  });
+
   test('should redirect to login when not authenticated', async ({ page }) => {
     // Clear local storage (logout)
     await page.goto('/admin');
@@ -113,5 +209,25 @@ test.describe('Authentication State', () => {
     // Should show login page
     await expect(page.locator('h1')).toContainText('Mynute Admin');
     await expect(page.locator('input[type="email"]')).toBeVisible();
+  });
+
+  test('should not show 403 errors on page load when not logged in', async ({ page }) => {
+    // Clear storage to simulate not logged in
+    await page.goto('/admin');
+    await page.evaluate(() => localStorage.clear());
+    
+    // Reload to trigger checkAuth
+    await page.reload();
+    
+    // Wait a bit for any API calls
+    await page.waitForTimeout(1000);
+    
+    // Should show login form, not error
+    await expect(page.locator('h1')).toContainText('Mynute Admin');
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    
+    // Should NOT show any 403 or error messages
+    const errorText = page.locator('text=/403|forbidden|unauthorized/i');
+    await expect(errorText).not.toBeVisible();
   });
 });
