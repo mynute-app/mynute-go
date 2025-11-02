@@ -153,11 +153,25 @@
     <script>
         // Parse URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const email = urlParams.get('email');
-        const code = urlParams.get('code');
-        const companyId = urlParams.get('company_id');
-        const userType = urlParams.get('type') || (companyId ? 'employee' : 'client');
-        const lang = urlParams.get('lang') || 'en';
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        
+        // Check if this is admin verification format: /admin/verify-email/email/code
+        let email, code, companyId, userType, lang;
+        
+        if (pathParts[0] === 'admin' && pathParts[1] === 'verify-email') {
+            // Admin format: /admin/verify-email/email/code?lang=en
+            email = pathParts[2];
+            code = pathParts[3];
+            userType = 'admin';
+            lang = urlParams.get('lang') || 'en';
+        } else {
+            // Client/Employee format: /verify-email?email=...&code=...
+            email = urlParams.get('email');
+            code = urlParams.get('code');
+            companyId = urlParams.get('company_id');
+            userType = urlParams.get('type') || (companyId ? 'employee' : 'client');
+            lang = urlParams.get('lang') || 'en';
+        }
 
         // Store translations globally
         let translations = {};
@@ -221,7 +235,9 @@
 
             try {
                 let endpoint;
-                if (userType === 'employee' && companyId) {
+                if (userType === 'admin') {
+                    endpoint = `/api/admin/verify-email/${email}/${code}`;
+                } else if (userType === 'employee' && companyId) {
                     endpoint = `/api/employee/verify-email/${email}/${code}/${companyId}`;
                 } else {
                     endpoint = `/api/client/verify-email/${email}/${code}`;
@@ -264,7 +280,9 @@
 
             try {
                 let endpoint;
-                if (userType === 'employee' && companyId) {
+                if (userType === 'admin') {
+                    endpoint = `/api/admin/send-verification-code/email/${email}?language=${lang}`;
+                } else if (userType === 'employee' && companyId) {
                     endpoint = `/api/employee/send-verification-code/email/${email}/${companyId}?language=${lang}`;
                 } else {
                     endpoint = `/api/client/send-verification-code/email/${email}?language=${lang}`;

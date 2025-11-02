@@ -31,6 +31,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	publicRoutes := App.Group("/")
 	publicRoutes.Get("/", controller.Home)
 	publicRoutes.Get("/verify-email", controller.VerifyEmailPage)
+	publicRoutes.Get("/admin/verify-email/:email/:code", controller.VerifyEmailPage)
 	publicRoutes.Get("/translations/page/:page", controller.GetPageTranslations)
 
 	// API routes (with /api prefix)
