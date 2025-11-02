@@ -22,7 +22,8 @@ type AdminLoginRequest struct {
 // AdminDetail represents detailed admin information (without password)
 type Admin struct {
 	ID       uuid.UUID   `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	Name     string      `json:"name" example:"Admin User"`
+	Name     string      `json:"name" example:"John"`
+	Surname  string      `json:"surname" example:"Doe"`
 	Email    string      `json:"email" example:"admin@example.com"`
 	IsActive bool        `json:"is_active" example:"true"`
 	Roles    []AdminRole `json:"roles"`
@@ -36,6 +37,7 @@ type AdminList struct {
 // AdminCreateRequest represents the request body to create a new admin
 type AdminCreateRequest struct {
 	Name     string   `json:"name" validate:"required,min=3,max=100" example:"Admin User"`
+	Surname  string  `json:"surname,omitempty" validate:"omitempty,min=3,max=100" example:"Doe"`
 	Email    string   `json:"email" validate:"required,email" example:"admin@example.com"`
 	Password string   `json:"password" validate:"required,min=8" example:"StrongPassword123!"`
 	IsActive bool     `json:"is_active" example:"true"`
@@ -45,6 +47,7 @@ type AdminCreateRequest struct {
 // AdminUpdateRequest represents the request body to update an admin
 type AdminUpdateRequest struct {
 	Name     *string `json:"name,omitempty" validate:"omitempty,min=3,max=100" example:"Admin User"`
+	Surname  *string `json:"surname,omitempty" validate:"omitempty,min=3,max=100" example:"Doe"`
 	Email    *string `json:"email,omitempty" validate:"omitempty,email" example:"admin@example.com"`
 	Password *string `json:"password,omitempty" validate:"omitempty,min=8" example:"NewPassword123!"`
 	IsActive *bool   `json:"is_active,omitempty" example:"true"`

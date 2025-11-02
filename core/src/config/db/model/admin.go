@@ -15,6 +15,7 @@ import (
 type Admin struct {
 	BaseModel
 	Name     string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
+	Surname  string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"surname"`
 	Email    string         `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
 	Password string         `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
 	Verified bool           `gorm:"default:false" json:"verified"`

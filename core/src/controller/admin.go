@@ -112,9 +112,6 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
-	// Set default IsActive to false
-	req.IsActive = false
-
 	// Validate request
 	if err := lib.MyCustomStructValidator(req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
@@ -129,9 +126,10 @@ func CreateAdmin(c *fiber.Ctx) error {
 	// Create admin model
 	admin := model.Admin{
 		Name:     req.Name,
+		Surname:  req.Surname,
 		Email:    req.Email,
 		Password: req.Password,
-		IsActive: req.IsActive,
+		IsActive: false, // Default to inactive
 		Verified: false, // Admins must verify email before login
 	}
 
