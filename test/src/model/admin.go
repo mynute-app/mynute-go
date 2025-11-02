@@ -264,7 +264,8 @@ func (a *Admin) createFirstSuperAdmin(s int, roles []string) (*Admin, error) {
 	pswd := lib.GenerateValidPassword()
 
 	createReq := DTO.AdminCreateRequest{
-		Name:     lib.GenerateRandomName("Admin"),
+		Name:     lib.GenerateRandomName("Admin Name"),
+		Surname:  lib.GenerateRandomName("Admin Surname"),
 		Email:    lib.GenerateRandomEmail("admin"),
 		Password: pswd,
 		Roles:    roles,
@@ -289,7 +290,8 @@ func (a *Admin) createRegularAdmin(s int, roles []string) (*Admin, error) {
 	pswd := lib.GenerateValidPassword()
 
 	createReq := DTO.AdminCreateRequest{
-		Name:     lib.GenerateRandomName("Admin"),
+		Name:     lib.GenerateRandomName("Admin Name"),
+		Surname:  lib.GenerateRandomName("Admin Surname"),
 		Email:    lib.GenerateRandomEmail("admin"),
 		Password: pswd,
 		IsActive: true,
