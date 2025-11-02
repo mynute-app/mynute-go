@@ -165,7 +165,7 @@
         // Load translations from the server
         async function loadTranslations() {
             try {
-                const response = await fetch(`/translations/page/verify-email?language=${lang}`);
+                const response = await fetch(`/api/translations/page/verify-email?language=${lang}`);
                 if (response.ok) {
                     translations = await response.json();
                     applyTranslations();
@@ -222,9 +222,9 @@
             try {
                 let endpoint;
                 if (userType === 'employee' && companyId) {
-                    endpoint = `/employee/verify-email/${email}/${code}/${companyId}`;
+                    endpoint = `/api/employee/verify-email/${email}/${code}/${companyId}`;
                 } else {
-                    endpoint = `/client/verify-email/${email}/${code}`;
+                    endpoint = `/api/client/verify-email/${email}/${code}`;
                 }
 
                 const response = await fetch(endpoint, {
@@ -265,9 +265,9 @@
             try {
                 let endpoint;
                 if (userType === 'employee' && companyId) {
-                    endpoint = `/employee/send-verification-code/email/${email}/${companyId}?language=${lang}`;
+                    endpoint = `/api/employee/send-verification-code/email/${email}/${companyId}?language=${lang}`;
                 } else {
-                    endpoint = `/client/send-verification-code/email/${email}?language=${lang}`;
+                    endpoint = `/api/client/send-verification-code/email/${email}?language=${lang}`;
                 }
 
                 const response = await fetch(endpoint, {
