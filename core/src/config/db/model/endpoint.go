@@ -948,6 +948,8 @@ var endpoints = []*EndPoint{
 	LogoutProvider,
 	// Admin Auth
 	AdminLoginByPassword,
+	AreThereAnyAdmin,
+	CreateFirstAdmin,
 	// Admin Management
 	GetAdminByID,
 	GetAdminByEmail,
