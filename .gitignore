@@ -10,3 +10,10 @@ __debug
 debug/output
 /build
 /bin
+node_modules
+
+# Playwright
+/admin/playwright-report/
+/admin/test-results/
+/admin/playwright/.cache/
+/admin/package-lock.json
