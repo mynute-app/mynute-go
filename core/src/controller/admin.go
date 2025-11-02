@@ -41,16 +41,35 @@ func AdminLoginByPassword(c *fiber.Ctx) error {
 // ADMIN MANAGEMENT
 // =====================
 
+// CreateFirstAdmin creates the first admin user in the system
+//
+//	@Summary		Create first admin
+//	@Description	Create the first admin user in the system
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			admin	body		DTO.Admin	true	"Admin creation data"
+//	@Success		201		{object}	DTO.Admin
+//	@Failure		400		{object}	lib.ErrorResponse
+func CreateFirstAdmin(c *fiber.Ctx) error {
+	hasSuperAdmin, err := areThereAnySuperAdmin(c)
+	if err != nil {
+		return err
+	} else if hasSuperAdmin {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("first admin already exists"))
+	}
+
+	return CreateAdmin(c)
+}
+
 // CreateAdmin creates a new admin user
 //
 //	@Summary		Create admin
 //	@Description	Create a new admin user
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Accept			json
 //	@Produce		json
 //	@Param			admin	body		DTO.Admin	true	"Admin creation data"
@@ -109,11 +128,9 @@ func CreateAdmin(c *fiber.Ctx) error {
 //	@Summary		Get admin by ID
 //	@Description	Retrieve an admin by its ID
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Param			id				path		string	true	"Admin ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Admin
@@ -136,11 +153,9 @@ func GetAdminByID(c *fiber.Ctx) error {
 //	@Summary		Get admin by email
 //	@Description	Retrieve an admin by email address
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Param			email			path		string	true	"Admin email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Admin
@@ -163,11 +178,9 @@ func GetAdminByEmail(c *fiber.Ctx) error {
 //	@Summary		List all admins
 //	@Description	Get list of all admin users with their roles
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Produce		json
 //	@Success		200	{array}	DTO.AdminList
 //	@Router			/admin [get]
@@ -203,11 +216,9 @@ func ListAdmins(c *fiber.Ctx) error {
 //	@Summary		Update admin
 //	@Description	Update admin user information
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string		true	"Admin ID"
@@ -233,11 +244,9 @@ func UpdateAdminByID(c *fiber.Ctx) error {
 //	@Summary		Delete admin
 //	@Description	Soft delete an admin user
 //	@Tags			Admin
-//
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//
 //	@Param			id				path		string	true	"Admin ID"
 //	@Success		204
 //	@Failure		404	{object}	lib.ErrorResponse
