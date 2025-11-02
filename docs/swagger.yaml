@@ -18,6 +18,34 @@ definitions:
           $ref: '#/definitions/DTO.AdminRole'
         type: array
     type: object
+  DTO.AdminCreateRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+      roles:
+        example:
+        - '[superadmin]'
+        items:
+          type: string
+        type: array
+    required:
+    - email
+    - name
+    - password
+    type: object
   DTO.AdminList:
     properties:
       admins:
@@ -1270,7 +1298,7 @@ paths:
         name: admin
         required: true
         schema:
-          $ref: '#/definitions/DTO.Admin'
+          $ref: '#/definitions/DTO.AdminCreateRequest'
       produces:
       - application/json
       responses:

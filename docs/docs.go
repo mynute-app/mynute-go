@@ -86,7 +86,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Admin"
+                            "$ref": "#/definitions/DTO.AdminCreateRequest"
                         }
                     }
                 ],
@@ -5568,6 +5568,44 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/DTO.AdminRole"
                     }
+                }
+            }
+        },
+        "DTO.AdminCreateRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Admin User"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "StrongPassword123!"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[superadmin]"
+                    ]
                 }
             }
         },
