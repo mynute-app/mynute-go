@@ -101,7 +101,7 @@ var LogoutProvider = &EndPoint{
 // --- Admin Auth Endpoints --- //
 
 var AdminLoginByPassword = &EndPoint{
-	Path:           "/admin/auth/login",
+	Path:           "/admin/login",
 	Method:         namespace.CreateActionMethod,
 	ControllerName: "AdminLoginByPassword",
 	Description:    "Admin login",
@@ -132,7 +132,7 @@ var GetAdminByEmail = &EndPoint{
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetAdminByEmail",
 	Description:      "Get admin by email",
-	DenyUnauthorized: true,
+	DenyUnauthorized: false, // Allow public access for post-login user data fetch
 }
 var ListAdmins = &EndPoint{
 	Path:             "/admin",
@@ -634,7 +634,7 @@ var GetEmployeeByEmail = &EndPoint{
 	ControllerName:   "GetEmployeeByEmail",
 	Description:      "View employee by email",
 	NeedsCompanyId:   true,
-	DenyUnauthorized: true,
+	DenyUnauthorized: false,
 	Resource:         EmployeeResource,
 }
 var UpdateEmployeeById = &EndPoint{

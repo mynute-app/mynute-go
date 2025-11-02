@@ -1,4 +1,5 @@
 import { signal, computed, Signal, ReadonlySignal } from '@preact/signals';
+import { api } from '../utils/api.ts';
 import type { User } from '../types.ts';
 
 // Signals
@@ -33,11 +34,28 @@ async function login(email: string, password: string): Promise<{ success: boolea
             throw new Error('No auth token received');
         }
 
-        // Store basic user info from email - we don't get user data from login response
         token.value = authToken;
-        user.value = { email } as User; // Store email, will be validated by checkAuth
-        
         localStorage.setItem('admin_token', authToken);
+
+        // Fetch admin data by email using public endpoint
+        try {
+            const adminResponse = await fetch(`/api/admin/email/${email}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (adminResponse.ok) {
+                const adminData = await adminResponse.json();
+                user.value = (adminData.data || adminData) as User;
+            } else {
+                // Couldn't fetch user data, but login succeeded
+                user.value = { email } as User;
+            }
+        } catch (err) {
+            // Couldn't fetch user data, but login succeeded
+            user.value = { email } as User;
+        }
         
         return { success: true };
     } catch (error) {
@@ -61,27 +79,24 @@ async function checkAuth(): Promise<void> {
         return;
     }
 
-    // If we have both token and user, we're good (already authenticated)
-    if (user.value) {
-        loading.value = false;
+    // If we already have user data, just validate the token is still good
+    if (user.value && user.value.email) {
+        loading.value = true;
+        try {
+            // Re-fetch user data to validate token and refresh user info
+            const response = await api.get<any>(`/admin/email/${user.value.email}`);
+            user.value = (response.data || response) as User;
+        } catch (error) {
+            // Token is invalid
+            await logout();
+        } finally {
+            loading.value = false;
+        }
         return;
     }
 
-    // We have a token but no user data - token might be from previous session
-    // Try to validate it silently, if it fails just clear it
-    loading.value = true;
-    try {
-        // Validate token by making an authenticated request
-        // If successful, we keep the token but need user data
-        // Since there's no /me endpoint and we don't have user data,
-        // we should just logout and let user re-login
-        await logout();
-    } catch (error) {
-        // Token is invalid, clear it
-        await logout();
-    } finally {
-        loading.value = false;
-    }
+    // We have a token but no user - shouldn't happen, but clear it
+    await logout();
 }
 
 // Export store
