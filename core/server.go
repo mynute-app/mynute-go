@@ -49,6 +49,10 @@ func NewServer() *Server {
 
 	app.Static("/", "./static")
 	routes.Build(db.Gorm, app)
+
+	// Setup live reload for development (admin panel)
+	middleware.SetupLiveReload(app)
+
 	if err := myUploader.StartProvider(); err != nil {
 		panic(err)
 	}
