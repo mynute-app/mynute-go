@@ -106,6 +106,20 @@ var AdminLoginByPassword = &EndPoint{
 	ControllerName: "AdminLoginByPassword",
 	Description:    "Admin login",
 }
+var AreThereAnyAdmin = &EndPoint{
+	Path:             "/admin/are_there_any_superadmin",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "AreThereAnyAdmin",
+	Description:      "Check if any superadmin exists",
+	DenyUnauthorized: false, // Public endpoint for initial setup check
+}
+var CreateFirstAdmin = &EndPoint{
+	Path:             "/admin/first_superadmin",
+	Method:           namespace.CreateActionMethod,
+	ControllerName:   "CreateFirstAdmin",
+	Description:      "Create the first superadmin (only works if no superadmin exists)",
+	DenyUnauthorized: false, // Public endpoint for initial setup
+}
 var GetAdminByID = &EndPoint{
 	Path:             "/admin/:id",
 	Method:           namespace.ViewActionMethod,
