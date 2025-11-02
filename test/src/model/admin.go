@@ -181,9 +181,146 @@ func (a *Admin) VerifyEmail(s int) error {
 	return nil
 }
 
-// Create creates a new admin user
-func (*Admin) Create(s int, roles ...string) (*Admin, error) {
+// CheckSuperAdminExists checks if there are any superadmin users in the system
+func (*Admin) CheckSuperAdminExists() (bool, error) {
+	var response map[string]bool
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL("/admin/are_there_any_superadmin").
+		ExpectedStatus(200).
+		Send(nil).
+		ParseResponse(&response).
+		Error; err != nil {
+		return false, fmt.Errorf("failed to check superadmin existence: %w", err)
+	}
+
+	hasSuperAdmin, ok := response["has_superadmin"]
+	if !ok {
+		return false, fmt.Errorf("invalid response format: missing has_superadmin field")
+	}
+
+	return hasSuperAdmin, nil
+}
+
+// CreateFirstSuperAdmin creates the first superadmin user in the system
+func (*Admin) CreateFirstSuperAdmin(s int) (*Admin, error) {
 	var a Admin
+	pswd := lib.GenerateValidPassword()
+
+	createReq := DTO.AdminCreateRequest{
+		Name:     lib.GenerateRandomName("Admin"),
+		Email:    lib.GenerateRandomEmail("admin"),
+		Password: pswd,
+		IsActive: true,
+		Roles:    []string{"superadmin"},
+	}
+
+	// Parse response as DTO first
+	var dtoAdmin DTO.Admin
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL("/admin/first_superadmin").
+		ExpectedStatus(s).
+		Send(createReq).
+		ParseResponse(&dtoAdmin).
+		Error; err != nil {
+		return nil, fmt.Errorf("failed to create first superadmin: %w", err)
+	}
+
+	// Convert DTO to model.Admin
+	a.Created = &model.Admin{
+		BaseModel: model.BaseModel{
+			ID: dtoAdmin.ID,
+		},
+		Name:     dtoAdmin.Name,
+		Email:    dtoAdmin.Email,
+		Password: pswd, // Store the password we used to create
+		IsActive: dtoAdmin.IsActive,
+		Roles:    make([]model.RoleAdmin, len(dtoAdmin.Roles)),
+	}
+
+	// Convert roles from DTO to model
+	for i, dtoRole := range dtoAdmin.Roles {
+		a.Created.Roles[i] = model.RoleAdmin{
+			BaseModel: model.BaseModel{
+				ID: dtoRole.ID,
+			},
+			Name:        dtoRole.Name,
+			Description: dtoRole.Description,
+		}
+	}
+
+	return &a, nil
+}
+
+// Create creates a new admin user
+func (a *Admin) Create(s int, roles ...string) (*Admin, error) {
+	// Try creating with the first_superadmin endpoint first (doesn't require auth)
+	// If it fails because a superadmin already exists, fall back to regular create
+	
+	// First, try to create as first superadmin
+	firstAdmin, err := a.createAsFirstSuperAdmin(s)
+	if err == nil {
+		return firstAdmin, nil
+	}
+	
+	// If that failed, try regular admin creation (requires authentication)
+	return a.createRegularAdmin(s, roles...)
+}
+
+// createAsFirstSuperAdmin attempts to create the first superadmin
+func (*Admin) createAsFirstSuperAdmin(s int) (*Admin, error) {
+	var a Admin
+	pswd := lib.GenerateValidPassword()
+
+	createReq := DTO.AdminCreateRequest{
+		Name:     lib.GenerateRandomName("Admin"),
+		Email:    lib.GenerateRandomEmail("admin"),
+		Password: pswd,
+		IsActive: true,
+		Roles:    []string{"superadmin"},
+	}
+
+	// Parse response as DTO first
+	var dtoAdmin DTO.Admin
+	if err := handler.NewHttpClient().
+		Method("POST").
+		URL("/admin/first_superadmin").
+		ExpectedStatus(s).
+		Send(createReq).
+		ParseResponse(&dtoAdmin).
+		Error; err != nil {
+		return nil, err
+	}
+
+	// Convert DTO to model.Admin
+	a.Created = &model.Admin{
+		BaseModel: model.BaseModel{
+			ID: dtoAdmin.ID,
+		},
+		Name:     dtoAdmin.Name,
+		Email:    dtoAdmin.Email,
+		Password: pswd, // Store the password we used to create
+		IsActive: dtoAdmin.IsActive,
+		Roles:    make([]model.RoleAdmin, len(dtoAdmin.Roles)),
+	}
+
+	// Convert roles from DTO to model
+	for i, dtoRole := range dtoAdmin.Roles {
+		a.Created.Roles[i] = model.RoleAdmin{
+			BaseModel: model.BaseModel{
+				ID: dtoRole.ID,
+			},
+			Name:        dtoRole.Name,
+			Description: dtoRole.Description,
+		}
+	}
+
+	return &a, nil
+}
+
+// createRegularAdmin creates an admin using the regular endpoint (requires auth)
+func (a *Admin) createRegularAdmin(s int, roles ...string) (*Admin, error) {
 	pswd := lib.GenerateValidPassword()
 
 	createReq := DTO.AdminCreateRequest{
@@ -213,20 +350,23 @@ func (*Admin) Create(s int, roles ...string) (*Admin, error) {
 	}
 
 	// Convert DTO to model.Admin
-	a.Created = &model.Admin{
-		BaseModel: model.BaseModel{
-			ID: dtoAdmin.ID,
+	newAdmin := Admin{
+		X_Auth_Token: a.X_Auth_Token,
+		Created: &model.Admin{
+			BaseModel: model.BaseModel{
+				ID: dtoAdmin.ID,
+			},
+			Name:     dtoAdmin.Name,
+			Email:    dtoAdmin.Email,
+			Password: pswd, // Store the password we used to create
+			IsActive: dtoAdmin.IsActive,
+			Roles:    make([]model.RoleAdmin, len(dtoAdmin.Roles)),
 		},
-		Name:     dtoAdmin.Name,
-		Email:    dtoAdmin.Email,
-		Password: pswd, // Store the password we used to create
-		IsActive: dtoAdmin.IsActive,
-		Roles:    make([]model.RoleAdmin, len(dtoAdmin.Roles)),
 	}
 
 	// Convert roles from DTO to model
 	for i, dtoRole := range dtoAdmin.Roles {
-		a.Created.Roles[i] = model.RoleAdmin{
+		newAdmin.Created.Roles[i] = model.RoleAdmin{
 			BaseModel: model.BaseModel{
 				ID: dtoRole.ID,
 			},
@@ -235,7 +375,7 @@ func (*Admin) Create(s int, roles ...string) (*Admin, error) {
 		}
 	}
 
-	return &a, nil
+	return &newAdmin, nil
 }
 
 // CreateSuperAdmin creates a new superadmin user

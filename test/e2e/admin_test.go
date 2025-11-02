@@ -15,10 +15,39 @@ func Test_Admin(t *testing.T) {
 
 	tt := handler.NewTestErrorHandler(t)
 
+	// Initialize the admin model
+	admin := &model.Admin{}
+	
+	// Check if a superadmin exists
 	var superadmin *model.Admin
+	tt.Describe("Check if superadmin exists and create first admin").Test(func() error {
+		hasSuperAdmin, err := admin.CheckSuperAdminExists()
+		if err != nil {
+			return fmt.Errorf("failed to check superadmin existence: %w", err)
+		}
 
-	// The first admin created in the system should get superadmin privileges automatically
-	tt.Describe("Create first admin").Test(superadmin.Set([]string{}, nil))
+		if !hasSuperAdmin {
+			// Create the first superadmin using the first_superadmin endpoint
+			superadmin, err = admin.CreateFirstSuperAdmin(200)
+			if err != nil {
+				return fmt.Errorf("failed to create first superadmin: %w", err)
+			}
+			// Verify and login
+			if err := superadmin.VerifyEmail(200); err != nil {
+				return fmt.Errorf("failed to verify first superadmin email: %w", err)
+			}
+			if err := superadmin.LoginByPassword(200, superadmin.Created.Password); err != nil {
+				return fmt.Errorf("failed to login first superadmin: %w", err)
+			}
+			if err := superadmin.ResetPasswordByEmail(200); err != nil {
+				return fmt.Errorf("failed to reset first superadmin password: %w", err)
+			}
+		} else {
+			// Create a regular superadmin using the authenticated endpoint
+			return fmt.Errorf("unexpected: superadmin already exists in fresh test environment")
+		}
+		return nil
+	}())
 
 	// Test admin creation (only superadmin can create admins)
 	supportAdmin := &model.Admin{}
