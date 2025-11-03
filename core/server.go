@@ -40,7 +40,15 @@ func NewServer() *Server {
 	// See: docs/MIGRATIONS.md or run `make migrate-help`
 	app_env := os.Getenv("APP_ENV")
 	if app_env == "dev" || app_env == "test" {
-		db.Migrate(model.GeneralModels)
+		// Migrate auth database (endpoints, policies, resources, users, roles)
+		log.Println("Migrating auth database...")
+		db.WithDB(db.AuthDB).Migrate(model.AuthDBModels)
+
+		// Migrate main database (business data)
+		log.Println("Migrating main database...")
+		db.Migrate(model.MainDBModels)
+
+		// Run initial seeding (populates both databases)
 		db.InitialSeed()
 	} else {
 		log.Println("Production environment detected - skipping automatic migrations and seeding")
