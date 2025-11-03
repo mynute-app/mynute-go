@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	authModel "mynute-go/auth/model"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
+	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
+	policySeed "mynute-go/core/src/config/db/seed/policy"
+	resourceSeed "mynute-go/core/src/config/db/seed/resource"
 	"mynute-go/core/src/lib"
 	"os"
 )
@@ -34,10 +38,14 @@ func main() {
 
 	// Seed system roles (if not already seeded by migrations)
 	model.AllowSystemRoleCreation = true
-	defer func() { model.AllowSystemRoleCreation = false }()
+	authModel.AllowEndpointCreation = true
+	defer func() {
+		model.AllowSystemRoleCreation = false
+		authModel.AllowEndpointCreation = false
+	}()
 
 	if err := db.
-		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
+		Seed("Resources", resourceSeed.Resources, `"table" = ?`, []string{"Table"}).
 		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
 		Error; err != nil {
 		log.Fatalf("Failed to seed roles/resources: %v", err)
@@ -49,7 +57,8 @@ func main() {
 	}
 
 	// Seed endpoints
-	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)
+	endpoints := endpointSeed.GetAllEndpoints()
+	endpoints, deferEndpoint, err := authModel.EndPoints(endpoints, &authModel.EndpointCfg{AllowCreation: true}, tx)
 	if err != nil {
 		log.Fatalf("Failed to prepare endpoints: %v", err)
 	}
@@ -62,12 +71,13 @@ func main() {
 	}
 
 	// Load endpoint IDs from database so policies can reference them
-	if err := model.LoadEndpointIDs(tx); err != nil {
+	if err := authModel.LoadEndpointIDs(endpoints, tx); err != nil {
 		log.Fatalf("Failed to load endpoint IDs: %v", err)
 	}
 
 	// Seed policies
-	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
+	allPolicies := policySeed.GetAllPolicies()
+	policies, deferPolicies := authModel.Policies(allPolicies, &authModel.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
 	defer deferPolicies()
 
 	if err := db.
