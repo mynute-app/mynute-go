@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	DTO "mynute-go/core/src/api/dto"
+	serviceFactory "mynute-go/core/src/api/service"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/lib/email"
-	"mynute-go/core/src/api/service"
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +15,7 @@ import (
 
 func Create(c *fiber.Ctx, model any) error {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	if err := Service.SetModel(model).Create().Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
@@ -25,7 +25,7 @@ func Create(c *fiber.Ctx, model any) error {
 
 func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string, do_not_load *[]string) error {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	if err = Service.
 		SetModel(model).
@@ -39,7 +39,7 @@ func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string, d
 
 func UpdateOneById(c *fiber.Ctx, model any, nested_preload *[]string) error {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	if err = Service.SetModel(model).SetNestedPreload(nested_preload).UpdateOneById().Error; err != nil {
 		return err
@@ -49,7 +49,7 @@ func UpdateOneById(c *fiber.Ctx, model any, nested_preload *[]string) error {
 
 func DeleteOneById(c *fiber.Ctx, model any) error {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	if err = Service.SetModel(model).DeleteOneById().Error; err != nil {
 		return err
@@ -59,7 +59,7 @@ func DeleteOneById(c *fiber.Ctx, model any) error {
 
 func LoginByPassword(user_type string, model any, c *fiber.Ctx) (string, error) {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	token, err := Service.SetModel(model).LoginByPassword(user_type)
 	return token, err
@@ -67,7 +67,7 @@ func LoginByPassword(user_type string, model any, c *fiber.Ctx) (string, error) 
 
 func LoginByEmailCode(user_type string, model any, c *fiber.Ctx) (string, error) {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	token, err := Service.SetModel(model).LoginByEmailCode(user_type)
 	return token, err
@@ -75,7 +75,7 @@ func LoginByEmailCode(user_type string, model any, c *fiber.Ctx) (string, error)
 
 func ResetLoginvalidationCode(c *fiber.Ctx, user_email string, model any) (string, error) {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	return Service.SetModel(model).ResetLoginCodeByEmail(user_email)
 }
@@ -127,7 +127,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 
 func ResetPasswordByEmail(c *fiber.Ctx, user_email string, model any) (*DTO.PasswordReseted, error) {
 	var err error
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	return Service.SetModel(model).ResetPasswordByEmail(user_email)
 }
@@ -189,7 +189,7 @@ func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
 		}
 	}
 
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 
 	code, err := Service.SetModel(model).GetVerificationCodeByEmail(user_email)
@@ -256,7 +256,7 @@ func VerifyEmail(c *fiber.Ctx, model any) error {
 	if email == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
 	}
-	Service := service.New(c)
+	Service := serviceFactory.New(c)
 	defer func() { Service.DeferDB(err) }()
 	company_id := c.Params("company_id", "")
 	if company_id != "" {
@@ -447,5 +447,3 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 
 	return &Design, nil
 }
-
-

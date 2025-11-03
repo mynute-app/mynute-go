@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"mynute-go/core/src/config/api/routes"
+	"mynute-go/core/src/api/middleware"
+	"mynute-go/core/src/api/routes"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
 	myUploader "mynute-go/core/src/lib/cloud_uploader"
-	"mynute-go/core/src/api/middleware"
 	"mynute-go/debug"
 	"os"
 
@@ -126,5 +126,3 @@ func (s *Server) Run(in string) *Server {
 	}
 	return s
 }
-
-

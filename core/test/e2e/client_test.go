@@ -57,7 +57,7 @@ func Test_Client(t *testing.T) {
 		"password": "NewPswrd1@!",
 	}))
 
-	client.Created.Password = new_password // Update the password in the client model
+	client.Password = new_password // Update the password in the test wrapper
 
 	// Re-login with new password to get a fresh token
 	tt.Describe("Login with new password").Test(client.LoginByPassword(200, new_password))
@@ -69,7 +69,7 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Login with old password fails").Test(client.LoginByPassword(401, new_password))
 
 	// Test that new password from email works
-	tt.Describe("Login with password from email").Test(client.LoginByPassword(200, client.Created.Password))
+	tt.Describe("Login with password from email").Test(client.LoginByPassword(200, client.Password))
 
 	tt.Describe("Upload profile image").Test(client.UploadImages(200, map[string][]byte{
 		"profile": FileBytes.PNG_FILE_1,
@@ -97,5 +97,3 @@ func Test_Client(t *testing.T) {
 
 	tt.Describe("Get deleted client by email").Test(client.GetByEmail(404))
 }
-
-

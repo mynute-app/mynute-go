@@ -54,10 +54,10 @@ func Test_Employee(t *testing.T) {
 	}, nil, nil))
 
 	// Test that old password fails after password change
-	tt.Describe("Employee fail to login with old password").Test(employee.LoginByPassword(401, employee.Created.Password, nil))
+	tt.Describe("Employee fail to login with old password").Test(employee.LoginByPassword(401, employee.Password, nil))
 
 	// Update password in memory and test new password works
-	employee.Created.Password = new_password
+	employee.Password = new_password
 	tt.Describe("Employee login with new password").Test(employee.LoginByPassword(200, new_password, nil))
 
 	// Test password reset by email
@@ -67,13 +67,13 @@ func Test_Employee(t *testing.T) {
 	tt.Describe("Employee login with old password fails").Test(employee.LoginByPassword(401, new_password, nil))
 
 	// Test that new password from email works
-	tt.Describe("Employee login with password from email").Test(employee.LoginByPassword(200, employee.Created.Password, nil))
+	tt.Describe("Employee login with password from email").Test(employee.LoginByPassword(200, employee.Password, nil))
 
 	ServicesID := []DTO.ServiceBase{
 		{ID: service.Created.ID},
 	}
 
-	EmployeeWorkSchedule := model.GetExampleEmployeeWorkSchedule(employee.Created.ID, branch.Created.ID, ServicesID)
+	EmployeeWorkSchedule := model.GetExampleEmployeeWorkSchedule(employee.Created.UserID, branch.Created.ID, ServicesID)
 
 	tt.Describe("Employee create work schedule incorrectly").Test(employee.CreateWorkSchedule(400, EmployeeWorkSchedule, nil, nil))
 

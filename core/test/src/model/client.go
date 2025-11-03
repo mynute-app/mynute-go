@@ -59,7 +59,7 @@ func (u *Client) Set() error {
 func (u *Client) Create(s int) error {
 	pswd := lib.GenerateValidPassword()
 	email := lib.GenerateRandomEmail("client")
-	
+
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/client").
@@ -496,6 +496,3 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 	}
 	return nil
 }
-
-
-

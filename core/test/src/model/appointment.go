@@ -2,12 +2,12 @@ package model
 
 import (
 	"fmt"
-	"mynute-go/core/src/api/dto"
+	DTO "mynute-go/core/src/api/dto"
 	coreModel "mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
-	"mynute-go/debug"
 	"mynute-go/core/test/src/handler"
+	"mynute-go/debug"
 	"slices"
 	"time"
 
@@ -448,6 +448,3 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	}
 	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s", employee.Created.UserID.String())
 }
-
-
-

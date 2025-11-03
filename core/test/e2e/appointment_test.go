@@ -53,7 +53,7 @@ func Test_Appointment(t *testing.T) {
 
 	GetEmployeeByID := func(employeeID string, company *testModel.Company) (*testModel.Employee, error) {
 		for _, employee := range company.Employees {
-			if employee.Created.ID.String() == employeeID {
+			if employee.Created.UserID.String() == employeeID {
 				return employee, nil
 			}
 		}
@@ -63,7 +63,7 @@ func Test_Appointment(t *testing.T) {
 	// Test Case 0: Creating multiple appointments for a single customer.
 
 	appointmentsToCreate := 5
-	client_public_id := ct.Created.ID.String()
+	client_public_id := ct.Created.UserID.String()
 
 	// Only use the first company and its first service to create exactly 5 appointments
 	if len(cys) > 0 && len(cys[0].Services) > 0 {
