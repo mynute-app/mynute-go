@@ -2,9 +2,9 @@ package controller
 
 import (
 	"fmt"
-	"mynute-go/auth"
+	authModel "mynute-go/auth/config/db/model"
+	"mynute-go/auth/handler"
 	"mynute-go/auth/lib"
-	authModel "mynute-go/auth/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -63,7 +63,7 @@ func CheckAccess(c *fiber.Ctx) error {
 	}
 
 	// Create access controller
-	accessCtrl := auth.NewAccessController(tx)
+	accessCtrl := handler.NewAccessController(tx)
 
 	// Evaluate each policy
 	var allowPolicies []authModel.PolicyRule
@@ -199,7 +199,7 @@ func EvaluatePolicy(c *fiber.Ctx) error {
 	}
 
 	// Create access controller
-	accessCtrl := auth.NewAccessController(tx)
+	accessCtrl := handler.NewAccessController(tx)
 
 	// Evaluate the policy
 	decision := accessCtrl.Validate(

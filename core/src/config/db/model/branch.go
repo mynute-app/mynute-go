@@ -211,11 +211,11 @@ func (b *Branch) HasEmployee(tx *gorm.DB, employee *Employee) error {
 	}
 	var count int64
 	// Check if the employee exists in the branch
-	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE branch_id = ? AND employee_id = ?", b.ID, employee.ID).Scan(&count).Error; err != nil {
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE branch_id = ? AND employee_id = ?", b.ID, employee.UserID).Scan(&count).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	if count == 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s not found in branch %s", employee.ID, b.ID))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s not found in branch %s", employee.UserID, b.ID))
 	}
 	return nil
 }

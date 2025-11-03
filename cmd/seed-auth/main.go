@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	database "mynute-go/core/src/config/db"
 	coreModel "mynute-go/core/src/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"

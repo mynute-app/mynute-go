@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	DTO "mynute-go/core/src/config/api/dto"
+	DTO "mynute-go/core/src/api/dto"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
 	"os"
@@ -162,3 +162,4 @@ func getSecret() []byte {
 	// This allows tests to work without setting JWT_SECRET
 	return []byte("default-test-secret-do-not-use-in-production-12345")
 }
+

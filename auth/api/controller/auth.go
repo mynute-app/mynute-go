@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"mynute-go/auth/config/namespace"
-	DTO "mynute-go/auth/dto"
+	DTO "mynute-go/auth/config/dto"
 	"mynute-go/auth/handler"
 	"mynute-go/auth/lib"
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

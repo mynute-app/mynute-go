@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"mynute-go/auth/config/namespace"
-	DTO "mynute-go/auth/dto"
+	DTO "mynute-go/auth/config/dto"
 	"mynute-go/auth/lib"
 	"os"
 	"time"

@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 )
 
 // GetAllPolicies returns all policy definitions from all modules

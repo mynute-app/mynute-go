@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mynute-go/auth/lib"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"

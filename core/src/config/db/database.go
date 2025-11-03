@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	"mynute-go/core/src/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 	policySeed "mynute-go/core/src/config/db/seed/policy"

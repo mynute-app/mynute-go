@@ -2,7 +2,7 @@ package lib
 
 import (
 	"mynute-go/core/src/lib"
-	"mynute-go/test/src/model"
+	"mynute-go/core/test/src/model"
 	"os"
 )
 

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
 	"os"

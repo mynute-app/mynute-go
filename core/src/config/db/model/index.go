@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	"mynute-go/core/src/lib"
 	"time"
 

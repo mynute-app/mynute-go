@@ -57,7 +57,7 @@ func (ewr *EmployeeWorkRange) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
-	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
+	employee := &Employee{UserID: ewr.EmployeeID}
 
 	if err := branch.HasEmployee(tx, employee); err != nil {
 		return err
@@ -103,7 +103,7 @@ func (ewr *EmployeeWorkRange) BeforeUpdate(tx *gorm.DB) error {
 	}
 
 	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
-	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
+	employee := &Employee{UserID: ewr.EmployeeID}
 
 	if err := employee.ValidateEmployeeWorkRangeTime(tx, ewr); err != nil {
 		return err
@@ -148,7 +148,7 @@ func (ewr *EmployeeWorkRange) AddServices(tx *gorm.DB, services ...*Service) err
 	if ewr.Services == nil {
 		ewr.Services = make([]*Service, 0)
 	}
-	employee := &Employee{BaseModel: BaseModel{ID: ewr.EmployeeID}}
+	employee := &Employee{UserID: ewr.EmployeeID}
 	branch := &Branch{BaseModel: BaseModel{ID: ewr.BranchID}}
 	if err := employee.HasBranch(tx, ewr.BranchID); err != nil {
 		return err

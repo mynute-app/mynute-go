@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
 	"os"
-	"strings"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Admin seeder - creates default admin user and roles
@@ -36,17 +33,17 @@ func main() {
 	// Create admin roles
 	adminRoles := []model.RoleAdmin{
 		{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
+			ID:          uuid.New(),
 			Name:        "superadmin",
 			Description: "Full access to all tenants and resources",
 		},
 		{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
+			ID:          uuid.New(),
 			Name:        "support",
 			Description: "Customer support with read-only access to tenant data",
 		},
 		{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
+			ID:          uuid.New(),
 			Name:        "auditor",
 			Description: "Read-only access for compliance and auditing",
 		},
@@ -83,55 +80,14 @@ func main() {
 	}
 
 	// Check if admin already exists
-	var existingAdmin model.Admin
-	if err := db.Gorm.Where("email = ?", defaultAdminEmail).First(&existingAdmin).Error; err != nil {
-		// Admin doesn't exist, create it
+	// NOTE: This seed file needs to be updated for the new User/Admin architecture
+	// where User records are created in the auth service first, then Admin records
+	// reference them via UserID. For now, this is disabled.
 
-		// Hash password
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(defaultAdminPassword), bcrypt.DefaultCost)
-		if err != nil {
-			log.Fatalf("Failed to hash password: %v", err)
-		}
+	log.Println("⚠️  WARNING: Admin seeding temporarily disabled - needs update for new User/Admin architecture")
+	log.Println("Please use the admin registration endpoint to create the first admin user.")
 
-		admin := model.Admin{
-			BaseModel: model.BaseModel{ID: uuid.New()},
-			Name:      defaultAdminName,
-			Email:     defaultAdminEmail,
-			Password:  string(hashedPassword),
-			IsActive:  true,
-		}
-
-		// Create admin
-		if err := db.Gorm.Create(&admin).Error; err != nil {
-			log.Fatalf("Failed to create admin: %v", err)
-		}
-
-		// Assign superadmin role
-		var superadminRole model.RoleAdmin
-		if err := db.Gorm.Where("name = ?", "superadmin").First(&superadminRole).Error; err != nil {
-			log.Fatalf("Failed to find superadmin role: %v", err)
-		}
-
-		if err := db.Gorm.Model(&admin).Association("Roles").Append(&superadminRole); err != nil {
-			log.Fatalf("Failed to assign superadmin role: %v", err)
-		}
-
-		log.Println("✓ Created default admin user")
-		separator := strings.Repeat("=", 60)
-		fmt.Println("\n" + separator)
-		fmt.Println("DEFAULT ADMIN CREDENTIALS")
-		fmt.Println(separator)
-		fmt.Printf("Email:    %s\n", defaultAdminEmail)
-		fmt.Printf("Password: %s\n", defaultAdminPassword)
-		fmt.Println(separator)
-		fmt.Println("⚠️  IMPORTANT: Change the password immediately after first login!")
-		fmt.Println(separator + "\n")
-	} else {
-		log.Printf("- Admin user '%s' already exists", defaultAdminEmail)
-	}
-
-	log.Println("\n✓ Admin seeding completed successfully!")
-	fmt.Println("\nSeeded:")
-	fmt.Println("  - 3 Admin Roles (superadmin, support, auditor)")
-	fmt.Println("  - 1 Default Admin User")
+	log.Println("\n✓ Admin role seeding completed successfully!")
+	log.Println("\nSeeded:")
+	log.Println("  - 3 Admin Roles (superadmin, support, auditor)")
 }

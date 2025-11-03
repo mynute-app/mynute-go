@@ -165,11 +165,11 @@ func (c *Company) CreateOwner(tx *gorm.DB, owner *Employee) error {
 	}
 
 	// TODO: Check why this employee_roles implementation is not working.
-	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.ID).Error; err != nil {
+	if err := tx.Exec("INSERT INTO employee_roles (role_id, employee_id) VALUES (?, ?)", ownerRole.ID, owner.UserID).Error; err != nil {
 		return err
 	}
 
-	if err := tx.Model(&owner).Preload("Roles").Where("id = ?", owner.ID.String()).First(&owner).Error; err != nil {
+	if err := tx.Model(&owner).Preload("Roles").Where("id = ?", owner.UserID.String()).First(&owner).Error; err != nil {
 		return err
 	}
 

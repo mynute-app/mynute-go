@@ -1,7 +1,7 @@
 package resourceSeed
 
 import (
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	coreModel "mynute-go/core/src/config/db/model"
 )
 
