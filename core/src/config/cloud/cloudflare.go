@@ -37,3 +37,4 @@ func (cf *CloudFlare) R2() (*s3.Client, error) {
 
 	return client, nil
 }
+

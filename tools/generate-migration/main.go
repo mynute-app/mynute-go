@@ -222,3 +222,4 @@ func getSchemaType(m any) string {
 	}
 	return "public"
 }
+

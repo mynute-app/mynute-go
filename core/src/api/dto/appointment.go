@@ -51,3 +51,4 @@ type AppointmentList struct {
 	PageSize     int           `json:"page_size" example:"10"`
 }
 
+

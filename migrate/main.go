@@ -100,3 +100,4 @@ func createMigration(migrationsPath, name string) error {
 	log.Printf("Created migration files:\n  %s\n  %s\n", upFile, downFile)
 	return nil
 }
+

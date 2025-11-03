@@ -140,3 +140,4 @@ func LoadAdminRoleIDs(db *gorm.DB) error {
 	}
 	return nil
 }
+

@@ -11,3 +11,4 @@ type S3Uploader interface {
 	PutObject(ctx context.Context, input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
 	DeleteObject(ctx context.Context, input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
 }
+

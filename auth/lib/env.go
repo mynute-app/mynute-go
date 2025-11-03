@@ -68,3 +68,4 @@ func LoadEnv() {
 		log.Println("INFO: .env file loaded successfully. This is expected in a local environment.")
 	}
 }
+

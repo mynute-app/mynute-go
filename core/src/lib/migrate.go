@@ -154,3 +154,4 @@ func ForceMigrationVersion(migrationsPath string, version int) error {
 	log.Printf("Successfully forced migration version to %d\n", version)
 	return nil
 }
+

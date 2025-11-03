@@ -62,3 +62,4 @@ func StructToMap(v any) (map[string]any, error) {
 
 	return mapV, nil
 }
+

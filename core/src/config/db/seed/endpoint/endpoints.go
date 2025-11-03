@@ -1,7 +1,7 @@
 package endpointSeed
 
 import (
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 )
 
 // GetAllEndpoints returns all endpoint definitions for seeding
@@ -138,3 +138,4 @@ func GetAllEndpoints() []*authModel.EndPoint {
 		GetServiceAvailability,
 	}
 }
+

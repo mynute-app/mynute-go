@@ -652,3 +652,4 @@ func TestMailHogAdapter_DeleteAllMessages(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+

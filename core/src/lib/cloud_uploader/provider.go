@@ -122,3 +122,4 @@ func make_bucket_public(client *s3.Client, bucket string) error {
 	}
 	return nil
 }
+

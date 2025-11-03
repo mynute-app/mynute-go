@@ -765,3 +765,4 @@ func collectAllPolicies() []*authModel.PolicyRule {
 		policySeed.AllowDeleteServiceImage,
 	}
 }
+

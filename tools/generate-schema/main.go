@@ -450,3 +450,4 @@ DROP TABLE IF EXISTS public.companies CASCADE;
 DROP TABLE IF EXISTS public.sectors CASCADE;
 `
 }
+

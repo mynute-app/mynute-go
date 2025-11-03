@@ -16,3 +16,4 @@ type LoginConfig struct {
 	VerificationRequestedAt   *time.Time `json:"verification_requested_at,omitempty"`
 	VerificationRequestsCount *int       `json:"verification_requests_count,omitempty"` // This is always reset when a code is used successfully
 }
+

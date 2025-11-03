@@ -106,3 +106,4 @@ func TruncateUTF8(s string, limit int) string {
 	}
 	return s
 }
+

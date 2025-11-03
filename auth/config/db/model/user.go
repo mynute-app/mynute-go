@@ -61,3 +61,4 @@ func (u *User) BeforeUpdate(tx *gorm.DB) error {
 
 	return nil
 }
+

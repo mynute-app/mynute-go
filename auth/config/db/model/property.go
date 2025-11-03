@@ -10,3 +10,4 @@ type Property struct {
 
 func (Property) TableName() string { return "public.properties" }
 func (Property) SchemaType() string { return "public" }
+

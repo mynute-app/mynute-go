@@ -93,3 +93,4 @@ func TestLokiLogStructured_FailAfterMaxRetries(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed after 3 attempts")
 }
+

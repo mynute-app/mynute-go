@@ -47,3 +47,4 @@ type Payment struct {
 
 func (Payment) TableName() string  { return "payments" }
 func (Payment) SchemaType() string { return "company" }
+

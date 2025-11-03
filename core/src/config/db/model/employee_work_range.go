@@ -170,3 +170,4 @@ func (ewr *EmployeeWorkRange) AddServices(tx *gorm.DB, services ...*Service) err
 	}
 	return nil
 }
+

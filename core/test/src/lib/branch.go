@@ -21,3 +21,4 @@ func GetBranchByID(company *model.Company, branchIDStr string) (*model.Branch, e
 	return nil, fmt.Errorf("branch with ID %s (found by slot finder) not in company.Branches", branchIDStr)
 }
 
+

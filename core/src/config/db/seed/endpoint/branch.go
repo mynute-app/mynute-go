@@ -1,7 +1,7 @@
 package endpointSeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	resourceSeed "mynute-go/core/src/config/db/seed/resource"
 	"mynute-go/core/src/config/namespace"
 )
@@ -174,3 +174,4 @@ var GetBranchAppointmentsById = &model.EndPoint{
 	DenyUnauthorized: true,
 	Resource:         resourceSeed.Branch,
 }
+

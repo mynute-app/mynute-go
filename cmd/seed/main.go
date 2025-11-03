@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
@@ -93,3 +93,4 @@ func main() {
 	fmt.Printf("  - %d Endpoints\n", len(endpoints))
 	fmt.Printf("  - %d Policies\n", len(policies))
 }
+

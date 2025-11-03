@@ -465,3 +465,4 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	}
 	return nil
 }
+

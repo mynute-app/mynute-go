@@ -163,3 +163,4 @@ func GenerateValidPassword() string {
 
 	return string(password)
 }
+

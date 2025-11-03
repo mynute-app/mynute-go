@@ -448,3 +448,4 @@ func DeleteImageById(c *fiber.Ctx, model_table_name string, model any, img_types
 	return &Design, nil
 }
 
+

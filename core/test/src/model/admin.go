@@ -210,8 +210,8 @@ func checkSuperAdminExists() (bool, error) {
 func createAdminFromDTO(dtoAdmin DTO.Admin, password string) *Admin {
 	admin := &Admin{
 		Created: &model.Admin{
-			UserID:   dtoAdmin.ID, // Admin uses UserID as primary key
-			Name:     dtoAdmin.Name,
+			UserID: dtoAdmin.ID, // Admin uses UserID as primary key
+			Name:   dtoAdmin.Name,
 			// Email:    dtoAdmin.Email, // TODO: Email is on User model
 			// Password: password, // TODO: Password is on User model
 			IsActive: dtoAdmin.IsActive,
@@ -402,8 +402,8 @@ func (a *Admin) Update(s int, adminID uuid.UUID, changes map[string]any) error {
 	if s >= 200 && s < 300 {
 		// Map DTO to model.Admin for validation
 		updated := model.Admin{
-			UserID:   response.Data.ID, // Admin uses UserID
-			Name:     response.Data.Name,
+			UserID: response.Data.ID, // Admin uses UserID
+			Name:   response.Data.Name,
 			// Email:     response.Data.Email, // Email is on User model
 			IsActive: response.Data.IsActive,
 		}

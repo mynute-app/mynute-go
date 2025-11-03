@@ -141,3 +141,4 @@ func (wr *WorkRangeBase) ConvertToBranchTimeZone(tx *gorm.DB) error {
 	wr.TimeZone = bTZ
 	return nil
 }
+

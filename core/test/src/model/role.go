@@ -8,3 +8,4 @@ type Role struct {
 	Auth_token string
 	Employees  []*Employee
 }
+

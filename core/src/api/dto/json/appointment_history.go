@@ -11,3 +11,4 @@ type FieldChange struct {
 	NewValue  string `json:"new_value" example:"new_value"`
 	Reason    string `json:"reason" example:"Some reason."`
 }
+

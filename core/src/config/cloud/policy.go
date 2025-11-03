@@ -14,3 +14,4 @@ func PublicReadPolicy(bucket string) string {
 		]
 	}`
 }
+

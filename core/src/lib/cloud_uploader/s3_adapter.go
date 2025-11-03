@@ -18,3 +18,4 @@ func (r *myS3Client) PutObject(ctx context.Context, input *s3.PutObjectInput) (*
 func (r *myS3Client) DeleteObject(ctx context.Context, input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
 	return r.Client.DeleteObject(ctx, input)
 }
+

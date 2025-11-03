@@ -36,3 +36,4 @@ func (s *Service) BeforeUpdate(tx *gorm.DB) (err error) {
 	}
 	return nil
 }
+

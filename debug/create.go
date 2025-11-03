@@ -54,3 +54,4 @@ func Clear() error {
 
 	return nil
 }
+

@@ -249,3 +249,4 @@ func Policies(policies []*PolicyRule, cfg *PolicyCfg) ([]*PolicyRule, func()) {
 	}
 	return policies, deferFnc
 }
+

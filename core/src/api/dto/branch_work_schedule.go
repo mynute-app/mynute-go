@@ -41,3 +41,4 @@ type BranchWorkRange struct {
 type BranchWorkRangeServices struct {
 	Services []ServiceBase `json:"services" swaggertype:"array,object"` // List of services associated with the work range
 }
+

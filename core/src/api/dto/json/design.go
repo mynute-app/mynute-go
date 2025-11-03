@@ -26,3 +26,4 @@ type Image struct {
 	Caption  string `json:"caption" example:"This is the image we talk about"`
 	URL       string `json:"url" example:"https://example.com/image.png"`
 }
+

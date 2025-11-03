@@ -1015,3 +1015,4 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 		},
 	}
 }
+

@@ -107,3 +107,4 @@ func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
 		// roles.Delete("/:id", controllers.DeleteRole)
 	}
 }
+

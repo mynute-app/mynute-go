@@ -66,3 +66,4 @@ type ServiceDensity struct {
 	ServiceID           uuid.UUID `json:"service_id" example:"00000000-0000-0000-0000-000000000000"`
 	MaxSchedulesOverlap uint      `json:"max_schedules_overlap" example:"5"`
 }
+

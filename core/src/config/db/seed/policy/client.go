@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -59,3 +59,4 @@ var AllowDeleteClientImage = &model.PolicyRule{
 	EndPointID:  endpointSeed.DeleteClientImage.ID,
 	Conditions:  model.JsonRawMessage(ClientSelfAccessCheck), // Client can delete self images (checks subject.id == resource.id)
 }
+

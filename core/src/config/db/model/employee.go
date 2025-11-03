@@ -396,3 +396,4 @@ func (e *Employee) RemoveRole(tx *gorm.DB, role *Role) error {
 
 	return nil
 }
+

@@ -68,3 +68,4 @@ func (bwr *BranchWorkRange) BeforeUpdate(tx *gorm.DB) error {
 
 	return nil
 }
+

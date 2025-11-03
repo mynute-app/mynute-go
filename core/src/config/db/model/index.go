@@ -105,3 +105,4 @@ func GetModelFromTableName(tableName string) (any, string, error) {
 	}
 	return nil, "", lib.Error.General.InternalError.WithError(fmt.Errorf("model not found for table name: %s", tableName))
 }
+

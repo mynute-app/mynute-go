@@ -98,3 +98,4 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Get deleted client by email").Test(client.GetByEmail(404))
 }
 
+

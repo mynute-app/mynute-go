@@ -39,3 +39,4 @@ func (a *AppointmentArchive) BeforeUpdate(tx *gorm.DB) (err error) {
 func (a *AppointmentArchive) BeforeDelete(tx *gorm.DB) (err error) {
 	return lib.Error.AppointmentArchive.DeleteForbidden
 }
+

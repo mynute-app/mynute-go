@@ -264,3 +264,4 @@ type CompanyMerged struct {
 	Employees []Employee `json:"employees"`
 	Services  []Service  `json:"services"`
 }
+

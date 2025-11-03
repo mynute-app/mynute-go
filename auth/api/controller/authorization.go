@@ -278,3 +278,4 @@ type AccessCheckResponse struct {
 	Effect     string `json:"effect,omitempty"`
 	Error      string `json:"error,omitempty"`
 }
+

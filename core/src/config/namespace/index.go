@@ -137,3 +137,4 @@ var (
 
 var UploadsFolder = "local_uploads"
 var StaticServerFolder = "static"
+

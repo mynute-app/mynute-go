@@ -58,3 +58,4 @@ func GetPageTranslations(c *fiber.Ctx) error {
 
 	return c.JSON(langData)
 }
+

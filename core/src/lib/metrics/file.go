@@ -7,3 +7,4 @@ func (f *File) Log(message string, labels map[string]string) error {
 	// For example, write the message to a log file with the provided labels
 	return nil
 }
+

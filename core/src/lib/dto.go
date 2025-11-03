@@ -118,3 +118,4 @@ func copyMatchingFields(sourceVal, dtoVal reflect.Value) error {
 
 	return nil
 }
+

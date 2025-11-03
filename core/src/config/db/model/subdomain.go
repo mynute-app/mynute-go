@@ -13,3 +13,4 @@ type Subdomain struct {
 
 func (Subdomain) TableName() string { return "public.subdomains" }
 func (Subdomain) SchemaType() string { return "public" }
+

@@ -250,3 +250,4 @@ func (p Gorm) ForceGetAll(model any) error {
 	// Fetch all records after applying all preloads
 	return query.Find(model).Error
 }
+

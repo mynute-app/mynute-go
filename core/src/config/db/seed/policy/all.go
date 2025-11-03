@@ -28,3 +28,4 @@ func GetAllPolicies() []*authModel.PolicyRule {
 
 	return policies
 }
+

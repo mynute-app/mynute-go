@@ -81,3 +81,4 @@ func (c *cloudUploader) save(file []byte, scopedPath string) (string, error) {
 	url := fmt.Sprintf("%s/%s/%s", c.PublicURL, c.Bucket, filepath.ToSlash(scopedPath))
 	return url, nil
 }
+

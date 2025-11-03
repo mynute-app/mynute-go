@@ -24,3 +24,4 @@ type CommentVersion struct {
 	Comment   string    `json:"comment" example:"Some different version comment text"`
 	CreatedBy uuid.UUID `json:"created_by" example:"00000000-0000-0000-0000-000000000000"`
 }
+

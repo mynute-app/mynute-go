@@ -64,3 +64,4 @@ type ServiceAvailability struct {
 	EmployeeInfo   []EmployeeBase  `json:"employee_info"`
 	BranchInfo     []BranchBase    `json:"branch_info"`
 }
+

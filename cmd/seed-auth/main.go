@@ -152,3 +152,4 @@ func seedEndpoint(client *http.Client, baseURL string, endpoint *authModel.EndPo
 
 	return nil
 }
+

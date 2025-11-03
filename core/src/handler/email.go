@@ -100,3 +100,4 @@ func setConfigs(configs *Configs) {
 	configs.SMTPClient = os.Getenv("SMTP_USER")
 	configs.SMTPPass = os.Getenv("SMTP_PASS")
 }
+

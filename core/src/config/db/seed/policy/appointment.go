@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -59,3 +59,4 @@ var AllowCancelAppointmentByID = &model.PolicyRule{
 	EndPointID:  endpointSeed.CancelAppointmentByID.ID,
 	Conditions:  model.JsonRawMessage(ClientOrCompanyMembershipAndManagerOrAssignedEmployeeCheck),
 }
+

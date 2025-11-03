@@ -1116,3 +1116,4 @@ func Employee(Gorm *handler.Gorm) {
 		VerifyEmployeeEmail,
 	})
 }
+

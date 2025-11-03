@@ -17,3 +17,4 @@ type RolePopulated struct {
 	CompanyID    uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	IsSystemRole bool      `json:"is_system_role"`
 }
+

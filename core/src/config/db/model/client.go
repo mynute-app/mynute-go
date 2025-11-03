@@ -76,3 +76,4 @@ func (c *Client) AddAppointment(a *Appointment, tx *gorm.DB) error {
 	}
 	return nil
 }
+

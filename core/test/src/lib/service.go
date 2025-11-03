@@ -20,3 +20,4 @@ func GetServiceByID(company *model.Company, serviceIDStr string) (*model.Service
 	return nil, fmt.Errorf("service with ID %s (found by slot finder) not in company.Services", serviceIDStr)
 }
 
+

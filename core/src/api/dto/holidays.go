@@ -15,3 +15,4 @@ type Holidays struct {
 	Recurrent   bool      `json:"recurrent" example:"true"`
 	DayMonth    string    `json:"dayMonth" example:"01-01"`
 }
+

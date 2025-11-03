@@ -48,3 +48,4 @@ func (ah *AppointmentHistory) FilterByField(field string) []FieldChange {
 	}
 	return filteredChanges
 }
+

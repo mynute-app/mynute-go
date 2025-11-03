@@ -152,3 +152,4 @@ func (sr *SendResponseStruct) saveError(err error) *SendResponseStruct {
 	fmt.Printf("An error occurred!\n>>> %v\n", err.Error())
 	return sr
 }
+

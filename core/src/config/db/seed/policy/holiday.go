@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -36,3 +36,4 @@ var AllowDeleteHolidayById = &model.PolicyRule{
 	EndPointID:  endpointSeed.DeleteHolidayById.ID,
 	Conditions:  model.JsonRawMessage(CompanyManagerCheck), // Any manager of the holiday's company
 }
+

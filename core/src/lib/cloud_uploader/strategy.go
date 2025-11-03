@@ -46,3 +46,4 @@ func makePDFStrategy(u Uploader) UploadStrategy {
 		}
 	}
 }
+

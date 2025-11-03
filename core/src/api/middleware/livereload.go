@@ -159,3 +159,4 @@ func SetupLiveReload(app *fiber.App) {
 
 	fmt.Println("🔄 Live reload enabled - watching ./admin/src")
 }
+

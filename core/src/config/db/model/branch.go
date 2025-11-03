@@ -297,3 +297,4 @@ func (b *Branch) ValidateBranchWorkRangeTime(tx *gorm.DB, newRange *BranchWorkRa
 
 	return nil
 }
+

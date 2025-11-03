@@ -290,3 +290,4 @@ func requireSuperAdmin(c *fiber.Ctx) error {
 	}
 	return nil
 }
+

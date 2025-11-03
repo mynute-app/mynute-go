@@ -42,3 +42,4 @@ type EmployeeBase struct {
 	Phone     string    `json:"phone" example:"+15555555555"`
 	Verified  bool      `json:"verified" example:"true"`
 }
+

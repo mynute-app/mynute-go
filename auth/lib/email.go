@@ -28,3 +28,4 @@ func PrepareEmail(user_email string) (string, error) {
 
 	return cleanedEmail, nil
 }
+

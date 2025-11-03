@@ -73,3 +73,4 @@ func (bsd *BranchServiceDensity) BeforeUpdate(tx *gorm.DB) error {
 
 	return nil
 }
+

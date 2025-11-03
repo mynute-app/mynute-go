@@ -10,3 +10,4 @@ func Prometheus(App *fiber.App) {
 	prometheus.RegisterAt(App, "/metrics")
 	App.Use(prometheus.Middleware)
 }
+

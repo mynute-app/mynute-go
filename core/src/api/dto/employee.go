@@ -75,3 +75,4 @@ type EmployeeBase struct {
 	TotalServiceDensity uint32             `json:"total_service_density" example:"100"`
 	Design              mJSON.DesignConfig `json:"design"`
 }
+

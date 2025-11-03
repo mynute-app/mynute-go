@@ -11,3 +11,4 @@ func Swagger(App *fiber.App) {
 	App.Get("/swagger/*", middleware.SwaggerAuth(), swagger.HandlerDefault)
 }
 
+

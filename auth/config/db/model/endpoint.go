@@ -89,3 +89,4 @@ func LoadEndpointIDs(endpoints []*EndPoint,db *gorm.DB) error {
 	}
 	return nil
 }
+

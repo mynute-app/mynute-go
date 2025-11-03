@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -52,3 +52,4 @@ var AllowDeleteServiceImage = &model.PolicyRule{
 	EndPointID:  endpointSeed.DeleteServiceImage.ID,
 	Conditions:  model.JsonRawMessage(CompanyAdminCheck), // Any manager of the service's company
 }
+

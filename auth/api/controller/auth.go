@@ -428,3 +428,4 @@ func SendLoginValidationCodeByEmail(user_type string, c *fiber.Ctx) error {
 		"message":         "Validation code generated. Use this code to login or have your service send it via email.",
 	})
 }
+

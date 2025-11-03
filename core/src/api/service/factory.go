@@ -720,3 +720,4 @@ func (s *service) VerifyEmail(email, code string) error {
 	return nil
 }
 
+

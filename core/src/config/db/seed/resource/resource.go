@@ -151,3 +151,4 @@ var Resources = []*authModel.Resource{
 	Service,
 	Auth,
 }
+

@@ -67,3 +67,4 @@ func Test_Service(t *testing.T) {
 	tt.Describe("Get service availability by ID").Test(cService.GetAvailability(200, nil, 0, 10))
 }
 
+

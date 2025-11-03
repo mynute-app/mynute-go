@@ -162,3 +162,4 @@ func getSecret() []byte {
 	// This allows tests to work without setting JWT_SECRET
 	return []byte("default-test-secret-do-not-use-in-production-12345")
 }
+

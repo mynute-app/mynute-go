@@ -15,3 +15,4 @@ type ClientAppointment struct {
 	StartTime     time.Time `json:"start_time" example:"2021-01-01T09:00:00Z"`
 	BranchAddress string    `json:"branch_address" example:"76, Example street, My city, My country, 09090790"`
 }
+

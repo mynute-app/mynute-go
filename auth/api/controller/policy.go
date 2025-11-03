@@ -331,3 +331,4 @@ type PolicyUpdateRequest struct {
 	EndPointID  *string         `json:"end_point_id,omitempty" validate:"omitempty,uuid"`
 	Conditions  json.RawMessage `json:"conditions,omitempty"`
 }
+

@@ -301,3 +301,4 @@ func TestTemplateRenderer_RealLoginValidation(t *testing.T) {
 		assert.Contains(t, result.HTMLBody, "Su Código de Validación de Inicio de Sesión")
 	})
 }
+

@@ -117,3 +117,4 @@ func (r *TemplateRenderer) mergeData(translations map[string]any, customData Tem
 
 	return merged
 }
+

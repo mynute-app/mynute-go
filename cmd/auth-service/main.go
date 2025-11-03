@@ -87,3 +87,4 @@ func main() {
 		log.Fatalf("Failed to start auth service: %v", err)
 	}
 }
+

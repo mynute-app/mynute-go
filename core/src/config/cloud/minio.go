@@ -40,3 +40,4 @@ func (m *MinIO) Client() (*s3.Client, error) {
 
 	return client, nil
 }
+

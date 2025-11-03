@@ -131,3 +131,4 @@ func UpdateClientById(c *fiber.Ctx) error {
 func DeleteClientById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &authModel.User{})
 }
+

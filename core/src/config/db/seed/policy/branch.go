@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -132,3 +132,4 @@ var AllowGetBranchAppointmentsById = &model.PolicyRule{
 	EndPointID:  endpointSeed.GetBranchAppointmentsById.ID,
 	Conditions:  model.JsonRawMessage(CompanyAdminOrAssignedBranchManagerCheck),
 }
+

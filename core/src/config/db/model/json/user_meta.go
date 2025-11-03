@@ -48,3 +48,4 @@ func (m *UserMeta) Scan(value any) error {
 func (m UserMeta) Value() (driver.Value, error) {
 	return json.Marshal(m)
 }
+

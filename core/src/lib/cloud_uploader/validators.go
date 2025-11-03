@@ -21,3 +21,4 @@ func validatePDF(file []byte) error {
 	}
 	return errors.New("file is not a valid PDF")
 }
+

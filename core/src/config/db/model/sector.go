@@ -10,3 +10,4 @@ const SectorTableName = "public.sectors"
 
 func (Sector) TableName() string { return SectorTableName }
 func (Sector) SchemaType() string { return "public" }
+

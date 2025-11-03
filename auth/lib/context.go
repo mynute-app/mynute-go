@@ -34,3 +34,4 @@ func InvalidDataType(interfaceName string) error {
 	errStr := fmt.Sprintf("invalid %s data type", interfaceName)
 	return errors.New(errStr)
 }
+

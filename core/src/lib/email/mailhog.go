@@ -466,3 +466,4 @@ func (m *MailHogAdapter) DeleteAllMessages() error {
 
 	return nil
 }
+

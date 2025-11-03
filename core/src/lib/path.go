@@ -62,3 +62,4 @@ func MatchPath(rulePath, actualPath string) bool {
 	}
 	return true
 }
+

@@ -23,3 +23,4 @@ func (m *BaseModel) BeforeSave(tx *gorm.DB) (err error) {
 	}
 	return nil
 }
+

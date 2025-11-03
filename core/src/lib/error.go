@@ -298,3 +298,4 @@ var Error = ErrorCategory{
 		Failed: NewError("Input validation failed", "Falha na validação dos dados de entrada", fiber.StatusBadRequest),
 	},
 }
+

@@ -18,6 +18,9 @@ type Client struct {
 	Created      *model.Client
 	Appointments []*Appointment
 	X_Auth_Token string
+	Email        string // Email is stored in auth.User, cached here for tests
+	Password     string // Password is stored in auth.User, cached here for tests
+	Verified     bool   // Verified is stored in auth.User, cached here for tests
 }
 
 func (u *Client) Set() error {
@@ -55,12 +58,14 @@ func (u *Client) Set() error {
 
 func (u *Client) Create(s int) error {
 	pswd := lib.GenerateValidPassword()
+	email := lib.GenerateRandomEmail("client")
+	
 	if err := handler.NewHttpClient().
 		Method("POST").
 		URL("/client").
 		ExpectedStatus(s).
 		Send(DTO.CreateClient{
-			Email:    lib.GenerateRandomEmail("client"),
+			Email:    email,
 			Name:     lib.GenerateRandomName("Client Name"),
 			Surname:  lib.GenerateRandomName("Client Surname"),
 			Password: pswd,
@@ -68,14 +73,16 @@ func (u *Client) Create(s int) error {
 		}).ParseResponse(&u.Created).Error; err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
 	}
-	u.Created.Password = pswd
+	// Cache email/password in test wrapper (they're stored in auth.User)
+	u.Email = email
+	u.Password = pswd
 	return nil
 }
 
 func (u *Client) Update(s int, changes map[string]any) error {
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL("/client/"+fmt.Sprintf("%v", u.Created.ID.String())).
+		URL("/client/"+fmt.Sprintf("%v", u.Created.UserID.String())).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(changes).
@@ -95,7 +102,7 @@ func (u *Client) Update(s int, changes map[string]any) error {
 func (u *Client) GetByEmail(s int) error {
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL("/client/email/" + u.Created.Email).
+		URL("/client/email/" + u.Email).
 		ExpectedStatus(s).
 		Send(nil).
 		ParseResponse(&u.Created).Error; err != nil {
@@ -107,7 +114,7 @@ func (u *Client) GetByEmail(s int) error {
 func (u *Client) Delete(s int) error {
 	if err := handler.NewHttpClient().
 		Method("DELETE").
-		URL(fmt.Sprintf("/client/%v", u.Created.ID.String())).
+		URL(fmt.Sprintf("/client/%v", u.Created.UserID.String())).
 		ExpectedStatus(s).
 		Header(namespace.HeadersKey.Auth, u.X_Auth_Token).
 		Send(nil).
@@ -127,7 +134,7 @@ func (u *Client) Login(s int, login_type string) error {
 }
 
 func (u *Client) LoginWithPassword(s int) error {
-	if err := u.LoginByPassword(s, u.Created.Password); err != nil {
+	if err := u.LoginByPassword(s, u.Password); err != nil {
 		return fmt.Errorf("failed to login with password: %w", err)
 	}
 	return nil
@@ -135,7 +142,7 @@ func (u *Client) LoginWithPassword(s int) error {
 
 func (u *Client) LoginByPassword(s int, password string) error {
 	login := DTO.LoginClient{
-		Email:    u.Created.Email,
+		Email:    u.Email,
 		Password: password,
 	}
 	http := handler.NewHttpClient()
@@ -176,7 +183,7 @@ func (u *Client) LoginWithEmailCode(s int) error {
 
 func (u *Client) LoginByEmailCode(s int, code string) error {
 	loginData := DTO.LoginByEmailCode{
-		Email: u.Created.Email,
+		Email: u.Email,
 		Code:  code,
 	}
 	http := handler.NewHttpClient()
@@ -205,7 +212,7 @@ func (u *Client) SendLoginCode(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/send-login-code/email/%s?lang=en", url.PathEscape(u.Created.Email))).
+		URL(fmt.Sprintf("/client/send-login-code/email/%s?lang=en", url.PathEscape(u.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send login code to client: %w", err)
@@ -221,7 +228,7 @@ func (u *Client) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	// Get the latest email sent to the client
-	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	message, err := mailhog.GetLatestMessageTo(u.Email)
 	if err != nil {
 		return "", err
 	}
@@ -244,7 +251,7 @@ func (u *Client) SendPasswordResetEmail(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/reset-password/%s?lang=en", url.PathEscape(u.Created.Email))).
+		URL(fmt.Sprintf("/client/reset-password/%s?lang=en", url.PathEscape(u.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send password reset email to client: %w", err)
@@ -260,7 +267,7 @@ func (u *Client) GetNewPasswordFromEmail() (string, error) {
 	}
 
 	// Get the latest email sent to the client
-	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	message, err := mailhog.GetLatestMessageTo(u.Email)
 	if err != nil {
 		return "", err
 	}
@@ -290,7 +297,7 @@ func (u *Client) ResetPasswordByEmail(s int) error {
 	}
 
 	// Update the password in memory
-	u.Created.Password = newPassword
+	u.Password = newPassword
 
 	// Try to login with the new password
 	if err := u.LoginByPassword(200, newPassword); err != nil {
@@ -304,7 +311,7 @@ func (u *Client) SendVerificationEmail(s int) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("POST").
-		URL(fmt.Sprintf("/client/send-verification-code/email/%s?language=en", url.PathEscape(u.Created.Email))).
+		URL(fmt.Sprintf("/client/send-verification-code/email/%s?language=en", url.PathEscape(u.Email))).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to send verification email to client: %w", err)
@@ -320,7 +327,7 @@ func (u *Client) GetVerificationCodeFromEmail() (string, error) {
 	}
 
 	// Get the latest email sent to the client
-	message, err := mailhog.GetLatestMessageTo(u.Created.Email)
+	message, err := mailhog.GetLatestMessageTo(u.Email)
 	if err != nil {
 		return "", err
 	}
@@ -343,7 +350,7 @@ func (u *Client) VerifyEmailByCode(s int, code string) error {
 	http := handler.NewHttpClient()
 	if err := http.
 		Method("GET").
-		URL(fmt.Sprintf("/client/verify-email/%s/%s", url.PathEscape(u.Created.Email), code)).
+		URL(fmt.Sprintf("/client/verify-email/%s/%s", url.PathEscape(u.Email), code)).
 		ExpectedStatus(s).
 		Send(nil).Error; err != nil {
 		return fmt.Errorf("failed to verify client email: %w", err)
@@ -351,7 +358,7 @@ func (u *Client) VerifyEmailByCode(s int, code string) error {
 
 	if s == 200 {
 		// Update the verified status in memory
-		u.Created.Verified = true
+		u.Verified = true
 		if err := u.GetByEmail(200); err != nil {
 			return fmt.Errorf("failed to get client by email after verification: %w", err)
 		}
@@ -417,7 +424,7 @@ func (c *Client) UploadImages(status int, files map[string][]byte, x_auth_token 
 
 	if err := handler.NewHttpClient().
 		Method("PATCH").
-		URL(fmt.Sprintf("/client/%s/design/images", c.Created.ID.String())).
+		URL(fmt.Sprintf("/client/%s/design/images", c.Created.UserID.String())).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Auth, t).
 		Send(fileMap).
@@ -473,7 +480,7 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 		return fmt.Errorf("failed to prepare delete images request: %w", err)
 	}
 
-	base_url := fmt.Sprintf("/client/%s/design/images", c.Created.ID.String())
+	base_url := fmt.Sprintf("/client/%s/design/images", c.Created.UserID.String())
 	for _, image_type := range image_types {
 		image_url := base_url + "/" + image_type
 		http.URL(image_url)
@@ -489,5 +496,6 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 	}
 	return nil
 }
+
 
 

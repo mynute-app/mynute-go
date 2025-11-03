@@ -175,3 +175,4 @@ func (is *Images) Scan(value any) error {
 	}
 	return json.Unmarshal(bytes, is)
 }
+

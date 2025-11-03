@@ -7,3 +7,4 @@ type Sector struct {
 	Name        string    `json:"name" example:"Your Company Sector Name"`
 	Description string    `json:"description" example:"The Company Sector Description"`
 }
+

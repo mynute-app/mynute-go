@@ -18,3 +18,4 @@ type LoginByEmailCode struct {
 	Email string `json:"email" example:"john.doe@example.com"`
 	Code  string `json:"code" example:"123456"`
 }
+

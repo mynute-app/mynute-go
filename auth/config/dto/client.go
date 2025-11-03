@@ -34,3 +34,4 @@ type ClientPopulated struct {
 	Phone    string    `json:"phone" example:"+1-555-555-5555"`
 	Verified bool      `json:"verified" example:"false"`
 }
+

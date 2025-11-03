@@ -18,3 +18,4 @@ const HolidayTableName = "public.holidays"
 
 func (Holiday) TableName() string { return HolidayTableName }
 func (Holiday) SchemaType() string { return "public" }
+

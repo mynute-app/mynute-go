@@ -41,3 +41,4 @@ type CompanyBase struct {
 	Sectors    []*Sector          `json:"sectors"`
 	Subdomains []*Subdomain       `json:"subdomains"`
 }
+

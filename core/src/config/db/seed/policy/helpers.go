@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	coreModel "mynute-go/core/src/config/db/model"
 )
 
@@ -393,3 +393,4 @@ var EmployeeSelfOrInternalUserCheck = authModel.ConditionNode{
 		CompanyInternalUserCheck, // Any other member of the same company can view
 	},
 }
+

@@ -261,3 +261,4 @@ func TestResendAdapter_Send(t *testing.T) {
 		mockEmailsService.AssertExpectations(t)
 	})
 }
+

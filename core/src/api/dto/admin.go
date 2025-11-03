@@ -73,3 +73,4 @@ type AdminRole struct {
 	CreatedAt   string    `json:"created_at" example:"2025-01-01T00:00:00Z"`
 	UpdatedAt   string    `json:"updated_at" example:"2025-01-01T00:00:00Z"`
 }
+

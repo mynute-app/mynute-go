@@ -142,3 +142,4 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 func DeleteEmployeeById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &authModel.User{})
 }
+

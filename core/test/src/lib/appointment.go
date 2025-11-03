@@ -26,3 +26,4 @@ func GetAppointment(s int, appointment_id string, company_id, token string, a *m
 	return nil
 }
 
+

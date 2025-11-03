@@ -17,3 +17,4 @@ func SwaggerAuth() fiber.Handler {
 		Realm: "Restricted",
 	})
 }
+

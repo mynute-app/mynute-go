@@ -35,3 +35,4 @@ func CreateCompaniesRandomly(CompaniesToCreate int) ([]*model.Company, error) {
 	}
 	return companies, nil
 }
+

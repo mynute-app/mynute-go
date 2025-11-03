@@ -75,7 +75,7 @@ func (a *Appointment) CreateRandomly(s int, cy *Company, ct *Client, e *Employee
 		Send(map[string]any{
 			"branch_id":   appointmentSlot.BranchID,
 			"service_id":  appointmentSlot.ServiceID,
-			"employee_id": e.Created.ID.String(),
+			"employee_id": e.Created.UserID.String(),
 			"company_id":  cy.Created.ID.String(),
 			"client_id":   ct.Created.UserID.String(),
 			"start_time":  appointmentSlot.StartTimeRFC3339, // Use found start time
@@ -121,7 +121,7 @@ func (a *Appointment) RescheduleRandomly(s int, x_auth_token string, x_company_i
 		return fmt.Errorf("failed to find valid appointment slot: %w", err)
 	}
 	if !found {
-		return fmt.Errorf("no valid appointment slot found for employee %s in company %s", a.employee.Created.UserID.String(), a.Company.Created.ID.String())
+		return fmt.Errorf("no valid appointment slot found for employee %s in company %s", a.Employee.Created.UserID.String(), a.Company.Created.ID.String())
 	}
 	var branch *Branch
 	for _, b := range a.Company.Branches {
@@ -194,7 +194,7 @@ func (a *Appointment) Create(status int, x_auth_token string, x_company_id *stri
 	}
 	A := DTO.CreateAppointment{
 		BranchID:   b.Created.ID,
-		EmployeeID: e.Created.ID,
+		EmployeeID: e.Created.UserID,
 		ServiceID:  s.Created.ID,
 		ClientID:   ct.Created.UserID,
 		CompanyID:  cy.Created.ID,
@@ -448,5 +448,6 @@ func (a *Appointment) FindValidAppointmentSlot(employee *Employee, preferredLoca
 	}
 	return nil, false, fmt.Errorf("no valid appointment slot found for employee %s", employee.Created.UserID.String())
 }
+
 
 

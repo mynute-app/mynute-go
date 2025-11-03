@@ -41,3 +41,4 @@ func Build(DB *gorm.DB, App *fiber.App) {
 		panic(err)
 	}
 }
+

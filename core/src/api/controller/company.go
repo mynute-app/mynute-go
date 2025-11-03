@@ -519,3 +519,4 @@ func Company(Gorm *handler.Gorm) {
 		DeleteCompanyById,
 	})
 }
+

@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 	"log"
-	authModel "mynute-go/auth/model"
+	authModel "mynute-go/auth/config/db/model"
 	"mynute-go/core/src/handler"
 	"reflect"
 	"runtime"
@@ -103,3 +103,4 @@ func getEndpointControllerName(fn fiber.Handler) string {
 	last = strings.Split(last, "-")[0]
 	return last
 }
+

@@ -87,3 +87,4 @@ func GetCompanySchemaName(c *fiber.Ctx) (string, error) {
 	}
 	return schemaName, nil
 }
+

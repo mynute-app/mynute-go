@@ -22,3 +22,4 @@ func (h *testErrorHandler) Test(e error) *testErrorHandler {
 	}
 	return h
 }
+

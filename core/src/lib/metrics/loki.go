@@ -143,3 +143,4 @@ func sendToLoki(url string, data []byte) error {
 
 	return nil
 }
+

@@ -78,3 +78,4 @@ func TestCloudUploader_Replace(t *testing.T) {
 		t.Errorf("expected new URL to contain base filename '%s', got: %s", newName[:3], url)
 	}
 }
+

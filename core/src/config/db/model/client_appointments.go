@@ -15,3 +15,4 @@ type ClientAppointment struct {
 	TimeZone      string    `gorm:"type:varchar(100);not null" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	IsCancelled   bool      `gorm:"default:false" json:"is_cancelled"`
 }
+

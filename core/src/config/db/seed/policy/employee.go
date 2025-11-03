@@ -1,7 +1,7 @@
 package policySeed
 
 import (
-	"mynute-go/auth/model"
+	"mynute-go/auth/config/db/model"
 	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
 )
 
@@ -162,3 +162,4 @@ var AllowGetEmployeeAppointmentsById = &model.PolicyRule{
 	EndPointID:  endpointSeed.GetEmployeeAppointmentsById.ID,
 	Conditions:  model.JsonRawMessage(CompanyAdminOrEmployeeHimselfCheck),
 }
+
