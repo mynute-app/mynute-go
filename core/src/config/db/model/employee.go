@@ -7,21 +7,19 @@ import (
 	"mynute-go/debug"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
+// Employee represents an employee in the business service
+// Authentication is handled by auth service - UserID links to auth.users.id
 type Employee struct {
-	BaseModel
+	UserID              uuid.UUID           `gorm:"type:uuid;primaryKey" json:"user_id"` // Primary key, references auth.users.id
 	Name                string              `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
 	Surname             string              `gorm:"type:varchar(100)" validate:"max=100" json:"surname"`
-	Email               string              `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
 	Phone               string              `gorm:"type:varchar(20);uniqueIndex" validate:"required,e164" json:"phone"`
 	Tags                []string            `gorm:"type:json" json:"tags"`
-	Password            string              `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
 	SlotTimeDiff        uint                `gorm:"default:30" json:"slot_time_diff"`
 	WorkSchedule        []EmployeeWorkRange `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"work_schedule"`
 	Appointments        []Appointment       `gorm:"foreignKey:EmployeeID;constraint:OnDelete:CASCADE;" json:"appointments"`
@@ -31,8 +29,7 @@ type Employee struct {
 	Roles               []*Role             `gorm:"many2many:employee_roles;constraint:OnDelete:CASCADE;" json:"roles"`
 	TimeZone            string              `gorm:"type:varchar(100)" json:"time_zone" validate:"required,myTimezoneValidation"` // Time zone in IANA format (e.g., "America/New_York", "America/Sao_Paulo", etc.)
 	TotalServiceDensity uint32              `gorm:"not null;default:1" json:"total_service_density"`                             // Total service density for the employee
-	Verified            bool                `gorm:"default:false" json:"verified"`
-	Meta                mJSON.UserMeta      `gorm:"type:jsonb" json:"meta"`
+	Meta                mJSON.UserMeta      `gorm:"type:jsonb" json:"meta"`                                                      // Business-specific metadata (design, etc.)
 }
 
 const EmployeeTableName = "employees"
@@ -41,21 +38,20 @@ func (Employee) TableName() string  { return EmployeeTableName }
 func (Employee) SchemaType() string { return "company" }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {
-	if err := lib.MyCustomStructValidator(e); err != nil {
-		return err
+	if e.UserID == uuid.Nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("user_id is required"))
 	}
-	if err := e.HashPassword(); err != nil {
+	if err := lib.MyCustomStructValidator(e); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
-	// Prevent ID and company_id from being changed after creation
-	// The ID field is now populated by the handler before calling Updates()
-	if e.ID != uuid.Nil {
+	// Prevent user_id and company_id from being changed after creation
+	if e.UserID != uuid.Nil {
 		var existingEmployee Employee
-		if err := tx.Unscoped().Select("company_id").Where("id = ?", e.ID).Take(&existingEmployee).Error; err == nil {
+		if err := tx.Unscoped().Select("company_id").Where("user_id = ?", e.UserID).Take(&existingEmployee).Error; err == nil {
 			// Check if CompanyID is being changed
 			if e.CompanyID != uuid.Nil && existingEmployee.CompanyID != e.CompanyID {
 				return lib.Error.General.UpdatedError.WithError(fmt.Errorf("the CompanyID cannot be changed after creation"))
@@ -63,37 +59,7 @@ func (e *Employee) BeforeUpdate(tx *gorm.DB) error {
 		}
 	}
 
-	if e.Password != "" {
-		var dbEmployee Employee
-		tx.First(&dbEmployee, "id = ?", e.ID)
-		if e.Password == dbEmployee.Password || e.MatchPassword(dbEmployee.Password) {
-			return nil
-		}
-		if err := lib.ValidatorV10.Var(e.Password, "myPasswordValidation"); err != nil {
-			if _, ok := err.(validator.ValidationErrors); ok {
-				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
-			} else {
-				return lib.Error.General.InternalError.WithError(err)
-			}
-		}
-		return e.HashPassword()
-	}
-	return nil
-}
-
-func (e *Employee) MatchPassword(hashedPass string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(e.Password))
-	return err == nil
-}
-
-// Method to set hashed password:
-func (e *Employee) HashPassword() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(e.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	e.Password = string(hash)
-	return nil
+	return lib.MyCustomStructValidator(e)
 }
 
 func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
@@ -113,7 +79,7 @@ func (e *Employee) GetWorkRangeForDay(day time.Weekday) []EmployeeWorkRange {
 func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkRange) error {
 	var emp_work_schedule []EmployeeWorkRange
 	if err := tx.
-		Where("employee_id = ? AND weekday = ? AND id != ?", e.ID, ewr.Weekday, ewr.ID).
+		Where("employee_id = ? AND weekday = ? AND id != ?", e.UserID, ewr.Weekday, ewr.ID).
 		Where("start_time <= ? AND end_time >= ?", ewr.EndTime, ewr.StartTime).
 		Find(&emp_work_schedule).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
@@ -160,7 +126,7 @@ func (e *Employee) ValidateEmployeeWorkRangeTime(tx *gorm.DB, ewr *EmployeeWorkR
 }
 
 func (e *Employee) RemoveWorkRange(tx *gorm.DB, wr *EmployeeWorkRange) error {
-	if wr.EmployeeID != e.ID {
+	if wr.EmployeeID != e.UserID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID"))
 	}
 
@@ -177,14 +143,14 @@ func (e *Employee) AddServicesToWorkRange(tx *gorm.DB, wr_id string, services []
 	}
 
 	var wr EmployeeWorkRange
-	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.ID).Error; err != nil {
+	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.ID))
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.UserID))
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if wr.EmployeeID != e.ID {
+	if wr.EmployeeID != e.UserID {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("work range employee ID does not match employee ID"))
 	}
 
@@ -210,9 +176,9 @@ func (e *Employee) AddServicesToWorkRange(tx *gorm.DB, wr_id string, services []
 
 func (e *Employee) RemoveServiceFromWorkRange(tx *gorm.DB, wr_id string, service_id string) error {
 	var wr EmployeeWorkRange
-	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.ID).Error; err != nil {
+	if err := tx.First(&wr, "id = ? AND employee_id = ?", wr_id, e.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.ID))
+			return lib.Error.General.RecordNotFound.WithError(fmt.Errorf("work range not found for this employee ID (%s)", e.UserID))
 		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -235,14 +201,14 @@ func (e *Employee) HasServices(tx *gorm.DB, services []*Service) error {
 
 func (e *Employee) HasService(tx *gorm.DB, service *Service) error {
 	if service == nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("service passed is nil when validating employee (%s) services", e.ID))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("service passed is nil when validating employee (%s) services", e.UserID))
 	}
 	var count int64
-	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", e.ID, service.ID).Scan(&count).Error; err != nil {
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_services WHERE employee_id = ? AND service_id = ?", e.UserID, service.ID).Scan(&count).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	if count == 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", e.ID, service.ID))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s does not have service %s", e.UserID, service.ID))
 	}
 	return nil
 }
@@ -252,7 +218,7 @@ func (e *Employee) AddService(tx *gorm.DB, service *Service) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	sID := service.ID.String()
 
 	// Check if the employee already has the service
@@ -284,7 +250,7 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	sID := service.ID.String()
 
 	// Check if the employee has the service
@@ -314,11 +280,11 @@ func (e *Employee) RemoveService(tx *gorm.DB, service *Service) error {
 func (e *Employee) HasBranch(tx *gorm.DB, branchID uuid.UUID) error {
 	var count int64
 	// Check if the employee exists in the branch
-	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", e.ID, branchID).Scan(&count).Error; err != nil {
+	if err := tx.Raw("SELECT COUNT(*) FROM employee_branches WHERE employee_id = ? AND branch_id = ?", e.UserID, branchID).Scan(&count).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	if count == 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s not found in branch %s", e.ID, branchID))
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("employee %s not found in branch %s", e.UserID, branchID))
 	}
 	return nil
 }
@@ -328,7 +294,7 @@ func (e *Employee) AddBranch(tx *gorm.DB, branch *Branch) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	bID := branch.ID.String()
 
 	// Check if the employee already exists in the branch
@@ -360,7 +326,7 @@ func (e *Employee) RemoveBranch(tx *gorm.DB, branch *Branch) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	bID := branch.ID.String()
 
 	// Check if the employee exists in the branch
@@ -392,7 +358,7 @@ func (e *Employee) AddRole(tx *gorm.DB, role *Role) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	rID := role.ID.String()
 
 	if err := tx.Exec("INSERT INTO employee_roles (employee_id, role_id) VALUES (?, ?)", eID, rID).Error; err != nil {
@@ -414,7 +380,7 @@ func (e *Employee) RemoveRole(tx *gorm.DB, role *Role) error {
 		return lib.Error.Company.NotSame
 	}
 
-	eID := e.ID.String()
+	eID := e.UserID.String()
 	rID := role.ID.String()
 
 	if err := tx.Exec("DELETE FROM employee_roles WHERE employee_id = ? AND role_id = ?", eID, rID).Error; err != nil {

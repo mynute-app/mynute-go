@@ -1,12 +1,13 @@
 package controller
 
 import (
-	DTO "mynute-go/core/src/config/api/dto"
-	"mynute-go/core/src/config/db/model"
-	"mynute-go/core/src/lib"
-	"mynute-go/core/src/service"
+	"fmt"
+	DTO "mynute-go/auth/dto"
+	"mynute-go/auth/lib"
+	authModel "mynute-go/auth/model"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // =====================
@@ -25,7 +26,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var client model.Client
+	var client authModel.Client
 	if err := CreateUser(c, &client); err != nil {
 		return err
 	}
@@ -46,8 +47,8 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var client model.Client
-	if err := GetOneBy("email", c, &client, nil, &[]string{"Appointments"}); err != nil {
+	var client authModel.Client
+	if err := GetOneBy("email", c, &client); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
@@ -70,8 +71,8 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	var client model.Client
-	if err := GetOneBy("id", c, &client, nil, &[]string{"Appointments"}); err != nil {
+	var client authModel.Client
+	if err := GetOneBy("id", c, &client); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
@@ -96,8 +97,8 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var client model.Client
-	if err := UpdateOneById(c, &client, nil); err != nil {
+	var client authModel.Client
+	if err := UpdateOneById(c, &client); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
@@ -120,7 +121,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.Client{})
+	return DeleteOneById(c, &authModel.Client{})
 }
 
 // =====================
@@ -143,7 +144,7 @@ func DeleteClientById(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee [post]
 func CreateEmployee(c *fiber.Ctx) error {
-	var employee model.Employee
+	var employee authModel.Employee
 	if err := CreateUser(c, &employee); err != nil {
 		return err
 	}
@@ -168,8 +169,8 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
-	var employee model.Employee
-	if err := GetOneBy("id", c, &employee, &[]string{"WorkSchedule.Services"}, &[]string{"Appointments"}); err != nil {
+	var employee authModel.Employee
+	if err := GetOneBy("id", c, &employee); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -193,8 +194,8 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
-	var employee model.Employee
-	if err := GetOneBy("email", c, &employee, &[]string{"WorkSchedule.Services"}, &[]string{"Appointments"}); err != nil {
+	var employee authModel.Employee
+	if err := GetOneBy("email", c, &employee); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -220,8 +221,8 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
-	var employee model.Employee
-	if err := UpdateOneById(c, &employee, nil); err != nil {
+	var employee authModel.Employee
+	if err := UpdateOneById(c, &employee); err != nil {
 		return err
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
@@ -245,53 +246,127 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.Employee{})
+	return DeleteOneById(c, &authModel.Employee{})
 }
 
 // =====================
 // SHARED HELPERS
 // =====================
 
-func CreateUser(c *fiber.Ctx, model any) error {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	if err := Service.SetModel(model).Create().Error; err != nil {
+func CreateUser(c *fiber.Ctx, modelInstance any) error {
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	// Parse the request body into the model
+	if err := c.BodyParser(modelInstance); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Create the user record
+	if err := tx.Create(modelInstance).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
+
 	return nil
 }
 
-func GetOneBy(param string, c *fiber.Ctx, model any, nested_preload *[]string, do_not_load *[]string) error {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	if err = Service.
-		SetModel(model).
-		SetNestedPreload(nested_preload).
-		SetDoNotLoad(do_not_load).
-		GetBy(param).Error; err != nil {
+func GetOneBy(param string, c *fiber.Ctx, modelInstance any) error {
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
+
+	// Get the parameter value from context
+	paramValue := c.Params(param)
+	if paramValue == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing parameter: %s", param))
+	}
+
+	// Validate UUID if param is "id"
+	if param == "id" {
+		if _, err := uuid.Parse(paramValue); err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid UUID format"))
+		}
+	}
+
+	// Query the database
+	query := tx.Model(modelInstance).Where(param+" = ?", paramValue)
+
+	// Execute the query
+	if err := query.First(modelInstance).Error; err != nil {
+		if err.Error() == "record not found" {
+			return lib.Error.General.RecordNotFound
+		}
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	return nil
 }
 
-func UpdateOneById(c *fiber.Ctx, model any, nested_preload *[]string) error {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	if err = Service.SetModel(model).SetNestedPreload(nested_preload).UpdateOneById().Error; err != nil {
+func UpdateOneById(c *fiber.Ctx, modelInstance any) error {
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
+
+	// Get ID from params
+	id := c.Params("id")
+	if id == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing id parameter"))
+	}
+
+	// Validate UUID
+	if _, err := uuid.Parse(id); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid UUID format"))
+	}
+
+	// Parse updates from body
+	var updates map[string]interface{}
+	if err := c.BodyParser(&updates); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Update the record
+	if err := tx.Model(modelInstance).Where("id = ?", id).Updates(updates).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Fetch the updated record
+	if err := tx.Where("id = ?", id).First(modelInstance).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	return nil
 }
 
-func DeleteOneById(c *fiber.Ctx, model any) error {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	if err = Service.SetModel(model).DeleteOneById().Error; err != nil {
+func DeleteOneById(c *fiber.Ctx, modelInstance any) error {
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
 		return err
 	}
-	return nil
+
+	// Get ID from params
+	id := c.Params("id")
+	if id == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing id parameter"))
+	}
+
+	// Validate UUID
+	if _, err := uuid.Parse(id); err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid UUID format"))
+	}
+
+	// Delete the record
+	if err := tx.Where("id = ?", id).Delete(modelInstance).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Return success
+	return lib.ResponseFactory(c).Send(200, map[string]string{"message": "Deleted successfully"})
 }

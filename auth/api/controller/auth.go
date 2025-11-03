@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
-	"mynute-go/core/src/config/db/model"
-	"mynute-go/core/src/config/namespace"
-	"mynute-go/core/src/handler"
-	"mynute-go/core/src/lib"
-	"mynute-go/core/src/service"
+	"mynute-go/auth/config/namespace"
+	DTO "mynute-go/auth/dto"
+	"mynute-go/auth/handler"
+	"mynute-go/auth/lib"
+	"mynute-go/auth/model"
+	mJSON "mynute-go/auth/model/json"
+	"reflect"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,7 +31,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/client/login [post]
 func LoginClientByPassword(c *fiber.Ctx) error {
-	token, err := LoginByPassword(namespace.ClientKey.Name, &model.Client{}, c)
+	token, err := LoginByPassword(namespace.ClientKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -47,7 +51,7 @@ func LoginClientByPassword(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/client/login-with-code [post]
 func LoginClientByEmailCode(c *fiber.Ctx) error {
-	token, err := LoginByEmailCode(namespace.ClientKey.Name, &model.Client{}, c)
+	token, err := LoginByEmailCode(namespace.ClientKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -67,7 +71,7 @@ func LoginClientByEmailCode(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/client/send-login-code/email/{email} [post]
 func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
-	if err := SendLoginValidationCodeByEmail(c, &model.Client{}); err != nil {
+	if err := SendLoginValidationCodeByEmail(namespace.ClientKey.Name, c); err != nil {
 		return err
 	}
 	return nil
@@ -226,71 +230,213 @@ func ValidateAdminToken(c *fiber.Ctx) error {
 // SHARED LOGIN HELPERS
 // =====================
 
-// LoginByPassword is a shared helper for password-based login
-func LoginByPassword(user_type string, model any, c *fiber.Ctx) (string, error) {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	token, err := Service.SetModel(model).LoginByPassword(user_type)
-	return token, err
+// LoginByPassword is a shared helper for password-based login using unified User model
+func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
+	// Parse request body
+	var body struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return "", lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return "", err
+	}
+
+	// Find user by email and type
+	var user model.User
+	if err := tx.Where("email = ? AND type = ?", body.Email, user_type).First(&user).Error; err != nil {
+		if err.Error() == "record not found" {
+			return "", lib.Error.Client.NotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Validate user status and password
+	if !user.Verified {
+		return "", lib.Error.Client.NotVerified
+	}
+	if !handler.ComparePassword(user.Password, body.Password) {
+		return "", lib.Error.Auth.InvalidLogin
+	}
+
+	// Create JWT claims from user data
+	userBytes, err := json.Marshal(&user)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	var claims DTO.Claims
+	if err := json.Unmarshal(userBytes, &claims); err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	claims.Type = user_type
+
+	// Generate JWT token
+	token, err := handler.JWT(c).Encode(&claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
-// LoginByEmailCode is a shared helper for email code-based login
-func LoginByEmailCode(user_type string, model any, c *fiber.Ctx) (string, error) {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	token, err := Service.SetModel(model).LoginByEmailCode(user_type)
-	return token, err
+// LoginByEmailCode is a shared helper for email code-based login using unified User model
+func LoginByEmailCode(user_type string, c *fiber.Ctx) (string, error) {
+	// Parse request body
+	var body DTO.LoginByEmailCode
+	if err := c.BodyParser(&body); err != nil {
+		return "", lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return "", err
+	}
+
+	// Find user by email and type
+	var user model.User
+	if err := tx.Where("email = ? AND type = ?", body.Email, user_type).First(&user).Error; err != nil {
+		if err.Error() == "record not found" {
+			return "", lib.Error.Client.NotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Check if code exists
+	if user.Meta.Login.ValidationCode == nil {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
+	}
+
+	// Check if expiry exists
+	if user.Meta.Login.ValidationExpiry == nil {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+	}
+
+	// Check if code has expired
+	if time.Now().After(*user.Meta.Login.ValidationExpiry) {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+	}
+
+	// Verify the code
+	if *user.Meta.Login.ValidationCode != body.Code {
+		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+	}
+
+	// Clear the validation code after successful use
+	if err := tx.Model(&user).Updates(map[string]interface{}{
+		"meta": map[string]interface{}{
+			"login": map[string]interface{}{
+				"validation_code":   nil,
+				"validation_expiry": nil,
+			},
+		},
+		"verified": true,
+	}).Error; err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Generate JWT token
+	userBytes, err := json.Marshal(&user)
+	if err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	
+	var claims DTO.Claims
+	if err := json.Unmarshal(userBytes, &claims); err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+	claims.Type = user_type
+
+	token, err := handler.JWT(c).Encode(&claims)
+	if err != nil {
+		return "", err
+	}
+	
+	return token, nil
 }
 
-// ResetLoginvalidationCode resets the login validation code for a user
-func ResetLoginvalidationCode(c *fiber.Ctx, user_email string, model any) (string, error) {
-	var err error
-	Service := service.New(c)
-	defer func() { Service.DeferDB(err) }()
-	return Service.SetModel(model).ResetLoginCodeByEmail(user_email)
+// GenerateLoginValidationCode generates and stores a validation code, returning it for external use
+func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type string) (string, error) {
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return "", err
+	}
+
+	// URL decode the email
+	user_email, err = lib.PrepareEmail(user_email)
+	if err != nil {
+		return "", lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Find user by email
+	if err := tx.Model(modelInstance).Where("email = ?", user_email).First(modelInstance).Error; err != nil {
+		if err.Error() == "record not found" {
+			return "", lib.Error.General.RecordNotFound
+		}
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Use reflection to access Meta field
+	val := reflect.ValueOf(modelInstance)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	metaField := val.FieldByName("Meta")
+	if !metaField.IsValid() {
+		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("model does not have a Meta field"))
+	}
+
+	// Generate 6-digit validation code
+	code := lib.GenerateRandomInt(6)
+	codeString := fmt.Sprintf("%06d", code)
+
+	// Set expiration to 15 minutes
+	expiryTime := time.Now().Add(15 * time.Minute)
+	now := time.Now()
+
+	// Update the database with new validation code
+	updates := map[string]interface{}{
+		"meta": map[string]interface{}{
+			"login": map[string]interface{}{
+				"validation_code":         codeString,
+				"validation_expiry":       expiryTime,
+				"validation_requested_at": now,
+			},
+		},
+	}
+
+	if err := tx.Model(modelInstance).Updates(updates).Error; err != nil {
+		return "", lib.Error.General.InternalError.WithError(err)
+	}
+
+	return codeString, nil
 }
 
-// SendLoginValidationCodeByEmail sends a login validation code to the user's email
+// SendLoginValidationCodeByEmail generates a validation code and returns it in the response
+// The caller (business service) can then send the code via email
 func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 	user_email := c.Params("email")
 	if user_email == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
 	}
 
-	LoginValidationCode, err := ResetLoginvalidationCode(c, user_email, model)
+	validationCode, err := GenerateLoginValidationCode(c, user_email, model)
 	if err != nil {
 		return err
 	}
 
-	language := c.Query("language", "en")
-
-	// Send email using the email library
-	// NOTE: This requires the email templates to be accessible
-	// For now, we'll return success - email integration can be added later
-	_ = LoginValidationCode
-	_ = language
-
-	// TODO: Implement email sending
-	// renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
-	// renderedEmail, err := renderer.RenderEmail("login_validation_code", language, email.TemplateData{
-	// 	"LoginValidationCode": LoginValidationCode,
-	// })
-	// if err != nil {
-	// 	return fmt.Errorf("failed to render email: %w", err)
-	// }
-
-	// provider, err := email.NewProvider(nil)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to initialize email provider: %w", err)
-	// }
-
-	// err = provider.Send(context.Background(), email.EmailData{
-	// 	To:      []string{user_email},
-	// 	Subject: renderedEmail.Subject,
-	// 	Html:    renderedEmail.HTMLBody,
-	// })
-
-	return nil
+	// Return the validation code in the response for the business service to send via email
+	return lib.ResponseFactory(c).Send(200, map[string]interface{}{
+		"validation_code": validationCode,
+		"email":           user_email,
+		"message":         "Validation code generated. Use this code to login or have your service send it via email.",
+	})
 }

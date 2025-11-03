@@ -3,8 +3,8 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"mynute-go/auth/lib"
 	authModel "mynute-go/auth/model"
-	"mynute-go/core/src/lib"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"

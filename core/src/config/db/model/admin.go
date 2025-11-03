@@ -4,24 +4,21 @@ import (
 	"fmt"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
+	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 // Admin represents a system-wide administrator who can access all tenants
+// Authentication is handled by auth service - UserID links to auth.users.id
 type Admin struct {
-	BaseModel
-	Name     string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
-	Surname  string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"surname"`
-	Email    string         `gorm:"type:varchar(100);uniqueIndex" validate:"required,email" json:"email"`
-	Password string         `gorm:"type:varchar(255)" validate:"required,myPasswordValidation" json:"password"`
-	Verified bool           `gorm:"default:false" json:"verified"`
-	IsActive bool           `gorm:"default:true" json:"is_active"`
-	Roles    []RoleAdmin    `gorm:"many2many:admin_role_admins;constraint:OnDelete:CASCADE;" json:"roles"`
-	Meta     mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
+	UserID    uuid.UUID      `gorm:"type:uuid;primaryKey" json:"user_id"` // Primary key, references auth.users.id
+	Name      string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"name"`
+	Surname   string         `gorm:"type:varchar(100)" validate:"required,min=3,max=100" json:"surname"`
+	IsActive  bool           `gorm:"default:true" json:"is_active"`
+	Roles     []RoleAdmin    `gorm:"many2many:admin_role_admins;constraint:OnDelete:CASCADE;" json:"roles"`
+	Meta      mJSON.UserMeta `gorm:"type:jsonb" json:"meta"` // Business-specific metadata (design, etc.)
 }
 
 type AdminList struct {
@@ -32,52 +29,20 @@ type AdminList struct {
 func (Admin) TableName() string  { return "public.admins" }
 func (Admin) SchemaType() string { return "public" }
 
-// BeforeCreate hook to validate and hash password before creating admin
+// BeforeCreate hook to validate before creating admin
 func (a *Admin) BeforeCreate(tx *gorm.DB) error {
+	if a.UserID == uuid.Nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("user_id is required"))
+	}
 	if err := lib.MyCustomStructValidator(a); err != nil {
 		return err
 	}
-	if err := a.HashPassword(); err != nil {
-		return err
-	}
 	return nil
 }
 
-// BeforeUpdate hook to validate and hash password before updating admin
+// BeforeUpdate hook to validate before updating admin
 func (a *Admin) BeforeUpdate(tx *gorm.DB) error {
-	if a.Password != "" {
-		var dbAdmin Admin
-		tx.First(&dbAdmin, "id = ?", a.ID)
-		// Skip hashing if password hasn't changed
-		if a.Password == dbAdmin.Password || a.MatchPassword(dbAdmin.Password) {
-			return nil
-		}
-		if err := lib.ValidatorV10.Var(a.Password, "myPasswordValidation"); err != nil {
-			if _, ok := err.(validator.ValidationErrors); ok {
-				return lib.Error.General.BadRequest.WithError(fmt.Errorf("password invalid"))
-			} else {
-				return lib.Error.General.InternalError.WithError(err)
-			}
-		}
-		return a.HashPassword()
-	}
-	return nil
-}
-
-// MatchPassword compares the provided plain text password with the hashed password
-func (a *Admin) MatchPassword(plainPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(plainPassword))
-	return err == nil
-}
-
-// HashPassword generates a bcrypt hash of the password
-func (a *Admin) HashPassword() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	a.Password = string(hash)
-	return nil
+	return lib.MyCustomStructValidator(a)
 }
 
 // GetFullAdmin loads the admin with all associations
@@ -85,8 +50,7 @@ func (a *Admin) GetFullAdmin(tx *gorm.DB) error {
 	if err := lib.ChangeToPublicSchema(tx); err != nil {
 		return err
 	}
-	aID := a.ID.String()
-	if err := tx.Preload("Roles").First(a, "id = ?", aID).Error; err != nil {
+	if err := tx.Preload("Roles").First(a, "user_id = ?", a.UserID).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -109,10 +73,13 @@ func (a *Admin) IsSuperAdmin() bool {
 
 // RoleAdmin represents a role for system administrators
 type RoleAdmin struct {
-	BaseModel
-	Name        string  `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"name"`
-	Description string  `gorm:"type:text" json:"description"`
-	Admins      []Admin `gorm:"many2many:admin_role_admins;constraint:OnDelete:CASCADE;" json:"admins,omitempty"`
+	ID          uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
+	Name        string         `gorm:"type:varchar(100);uniqueIndex" validate:"required,min=3,max=100" json:"name"`
+	Description string         `gorm:"type:text" json:"description"`
+	Admins      []Admin        `gorm:"many2many:admin_role_admins;foreignKey:ID;joinForeignKey:RoleAdminID;References:UserID;joinReferences:AdminUserID;constraint:OnDelete:CASCADE;" json:"admins,omitempty"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func (RoleAdmin) TableName() string  { return "public.role_admins" }
@@ -120,6 +87,9 @@ func (RoleAdmin) SchemaType() string { return "public" }
 
 // BeforeCreate hook to validate before creating role
 func (r *RoleAdmin) BeforeCreate(tx *gorm.DB) error {
+	if r.ID == uuid.Nil {
+		r.ID = uuid.New()
+	}
 	if err := lib.MyCustomStructValidator(r); err != nil {
 		return err
 	}

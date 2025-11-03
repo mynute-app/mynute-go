@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"mynute-go/core/src/lib"
+	"mynute-go/auth/lib"
 	"time"
 
 	"github.com/google/uuid"
