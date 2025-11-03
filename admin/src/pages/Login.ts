@@ -2,6 +2,7 @@ import { html } from 'htm/preact';
 import { useState, useEffect } from 'preact/hooks';
 import { authStore } from '../stores/authStore.ts';
 import { api } from '../utils/api.ts';
+import PasswordInput from '../components/PasswordInput.ts';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -177,36 +178,24 @@ export default function Login() {
                             />
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Password <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                value=${regPassword}
-                                onInput=${(e: Event) => setRegPassword((e.target as HTMLInputElement).value)}
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                placeholder="••••••••"
-                                minLength="8"
-                                required
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
-                        </div>
+                        <${PasswordInput}
+                            value=${regPassword}
+                            onInput=${(e: Event) => setRegPassword((e.target as HTMLInputElement).value)}
+                            label="Password"
+                            required=${true}
+                            minLength=${8}
+                            helpText="Must be at least 8 characters"
+                            testId="registration-password"
+                        />
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Confirm Password <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                value=${confirmPassword}
-                                onInput=${(e: Event) => setConfirmPassword((e.target as HTMLInputElement).value)}
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                placeholder="••••••••"
-                                minLength="8"
-                                required
-                            />
-                        </div>
+                        <${PasswordInput}
+                            value=${confirmPassword}
+                            onInput=${(e: Event) => setConfirmPassword((e.target as HTMLInputElement).value)}
+                            label="Confirm Password"
+                            required=${true}
+                            minLength=${8}
+                            testId="registration-confirm-password"
+                        />
                         
                         <button
                             type="submit"
@@ -248,19 +237,13 @@ export default function Login() {
                         />
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value=${password}
-                            onInput=${(e: Event) => setPassword((e.target as HTMLInputElement).value)}
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                            placeholder="••••••••"
-                            required
-                        />
-                    </div>
+                    <${PasswordInput}
+                        value=${password}
+                        onInput=${(e: Event) => setPassword((e.target as HTMLInputElement).value)}
+                        label="Password"
+                        required=${true}
+                        testId="login-password"
+                    />
                     
                     <button
                         type="submit"

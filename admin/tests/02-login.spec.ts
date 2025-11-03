@@ -112,4 +112,28 @@ test.describe('Login Page', () => {
     const user = JSON.parse(userData as string);
     expect(user.email).toBe('admin@mynute.com');
   });
+
+  test('should toggle password visibility on login form', async ({ page }) => {
+    // Ensure we're on the login page (admin should exist from previous tests)
+    await expect(page.locator('h1')).toContainText('Mynute Admin');
+    
+    // Get password input and toggle button
+    const passwordInput = page.getByTestId('login-password');
+    const passwordToggle = page.getByTestId('login-password-toggle');
+    
+    // Password should be hidden by default
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+    
+    // Fill password
+    await passwordInput.fill('Admin@123456');
+    
+    // Click eye icon to show password
+    await passwordToggle.click();
+    await expect(passwordInput).toHaveAttribute('type', 'text');
+    await expect(passwordInput).toHaveValue('Admin@123456');
+    
+    // Click again to hide password
+    await passwordToggle.click();
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+  });
 });

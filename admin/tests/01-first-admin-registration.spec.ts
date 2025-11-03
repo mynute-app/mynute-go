@@ -128,6 +128,70 @@ test.describe.serial('First Admin Registration', () => {
     await expect(page.locator('text=/Password must be at least 8 characters/i')).toBeVisible();
   });
 
+  test('should toggle password visibility on registration form', async ({ page }) => {
+    // Mock the API to return no admins
+    await page.route('**/api/admin/are_there_any_superadmin', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ has_superadmin: false }),
+      });
+    });
+
+    await page.goto('');
+    
+    // Get password input and toggle button
+    const passwordInput = page.getByTestId('registration-password');
+    const passwordToggle = page.getByTestId('registration-password-toggle');
+    
+    // Password should be hidden by default
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+    
+    // Fill password
+    await passwordInput.fill('TestPassword123');
+    
+    // Click eye icon to show password
+    await passwordToggle.click();
+    await expect(passwordInput).toHaveAttribute('type', 'text');
+    await expect(passwordInput).toHaveValue('TestPassword123');
+    
+    // Click again to hide password
+    await passwordToggle.click();
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+
+  test('should toggle confirm password visibility on registration form', async ({ page }) => {
+    // Mock the API to return no admins
+    await page.route('**/api/admin/are_there_any_superadmin', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ has_superadmin: false }),
+      });
+    });
+
+    await page.goto('');
+    
+    // Get confirm password input and toggle button
+    const confirmPasswordInput = page.getByTestId('registration-confirm-password');
+    const confirmPasswordToggle = page.getByTestId('registration-confirm-password-toggle');
+    
+    // Password should be hidden by default
+    await expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+    
+    // Fill confirm password
+    await confirmPasswordInput.fill('TestPassword123');
+    
+    // Click eye icon to show password
+    await confirmPasswordToggle.click();
+    await expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+    await expect(confirmPasswordInput).toHaveValue('TestPassword123');
+    
+    // Click again to hide password
+    await confirmPasswordToggle.click();
+    await expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+  });
+
   test('should successfully register first admin and show success message', async ({ page }) => {
     // Mock the API responses
     await page.route('**/api/admin/are_there_any_superadmin', (route) => {

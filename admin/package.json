@@ -4,7 +4,7 @@
   "description": "A lightweight admin panel built with:\r - **Preact** - Fast 3KB React alternative\r - **TypeScript** - Type safety without build step\r - **Preact Signals** - Reactive state management\r - **HTM** - JSX-like syntax in the browser\r - **Tailwind CSS** - Utility-first styling",
   "main": "index.js",
   "scripts": {
-    "test": "playwright test tests/first-admin-registration.spec.ts tests/login.spec.ts tests/navigation.spec.ts tests/dashboard.spec.ts tests/users.spec.ts tests/companies.spec.ts tests/company-detail.spec.ts tests/clients.spec.ts tests/integration.spec.ts tests/routing-basepath.spec.ts",
+    "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/node": "^24.9.2"
+    "@types/node": "^24.9.2",
+    "dotenv": "^17.2.3"
   }
 }

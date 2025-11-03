@@ -13,7 +13,7 @@ export interface AdminUser {
 
 export const adminCredentials: AdminUser = {
   email: 'admin@mynute.com',
-  password: 'admin123',
+  password: 'Admin@123456',
   name: 'Admin User',
 };
 

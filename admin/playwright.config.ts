@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load environment variables from parent directory's .env file
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Helper to check if running in CI
 const isCI = process.env.CI === 'true';
@@ -17,7 +22,7 @@ if (APP_ENV !== 'test') {
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: './tests', // Test files are numbered (01-, 02-, etc.) to enforce execution order
   /* Run tests in files in parallel */
   fullyParallel: false, // Changed to false to ensure proper test order
   /* Fail the build on CI if you accidentally left test.only in the source code. */
