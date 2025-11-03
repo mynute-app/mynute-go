@@ -98,10 +98,10 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return err
 	}
 
-	// Check if admin with same email already exists
-	var existingAdmin model.Admin
-	if err := tx.Where("email = ?", req.Email).First(&existingAdmin).Error; err == nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("admin with email %s already exists", req.Email))
+	// Check if user with same email already exists
+	var existingUser model.User
+	if err := tx.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("user with email %s already exists", req.Email))
 	} else if err != gorm.ErrRecordNotFound {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -112,22 +112,21 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Create admin
-	admin := model.Admin{
+	// Create admin user with type='admin'
+	user := model.User{
 		BaseModel: model.BaseModel{ID: uuid.New()},
 		Email:     req.Email,
 		Password:  hashedPassword,
-		Name:      req.Name,
-		Surname:   req.Surname,
-		IsActive:  req.IsActive,
+		Type:      "admin",
+		Verified:  true, // Admins are verified by default
 	}
 
-	if err := tx.Create(&admin).Error; err != nil {
+	if err := tx.Create(&user).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
-	// Return admin (without password)
-	return lib.ResponseFactory(c).SendDTO(201, &admin, &DTO.Admin{})
+	// Return user (without password)
+	return lib.ResponseFactory(c).SendDTO(201, &user, &DTO.Admin{})
 }
 
 // GetAdminById retrieves an admin by ID
@@ -148,11 +147,17 @@ func GetAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var admin model.Admin
-	if err := GetOneBy("id", c, &admin, nil, nil); err != nil {
+	var user model.User
+	if err := GetOneBy("id", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{}); err != nil {
+	
+	// Verify it's an admin user
+	if user.Type != "admin" {
+		return lib.Error.General.RecordNotFound
+	}
+	
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -178,11 +183,17 @@ func UpdateAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var admin model.Admin
-	if err := UpdateOneById(c, &admin, nil); err != nil {
+	var user model.User
+	if err := UpdateOneById(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &admin, &DTO.Admin{}); err != nil {
+	
+	// Verify it's an admin user
+	if user.Type != "admin" {
+		return lib.Error.General.RecordNotFound
+	}
+	
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -205,7 +216,7 @@ func DeleteAdminById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
 	}
-	return DeleteOneById(c, &model.Admin{})
+	return DeleteOneById(c, &model.User{})
 }
 
 // ListAdmins retrieves all admins
@@ -230,19 +241,19 @@ func ListAdmins(c *fiber.Ctx) error {
 		return err
 	}
 
-	var admins []model.Admin
-	if err := tx.Find(&admins).Error; err != nil {
+	var users []model.User
+	if err := tx.Where("type = ?", "admin").Find(&users).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &admins, &[]DTO.Admin{})
+	return lib.ResponseFactory(c).SendDTO(200, &users, &[]DTO.Admin{})
 }
 
 // =====================
 // HELPER FUNCTIONS
 // =====================
 
-// areThereAnySuperAdmin checks if there are any superadmin users in the system
+// areThereAnySuperAdmin checks if there are any admin users in the system
 func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
 	tx, err := lib.Session(c)
 	if err != nil {
@@ -250,7 +261,7 @@ func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
 	}
 
 	var count int64
-	if err := tx.Model(&model.Admin{}).Where("is_super_admin = ?", true).Count(&count).Error; err != nil {
+	if err := tx.Model(&model.User{}).Where("type = ?", "admin").Count(&count).Error; err != nil {
 		return false, lib.Error.General.InternalError.WithError(err)
 	}
 

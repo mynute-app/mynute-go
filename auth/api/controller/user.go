@@ -26,11 +26,12 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var client authModel.Client
-	if err := CreateUser(c, &client); err != nil {
+	var user authModel.User
+	user.Type = "client"
+	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -47,11 +48,14 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var client authModel.Client
-	if err := GetOneBy("email", c, &client); err != nil {
+	var user authModel.User
+	if err := GetOneBy("email", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+	if user.Type != "client" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -71,11 +75,14 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	var client authModel.Client
-	if err := GetOneBy("id", c, &client); err != nil {
+	var user authModel.User
+	if err := GetOneBy("id", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+	if user.Type != "client" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -97,11 +104,14 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var client authModel.Client
-	if err := UpdateOneById(c, &client); err != nil {
+	var user authModel.User
+	if err := UpdateOneById(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &client, &DTO.Client{}); err != nil {
+	if user.Type != "client" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -121,7 +131,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &authModel.Client{})
+	return DeleteOneById(c, &authModel.User{})
 }
 
 // =====================
@@ -140,15 +150,16 @@ func DeleteClientById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			employee	body		DTO.CreateEmployee	true	"Employee"
-//	@Success		200			{object}	DTO.EmployeeFull
+//	@Success		200			{object}	DTO.EmployeeBase
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee [post]
 func CreateEmployee(c *fiber.Ctx) error {
-	var employee authModel.Employee
-	if err := CreateUser(c, &employee); err != nil {
+	var user authModel.User
+	user.Type = "employee"
+	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -165,15 +176,18 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.EmployeeFull
+//	@Success		200	{object}	DTO.EmployeeBase
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
-	var employee authModel.Employee
-	if err := GetOneBy("id", c, &employee); err != nil {
+	var user authModel.User
+	if err := GetOneBy("id", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+	if user.Type != "employee" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -190,15 +204,18 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Employee Email"
 //	@Produce		json
-//	@Success		200	{object}	DTO.EmployeeFull
+//	@Success		200	{object}	DTO.EmployeeBase
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
-	var employee authModel.Employee
-	if err := GetOneBy("email", c, &employee); err != nil {
+	var user authModel.User
+	if err := GetOneBy("email", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+	if user.Type != "employee" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -217,15 +234,18 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id			path		string						true	"Employee ID"
 //	@Param			employee	body		DTO.UpdateEmployeeSwagger	true	"Employee"
-//	@Success		200			{object}	DTO.EmployeeFull
+//	@Success		200			{object}	DTO.EmployeeBase
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
-	var employee authModel.Employee
-	if err := UpdateOneById(c, &employee); err != nil {
+	var user authModel.User
+	if err := UpdateOneById(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &employee, &DTO.EmployeeFull{}); err != nil {
+	if user.Type != "employee" {
+		return lib.Error.General.RecordNotFound
+	}
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -246,7 +266,7 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &authModel.Employee{})
+	return DeleteOneById(c, &authModel.User{})
 }
 
 // =====================
