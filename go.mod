@@ -1,6 +1,8 @@
 module mynute-go
 
-go 1.23.4
+go 1.24.0
+
+toolchain go1.24.2
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
@@ -19,9 +21,10 @@ require (
 	github.com/shareed2k/goth_fiber v0.3.0
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/swag v1.16.4
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.41.0
 	gorm.io/datatypes v1.2.5
 	gorm.io/driver/postgres v1.5.9
+	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.25.12
 )
 
@@ -62,6 +65,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
@@ -71,8 +75,8 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/files/v2 v2.0.2 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -101,8 +105,8 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.59.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/mail.v2 v2.3.1
 )
