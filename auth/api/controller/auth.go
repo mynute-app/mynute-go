@@ -8,8 +8,6 @@ import (
 	"mynute-go/auth/handler"
 	"mynute-go/auth/lib"
 	"mynute-go/auth/model"
-	mJSON "mynute-go/auth/model/json"
-	"reflect"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -96,7 +94,7 @@ func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Failure		401			{object}	nil
 //	@Router			/auth/employee/login [post]
 func LoginEmployeeByPassword(c *fiber.Ctx) error {
-	token, err := LoginByPassword(namespace.EmployeeKey.Name, &model.Employee{}, c)
+	token, err := LoginByPassword(namespace.EmployeeKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -117,7 +115,7 @@ func LoginEmployeeByPassword(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/employee/login-with-code [post]
 func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
-	token, err := LoginByEmailCode(namespace.EmployeeKey.Name, &model.Employee{}, c)
+	token, err := LoginByEmailCode(namespace.EmployeeKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -139,7 +137,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/auth/employee/send-login-code/email/{email} [post]
 func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
-	if err := SendLoginValidationCodeByEmail(c, &model.Employee{}); err != nil {
+	if err := SendLoginValidationCodeByEmail(namespace.EmployeeKey.Name, c); err != nil {
 		return err
 	}
 	return nil
@@ -162,7 +160,7 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/admin/login [post]
 func AdminLoginByPassword(c *fiber.Ctx) error {
-	token, err := LoginByPassword(namespace.AdminKey.Name, &model.Admin{}, c)
+	token, err := LoginByPassword(namespace.AdminKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -346,7 +344,7 @@ func LoginByEmailCode(user_type string, c *fiber.Ctx) (string, error) {
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
-	
+
 	var claims DTO.Claims
 	if err := json.Unmarshal(userBytes, &claims); err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
@@ -357,7 +355,7 @@ func LoginByEmailCode(user_type string, c *fiber.Ctx) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return token, nil
 }
 
@@ -375,23 +373,13 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 		return "", lib.Error.General.BadRequest.WithError(err)
 	}
 
-	// Find user by email
-	if err := tx.Model(modelInstance).Where("email = ?", user_email).First(modelInstance).Error; err != nil {
+	// Find user by email and type
+	var user model.User
+	if err := tx.Where("email = ? AND type = ?", user_email, user_type).First(&user).Error; err != nil {
 		if err.Error() == "record not found" {
 			return "", lib.Error.General.RecordNotFound
 		}
 		return "", lib.Error.General.InternalError.WithError(err)
-	}
-
-	// Use reflection to access Meta field
-	val := reflect.ValueOf(modelInstance)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-
-	metaField := val.FieldByName("Meta")
-	if !metaField.IsValid() {
-		return "", lib.Error.General.InternalError.WithError(fmt.Errorf("model does not have a Meta field"))
 	}
 
 	// Generate 6-digit validation code
@@ -413,7 +401,7 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 		},
 	}
 
-	if err := tx.Model(modelInstance).Updates(updates).Error; err != nil {
+	if err := tx.Model(&user).Updates(updates).Error; err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -422,13 +410,13 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 
 // SendLoginValidationCodeByEmail generates a validation code and returns it in the response
 // The caller (business service) can then send the code via email
-func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
+func SendLoginValidationCodeByEmail(user_type string, c *fiber.Ctx) error {
 	user_email := c.Params("email")
 	if user_email == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'email' at params route"))
 	}
 
-	validationCode, err := GenerateLoginValidationCode(c, user_email, model)
+	validationCode, err := GenerateLoginValidationCode(c, user_email, user_type)
 	if err != nil {
 		return err
 	}

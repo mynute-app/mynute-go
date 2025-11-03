@@ -16,7 +16,7 @@ type Role struct {
 	Name        string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
 	Description string     `json:"description"`
 	CompanyID   *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
-	Company     *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
+	// Company reference removed - business logic belongs in core service
 }
 
 const RoleTableName = "public.roles"

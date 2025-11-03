@@ -1,8 +1,6 @@
 package DTO
 
 import (
-	mJSON "mynute-go/auth/model/json"
-
 	"github.com/google/uuid"
 )
 
@@ -32,46 +30,15 @@ type CreateEmployee struct {
 	TimeZone  string    `json:"time_zone" example:"America/Sao_Paulo"` // Use a valid timezone
 }
 
-// type EmployeeWorkSchedule struct {
-// 	Monday    []EmployeeWorkRange `json:"monday"`
-// 	Tuesday   []EmployeeWorkRange `json:"tuesday"`
-// 	Wednesday []EmployeeWorkRange `json:"wednesday"`
-// 	Thursday  []EmployeeWorkRange `json:"thursday"`
-// 	Friday    []EmployeeWorkRange `json:"friday"`
-// 	Saturday  []EmployeeWorkRange `json:"saturday"`
-// 	Sunday    []EmployeeWorkRange `json:"sunday"`
-// }
-
-// type EmployeeWorkRange struct {
-// 	Start    string      `json:"start"` // Store as "15:30:00"
-// 	End      string      `json:"end"`   // Store as "18:00:00"
-// 	BranchID uuid.UUID   `json:"branch_id"`
-// 	Services []uuid.UUID `json:"services"` // Store as UUIDs
-// }
-
-// @description	Employee Full DTO
-// @name			EmployeeFullDTO
-// @tag.name		employee.full.dto
-type EmployeeFull struct {
-	EmployeeBase
-	Verified             bool                `json:"verified" example:"true"`
-	Email                string              `json:"email" example:"john.doe@example.com"`
-	Phone                string              `json:"phone" example:"+15555555555"`
-	EmployeeWorkSchedule []EmployeeWorkRange `json:"work_schedule"`
-	Branches             []BranchBase        `json:"branches"`
-	Services             []ServiceBase       `json:"services"`
-	Roles                []RolePopulated     `json:"roles"`
-}
-
-// @description	Employee Base DTO
+// @description	Employee Base DTO - Auth service only handles basic employee info
 // @name			EmployeeBaseDTO
 // @tag.name		employee.base.dto
 type EmployeeBase struct {
-	ID                  uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	CompanyID           uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Name                string             `json:"name" example:"John"`
-	Surname             string             `json:"surname" example:"Doe"`
-	TimeZone            string             `json:"time_zone" example:"America/Sao_Paulo"`
-	TotalServiceDensity uint32             `json:"total_service_density" example:"100"`
-	Design              mJSON.DesignConfig `json:"design"`
+	ID        uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
+	Name      string    `json:"name" example:"John"`
+	Surname   string    `json:"surname" example:"Doe"`
+	Email     string    `json:"email" example:"john.doe@example.com"`
+	Phone     string    `json:"phone" example:"+15555555555"`
+	Verified  bool      `json:"verified" example:"true"`
 }

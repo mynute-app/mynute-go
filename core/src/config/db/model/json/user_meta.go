@@ -7,7 +7,6 @@ import (
 )
 
 type UserMeta struct {
-	Login  LoginConfig  `json:"login" gorm:"-"`
 	Design DesignConfig `json:"design" gorm:"-"`
 }
 

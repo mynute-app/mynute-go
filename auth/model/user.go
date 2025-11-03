@@ -13,11 +13,12 @@ import (
 // Type determines if user is admin, client, employee, etc.
 type User struct {
 	BaseModel
-	Email     string         `gorm:"type:varchar(255);not null;uniqueIndex" json:"email"`
-	Password  string         `gorm:"type:varchar(255);not null" json:"-"`
-	Verified  bool           `gorm:"default:false" json:"verified"`
-	Type      string         `gorm:"type:varchar(50);not null;index" json:"type"` // "admin", "client", "employee"
-	Meta      mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
+	TenantID *uuid.UUID     `gorm:"type:uuid;index" json:"tenant_id"` // Optional tenant ID for multi-tenant setups
+	Email    string         `gorm:"type:varchar(255);not null;uniqueIndex" json:"email"`
+	Password string         `gorm:"type:varchar(255);not null" json:"-"`
+	Verified bool           `gorm:"default:false" json:"verified"`
+	Type     string         `gorm:"type:varchar(50);not null;index" json:"type"` // "admin", "client", "employee"
+	Meta     mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
 }
 
 // TableName specifies the table name for the User model

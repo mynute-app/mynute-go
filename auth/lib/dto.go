@@ -2,9 +2,51 @@ package lib
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 )
+
+// ResolvePointerStruct checks the struct pointer and resolves the struct or slice
+func ResolvePointerStruct(v any) (reflect.Value, error) {
+	val := reflect.ValueOf(v)
+
+	// Ensure the value is a pointer
+	if val.Kind() != reflect.Ptr {
+		return val, errors.New("interface is not a pointer")
+	}
+
+	// If it's a pointer to a slice, return the slice
+	if val.Elem().Kind() == reflect.Slice {
+		return val.Elem(), nil
+	}
+
+	// If it's a pointer to a struct, return the struct
+	if val.Elem().Kind() == reflect.Struct {
+		return val.Elem(), nil
+	}
+
+	fmt.Printf("Resolved DTO Struct: %+v\n", val.Elem().Interface())
+
+	return val, errors.New("interface is not a pointer to a struct or slice")
+}
+
+// ResolveStruct checks and resolves a struct or slice
+func ResolveStruct(v any) (reflect.Value, error) {
+	val := reflect.ValueOf(v)
+
+	// Dereference the pointer if it's a pointer
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	// Ensure the value is a struct or a slice
+	if val.Kind() == reflect.Struct || val.Kind() == reflect.Slice {
+		return val, nil
+	}
+
+	return val, errors.New("interface is not a struct or slice")
+}
 
 // ConvertToDTO recursively converts a source struct or slice of structs to a destination DTO struct or slice of DTOs
 func ParseToDTO(source any, dto any) error {
