@@ -6,10 +6,10 @@ import (
 	"fmt"
 	DTO "mynute-go/core/src/api/dto"
 	dJSON "mynute-go/core/src/api/dto/json"
+	"mynute-go/core/src/api/middleware"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/api/middleware"
 	"mynute-go/debug"
 	"strconv"
 	"time"
@@ -327,7 +327,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		StartTime  time.Time
 		Count      int64
 	}
-	
+
 	var appointmentCounts []appointmentCountResult
 
 	if len(employeeIDs) > 0 {
@@ -431,63 +431,65 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 						}
 					}
 
-				for slot.Before(endOfDay) {
+					for slot.Before(endOfDay) {
 
-					// Check availability using the map - THIS IS THE KEY
-					lookupKey := fmt.Sprintf("%s-%s", emp.UserID.String(), slot.Format(time.RFC3339))
-					currentBookings := appointmentSlotMap[lookupKey]
+						// Check availability using the map - THIS IS THE KEY
+						lookupKey := fmt.Sprintf("%s-%s", emp.UserID.String(), slot.Format(time.RFC3339))
+						currentBookings := appointmentSlotMap[lookupKey]
 
-					// Determine max capacity for this employee and service
-					maxCapacity := emp.TotalServiceDensity
-					if specificDensity, hasSpecific := densityMap[emp.UserID]; hasSpecific {
-						maxCapacity = specificDensity
-					}
-
-					if uint32(currentBookings) < maxCapacity {
-						// This slot is available, add it to the results
-						dateStr := d.Format("2006-01-02")
-						timeStr := slot.Format("15:04")
-
-						if _, ok := availabilityMap[dateStr]; !ok {
-							availabilityMap[dateStr] = map[uuid.UUID]map[string][]uuid.UUID{}
+						// Determine max capacity for this employee and service
+						maxCapacity := emp.TotalServiceDensity
+						if specificDensity, hasSpecific := densityMap[emp.UserID]; hasSpecific {
+							maxCapacity = specificDensity
 						}
-						if _, ok := availabilityMap[dateStr][branchID]; !ok {
-							availabilityMap[dateStr][branchID] = map[string][]uuid.UUID{}
-						}
-						availabilityMap[dateStr][branchID][timeStr] = append(availabilityMap[dateStr][branchID][timeStr], emp.UserID)
 
-						// Populate info maps if not already present
-						if _, ok := branchInfoMap[branchID]; !ok {
-							empRangeBranchBytes, err := json.Marshal(empRange.Branch)
-							if err != nil {
-								return fmt.Errorf("failed to marshal branch info: %w", err)
+						if uint32(currentBookings) < maxCapacity {
+							// This slot is available, add it to the results
+							dateStr := d.Format("2006-01-02")
+							timeStr := slot.Format("15:04")
+
+							if _, ok := availabilityMap[dateStr]; !ok {
+								availabilityMap[dateStr] = map[uuid.UUID]map[string][]uuid.UUID{}
 							}
-							var dtoBranchBase DTO.BranchBase
-							if err := json.Unmarshal(empRangeBranchBytes, &dtoBranchBase); err != nil {
-							return fmt.Errorf("failed to unmarshal branch info: %w", err)
+							if _, ok := availabilityMap[dateStr][branchID]; !ok {
+								availabilityMap[dateStr][branchID] = map[string][]uuid.UUID{}
+							}
+							availabilityMap[dateStr][branchID][timeStr] = append(availabilityMap[dateStr][branchID][timeStr], emp.UserID)
+
+							// Populate info maps if not already present
+							if _, ok := branchInfoMap[branchID]; !ok {
+								empRangeBranchBytes, err := json.Marshal(empRange.Branch)
+								if err != nil {
+									return fmt.Errorf("failed to marshal branch info: %w", err)
+								}
+								var dtoBranchBase DTO.BranchBase
+								if err := json.Unmarshal(empRangeBranchBytes, &dtoBranchBase); err != nil {
+									return fmt.Errorf("failed to unmarshal branch info: %w", err)
+								}
+								branchInfoMap[branchID] = dtoBranchBase
+							}
+							if _, ok := employeeInfoMap[emp.UserID]; !ok {
+								empBytes, err := json.Marshal(emp)
+								if err != nil {
+									return fmt.Errorf("failed to marshal employee info: %w", err)
+								}
+								var dtoEmployeeBase DTO.EmployeeBase
+								if err := json.Unmarshal(empBytes, &dtoEmployeeBase); err != nil {
+									return fmt.Errorf("failed to unmarshal employee info: %w", err)
+								}
+								employeeInfoMap[emp.UserID] = dtoEmployeeBase
+							}
 						}
-						branchInfoMap[branchID] = dtoBranchBase
-					}
-					if _, ok := employeeInfoMap[emp.UserID]; !ok {
-						empBytes, err := json.Marshal(emp)
-						if err != nil {
-							return fmt.Errorf("failed to marshal employee info: %w", err)
-						}
-						var dtoEmployeeBase DTO.EmployeeBase
-						if err := json.Unmarshal(empBytes, &dtoEmployeeBase); err != nil {
-							return fmt.Errorf("failed to unmarshal employee info: %w", err)
-						}
-						employeeInfoMap[emp.UserID] = dtoEmployeeBase
+
+						slot = slot.Add(time.Minute * time.Duration(emp.SlotTimeDiff))
 					}
 				}
-
-				slot = slot.Add(time.Minute * time.Duration(emp.SlotTimeDiff))
 			}
 		}
 	}
-}
 
-availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}client_public_id := c.Query("client_public_id")
+	availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}
+	client_public_id := c.Query("client_public_id")
 	var clientAppointments []model.ClientAppointment
 	if client_public_id != "" {
 		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
@@ -508,9 +510,9 @@ availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}client_public_i
 	var serviceDuration uint16
 	if client_public_id != "" {
 		if err := tx.
-		Model(&model.Service{}).
-		Where("id = ?", serviceID).
-		Pluck("duration", &serviceDuration).Error; err != nil {
+			Model(&model.Service{}).
+			Where("id = ?", serviceID).
+			Pluck("duration", &serviceDuration).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -529,7 +531,7 @@ availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}client_public_i
 				}
 			}
 
-			slotLoop:
+		slotLoop:
 			for timeStr, empIDs := range slots {
 				// Filter out times where the client already has an appointment
 				if client_public_id != "" {
@@ -549,8 +551,8 @@ availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}client_public_i
 						if appt.StartTime.Before(slotTime) && appt.EndTime.After(slotTime) {
 							continue slotLoop
 						}
-						// If appt.StartTime is After slotTime 
-						// AND 
+						// If appt.StartTime is After slotTime
+						// AND
 						// appt.StartTime is Before slotTime + service duration then there is a conflict
 						slotTime_end := slotTime.Add(time.Minute * time.Duration(serviceDuration))
 						if appt.StartTime.After(slotTime) && appt.StartTime.Before(slotTime_end) {
@@ -613,8 +615,3 @@ func Service(Gorm *handler.Gorm) {
 		GetServiceAvailability,
 	})
 }
-
-
-
-
-
