@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 	"log"
-	"mynute-go/core/src/config/db/model"
+	authModel "mynute-go/auth/model"
 	"mynute-go/core/src/handler"
 	"reflect"
 	"runtime"
@@ -21,7 +21,7 @@ type Endpoint struct {
 func (ep *Endpoint) Build(r fiber.Router) error {
 	db := ep.DB.DB
 
-	var edps []*model.EndPoint
+	var edps []*authModel.EndPoint
 	if err := db.Find(&edps).Error; err != nil {
 		return err
 	}

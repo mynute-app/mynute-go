@@ -19,7 +19,9 @@ type Role struct {
 	Company     *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;" json:"company"`     // BelongsTo Company
 }
 
-func (Role) TableName() string  { return "public.roles" }
+const RoleTableName = "public.roles"
+
+func (Role) TableName() string  { return RoleTableName }
 func (Role) SchemaType() string { return "public" }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {

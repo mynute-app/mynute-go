@@ -14,5 +14,7 @@ type Holiday struct {
 	DayMonth    string    `gorm:"not null" json:"dayMonth"`
 }
 
-func (Holiday) TableName() string { return "public.holidays" }
+const HolidayTableName = "public.holidays"
+
+func (Holiday) TableName() string { return HolidayTableName }
 func (Holiday) SchemaType() string { return "public" }

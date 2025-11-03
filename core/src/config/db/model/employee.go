@@ -35,7 +35,9 @@ type Employee struct {
 	Meta                mJSON.UserMeta      `gorm:"type:jsonb" json:"meta"`
 }
 
-func (Employee) TableName() string  { return "employees" }
+const EmployeeTableName = "employees"
+
+func (Employee) TableName() string  { return EmployeeTableName }
 func (Employee) SchemaType() string { return "company" }
 
 func (e *Employee) BeforeCreate(tx *gorm.DB) error {

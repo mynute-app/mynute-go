@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	authModel "mynute-go/auth/model"
 	"mynute-go/core/src/lib"
 	"time"
 
@@ -37,16 +38,42 @@ var TenantModels = []any{
 	&Payment{},
 }
 
+// MainDBModels are business models that live in the main database
+var MainDBModels = []any{
+	&Sector{},
+	&Company{},
+	&Holiday{},
+	&Client{},   // Moved to auth DB (users)
+	&Employee{}, // Moved to auth DB (users)
+	&Role{},     // Company-specific roles stay in main DB
+	&Subdomain{},
+	&ClientAppointment{},
+}
+
+// AuthDBModels are authentication/authorization models that live in the auth database
+var AuthDBModels = []any{
+	&authModel.EndPoint{},
+	&authModel.PolicyRule{},
+	&authModel.Resource{},
+	&authModel.Property{},
+	&Client{},    // User authentication
+	&Employee{},  // User authentication
+	&Admin{},     // Admin users
+	&RoleAdmin{}, // Admin roles
+	&Role{},      // System roles (Owner, GM, BM, Employee)
+}
+
+// GeneralModels combines all models (for backwards compatibility and utilities)
 var GeneralModels = []any{
 	&Sector{},
 	&Company{},
 	&Holiday{},
 	&Client{},
-	&EndPoint{},
+	&authModel.EndPoint{},
 	&Role{},
-	&PolicyRule{},
-	&Resource{},
-	&Property{},
+	&authModel.PolicyRule{},
+	&authModel.Resource{},
+	&authModel.Property{},
 	&Subdomain{},
 	&ClientAppointment{},
 	&Admin{},

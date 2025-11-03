@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"mynute-go/auth"
+	authModel "mynute-go/auth/model"
 	DTO "mynute-go/core/src/config/api/dto"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
@@ -30,7 +32,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	var EndPoint model.EndPoint
+	var EndPoint authModel.EndPoint
 	if err := tx.Where("method = ? AND path = ?", method, routePath).Preload("Resource").First(&EndPoint).Error; err != nil || EndPoint.ID == uuid.Nil {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("endpoint not found: %s %s", method, routePath))
 	}
@@ -42,7 +44,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.InvalidToken
 	}
 
-	var policies []*model.PolicyRule
+	var policies []*authModel.PolicyRule
 	PoliciesWhereClause := "end_point_id = ?"
 	if err := tx.Where(PoliciesWhereClause, EndPoint.ID).Find(&policies).Error; err != nil {
 		// Note: gorm.ErrRecordNotFound is handled by the len(policies) == 0 check later
@@ -166,7 +168,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 
 	// --- Find Resource Reference Key/Value ---
 	var RequestVal string
-	var ResourceReference model.ResourceReference
+	var ResourceReference authModel.ResourceReference
 	resourceRefFound := false
 forLoop: // Label is optional but can improve readability
 	for _, ref := range EndPoint.Resource.References {
@@ -276,11 +278,11 @@ forLoop: // Label is optional but can improve readability
 
 	// --- Evaluate Policies ---
 
-	PolicyEngine := handler.NewPolicyEngine(tx)
+	AuthEngine := auth.NewAccessController(tx)
 
 	for _, policy := range policies {
 		// log.Printf("DEBUG: Evaluating policy '%s' (ID: %s)", policy.Name, policy.ID) // Debug log
-		decision := PolicyEngine.CanAccess(
+		decision := AuthEngine.Validate(
 			subject_data,  // The subject (user) data
 			resource_data, // The data fetched (or empty map)
 			path_data,     // Path parameters

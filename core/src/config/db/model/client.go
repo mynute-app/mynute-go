@@ -33,7 +33,9 @@ type Client struct {
 	ClientMeta
 }
 
-func (Client) TableName() string  { return "public.clients" }
+const ClientTableName = "public.clients"
+
+func (Client) TableName() string  { return ClientTableName }
 func (Client) SchemaType() string { return "public" }
 
 func (c *Client) BeforeCreate(tx *gorm.DB) (err error) {

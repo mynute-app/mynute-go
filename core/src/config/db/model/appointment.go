@@ -297,11 +297,12 @@ func (a *Appointment) ValidateRules(tx *gorm.DB, isCreate bool) error {
 	}
 
 	ChangeSchema := func(schema string) error {
-		if schema == "public" {
+		switch schema {
+		case "public":
 			if err := lib.ChangeToPublicSchema(tx); err != nil {
 				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to public schema: %w", err))
 			}
-		} else if schema == "company" {
+		case "company":
 			companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
 			if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
 				return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))

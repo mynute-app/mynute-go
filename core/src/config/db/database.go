@@ -3,7 +3,11 @@ package database
 import (
 	"fmt"
 	"log"
+	authModel "mynute-go/auth/model"
 	"mynute-go/core/src/config/db/model"
+	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
+	policySeed "mynute-go/core/src/config/db/seed/policy"
+	resourceSeed "mynute-go/core/src/config/db/seed/resource"
 	"mynute-go/core/src/lib"
 	"os"
 	"reflect"
@@ -19,8 +23,9 @@ import (
 )
 
 type Database struct {
-	Gorm  *gorm.DB
-	Error error
+	Gorm   *gorm.DB
+	AuthDB *gorm.DB // Separate connection for auth-related tables
+	Error  error
 }
 
 type Test struct {
@@ -28,7 +33,7 @@ type Test struct {
 	name string
 }
 
-// Connects to the database
+// Connects to the main business database
 func Connect() *Database {
 	// Get environment variables
 	host := os.Getenv("POSTGRES_HOST")
@@ -52,13 +57,14 @@ func Connect() *Database {
 		log.Fatalf("Invalid APP_ENV: %s", app_env)
 	}
 
-	if db_log_level == "info" {
+	switch db_log_level {
+	case "info":
 		LogLevel = logger.Info
-	} else if db_log_level == "error" {
+	case "error":
 		LogLevel = logger.Error
-	} else if db_log_level == "silent" {
+	case "silent":
 		LogLevel = logger.Silent
-	} else if db_log_level == "warn" {
+	case "warn":
 		LogLevel = logger.Warn
 	}
 
@@ -99,9 +105,13 @@ func Connect() *Database {
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
 	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
 
+	// Connect to the auth database
+	authDB := connectAuthDB(app_env, gormConfig)
+
 	dbWrapper := &Database{
-		Gorm:  db,
-		Error: nil,
+		Gorm:   db,
+		AuthDB: authDB,
+		Error:  nil,
 	}
 
 	if app_env == "test" {
@@ -111,59 +121,159 @@ func Connect() *Database {
 	return dbWrapper
 }
 
+// Connects to the auth database
+func connectAuthDB(app_env string, gormConfig *gorm.Config) *gorm.DB {
+	// Get environment variables
+	host := os.Getenv("POSTGRES_AUTH_HOST")
+	user := os.Getenv("POSTGRES_AUTH_USER")
+	password := os.Getenv("POSTGRES_AUTH_PASSWORD")
+	dbName := os.Getenv("POSTGRES_AUTH_DB")
+	port := os.Getenv("POSTGRES_AUTH_PORT")
+
+	// Fallback to main DB connection settings if auth-specific vars not set
+	if host == "" {
+		host = os.Getenv("POSTGRES_HOST")
+	}
+	if user == "" {
+		user = os.Getenv("POSTGRES_USER")
+	}
+	if password == "" {
+		password = os.Getenv("POSTGRES_PASSWORD")
+	}
+	if port == "" {
+		port = os.Getenv("POSTGRES_PORT")
+	}
+
+	// Set auth database name based on environment
+	if dbName == "" {
+		switch app_env {
+		case "test":
+			dbName = "mynute_auth_test"
+		case "dev":
+			dbName = "mynute_auth_dev"
+		default:
+			dbName = "mynute_auth"
+		}
+	}
+
+	sslmode := "disable"
+	timeZone := "UTC"
+
+	log.Printf("Connecting to auth database: %s\n", dbName)
+
+	// Build the DSN for auth database
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		host, user, password, dbName, port, sslmode, timeZone)
+
+	// Connect to the auth database
+	authDB, err := gorm.Open(postgres.Open(dsn), gormConfig)
+	if err != nil {
+		log.Fatal("Failed to connect to the auth database: ", err)
+	}
+
+	// Set the connection pool settings for auth DB
+	sqlDB, err := authDB.DB()
+	if err != nil {
+		log.Fatal("Failed to get auth database connection pool: ", err)
+	}
+
+	sqlDB.SetMaxIdleConns(10) // Smaller pool for auth DB
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetConnMaxLifetime(15 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(2 * time.Second)
+
+	return authDB
+}
+
 // Seed the database with initial data
 func (db *Database) InitialSeed() {
-	tx, end, err := Transaction(db.Gorm)
-	defer end(nil)
+	// Seed auth database
+	authTx, authEnd, err := Transaction(db.AuthDB)
+	defer authEnd(nil)
 	if err != nil {
 		panic(err)
 	}
 
+	// Seed main database
+	mainTx, mainEnd, err := Transaction(db.Gorm)
+	defer mainEnd(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// Allow system role creation temporarily
 	model.AllowSystemRoleCreation = true
 	defer func() { model.AllowSystemRoleCreation = false }()
 
-	if err := db.
-		Seed("Resources", model.Resources, `"table" = ?`, []string{"Table"}).
-		Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
+	// Seed resources in AUTH DB
+	if err := db.WithDB(db.AuthDB).
+		Seed("Resources", resourceSeed.Resources, `"table" = ?`, []string{"Table"}).
+		Error; err != nil {
+		panic(err)
+	}
+
+	// Seed system roles in AUTH DB (no company_id)
+	if err := db.WithDB(db.AuthDB).
+		Seed("System Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
+		Error; err != nil {
+		panic(err)
+	}
+
+	// Seed admin roles in AUTH DB
+	if err := db.WithDB(db.AuthDB).
 		Seed("Admin Roles", model.RoleAdmins, "name = ?", []string{"Name"}).
 		Error; err != nil {
 		panic(err)
 	}
 
-	if err := model.LoadSystemRoleIDs(tx); err != nil {
+	// Load system and admin role IDs from auth DB
+	if err := model.LoadSystemRoleIDs(authTx); err != nil {
 		panic(fmt.Errorf("failed to load system role IDs: %w", err))
 	}
 
-	if err := model.LoadAdminRoleIDs(tx); err != nil {
+	if err := model.LoadAdminRoleIDs(authTx); err != nil {
 		panic(fmt.Errorf("failed to load admin role IDs: %w", err))
 	}
 
-	endpoints, deferEndpoint, err := model.EndPoints(&model.EndpointCfg{AllowCreation: true}, tx)
-	if err != nil {
-		panic(err)
-	}
-	defer deferEndpoint()
+	// Collect all endpoints from the separated seed files
+	allEndpoints := collectAllEndpoints()
 
-	if err := db.
-		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
+	// Seed endpoints in AUTH DB
+	if err := db.WithDB(db.AuthDB).
+		Seed("Endpoints", allEndpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
 		Error; err != nil {
 		panic(err)
 	}
 
-	// Load endpoint IDs from database so policies can reference them
-	if err := model.LoadEndpointIDs(tx); err != nil {
+	// Load endpoint IDs from auth DB so policies can reference them
+	if err := authModel.LoadEndpointIDs(allEndpoints, authTx); err != nil {
 		panic(fmt.Errorf("failed to load endpoint IDs: %w", err))
 	}
 
-	policies, deferPolicies := model.Policies(&model.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
-	defer deferPolicies()
-	if err := db.
-		Seed("Policies", policies, "name = ?", []string{"Name"}).
+	// Collect all policies from the separated seed files
+	allPolicies := collectAllPolicies()
+
+	// Seed policies in AUTH DB
+	if err := db.WithDB(db.AuthDB).
+		Seed("Policies", allPolicies, "name = ?", []string{"Name"}).
 		Error; err != nil {
 		panic(err)
 	}
 
-	log.Println("Seeding finished!")
+	// Note: mainTx can be used for future main DB seeding (e.g., sample companies, branches, etc.)
+	_ = mainTx
+
+	log.Println("Auth database seeding finished!")
+	log.Println("Main database ready for business data!")
+}
+
+// WithDB temporarily switches the database connection for chained operations
+func (db *Database) WithDB(gormDB *gorm.DB) *Database {
+	return &Database{
+		Gorm:   gormDB,
+		AuthDB: db.AuthDB,
+		Error:  db.Error,
+	}
 }
 
 // Migrate the database schema
@@ -520,4 +630,138 @@ func LockForUpdate(tx *gorm.DB, model any, key, val string) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
+}
+
+// collectAllEndpoints gathers all endpoint definitions from the separated seed files
+// NOTE: This is a temporary placeholder - endpoints should be collected automatically or maintained manually
+func collectAllEndpoints() []*authModel.EndPoint {
+	// For now, return a minimal set to get the system working
+	// TODO: Complete endpoint collection from all seed files
+	endpoints := []*authModel.EndPoint{
+		// Admin endpoints
+		endpointSeed.AdminLoginByPassword,
+		endpointSeed.AreThereAnyAdmin,
+		endpointSeed.CreateFirstAdmin,
+
+		// Appointment endpoints
+		endpointSeed.CreateAppointment,
+		endpointSeed.GetAppointmentByID,
+		endpointSeed.UpdateAppointmentByID,
+		endpointSeed.CancelAppointmentByID,
+
+		// Auth endpoints
+		endpointSeed.BeginAuthProviderCallback,
+		endpointSeed.GetAuthCallbackFunction,
+		endpointSeed.LogoutProvider,
+
+		// Branch endpoints
+		endpointSeed.CreateBranch,
+		endpointSeed.GetBranchById,
+		endpointSeed.UpdateBranchById,
+		endpointSeed.DeleteBranchById,
+
+		// Client endpoints
+		endpointSeed.GetClientByEmail,
+		endpointSeed.GetClientById,
+		endpointSeed.UpdateClientById,
+		endpointSeed.DeleteClientById,
+
+		// Company endpoints
+		endpointSeed.GetCompanyById,
+		endpointSeed.UpdateCompanyById,
+		endpointSeed.DeleteCompanyById,
+
+		// Employee endpoints
+		endpointSeed.CreateEmployee,
+		endpointSeed.GetEmployeeById,
+		endpointSeed.UpdateEmployeeById,
+		endpointSeed.DeleteEmployeeById,
+
+		// Service endpoints
+		endpointSeed.CreateService,
+		endpointSeed.GetServiceById,
+		endpointSeed.UpdateServiceById,
+		endpointSeed.DeleteServiceById,
+	}
+
+	return endpoints
+}
+
+// collectAllPolicies gathers all policy definitions from the separated seed files
+func collectAllPolicies() []*authModel.PolicyRule {
+	return []*authModel.PolicyRule{
+		// Appointment policies
+		policySeed.AllowGetAppointmentByID,
+		policySeed.AllowCreateAppointment,
+		policySeed.AllowUpdateAppointmentByID,
+		policySeed.AllowCancelAppointmentByID,
+
+		// Branch policies
+		policySeed.AllowCreateBranch,
+		policySeed.AllowGetBranchById,
+		policySeed.AllowUpdateBranchById,
+		policySeed.AllowDeleteBranchById,
+		policySeed.AllowGetEmployeeServicesByBranchId,
+		policySeed.AllowAddServiceToBranch,
+		policySeed.AllowRemoveServiceFromBranch,
+		policySeed.AllowCreateBranchWorkSchedule,
+		policySeed.AllowGetBranchWorkRangeById,
+		policySeed.AllowDeleteBranchWorkRangeById,
+		policySeed.AllowUpdateBranchWorkRangeById,
+		policySeed.AllowAddBranchWorkRangeService,
+		policySeed.AllowDeleteBranchWorkRangeService,
+		policySeed.AllowUpdateBranchImages,
+		policySeed.AllowDeleteBranchImage,
+		policySeed.AllowGetBranchAppointmentsById,
+
+		// Client policies
+		policySeed.AllowGetClientByEmail,
+		policySeed.AllowGetClientById,
+		policySeed.AllowUpdateClientById,
+		policySeed.AllowDeleteClientById,
+		policySeed.AllowUpdateClientImages,
+		policySeed.AllowDeleteClientImage,
+
+		// Company policies
+		policySeed.AllowGetCompanyById,
+		policySeed.AllowUpdateCompanyById,
+		policySeed.AllowDeleteCompanyById,
+		policySeed.AllowUpdateCompanyImages,
+		policySeed.AllowDeleteCompanyImage,
+		policySeed.AllowUpdateCompanyColors,
+
+		// Employee policies
+		policySeed.AllowCreateEmployee,
+		policySeed.AllowGetEmployeeById,
+		policySeed.AllowGetEmployeeByEmail,
+		policySeed.AllowUpdateEmployeeById,
+		policySeed.AllowDeleteEmployeeById,
+		policySeed.AllowAddServiceToEmployee,
+		policySeed.AllowRemoveServiceFromEmployee,
+		policySeed.AllowAddBranchToEmployee,
+		policySeed.AllowRemoveBranchFromEmployee,
+		policySeed.AllowCreateEmployeeWorkSchedule,
+		policySeed.AllowGetEmployeeWorkRangeById,
+		policySeed.AllowUpdateEmployeeWorkRange,
+		policySeed.AllowDeleteEmployeeWorkRange,
+		policySeed.AllowAddEmployeeWorkRangeServices,
+		policySeed.AllowDeleteEmployeeWorkRangeService,
+		policySeed.AllowUpdateEmployeeImages,
+		policySeed.AllowDeleteEmployeeImage,
+		policySeed.AllowGetEmployeeAppointmentsById,
+
+		// Holiday policies
+		policySeed.AllowCreateHoliday,
+		policySeed.AllowGetHolidayById,
+		policySeed.AllowUpdateHolidayById,
+		policySeed.AllowDeleteHolidayById,
+
+		// Service policies
+		policySeed.AllowCreateService,
+		policySeed.AllowGetServiceById,
+		policySeed.AllowUpdateServiceById,
+		policySeed.AllowDeleteServiceById,
+		policySeed.AllowUpdateServiceImages,
+		policySeed.AllowDeleteServiceImage,
+	}
 }

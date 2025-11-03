@@ -6,5 +6,7 @@ type Sector struct {
 	Description string `json:"description"`
 }
 
-func (Sector) TableName() string { return "public.sectors" }
+const SectorTableName = "public.sectors"
+
+func (Sector) TableName() string { return SectorTableName }
 func (Sector) SchemaType() string { return "public" }

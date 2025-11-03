@@ -21,7 +21,9 @@ type Company struct {
 	Design     mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
-func (Company) TableName() string  { return "public.companies" }
+const CompanyTableName = "companies"
+
+func (Company) TableName() string  { return CompanyTableName }
 func (Company) SchemaType() string { return "public" }
 
 func (c *Company) GenerateSchemaName() string {

@@ -37,7 +37,9 @@ type Branch struct {
 	Design              mJSON.DesignConfig     `gorm:"type:jsonb" json:"design"`
 }
 
-func (Branch) TableName() string { return "branches" }
+const BranchTableName = "branches"
+
+func (Branch) TableName() string { return BranchTableName }
 
 func (Branch) SchemaType() string { return "company" }
 

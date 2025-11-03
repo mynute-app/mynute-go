@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	authModel "mynute-go/auth/model"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
 	"os"
@@ -396,10 +397,10 @@ func getModelsByNames(names []string) []any {
 		"Sector":                 &model.Sector{},
 		"Holiday":                &model.Holiday{},
 		"Role":                   &model.Role{},
-		"Resource":               &model.Resource{},
-		"Property":               &model.Property{},
-		"EndPoint":               &model.EndPoint{},
-		"PolicyRule":             &model.PolicyRule{},
+		"Resource":               &authModel.Resource{},
+		"Property":               &authModel.Property{},
+		"EndPoint":               &authModel.EndPoint{},
+		"PolicyRule":             &authModel.PolicyRule{},
 		"Subdomain":              &model.Subdomain{},
 		"BranchWorkRange":        &model.BranchWorkRange{},
 		"EmployeeWorkRange":      &model.EmployeeWorkRange{},

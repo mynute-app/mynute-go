@@ -24,7 +24,9 @@ type Service struct {
 	Design      mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`
 }
 
-func (Service) TableName() string  { return "services" }
+const ServiceTableName = "services"
+
+func (Service) TableName() string  { return ServiceTableName }
 func (Service) SchemaType() string { return "company" }
 
 func (s *Service) BeforeUpdate(tx *gorm.DB) (err error) {
