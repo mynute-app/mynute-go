@@ -62,15 +62,21 @@
 
     eventSource.onerror = (error) => {
       console.warn('⚠️ Live reload connection lost. Using fallback polling...');
+      console.warn('⚠️ Make sure APP_ENV=dev is set in your environment variables at .env');
       eventSource.close();
 
       // Fallback: Poll a single hash endpoint
       let lastHash = null;
+      let failCount = 0;
+      const maxFails = 10;
 
-      setInterval(async () => {
+      const pollInterval = setInterval(async () => {
         try {
           const response = await fetch('/admin/dev/hash', { cache: 'no-cache' });
           const data = await response.json();
+
+          // Reset fail count on successful fetch
+          failCount = 0;
 
           if (lastHash === null) {
             lastHash = data.hash;
@@ -79,9 +85,14 @@
             window.location.reload();
           }
         } catch (err) {
-          // Silently fail if endpoint doesn't exist
+          failCount++;
+          if (failCount >= maxFails) {
+            clearInterval(pollInterval);
+            console.error('❌ Live reload disabled: Failed to connect to dev server after 10 attempts.');
+            console.error('💡 This is normal if APP_ENV is not set to "dev" or the server is not running.');
+          }
         }
-      }, 1000);
+      }, 1000); // Poll every 1 second
     };
     })(); // Close IIFE
 
