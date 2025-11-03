@@ -151,12 +151,12 @@ func GetAdminById(c *fiber.Ctx) error {
 	if err := GetOneBy("id", c, &user); err != nil {
 		return err
 	}
-	
+
 	// Verify it's an admin user
 	if user.Type != "admin" {
 		return lib.Error.General.RecordNotFound
 	}
-	
+
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -187,12 +187,12 @@ func UpdateAdminById(c *fiber.Ctx) error {
 	if err := UpdateOneById(c, &user); err != nil {
 		return err
 	}
-	
+
 	// Verify it's an admin user
 	if user.Type != "admin" {
 		return lib.Error.General.RecordNotFound
 	}
-	
+
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
