@@ -89,11 +89,6 @@ func startAllServices() {
 		fmt.Println()
 		fmt.Println("✅ All services started successfully!")
 		fmt.Println()
-		fmt.Println("Services running:")
-		fmt.Println("  • Core Service (PostgreSQL): http://localhost:5432")
-		fmt.Println("  • Auth Service (PostgreSQL): http://localhost:5433")
-		fmt.Println("  • Email Service (MailHog UI): http://localhost:8025")
-		fmt.Println()
 		fmt.Println("To stop all services: go run cmd/docker-dev/main.go down")
 		fmt.Println("To view logs: go run cmd/docker-dev/main.go logs")
 	}
