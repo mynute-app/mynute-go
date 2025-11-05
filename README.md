@@ -214,22 +214,24 @@ mynute-go/
 
 3. **Run the application**
    
+   This project uses a monorepo structure with Go modules.
+   
    **Option A: Run all services together (Recommended)**
    ```bash
-   go run main.go
+   go run .
    ```
    
    **Option B: Run services individually**
    
    ```bash
    # Core/Business Service
-   go run cmd/business-service/main.go
+   go run ./cmd/business-service
    
    # Auth Service
-   go run cmd/auth-service/main.go
+   go run ./cmd/auth-service
    
    # Email Service
-   go run cmd/email-service/main.go
+   go run ./cmd/email-service
    ```
 
 ### Access Points
@@ -264,7 +266,7 @@ Once running, access each service:
 
 4. **Start the application**
    ```bash
-   go run main.go
+   go run .
    ```
 
 The application will be available at `http://localhost:4000`

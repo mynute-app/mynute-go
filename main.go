@@ -5,8 +5,8 @@ import (
 	"log"
 	"mynute-go/services/auth"
 	"mynute-go/services/core"
-	_ "mynute-go/services/email/docs"
 	"mynute-go/services/email"
+	_ "mynute-go/services/email/docs"
 	"os"
 	"os/signal"
 	"sync"
@@ -31,20 +31,23 @@ func main() {
 	fmt.Println()
 	fmt.Println("Available services:")
 	fmt.Println("  • Business Service (Core) - Port 4000")
-	fmt.Println("      Run: go run cmd/business-service/main.go (It will run the microservice alone)")
 	fmt.Println("  • Auth Service - Port 4001")
-	fmt.Println("      Run: go run cmd/auth-service/main.go (It will run the microservice alone)")
 	fmt.Println("  • Email Service - Port 4002")
-	fmt.Println("      Run: go run cmd/email-service/main.go (It will run the microservice alone)")
 	fmt.Println()
 	fmt.Println("Running Options:")
-	fmt.Println("  1. Run all services:     go run main.go")
-	fmt.Println("  2. Run individually:     See commands above")
+	fmt.Println("  1. Run all services:     go run .")
+	fmt.Println("  2. Run individually:")
+	fmt.Println("      Core:   go run ./cmd/business-service")
+	fmt.Println("      Auth:   go run ./cmd/auth-service")
+	fmt.Println("      Email:  go run ./cmd/email-service")
 	fmt.Println()
 	fmt.Println("Docker Compose:")
-	fmt.Println("  • Core/Business: docker-compose -f core/docker-compose.dev.yml up")
-	fmt.Println("  • Auth:          docker-compose -f auth/docker-compose.dev.yml up")
-	fmt.Println("  • Email:         docker-compose -f email/docker-compose.dev.yml up")
+	fmt.Println("  • Development: docker-compose -f docker-compose.dev.yml up")
+	fmt.Println("  • Production:  docker-compose -f docker-compose.prod.yml up")
+	fmt.Println()
+	fmt.Println("Go Workspace:")
+	fmt.Println("  This project uses Go modules in a monorepo structure.")
+	fmt.Println("  All services share the same go.mod at the root level.")
 	fmt.Println()
 	fmt.Println("For more information, see the documentation in /docs")
 	fmt.Println()
