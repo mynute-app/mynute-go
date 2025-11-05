@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"mynute-go/services/core/api/controller"
 	"mynute-go/services/core/api/handler"
 	"mynute-go/services/core/api/middleware"
@@ -36,8 +37,18 @@ func Build(DB *gorm.DB, App *fiber.App) {
 
 	// API routes (with /api prefix)
 	apiRoutes := App.Group("/api")
-	endpoints := &middleware.Endpoint{DB: Gorm}
-	if err := endpoints.Build(apiRoutes); err != nil {
-		panic(err)
-	}
+	
+	// TODO: In production, endpoint authorization should be handled by the auth service API
+	// For now, we'll set up basic routes manually for testing
+	
+	// Company routes (public schema)
+	apiRoutes.Post("/company", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.CreateCompany)
+	apiRoutes.Get("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyById)
+	apiRoutes.Get("/company/name/:name", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyByName)
+	apiRoutes.Get("/company/tax/:taxId", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyByTaxId)
+	apiRoutes.Get("/company/subdomain/:subdomain", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyBySubdomain)
+	apiRoutes.Put("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.UpdateCompanyById)
+	apiRoutes.Delete("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.DeleteCompanyById)
+	
+	log.Println("Routes registered manually (endpoint middleware disabled)")
 }
