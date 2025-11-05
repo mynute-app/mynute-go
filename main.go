@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"mynute-go/auth"
-	"mynute-go/core"
+	"mynute-go/services/auth"
+	"mynute-go/services/core"
 	_ "mynute-go/docs"
-	"mynute-go/email"
+	"mynute-go/services/email"
 	"os"
 	"os/signal"
 	"sync"

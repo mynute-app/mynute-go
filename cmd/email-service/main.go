@@ -2,7 +2,7 @@ package main
 
 import (
 	_ "mynute-go/docs"
-	"mynute-go/email"
+	"mynute-go/services/email"
 )
 
 // @title						Email Service API

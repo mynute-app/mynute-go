@@ -12,7 +12,7 @@ The main issue was that authentication and authorization models (`EndPoint`, `Po
 
 #### `core/src/middleware/auth.go`
 **Changes:**
-- Added import: `authModel "mynute-go/auth/model"`
+- Added import: `authModel "mynute-go/services/auth/model"`
 - Changed `model.EndPoint` → `authModel.EndPoint`
 - Changed `model.PolicyRule` → `authModel.PolicyRule`
 - Changed `model.ResourceReference` → `authModel.ResourceReference`
@@ -21,7 +21,7 @@ The main issue was that authentication and authorization models (`EndPoint`, `Po
 
 #### `core/src/middleware/endpoint.go`
 **Changes:**
-- Added import: `authModel "mynute-go/auth/model"`
+- Added import: `authModel "mynute-go/services/auth/model"`
 - Changed `model.EndPoint` → `authModel.EndPoint`
 - Removed unused `model` import
 
@@ -32,10 +32,10 @@ The main issue was that authentication and authorization models (`EndPoint`, `Po
 #### `cmd/seed/main.go`
 **Changes:**
 - Added imports:
-  - `authModel "mynute-go/auth/model"`
-  - `endpointSeed "mynute-go/core/src/config/db/seed/endpoint"`
-  - `policySeed "mynute-go/core/src/config/db/seed/policy"`
-  - `resourceSeed "mynute-go/core/src/config/db/seed/resource"`
+  - `authModel "mynute-go/services/auth/model"`
+  - `endpointSeed "mynute-go/services/core/src/config/db/seed/endpoint"`
+  - `policySeed "mynute-go/services/core/src/config/db/seed/policy"`
+  - `resourceSeed "mynute-go/services/core/src/config/db/seed/resource"`
 - Changed `model.Resources` → `resourceSeed.Resources`
 - Changed `model.EndPoints()` → `authModel.EndPoints(endpointSeed.GetAllEndpoints(), ...)`
 - Changed `model.LoadEndpointIDs(tx)` → `authModel.LoadEndpointIDs(endpoints, tx)`
@@ -90,7 +90,7 @@ func GetAllPolicies() []*authModel.PolicyRule {
 
 #### `tools/generate-migration/main.go`
 **Changes:**
-- Added import: `authModel "mynute-go/auth/model"`
+- Added import: `authModel "mynute-go/services/auth/model"`
 - Updated modelMap:
   - `&model.Resource{}` → `&authModel.Resource{}`
   - `&model.Property{}` → `&authModel.Property{}`
@@ -101,7 +101,7 @@ func GetAllPolicies() []*authModel.PolicyRule {
 
 #### `tools/smart-migration/main.go`
 **Changes:**
-- Added import: `authModel "mynute-go/auth/model"`
+- Added import: `authModel "mynute-go/services/auth/model"`
 - Updated modelMap (same as generate-migration/main.go)
 
 **Reason:** Smart migration detector needs auth models for diff comparison.
@@ -110,7 +110,7 @@ func GetAllPolicies() []*authModel.PolicyRule {
 
 #### `cmd/auth-service/main.go`
 **Changes:**
-- Fixed import: `"mynute-go/core/src/config/db/database"` → `database "mynute-go/core/src/config/db"`
+- Fixed import: `"mynute-go/services/core/src/config/db/database"` → `database "mynute-go/services/core/src/config/db"`
 
 **Reason:** Incorrect import path - the package is named `database`, not in a subdirectory.
 
@@ -119,8 +119,8 @@ func GetAllPolicies() []*authModel.PolicyRule {
 ### Import Pattern
 ```go
 import (
-    authModel "mynute-go/auth/model"
-    coreModel "mynute-go/core/src/config/db/model"  // If both are needed
+    authModel "mynute-go/services/auth/model"
+    coreModel "mynute-go/services/core/src/config/db/model"  // If both are needed
 )
 ```
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"mynute-go/core"
+	"mynute-go/services/core"
 	"os"
 )
 
@@ -33,4 +33,3 @@ func main() {
 	server := core.NewServer()
 	server.Run("listen")
 }
-

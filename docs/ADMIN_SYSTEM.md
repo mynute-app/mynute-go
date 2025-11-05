@@ -416,7 +416,7 @@ package test
 
 import (
     "testing"
-    "mynute-go/core/src/config/db/model"
+    "mynute-go/services/core/src/config/db/model"
 )
 
 func TestAdminLogin(t *testing.T) {

@@ -59,7 +59,7 @@ core/
     └── email/              # Email translations
 ```
 
-All services imported from `mynute-go/core/src/lib/email`.
+All services imported from `mynute-go/services/core/src/lib/email`.
 
 ### After Migration
 
@@ -79,7 +79,7 @@ Email functionality is now accessed via HTTP API calls to the email service.
 ### Old Approach (Direct Library Usage)
 ```go
 // In any service
-import "mynute-go/core/src/lib/email"
+import "mynute-go/services/core/src/lib/email"
 
 provider, _ := email.NewProvider(nil)
 emailData := email.EmailData{
@@ -172,7 +172,7 @@ Replace direct email library calls with HTTP API calls:
 
 ```go
 // Old
-import "mynute-go/core/src/lib/email"
+import "mynute-go/services/core/src/lib/email"
 
 // New
 import (
@@ -289,7 +289,7 @@ If issues arise:
 
 1. Revert main.go to not start email service
 2. Update services to use direct library imports again
-3. Point imports back to `mynute-go/core/src/lib/email`
+3. Point imports back to `mynute-go/services/core/src/lib/email`
 4. Restart services
 
 ## Benefits

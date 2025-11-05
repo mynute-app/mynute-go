@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mynute-go/core/src/lib"
+	"mynute-go/services/core/src/lib"
 	"os"
 	"path/filepath"
 )
@@ -450,4 +450,3 @@ DROP TABLE IF EXISTS public.companies CASCADE;
 DROP TABLE IF EXISTS public.sectors CASCADE;
 `
 }
-

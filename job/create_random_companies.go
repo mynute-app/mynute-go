@@ -7,9 +7,9 @@ package main
 // go run job/create_random_companies.go 5
 
 import (
-	"mynute-go/core"
-	srcLib "mynute-go/core/src/lib"
 	"mynute-go/job/lib"
+	"mynute-go/services/core"
+	srcLib "mynute-go/services/core/src/lib"
 	"os"
 	"strconv"
 )
@@ -41,4 +41,3 @@ func main() {
 	qtty := GetQuantityFromArgs()
 	run(qtty)
 }
-

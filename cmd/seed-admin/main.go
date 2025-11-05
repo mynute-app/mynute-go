@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	database "mynute-go/core/src/config/db"
-	"mynute-go/core/src/config/db/model"
-	"mynute-go/core/src/lib"
+	database "mynute-go/services/core/src/config/db"
+	"mynute-go/services/core/src/config/db/model"
+	"mynute-go/services/core/src/lib"
 	"os"
 
 	"github.com/google/uuid"
@@ -91,4 +91,3 @@ func main() {
 	log.Println("\nSeeded:")
 	log.Println("  - 3 Admin Roles (superadmin, support, auditor)")
 }
-

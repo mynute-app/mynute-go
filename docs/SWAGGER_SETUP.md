@@ -127,7 +127,7 @@ Each service needs to import and serve Swagger docs:
 ```go
 import (
     swagger "github.com/gofiber/swagger"
-    _ "mynute-go/core/docs" // Import generated docs
+    _ "mynute-go/services/core/docs" // Import generated docs
 )
 
 func setupSwagger(app *fiber.App) {

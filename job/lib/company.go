@@ -1,8 +1,8 @@
 package lib
 
 import (
-	"mynute-go/core/src/lib"
-	"mynute-go/core/test/src/model"
+	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/test/src/model"
 	"os"
 )
 
@@ -35,4 +35,3 @@ func CreateCompaniesRandomly(CompaniesToCreate int) ([]*model.Company, error) {
 	}
 	return companies, nil
 }
-

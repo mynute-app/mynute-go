@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	authModel "mynute-go/auth/config/db/model"
-	database "mynute-go/core/src/config/db"
-	"mynute-go/core/src/config/db/model"
-	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
-	policySeed "mynute-go/core/src/config/db/seed/policy"
-	resourceSeed "mynute-go/core/src/config/db/seed/resource"
-	"mynute-go/core/src/lib"
+	authModel "mynute-go/services/auth/config/db/model"
+	database "mynute-go/services/core/src/config/db"
+	"mynute-go/services/core/src/config/db/model"
+	endpointSeed "mynute-go/services/core/src/config/db/seed/endpoint"
+	policySeed "mynute-go/services/core/src/config/db/seed/policy"
+	resourceSeed "mynute-go/services/core/src/config/db/seed/resource"
+	"mynute-go/services/core/src/lib"
 	"os"
 )
 

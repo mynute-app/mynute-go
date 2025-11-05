@@ -9,12 +9,12 @@ import (
 	"os"
 	"time"
 
-	authModel "mynute-go/auth/config/db/model"
-	database "mynute-go/core/src/config/db"
-	coreModel "mynute-go/core/src/config/db/model"
-	endpointSeed "mynute-go/core/src/config/db/seed/endpoint"
-	resourceSeed "mynute-go/core/src/config/db/seed/resource"
-	"mynute-go/core/src/lib"
+	authModel "mynute-go/services/auth/config/db/model"
+	database "mynute-go/services/core/src/config/db"
+	coreModel "mynute-go/services/core/src/config/db/model"
+	endpointSeed "mynute-go/services/core/src/config/db/seed/endpoint"
+	resourceSeed "mynute-go/services/core/src/config/db/seed/resource"
+	"mynute-go/services/core/src/lib"
 )
 
 // SeedAuth sends all endpoints, resources, and policies to the auth service

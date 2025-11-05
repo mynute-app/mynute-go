@@ -1,8 +1,8 @@
 package main
 
 import (
-	"mynute-go/auth"
 	_ "mynute-go/docs"
+	"mynute-go/services/auth"
 )
 
 // @title						Auth Service API
