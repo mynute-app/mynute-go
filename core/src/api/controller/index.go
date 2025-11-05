@@ -1,13 +1,12 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	DTO "mynute-go/core/src/api/dto"
 	serviceFactory "mynute-go/core/src/api/service"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/email"
+	"mynute-go/core/src/lib/emailclient"
 	"reflect"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,29 +92,15 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 
 	language := c.Query("language", "en")
 
-	// Initialize renderer
-	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
-
-	// Render email template
-	renderedEmail, err := renderer.RenderEmail("login_validation_code", language, email.TemplateData{
-		"LoginValidationCode": LoginValidationCode,
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to render email: %w", err)
-	}
-
-	// Initialize email provider
-	provider, err := email.NewProvider(nil)
-	if err != nil {
-		return fmt.Errorf("failed to initialize email provider: %w", err)
-	}
-
-	// Send email
-	err = provider.Send(context.Background(), email.EmailData{
-		To:      []string{user_email},
-		Subject: renderedEmail.Subject,
-		Html:    renderedEmail.HTMLBody,
+	// Send email using email service
+	emailClient := emailclient.New()
+	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+		To:           user_email,
+		TemplateName: "login_validation_code",
+		Language:     language,
+		Data: map[string]interface{}{
+			"LoginValidationCode": LoginValidationCode,
+		},
 	})
 
 	if err != nil {
@@ -138,30 +123,17 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 		return err
 	}
 
-	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
-
 	language := c.Query("language", "en")
 
-	// Render email template
-	renderedEmail, err := renderer.RenderEmail("new_password", language, email.TemplateData{
-		"NewPassword": password.Password,
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to render email: %w", err)
-	}
-
-	// Initialize email provider
-	provider, err := email.NewProvider(nil)
-	if err != nil {
-		return fmt.Errorf("failed to initialize email provider: %w", err)
-	}
-
-	// Send email
-	err = provider.Send(context.Background(), email.EmailData{
-		To:      []string{user_email},
-		Subject: renderedEmail.Subject,
-		Html:    renderedEmail.HTMLBody,
+	// Send email using email service
+	emailClient := emailclient.New()
+	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+		To:           user_email,
+		TemplateName: "new_password",
+		Language:     language,
+		Data: map[string]interface{}{
+			"NewPassword": password.Password,
+		},
 	})
 
 	if err != nil {
@@ -217,30 +189,16 @@ func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
 		verificationLink = fmt.Sprintf("%s://%s/verify-email?email=%s&type=client&lang=%s&code=%s", protocol, host, user_email, language, code)
 	}
 
-	// Initialize renderer
-	renderer := email.NewTemplateRenderer("./static/email", "./translation/email")
-
-	// Render email template
-	renderedEmail, err := renderer.RenderEmail("email_verification_code", language, email.TemplateData{
-		"VerificationCode": code,
-		"VerificationLink": verificationLink,
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to render email: %w", err)
-	}
-
-	// Initialize email provider
-	provider, err := email.NewProvider(nil)
-	if err != nil {
-		return fmt.Errorf("failed to initialize email provider: %w", err)
-	}
-
-	// Send email
-	err = provider.Send(context.Background(), email.EmailData{
-		To:      []string{user_email},
-		Subject: renderedEmail.Subject,
-		Html:    renderedEmail.HTMLBody,
+	// Send email using email service
+	emailClient := emailclient.New()
+	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+		To:           user_email,
+		TemplateName: "email_verification_code",
+		Language:     language,
+		Data: map[string]interface{}{
+			"VerificationCode": code,
+			"VerificationLink": verificationLink,
+		},
 	})
 
 	if err != nil {

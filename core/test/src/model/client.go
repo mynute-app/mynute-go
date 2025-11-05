@@ -7,7 +7,7 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/email"
+	"mynute-go/core/src/lib/emailclient"
 	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/core/test/src/handler"
 	"net/url"
@@ -222,10 +222,7 @@ func (u *Client) SendLoginCode(s int) error {
 
 func (u *Client) GetLoginCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)
@@ -261,10 +258,7 @@ func (u *Client) SendPasswordResetEmail(s int) error {
 
 func (u *Client) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)
@@ -321,10 +315,7 @@ func (u *Client) SendVerificationEmail(s int) error {
 
 func (u *Client) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)
@@ -496,3 +487,4 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 	}
 	return nil
 }
+

@@ -7,7 +7,7 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/email"
+	"mynute-go/core/src/lib/emailclient"
 	"mynute-go/core/test/src/handler"
 	"net/url"
 
@@ -461,10 +461,7 @@ func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
 
 func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get all messages to find the login validation email
 	messages, err := mailhog.GetMessages()
@@ -473,7 +470,7 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	// Search for the most recent login validation email (searching from newest to oldest)
-	var loginMessage *email.MailHogMessage
+	var loginMessage *emailclient.MailHogMessage
 	for i := len(messages) - 1; i >= 0; i-- {
 		msg := &messages[i]
 
@@ -536,10 +533,7 @@ func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
 
 func (e *Employee) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the employee
 	message, err := mailhog.GetLatestMessageTo(e.Email)
@@ -604,10 +598,7 @@ func (e *Employee) SendVerificationEmail(s int, x_company_id *string) error {
 
 func (e *Employee) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the employee
 	message, err := mailhog.GetLatestMessageTo(e.Email)
@@ -1015,4 +1006,3 @@ func GetExampleEmployeeWorkSchedule(employeeID uuid.UUID, branchID uuid.UUID, se
 		},
 	}
 }
-

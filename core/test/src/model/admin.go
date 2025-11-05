@@ -6,7 +6,7 @@ import (
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/email"
+	"mynute-go/core/src/lib/emailclient"
 	"mynute-go/core/test/src/handler"
 	"net/url"
 
@@ -63,19 +63,16 @@ func (a *Admin) SendPasswordResetEmail(s int) error {
 
 func (a *Admin) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the admin
-	message, err := mailhog.GetLatestMessageTo(a.Created.UserID.String() /* Email on User */)
+	message, err := mailhog.FindMessageByRecipient(a.Created.UserID.String() /* Email on User */)
 	if err != nil {
 		return "", err
 	}
 
 	// Verify the email has a subject
-	if message.GetSubject() == "" {
+	if len(message.Content.Headers["Subject"]) == 0 {
 		return "", fmt.Errorf("email subject is empty")
 	}
 
@@ -124,13 +121,10 @@ func (a *Admin) SendVerificationEmail(s int) error {
 
 func (a *Admin) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog, err := email.MailHog()
-	if err != nil {
-		return "", err
-	}
+	mailhog := emailclient.NewMailHogClient()
 
 	// Get the latest email sent to the client
-	message, err := mailhog.GetLatestMessageTo(a.Created.UserID.String() /* Email on User */)
+	message, err := mailhog.FindMessageByRecipient(a.Created.UserID.String() /* Email on User */)
 	if err != nil {
 		return "", err
 	}
@@ -593,4 +587,3 @@ func (a *Admin) DeleteRole(s int, roleID uuid.UUID) error {
 	}
 	return nil
 }
-

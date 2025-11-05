@@ -69,12 +69,23 @@ mynute-go/
    cd mynute-go
    ```
 
-2. **Create environment file**
+2. **Create environment files for each service**
+   
+   For Core/Business Service:
    ```bash
-   cp .env.example .env
+   cp core/.env.example core/.env
    ```
+   
+   For Auth Service:
+   ```bash
+   cp auth/.env.example auth/.env
+   ```
+   
+   Note: The root `.env` and `.env.example` are deprecated. Each service now has its own environment configuration.
 
-3. **Configure environment variables** in `.env`:
+3. **Configure environment variables** in each service's `.env`:
+   
+   Core Service (`core/.env`):
    ```env
    # Application
    APP_ENV=dev
@@ -106,8 +117,15 @@ mynute-go/
 ### Development with Docker (Recommended)
 
 1. **Start development environment**
+   
+   For Core/Business Service:
    ```bash
-   docker-compose -p mynute-go -f docker-compose.dev.yml up -d --force-recreate
+   docker-compose -p mynute-go -f core/docker-compose.dev.yml up -d --force-recreate
+   ```
+   
+   For Auth Service:
+   ```bash
+   docker-compose -p mynute-go-auth -f auth/docker-compose.dev.yml up -d --force-recreate
    ```
 
 2. **Install dependencies**
@@ -116,8 +134,22 @@ mynute-go/
    ```
 
 3. **Run the application**
+   
+   Run all services together (Recommended):
    ```bash
    go run main.go
+   ```
+   
+   Or run services individually:
+   
+   Business Service:
+   ```bash
+   go run cmd/business-service/main.go
+   ```
+   
+   Auth Service:
+   ```bash
+   go run cmd/auth-service/main.go
    ```
 
 ### Manual Setup
@@ -251,20 +283,41 @@ The application automatically uses the test database (`POSTGRES_DB_TEST`) when `
 ### Production with Docker
 
 1. **Build production image**
+   
+   For Core/Business Service:
    ```bash
-   docker-compose -f docker-compose.prod.yml build
+   docker-compose -f core/docker-compose.prod.yml build
+   ```
+   
+   For Auth Service:
+   ```bash
+   docker-compose -f auth/docker-compose.prod.yml build
    ```
 
 2. **Deploy with production configuration**
+   
+   For Core/Business Service:
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker-compose -f core/docker-compose.prod.yml up -d
+   ```
+   
+   For Auth Service:
+   ```bash
+   docker-compose -f auth/docker-compose.prod.yml up -d
    ```
 
 ### Manual Production Deployment
 
 1. **Build binary**
+   
+   Business Service:
    ```bash
-   CGO_ENABLED=0 GOOS=linux go build -o mynute-backend-app
+   CGO_ENABLED=0 GOOS=linux go build -o mynute-backend-app ./cmd/business-service
+   ```
+   
+   Auth Service:
+   ```bash
+   CGO_ENABLED=0 GOOS=linux go build -o mynute-auth-app ./cmd/auth-service
    ```
 
 2. **Run migrations manually**
