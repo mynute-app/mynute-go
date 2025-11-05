@@ -59,19 +59,19 @@ func SendEmail(c *fiber.Ctx) error {
 
 		// Send email
 		err := EmailProvider.Send(ctx, emailData)
-		
+
 		result := dto.Result{
 			To:      recipient.To,
 			Success: err == nil,
 		}
-		
+
 		if err != nil {
 			result.Error = err.Error()
 			failedCount++
 		} else {
 			successCount++
 		}
-		
+
 		results = append(results, result)
 	}
 

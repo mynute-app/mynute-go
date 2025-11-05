@@ -484,9 +484,9 @@ func TestSendTemplateMerge(t *testing.T) {
 		TemplateRenderer = &lib.TemplateRenderer{}
 
 		mockSender.On("Send", mock.Anything, mock.MatchedBy(func(data lib.EmailData) bool {
-			return data.To[0] == "user@example.com" && 
-				   data.Subject == "Welcome" && 
-				   len(data.Html) > 0
+			return data.To[0] == "user@example.com" &&
+				data.Subject == "Welcome" &&
+				len(data.Html) > 0
 		})).Return(nil)
 
 		app := setupTestApp()
