@@ -2,46 +2,62 @@
 
 A dedicated microservice for handling all email operations in the mynute-go application.
 
+## Overview
+
+The Email Service is responsible for **email delivery only**. It does not store templates or business logic - that responsibility belongs to the Core Service. The Email Service provides three delivery methods:
+
+1. **Simple Send**: Direct email with subject and body
+2. **Template Send**: Uses Email Service's own templates
+3. **Template Merge Send**: Receives template HTML and translations from calling service (e.g., Core)
+
+## Architecture Principle
+
+**Separation of Concerns:**
+- **Email Service**: Handles email **delivery** (sending via providers like MailHog/Resend)
+- **Core Service**: Manages email **templates and translations** stored at `services/core/api/view/`
+
 ## Features
 
 - **Multiple Email Providers**: Support for Resend, MailHog, and SMTP
 - **Template Rendering**: Multi-language HTML email templates with translations
+- **Template Merge Endpoint**: Accepts template HTML + translations from other services
 - **Bulk Email Sending**: Send emails to multiple recipients
 - **RESTful API**: Simple HTTP/REST interface
 - **Health Checks**: Built-in health check endpoint
 - **Attachments Support**: Send emails with file attachments
+- **Fully Independent**: No dependencies on Core or Auth services
 
-## Architecture
+## Service Details
 
-The email service is built with:
-- **Fiber v2**: Fast HTTP web framework
-- **Provider Pattern**: Pluggable email providers
-- **Template Engine**: HTML template rendering with i18n support
+- **Port**: `4002`
+- **Swagger**: `http://localhost:4002/swagger/index.html`
+- **Health Check**: `http://localhost:4002/health`
 
 ## Directory Structure
 
 ```
 email/
-├── lib/                     # Email library
-│   ├── sender.go           # Provider interface and factory
-│   ├── resend.go           # Resend API implementation
-│   ├── mailhog.go          # MailHog SMTP implementation
-│   └── template.go         # Template renderer
-├── static/                  # Static assets
-│   └── email/              # Email templates
-│       ├── email_verification_code.html
-│       ├── login_validation_code.html
-│       └── new_password.html
-├── translation/             # i18n translations
-│   └── email/              # Email translations
-│       ├── email_verification_code.json
-│       ├── login_validation_code.json
-│       └── new_password.json
-├── routes.go               # API route handlers
+├── api/
+│   ├── controller/          # HTTP controllers
+│   │   └── email.go        # Email endpoints
+│   └── lib/                # Email library
+│       ├── sender.go       # Provider interface and factory
+│       ├── resend.go       # Resend API implementation
+│       ├── mailhog.go      # MailHog SMTP implementation
+│       └── template.go     # Template renderer
+├── config/
+│   └── dto/                # Data transfer objects
+│       └── email.go        # Request/response DTOs
+├── lib/
+│   └── env.go              # Environment loading
+├── docs/                   # Swagger documentation
+├── routes.go               # API route definitions
 ├── server.go               # Server initialization
 ├── Dockerfile              # Docker configuration
 ├── docker-compose.dev.yml  # Development compose
 ├── docker-compose.prod.yml # Production compose
+├── loki-config.yaml        # Logging configuration
+├── prometheus.yml          # Metrics configuration
 ├── .env                    # Environment variables (gitignored)
 └── .env.example            # Environment template
 ```
@@ -60,7 +76,7 @@ Returns service health status.
 POST /api/v1/emails/send
 ```
 
-Send a single email.
+Send a single email directly.
 
 **Request Body:**
 ```json
@@ -79,7 +95,7 @@ Send a single email.
 POST /api/v1/emails/send-template
 ```
 
-Send an email using a template with translations.
+Send an email using templates stored in the Email Service.
 
 **Request Body:**
 ```json
@@ -95,6 +111,40 @@ Send an email using a template with translations.
   "bcc": []
 }
 ```
+
+### Send Template Merge Email (NEW)
+```http
+POST /api/v1/emails/send-template-merge
+```
+
+**Purpose**: Allows other services (like Core) to send their own templates for rendering and delivery.
+
+**Use Case**: Core Service stores templates at `services/core/api/view/html/email/*.html` and translations at `services/core/api/view/translation/email/*.json`. Core reads these files and sends them to Email Service for merging and delivery.
+
+**Request Body:**
+```json
+{
+  "to": ["user@example.com"],
+  "template_html": "<html><body><h1>{{.greeting}}</h1><p>{{.message}}</p></body></html>",
+  "translations": {
+    "subject": "Email Verification",
+    "greeting": "Hello",
+    "message": "Please verify your email"
+  },
+  "data": {
+    "username": "John Doe"
+  },
+  "cc": ["cc@example.com"],
+  "bcc": ["bcc@example.com"]
+}
+```
+
+**How it works:**
+1. Calling service (Core) loads template HTML from its filesystem
+2. Calling service loads translations for requested language
+3. Calling service sends both to `/send-template-merge`
+4. Email Service merges `translations` + `data` into `template_html`
+5. Email Service sends the rendered email via configured provider
 
 ### Send Bulk Email
 ```http
