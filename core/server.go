@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	_ "mynute-go/core/docs"
 	"mynute-go/core/src/api/middleware"
 	"mynute-go/core/src/api/routes"
 	database "mynute-go/core/src/config/db"
@@ -14,6 +15,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	fiberSwagger "github.com/gofiber/swagger"
 )
 
 type Server struct {
@@ -64,6 +66,9 @@ func NewServer() *Server {
 	app.Static("/admin", "./admin")
 
 	routes.Build(db.Gorm, app)
+
+	// Swagger documentation
+	app.Get("/swagger/*", fiberSwagger.HandlerDefault)
 
 	// Setup live reload for development (admin panel)
 	middleware.SetupLiveReload(app)

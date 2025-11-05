@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"mynute-go/auth/api/routes"
+	_ "mynute-go/auth/docs"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/lib"
@@ -13,6 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	fiberSwagger "github.com/gofiber/swagger"
 )
 
 type Server struct {
@@ -70,6 +72,9 @@ func NewServer() *Server {
 
 	// Setup auth routes
 	routes.SetupAuthRoutes(app, db.AuthDB)
+
+	// Swagger documentation
+	app.Get("/swagger/*", fiberSwagger.HandlerDefault)
 
 	return &Server{App: app, Db: db}
 }

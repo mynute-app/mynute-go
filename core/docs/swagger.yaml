@@ -1,0 +1,7006 @@
+definitions:
+  DTO.Appointment:
+    properties:
+      branch_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      cancel_time:
+        example: "2021-01-01T08:00:00Z"
+        type: string
+      cancelled:
+        example: false
+        type: boolean
+      cancelled_employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      client_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      comments:
+        items:
+          $ref: '#/definitions/dJSON.Comment'
+        type: array
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        example: "2021-01-01T10:00:00Z"
+        type: string
+      history:
+        $ref: '#/definitions/dJSON.AppointmentHistory'
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_cancelled:
+        example: true
+        type: boolean
+      is_cancelled_by_client:
+        example: false
+        type: boolean
+      is_cancelled_by_employee:
+        example: true
+        type: boolean
+      is_confirmed_by_client:
+        example: true
+        type: boolean
+      is_fulfilled:
+        example: false
+        type: boolean
+      payment_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      rescheduled:
+        example: false
+        type: boolean
+      service_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      start_time:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      time_zone:
+        example: America/New_York
+        type: string
+    type: object
+  DTO.AppointmentList:
+    properties:
+      appointments:
+        items:
+          $ref: '#/definitions/DTO.Appointment'
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_count:
+        example: 100
+        type: integer
+    type: object
+  DTO.AvailableDate:
+    properties:
+      branch_id:
+        type: string
+      date:
+        type: string
+      time_slots:
+        items:
+          $ref: '#/definitions/DTO.AvailableTime'
+        type: array
+    type: object
+  DTO.AvailableTime:
+    properties:
+      employees:
+        items:
+          type: string
+        type: array
+      time:
+        type: string
+    type: object
+  DTO.BranchBase:
+    description: Branch Base DTO
+    properties:
+      city:
+        example: New York
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
+      zip_code:
+        example: "10001"
+        type: string
+    type: object
+  DTO.BranchFull:
+    description: Branch Full DTO
+    properties:
+      city:
+        example: New York
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      employees:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.EmployeeBase'
+        type: array
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      service_density:
+        items:
+          $ref: '#/definitions/DTO.ServiceDensity'
+        type: array
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServiceBase'
+        type: array
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
+      zip_code:
+        example: "10001"
+        type: string
+    type: object
+  DTO.BranchWorkRange:
+    description: represents a work range for a branch, including its ID and the data
+      required to create it.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      id:
+        description: Work range ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.BranchWorkRangeServices:
+    properties:
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+    type: object
+  DTO.BranchWorkSchedule:
+    description: represents a work schedule for a branch, which is a collection of
+      work ranges.
+    properties:
+      branch_work_ranges:
+        description: List of work ranges for the branch
+        items:
+          $ref: '#/definitions/DTO.BranchWorkRange'
+        type: array
+    type: object
+  DTO.CompanyBase:
+    description: Company Base DTO
+    properties:
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      id:
+        description: Primary key
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      legal_name:
+        example: Your Company Legal Name
+        type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
+      subdomains:
+        items:
+          $ref: '#/definitions/DTO.Subdomain'
+        type: array
+      tax_id:
+        example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
+        type: string
+    type: object
+  DTO.CompanyFull:
+    description: Company Full DTO
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchBase'
+        type: array
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      employees:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.EmployeeBase'
+        type: array
+      id:
+        description: Primary key
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      legal_name:
+        example: Your Company Legal Name
+        type: string
+      sectors:
+        items:
+          $ref: '#/definitions/DTO.Sector'
+        type: array
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServiceBase'
+        type: array
+      subdomains:
+        items:
+          $ref: '#/definitions/DTO.Subdomain'
+        type: array
+      tax_id:
+        example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
+        type: string
+    type: object
+  DTO.CreateAppointment:
+    properties:
+      branch_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      client_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      service_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      start_time:
+        example: "2028-01-01T09:00:00Z"
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+    type: object
+  DTO.CreateBranch:
+    description: Branch Create DTO
+    properties:
+      city:
+        example: New York
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      complement:
+        example: Suite 100
+        type: string
+      country:
+        example: USA
+        type: string
+      name:
+        example: Main Branch
+        type: string
+      neighborhood:
+        example: Downtown
+        type: string
+      number:
+        example: "456"
+        type: string
+      state:
+        example: NY
+        type: string
+      street:
+        example: 123 Main St
+        type: string
+      time_zone:
+        description: Time zone in IANA format
+        example: America/New_York
+        type: string
+      zip_code:
+        example: "10001"
+        type: string
+    type: object
+  DTO.CreateBranchWorkRange:
+    description: represents the data required to create a work range for a branch.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.CreateBranchWorkSchedule:
+    description: represents the data required to create a work schedule for a branch.
+    properties:
+      branch_work_ranges:
+        items:
+          $ref: '#/definitions/DTO.CreateBranchWorkRange'
+        type: array
+    type: object
+  DTO.CreateCompany:
+    properties:
+      name:
+        example: Your Company Legal Name
+        type: string
+      owner_email:
+        example: john.clark@gmail.com
+        type: string
+      owner_name:
+        example: John
+        type: string
+      owner_password:
+        example: 1SecurePswd!
+        type: string
+      owner_phone:
+        example: "+15555555555"
+        type: string
+      owner_surname:
+        example: Clark
+        type: string
+      owner_time_zone:
+        description: Use a valid timezone
+        example: America/Sao_Paulo
+        type: string
+      start_subdomain:
+        example: your-company-subdomain
+        type: string
+      tax_id:
+        example: "00000000000000"
+        type: string
+      trading_name:
+        example: Your Company Trading Name
+        type: string
+    required:
+    - owner_email
+    - owner_password
+    - owner_phone
+    - owner_time_zone
+    - start_subdomain
+    type: object
+  DTO.CreateEmployeeWorkRange:
+    description: represents the data required to create a work range for an employee.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        description: Employee ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.CreateEmployeeWorkSchedule:
+    description: represents the data required to create a work schedule for an employee.
+    properties:
+      employee_work_ranges:
+        description: List of work ranges for the employee
+        items:
+          $ref: '#/definitions/DTO.CreateEmployeeWorkRange'
+        type: array
+    type: object
+  DTO.CreateService:
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      duration:
+        example: 60
+        type: integer
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
+  DTO.EmployeeFull:
+    description: Employee Full DTO
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchBase'
+        type: array
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/DTO.RolePopulated'
+        type: array
+      services:
+        items:
+          $ref: '#/definitions/DTO.ServiceBase'
+        type: array
+      surname:
+        example: Doe
+        type: string
+      time_zone:
+        example: America/Sao_Paulo
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
+      verified:
+        example: true
+        type: boolean
+      work_schedule:
+        items:
+          $ref: '#/definitions/DTO.EmployeeWorkRange'
+        type: array
+    type: object
+  DTO.EmployeeWorkRange:
+    description: represents a work range for an employee, including its ID and the
+      data required to create it.
+    properties:
+      branch_id:
+        description: Branch ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        description: Employee ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      id:
+        description: Work range ID
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  DTO.EmployeeWorkRangeServices:
+    properties:
+      services:
+        description: List of services associated with the work range
+        items:
+          type: object
+        type: array
+    type: object
+  DTO.EmployeeWorkSchedule:
+    description: represents a work schedule for an employee, which is a collection
+      of work ranges.
+    properties:
+      employee_work_ranges:
+        items:
+          $ref: '#/definitions/DTO.EmployeeWorkRange'
+        type: array
+    type: object
+  DTO.Holidays:
+    properties:
+      date:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+      dayMonth:
+        example: 01-01
+        type: string
+      description:
+        example: Celebration of the first day of the new year
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: New Year's Day
+        type: string
+      recurrent:
+        example: true
+        type: boolean
+      type:
+        example: Public
+        type: string
+    type: object
+  DTO.PasswordReseted:
+    properties:
+      password:
+        type: string
+    type: object
+  DTO.RolePopulated:
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      description:
+        example: Administrator role
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_system_role:
+        type: boolean
+      name:
+        example: admin
+        type: string
+    type: object
+  DTO.Sector:
+    properties:
+      description:
+        example: The Company Sector Description
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Your Company Sector Name
+        type: string
+    type: object
+  DTO.Service:
+    description: Service Full DTO
+    properties:
+      branches:
+        items:
+          $ref: '#/definitions/DTO.BranchBase'
+        type: array
+      company_id:
+        example: "1"
+        type: string
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      duration:
+        example: 60
+        type: integer
+      employees:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.EmployeeBase'
+        type: array
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
+  DTO.ServiceAvailability:
+    properties:
+      available_dates:
+        items:
+          $ref: '#/definitions/DTO.AvailableDate'
+        type: array
+      branch_info:
+        items:
+          $ref: '#/definitions/DTO.BranchBase'
+        type: array
+      employee_info:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.EmployeeBase'
+        type: array
+      service_id:
+        type: string
+    type: object
+  DTO.ServiceBase:
+    description: Service Base DTO
+    properties:
+      company_id:
+        example: "1"
+        type: string
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      duration:
+        example: 60
+        type: integer
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
+  DTO.ServiceDensity:
+    properties:
+      max_schedules_overlap:
+        example: 5
+        type: integer
+      service_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+    type: object
+  DTO.Subdomain:
+    properties:
+      company_id:
+        description: Foreign key to Company
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      id:
+        description: Primary key
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        description: Subdomain name
+        example: agenda-yourcompany
+        type: string
+    type: object
+  DTO.UpdateBranch:
+    description: Branch Update DTO
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Main Branch Updated
+        type: string
+      street:
+        example: 556 Main St
+        type: string
+    type: object
+  DTO.UpdateClientRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
+  DTO.UpdateWorkRange:
+    properties:
+      end_time:
+        description: End time (date ignored)
+        example: "17:00"
+        format: HH:mm
+        type: string
+      start_time:
+        description: Start time (date ignored)
+        example: "09:00"
+        format: HH:mm
+        type: string
+      time_zone:
+        description: Timezone in IANA format, e.g., "America/New_York"
+        example: America/New_York
+        type: string
+      weekday:
+        description: Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+        example: 1
+        type: integer
+    type: object
+  controller.AccessCheckRequest:
+    properties:
+      body:
+        additionalProperties: true
+        type: object
+      headers:
+        additionalProperties: true
+        type: object
+      method:
+        enum:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        type: string
+      path:
+        type: string
+      path_params:
+        additionalProperties: true
+        type: object
+      query:
+        additionalProperties: true
+        type: object
+      resource:
+        additionalProperties: true
+        type: object
+      subject:
+        additionalProperties: true
+        type: object
+    required:
+    - method
+    - path
+    - subject
+    type: object
+  controller.AccessCheckResponse:
+    properties:
+      allowed:
+        type: boolean
+      effect:
+        type: string
+      error:
+        type: string
+      policy_id:
+        type: string
+      policy_name:
+        type: string
+      reason:
+        type: string
+    type: object
+  controller.EndpointCreateRequest:
+    properties:
+      controller_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      deny_unauthorized:
+        type: boolean
+      description:
+        type: string
+      method:
+        enum:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        type: string
+      needs_company_id:
+        type: boolean
+      path:
+        type: string
+      resource_id:
+        type: string
+    required:
+    - controller_name
+    - method
+    - path
+    type: object
+  controller.EndpointUpdateRequest:
+    properties:
+      controller_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      deny_unauthorized:
+        type: boolean
+      description:
+        type: string
+      method:
+        enum:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        type: string
+      needs_company_id:
+        type: boolean
+      path:
+        type: string
+      resource_id:
+        type: string
+    type: object
+  controller.PolicyCreateRequest:
+    properties:
+      conditions:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      effect:
+        enum:
+        - Allow
+        - Deny
+        type: string
+      end_point_id:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - conditions
+    - effect
+    - end_point_id
+    - name
+    type: object
+  controller.PolicyEvaluateRequest:
+    properties:
+      body:
+        additionalProperties: true
+        type: object
+      headers:
+        additionalProperties: true
+        type: object
+      path_params:
+        additionalProperties: true
+        type: object
+      query:
+        additionalProperties: true
+        type: object
+      resource:
+        additionalProperties: true
+        type: object
+      subject:
+        additionalProperties: true
+        type: object
+    required:
+    - subject
+    type: object
+  controller.PolicyUpdateRequest:
+    properties:
+      conditions:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      effect:
+        enum:
+        - Allow
+        - Deny
+        type: string
+      end_point_id:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    type: object
+  dJSON.AppointmentHistory:
+    properties:
+      field_changes:
+        items:
+          $ref: '#/definitions/dJSON.FieldChange'
+        type: array
+    type: object
+  dJSON.ClientAppointment:
+    properties:
+      branch_address:
+        example: 76, Example street, My city, My country, 09090790
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      company_name:
+        example: Company name example
+        type: string
+      service_name:
+        example: Service name example
+        type: string
+      start_time:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+    type: object
+  dJSON.Colors:
+    properties:
+      primary:
+        example: '#FF5733'
+        type: string
+      quaternary:
+        example: '#FF33A1'
+        type: string
+      secondary:
+        example: '#33FF57'
+        type: string
+      tertiary:
+        example: '#3357FF'
+        type: string
+    type: object
+  dJSON.Comment:
+    properties:
+      comment:
+        example: Some comment example text
+        type: string
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      created_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      deleted_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      from_client:
+        example: true
+        type: boolean
+      from_employee:
+        example: false
+        type: boolean
+      last_updated_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      old_versions:
+        items:
+          $ref: '#/definitions/dJSON.CommentVersion'
+        type: array
+      type:
+        description: '"internal" or "external"'
+        example: internal
+        type: string
+      updated_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+    type: object
+  dJSON.CommentVersion:
+    properties:
+      comment:
+        example: Some different version comment text
+        type: string
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      created_by:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+    type: object
+  dJSON.Design:
+    properties:
+      colors:
+        $ref: '#/definitions/dJSON.Colors'
+      images:
+        $ref: '#/definitions/dJSON.Images'
+    type: object
+  dJSON.FieldChange:
+    properties:
+      created_at:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      field:
+        example: field_name
+        type: string
+      new_value:
+        example: new_value
+        type: string
+      old_value:
+        example: old_value
+        type: string
+      reason:
+        example: Some reason.
+        type: string
+    type: object
+  dJSON.Image:
+    properties:
+      alt:
+        example: Image of something
+        type: string
+      caption:
+        example: This is the image we talk about
+        type: string
+      title:
+        example: Title of this image
+        type: string
+      url:
+        example: https://example.com/image.png
+        type: string
+    type: object
+  dJSON.Images:
+    properties:
+      background:
+        $ref: '#/definitions/dJSON.Image'
+      banner:
+        $ref: '#/definitions/dJSON.Image'
+      favicon:
+        $ref: '#/definitions/dJSON.Image'
+      logo:
+        $ref: '#/definitions/dJSON.Image'
+      profile:
+        $ref: '#/definitions/dJSON.Image'
+    type: object
+  dto.BulkEmailResponse:
+    properties:
+      failed:
+        example: 1
+        type: integer
+      failed_recipients:
+        example:
+        - failed@example.com
+        items:
+          type: string
+        type: array
+      sent:
+        example: 9
+        type: integer
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 10
+        type: integer
+    type: object
+  dto.EmailSuccessResponse:
+    properties:
+      message:
+        example: Email sent successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+      to:
+        example: recipient@example.com
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      details:
+        example: 'Missing required field: to'
+        type: string
+      error:
+        example: Invalid request body
+        type: string
+    type: object
+  dto.HealthResponse:
+    properties:
+      service:
+        example: email
+        type: string
+      status:
+        example: healthy
+        type: string
+      version:
+        example: "1.0"
+        type: string
+    type: object
+  dto.SendBulkEmailRequest:
+    properties:
+      body:
+        example: Monthly newsletter content
+        type: string
+      is_html:
+        example: true
+        type: boolean
+      recipients:
+        example:
+        - user1@example.com
+        - user2@example.com
+        items:
+          type: string
+        type: array
+      subject:
+        example: Newsletter
+        type: string
+    required:
+    - body
+    - recipients
+    - subject
+    type: object
+  dto.SendEmailRequest:
+    properties:
+      bcc:
+        example:
+        - bcc@example.com
+        items:
+          type: string
+        type: array
+      body:
+        example: This is the email body
+        type: string
+      cc:
+        example:
+        - cc1@example.com
+        - cc2@example.com
+        items:
+          type: string
+        type: array
+      is_html:
+        example: true
+        type: boolean
+      subject:
+        example: Welcome to Mynute
+        type: string
+      to:
+        example: recipient@example.com
+        type: string
+    required:
+    - body
+    - subject
+    - to
+    type: object
+  dto.SendTemplateEmailRequest:
+    properties:
+      bcc:
+        example:
+        - bcc@example.com
+        items:
+          type: string
+        type: array
+      cc:
+        example:
+        - cc@example.com
+        items:
+          type: string
+        type: array
+      data:
+        additionalProperties: true
+        type: object
+      language:
+        example: en
+        type: string
+      template_name:
+        example: login_validation_code
+        type: string
+      to:
+        example: recipient@example.com
+        type: string
+    required:
+    - language
+    - template_name
+    - to
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  mJSON.Colors:
+    properties:
+      primary:
+        type: string
+      quaternary:
+        type: string
+      secondary:
+        type: string
+      tertiary:
+        type: string
+    type: object
+  mJSON.DesignConfig:
+    properties:
+      colors:
+        $ref: '#/definitions/mJSON.Colors'
+      images:
+        $ref: '#/definitions/mJSON.Images'
+    type: object
+  mJSON.Image:
+    properties:
+      alt:
+        type: string
+      caption:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  mJSON.Images:
+    properties:
+      background:
+        $ref: '#/definitions/mJSON.Image'
+      banner:
+        $ref: '#/definitions/mJSON.Image'
+      favicon:
+        $ref: '#/definitions/mJSON.Image'
+      logo:
+        $ref: '#/definitions/mJSON.Image'
+      profile:
+        $ref: '#/definitions/mJSON.Image'
+    type: object
+  model.EndPoint:
+    properties:
+      controller_name:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      deny_unauthorized:
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      method:
+        type: string
+      needs_company_id:
+        type: boolean
+      path:
+        type: string
+      resource:
+        $ref: '#/definitions/model.Resource'
+      resource_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.PolicyRule:
+    properties:
+      conditions:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      effect:
+        description: '"Allow" / "Deny"'
+        type: string
+      end_point:
+        $ref: '#/definitions/model.EndPoint'
+      end_point_id:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Resource:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      references:
+        items:
+          $ref: '#/definitions/model.ResourceReference'
+        type: array
+      table:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.ResourceReference:
+    properties:
+      database_key:
+        description: The key in the database, e.g. "id", "tax_id".
+        type: string
+      request_key:
+        description: The key in the request body, query, path, header...
+        type: string
+      request_ref:
+        description: '"query", "body", "header", "path".'
+        type: string
+    type: object
+  mynute-go_auth_config_dto.Admin:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: John
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/mynute-go_auth_config_dto.AdminRole'
+        type: array
+      surname:
+        example: Doe
+        type: string
+    type: object
+  mynute-go_auth_config_dto.AdminClaims:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      is_admin:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        type: string
+      roles:
+        example:
+        - '[superadmin]'
+        items:
+          type: string
+        type: array
+      type:
+        example: admin
+        type: string
+    type: object
+  mynute-go_auth_config_dto.AdminCreateRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+      roles:
+        example:
+        - '[superadmin]'
+        items:
+          type: string
+        type: array
+      surname:
+        example: Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  mynute-go_auth_config_dto.AdminLoginRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  mynute-go_auth_config_dto.AdminRole:
+    properties:
+      created_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Full access to all resources
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: superadmin
+        type: string
+      updated_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+    type: object
+  mynute-go_auth_config_dto.AdminUpdateRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: NewPassword123!
+        minLength: 8
+        type: string
+      surname:
+        example: Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+    type: object
+  mynute-go_auth_config_dto.Claims:
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: StrongPswrd1!
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+      type:
+        example: employee
+        type: string
+      verified:
+        example: true
+        type: boolean
+    type: object
+  mynute-go_auth_config_dto.Client:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+      verified:
+        example: false
+        type: boolean
+    type: object
+  mynute-go_auth_config_dto.CreateClient:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
+  mynute-go_auth_config_dto.CreateEmployee:
+    properties:
+      company_id:
+        type: string
+      email:
+        example: joseph.doe@example.com
+        type: string
+      name:
+        example: Joseph
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+      phone:
+        example: "+15555555551"
+        type: string
+      role:
+        example: client
+        type: string
+      surname:
+        example: Doe
+        type: string
+      time_zone:
+        description: Use a valid timezone
+        example: America/Sao_Paulo
+        type: string
+    type: object
+  mynute-go_auth_config_dto.EmployeeBase:
+    description: Employee Base DTO - Auth service only handles basic employee info
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+      verified:
+        example: true
+        type: boolean
+    type: object
+  mynute-go_auth_config_dto.ErrorResponse:
+    description: Error Response Model
+    properties:
+      message:
+        example: Not Found
+        type: string
+    type: object
+  mynute-go_auth_config_dto.LoginByEmailCode:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+    type: object
+  mynute-go_auth_config_dto.LoginClient:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+    type: object
+  mynute-go_auth_config_dto.LoginEmployee:
+    properties:
+      email:
+        example: john.clark@gmail.com
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+    type: object
+  mynute-go_auth_config_dto.UpdateEmployeeSwagger:
+    properties:
+      name:
+        example: John
+        type: string
+      surname:
+        example: Clark
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.Admin:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: John
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.AdminRole'
+        type: array
+      surname:
+        example: Doe
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.AdminCreateRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Admin User
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+      roles:
+        example:
+        - '[superadmin]'
+        items:
+          type: string
+        type: array
+      surname:
+        example: Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  mynute-go_core_src_api_dto.AdminList:
+    properties:
+      admins:
+        items:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        type: array
+      total:
+        example: 1
+        type: integer
+    type: object
+  mynute-go_core_src_api_dto.AdminLoginRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: StrongPassword123!
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  mynute-go_core_src_api_dto.AdminRole:
+    properties:
+      created_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Full access to all resources
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: superadmin
+        type: string
+      updated_at:
+        example: "2025-01-01T00:00:00Z"
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.Client:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+      verified:
+        example: false
+        type: boolean
+    type: object
+  mynute-go_core_src_api_dto.CreateClient:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+      phone:
+        example: "+15555555555"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.CreateEmployee:
+    properties:
+      company_id:
+        type: string
+      email:
+        example: joseph.doe@example.com
+        type: string
+      name:
+        example: Joseph
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+      phone:
+        example: "+15555555551"
+        type: string
+      role:
+        example: client
+        type: string
+      surname:
+        example: Doe
+        type: string
+      time_zone:
+        description: Use a valid timezone
+        example: America/Sao_Paulo
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.EmployeeBase:
+    description: Employee Base DTO
+    properties:
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      design:
+        $ref: '#/definitions/mJSON.DesignConfig'
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      surname:
+        example: Doe
+        type: string
+      time_zone:
+        example: America/Sao_Paulo
+        type: string
+      total_service_density:
+        example: 100
+        type: integer
+    type: object
+  mynute-go_core_src_api_dto.ErrorResponse:
+    description: Error Response Model
+    properties:
+      message:
+        example: Not Found
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.LoginByEmailCode:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.LoginClient:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.LoginEmployee:
+    properties:
+      email:
+        example: john.clark@gmail.com
+        type: string
+      password:
+        example: 1SecurePswd!
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.RoleAdminCreateRequest:
+    properties:
+      description:
+        example: Customer support role with limited access
+        type: string
+      name:
+        example: support
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - name
+    type: object
+  mynute-go_core_src_api_dto.RoleAdminUpdateRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      name:
+        example: support
+        maxLength: 100
+        minLength: 3
+        type: string
+    type: object
+  mynute-go_core_src_api_dto.UpdateEmployeeSwagger:
+    properties:
+      name:
+        example: John
+        type: string
+      surname:
+        example: Clark
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Main Business Logic Service
+  termsOfService: http://swagger.io/terms/
+  title: Business Service API
+  version: "1.0"
+paths:
+  /admin:
+    get:
+      description: Get list of all admin users with their roles
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/mynute-go_core_src_api_dto.AdminList'
+            type: array
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: List all admins
+      tags:
+      - Admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin user
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin creation data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.AdminCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create admin
+      tags:
+      - Admin
+  /admin/{id}:
+    delete:
+      description: Soft delete an admin user
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete admin
+      tags:
+      - Admin
+    get:
+      description: Retrieve an admin by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin by ID
+      tags:
+      - Admin
+    patch:
+      consumes:
+      - application/json
+      description: Update admin user information
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Admin update data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update admin
+      tags:
+      - Admin
+  /admin/are_there_any_superadmin:
+    get:
+      description: Check if there are any superadmin users in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: Check for superadmin existence
+      tags:
+      - Admin
+  /admin/email/{email}:
+    get:
+      description: Retrieve an admin by email address
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin by email
+      tags:
+      - Admin
+  /admin/first_superadmin:
+    post:
+      consumes:
+      - application/json
+      description: Create the first admin user in the system
+      parameters:
+      - description: Admin creation data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Create first admin
+      tags:
+      - Admin
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate admin user and return JWT token in X-Auth-Token header
+      parameters:
+      - description: Admin login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Admin Auth
+  /admin/reset-password/{email}:
+    post:
+      description: Reset the password of an admin by its email
+      parameters:
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Reset admin password by email
+      tags:
+      - Admin
+  /admin/role:
+    get:
+      description: Get list of all admin roles
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/mynute-go_core_src_api_dto.AdminRole'
+            type: array
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: List admin roles
+      tags:
+      - Admin Role
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin role
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.RoleAdminCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.AdminRole'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create admin role
+      tags:
+      - Admin Role
+  /admin/role/{id}:
+    delete:
+      description: Soft delete an admin role
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete admin role by ID
+      tags:
+      - Admin Role
+    get:
+      description: Retrieve an admin role by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.AdminRole'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin role by ID
+      tags:
+      - Admin Role
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing admin role
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.RoleAdminUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.AdminRole'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update admin role
+      tags:
+      - Admin Role
+  /admin/send-verification-code/email/{email}:
+    post:
+      description: Send a verification code to an admin's email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Send admin verification code by email
+      tags:
+      - Admin
+  /admin/verify-email/{email}/{code}:
+    get:
+      description: Verify an admin's email using the verification code
+      parameters:
+      - description: Admin Email
+        in: path
+        name: email
+        required: true
+        type: string
+      - description: Verification Code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Verify admin email
+      tags:
+      - Admin
+  /api/v1/emails/send:
+    post:
+      consumes:
+      - application/json
+      description: Send a plain text or HTML email to a single recipient
+      parameters:
+      - description: Email request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EmailSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Send a single email
+      tags:
+      - Email
+  /api/v1/emails/send-bulk:
+    post:
+      consumes:
+      - application/json
+      description: Send the same email to multiple recipients
+      parameters:
+      - description: Bulk email request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendBulkEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BulkEmailResponse'
+        "206":
+          description: Partial success
+          schema:
+            $ref: '#/definitions/dto.BulkEmailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Send bulk emails
+      tags:
+      - Email
+  /api/v1/emails/send-template:
+    post:
+      consumes:
+      - application/json
+      description: Send an email using a predefined template with dynamic data
+      parameters:
+      - description: Template email request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTemplateEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EmailSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Send an email using a template
+      tags:
+      - Email
+  /appointment:
+    post:
+      consumes:
+      - application/json
+      description: Create an appointment
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Appointment
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateAppointment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Appointment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Create appointment
+      tags:
+      - Appointment
+  /appointment/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an appointment by ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Appointment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      summary: Delete appointment
+      tags:
+      - Appointment
+    get:
+      consumes:
+      - application/json
+      description: Get an appointment by ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Appointment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      summary: Get appointment
+      tags:
+      - Appointment
+    patch:
+      consumes:
+      - application/json
+      description: Update an appointment by ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Appointment
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateAppointment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Appointment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update appointment
+      tags:
+      - Appointment
+  /auth/admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate admin user and return JWT token in X-Auth-Token header
+      parameters:
+      - description: Admin login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Admin/Auth
+  /auth/client/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a client using password
+      parameters:
+      - description: Client credentials
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.LoginClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Login client
+      tags:
+      - Client/Auth
+  /auth/client/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login client using email and validation code
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Login client by email code
+      tags:
+      - Client/Auth
+  /auth/client/send-login-code/email/{email}:
+    post:
+      description: Send a login validation code to a client's email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Send client login validation code by email
+      tags:
+      - Client/Auth
+  /auth/employee/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in an employee using password
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee credentials
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.LoginEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Login employee
+      tags:
+      - Employee/Auth
+  /auth/employee/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login employee using email and validation code
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned in X-Auth-Token header
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Login employee by email code
+      tags:
+      - Employee/Auth
+  /auth/employee/send-login-code/email/{email}:
+    post:
+      consumes:
+      - application/json
+      description: Sends a 6-digit login validation code to the employee's email
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Send employee login validation code by email
+      tags:
+      - Employee/Auth
+  /auth/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a JWT token and return user claims
+      parameters:
+      - description: JWT token to validate
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Claims'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Validate token
+      tags:
+      - Auth
+  /auth/validate-admin:
+    post:
+      consumes:
+      - application/json
+      description: Validate an admin JWT token and return admin claims
+      parameters:
+      - description: JWT admin token to validate
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.AdminClaims'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Validate admin token
+      tags:
+      - Auth
+  /authorize/check:
+    post:
+      consumes:
+      - application/json
+      description: Evaluate if a subject can access a resource based on endpoint policies
+      parameters:
+      - description: Access check request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.AccessCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AccessCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check access authorization
+      tags:
+      - Authorization
+  /authorize/policy/{id}/evaluate:
+    post:
+      consumes:
+      - application/json
+      description: Test a specific policy against request context
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Policy evaluation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.PolicyEvaluateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AccessCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Evaluate single policy
+      tags:
+      - Authorization
+  /branch:
+    post:
+      consumes:
+      - application/json
+      description: Create a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateBranch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create branch
+      tags:
+      - Branch
+  /branch/{branch_id}/appointments:
+    get:
+      description: Retrieve all appointments for a branch with pagination
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AppointmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branch appointments
+      tags:
+      - Branch
+  /branch/{branch_id}/employee/{employee_id}/services:
+    get:
+      description: Retrieve all services of an employee included in the branch ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee services included in the branch ID
+      tags:
+      - Branch
+  /branch/{branch_id}/service/{service_id}:
+    delete:
+      description: Remove a service from a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from branch
+      tags:
+      - Branch
+    post:
+      description: Add a service to a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Add service to branch
+      tags:
+      - Branch
+  /branch/{id}:
+    delete:
+      description: Delete a branch by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch by ID
+      tags:
+      - Branch
+    get:
+      description: Retrieve a branch by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch by ID
+      tags:
+      - Branch
+    patch:
+      consumes:
+      - application/json
+      description: Update a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Branch
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateBranch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch
+      tags:
+      - Branch
+  /branch/{id}/design/images:
+    patch:
+      consumes:
+      - application/json
+      description: Update a branch's images
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch images
+      tags:
+      - Branch
+  /branch/{id}/design/images/{image_type}:
+    delete:
+      description: Delete a branch's image
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type
+        in: path
+        name: image_type
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch image
+      tags:
+      - Branch
+  /branch/{id}/work_range/{work_range_id}:
+    delete:
+      description: Delete a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch work range
+      tags:
+      - BranchWorkSchedule
+    get:
+      description: Retrieve a branch's work range by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch work range By ID
+      tags:
+      - BranchWorkSchedule
+    put:
+      description: Update a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Work Range
+        in: body
+        name: work_range
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateWorkRange'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_range/{work_range_id}/service/{service_id}:
+    delete:
+      description: Remove a service from a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_range/{work_range_id}/services:
+    post:
+      description: Add services to a branch's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Services
+        in: body
+        name: services
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.BranchWorkRangeServices'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add services to branch work range
+      tags:
+      - BranchWorkSchedule
+  /branch/{id}/work_schedule:
+    get:
+      description: Retrieve all work ranges for a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branch work ranges
+      tags:
+      - BranchWorkSchedule
+    post:
+      description: Create a work schedule for a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Branch Work Schedule
+        in: body
+        name: work_schedule
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateBranchWorkSchedule'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.BranchFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create work schedule for a branch
+      tags:
+      - BranchWorkSchedule
+  /client:
+    post:
+      consumes:
+      - application/json
+      description: Create an client
+      parameters:
+      - description: Client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.CreateClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Create client
+      tags:
+      - Client
+  /client/{id}:
+    delete:
+      description: Delete an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Delete client
+      tags:
+      - Client
+    get:
+      description: Retrieve an client by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get client by ID
+      tags:
+      - Client
+    patch:
+      consumes:
+      - application/json
+      description: Update an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update client
+      tags:
+      - Client
+  /client/{id}/appointments:
+    get:
+      description: Get only the appointments field from a client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dJSON.ClientAppointment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get client appointments
+      tags:
+      - Client
+  /client/{id}/design/images:
+    patch:
+      consumes:
+      - application/json
+      description: Update the design images of an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update client design images
+      tags:
+      - Client
+  /client/{id}/design/images/{image_type}:
+    delete:
+      description: Delete the design images of an client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type
+        in: path
+        name: image_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete client design images
+      tags:
+      - Client
+  /client/email/{email}:
+    get:
+      description: Retrieve an client by its email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get client by email
+      tags:
+      - Client
+  /client/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in an client using password
+      parameters:
+      - description: Client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.LoginClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Login
+      tags:
+      - Client
+  /client/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login client using email and validation code
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Login client by email code
+      tags:
+      - client/auth
+  /client/reset-password/{email}:
+    post:
+      description: Reset the password of a client by its email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Reset client password by email
+      tags:
+      - Client
+  /client/send-login-code/email/{email}:
+    post:
+      description: Send a login validation code to a client's email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Send client login validation code by email
+      tags:
+      - Client
+  /client/send-verification-code/email/{email}:
+    post:
+      description: Send a verification code to a client's email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Send client verification code by email
+      tags:
+      - Client
+  /client/verify-email/{email}/{code}:
+    get:
+      description: Verify a client's email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Verify client email
+      tags:
+      - Client
+  /client/verify-email/{email}/{code}/{company_id}:
+    get:
+      description: Verify an employee's email
+      parameters:
+      - description: Verification Code
+        in: query
+        name: verification_code
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: company_id
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Verify employee email
+      tags:
+      - Employee
+  /company:
+    post:
+      consumes:
+      - application/json
+      description: Create a company
+      parameters:
+      - description: Company
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateCompany'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Create company
+      tags:
+      - Company
+  /company/{id}:
+    delete:
+      description: Delete a company by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete company by ID
+      tags:
+      - Company
+    get:
+      description: Retrieve a company by its ID
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get company by ID
+      tags:
+      - Company
+    patch:
+      consumes:
+      - application/json
+      description: Update a company by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Company
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateCompany'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update company by ID
+      tags:
+      - Company
+  /company/{id}/design/colors:
+    put:
+      consumes:
+      - application/json
+      description: Update the primary, secondary, tertiary, and quaternary colors
+        of a company
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Colors
+        in: body
+        name: colors
+        required: true
+        schema:
+          $ref: '#/definitions/mJSON.Colors'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Colors'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update company colors
+      tags:
+      - Company
+  /company/{id}/design/images:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Upload and update design images (logo, banner, etc.)
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Logo image
+        in: formData
+        name: logo
+        type: file
+      - description: Banner image
+        in: formData
+        name: banner
+        type: file
+      - description: Favicon image
+        in: formData
+        name: favicon
+        type: file
+      - description: Background image
+        in: formData
+        name: background
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update company design images
+      tags:
+      - Company
+  /company/{id}/design/images/{image_type}:
+    delete:
+      description: Delete logo, banner, favicon or background
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Type of image to delete (logo, banner, favicon, background)
+        in: path
+        name: image_type
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Design'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a specific company design image
+      tags:
+      - Company
+  /company/name/{name}:
+    get:
+      description: Retrieve a company by its name
+      parameters:
+      - description: Company Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get company by name
+      tags:
+      - Company
+  /company/subdomain/{subdomain_name}:
+    get:
+      description: Retrieve a company by its subdomain
+      parameters:
+      - description: Subdomain Name
+        in: path
+        name: subdomain_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyBase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get company ID by subdomain
+      tags:
+      - Company
+  /company/tax_id/{tax_id}:
+    get:
+      description: Retrieve a company by its tax identification number
+      parameters:
+      - description: Company Tax ID
+        in: path
+        name: tax_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.CompanyFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get company by tax ID
+      tags:
+      - Company
+  /company/tax_id/{tax_id}/exists:
+    get:
+      description: Check if a company exists by its tax identification number
+      parameters:
+      - description: Company Tax ID
+        in: path
+        name: tax_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Check if company exists by tax ID
+      tags:
+      - Company
+  /employee:
+    post:
+      consumes:
+      - application/json
+      description: Create an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.CreateEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create employee
+      tags:
+      - Employee
+  /employee/{employee_id}/branch/{branch_id}:
+    delete:
+      description: Remove an employee from a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Remove employee from branch
+      tags:
+      - Employee
+    post:
+      description: Add an employee to a branch
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Add employee to branch
+      tags:
+      - Employee
+  /employee/{employee_id}/service/{service_id}:
+    delete:
+      description: Remove a service from an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from employee
+      tags:
+      - Employee
+    post:
+      consumes:
+      - application/json
+      description: Add a service to an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add service to employee
+      tags:
+      - Employee
+  /employee/{employee_id}/work_range/{work_range_id}/service/{service_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a service from an employee's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from employee's work range
+      tags:
+      - Employee
+  /employee/{employee_id}/work_range/{work_range_id}/services:
+    post:
+      consumes:
+      - application/json
+      description: Add services to an employee's work range
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Services
+        in: body
+        name: services
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.EmployeeWorkRangeServices'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Add services to employee's work range
+      tags:
+      - Employee
+  /employee/{id}:
+    delete:
+      description: Delete an employee by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete employee by ID
+      tags:
+      - Employee
+    get:
+      description: Retrieve an employee by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee by ID
+      tags:
+      - Employee
+    patch:
+      consumes:
+      - application/json
+      description: Update an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.UpdateEmployeeSwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update employee
+      tags:
+      - Employee
+  /employee/{id}/appointments:
+    get:
+      description: Retrieve appointments for a specific employee with pagination
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AppointmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee appointments
+      tags:
+      - Employee
+  /employee/{id}/design/images:
+    patch:
+      consumes:
+      - application/json
+      description: Update the images of an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update employee images
+      tags:
+      - Employee
+  /employee/{id}/design/images/{image_type}:
+    delete:
+      description: Delete an image of an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image Type (logo, banner, favicon, background)
+        in: path
+        name: image_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete employee image
+      tags:
+      - Employee
+  /employee/{id}/work_range/{work_range_id}:
+    delete:
+      description: Delete a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete work schedule
+      tags:
+      - Employee
+    get:
+      description: Retrieve a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get work range by ID
+      tags:
+      - Employee
+    put:
+      consumes:
+      - application/json
+      description: Update a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Work Range
+        in: body
+        name: work_range
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateWorkRange'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update work range
+      tags:
+      - Employee
+  /employee/{id}/work_schedule:
+    get:
+      description: Retrieve all work ranges for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get all employee's work ranges
+      tags:
+      - Employee
+    post:
+      consumes:
+      - application/json
+      description: Create a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Work Schedule
+        in: body
+        name: work_schedule
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateEmployeeWorkSchedule'
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create work schedule
+      tags:
+      - Employee
+  /employee/email/{email}:
+    get:
+      description: Retrieve an employee by its email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeFull'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee by email
+      tags:
+      - Employee
+  /employee/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in an employee using password
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.LoginEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Login
+      tags:
+      - Employee
+  /employee/login-with-code:
+    post:
+      consumes:
+      - application/json
+      description: Login employee using email and validation code
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_core_src_api_dto.LoginByEmailCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Login employee by email code
+      tags:
+      - Employee
+  /employee/reset-password/{email}:
+    post:
+      consumes:
+      - application/json
+      description: Sets a random password of an employee using its email
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.PasswordReseted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Reset employee password to a random value
+      tags:
+      - Employee
+  /employee/send-login-code/email/{email}:
+    post:
+      consumes:
+      - application/json
+      description: Sends a 6-digit login validation code to the employee's email
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Send login validation code to employee email
+      tags:
+      - Employee
+  /employee/send-verification-code/email/{email}/{company_id}:
+    post:
+      description: Send a verification email to an employee
+      parameters:
+      - description: Company ID
+        in: path
+        name: company_id
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Send employee verification email
+      tags:
+      - Employee
+  /endpoints:
+    get:
+      description: Retrieve all endpoints
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.EndPoint'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all endpoints
+      tags:
+      - Endpoints
+    post:
+      consumes:
+      - application/json
+      description: Create a new endpoint
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Endpoint data
+        in: body
+        name: endpoint
+        required: true
+        schema:
+          $ref: '#/definitions/controller.EndpointCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.EndPoint'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create endpoint
+      tags:
+      - Endpoints
+  /endpoints/{id}:
+    delete:
+      description: Delete an endpoint by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete endpoint
+      tags:
+      - Endpoints
+    get:
+      description: Retrieve an endpoint by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.EndPoint'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get endpoint by ID
+      tags:
+      - Endpoints
+    patch:
+      consumes:
+      - application/json
+      description: Update an endpoint
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Endpoint data
+        in: body
+        name: endpoint
+        required: true
+        schema:
+          $ref: '#/definitions/controller.EndpointUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.EndPoint'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update endpoint
+      tags:
+      - Endpoints
+  /health:
+    get:
+      description: Check if the email service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Health check
+      tags:
+      - Health
+  /holidays:
+    post:
+      consumes:
+      - application/json
+      description: Create a holiday
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Holiday
+        in: body
+        name: holiday
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Holidays'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create holiday
+      tags:
+      - Holidays
+  /holidays/{id}:
+    delete:
+      description: Delete a holiday by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete holiday by ID
+      tags:
+      - Holidays
+    get:
+      description: Retrieve a holiday by its ID
+      parameters:
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get holiday by ID
+      tags:
+      - Holidays
+    patch:
+      consumes:
+      - application/json
+      description: Update a holiday
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Holiday ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Holiday
+        in: body
+        name: holiday
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Holidays'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update holiday
+      tags:
+      - Holidays
+  /holidays/name/{name}:
+    get:
+      description: Retrieve a holiday by its name
+      parameters:
+      - description: Holiday Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Holidays'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get holiday by name
+      tags:
+      - Holidays
+  /policies:
+    get:
+      description: Retrieve all policy rules
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.PolicyRule'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all policies
+      tags:
+      - Policies
+    post:
+      consumes:
+      - application/json
+      description: Create a new policy rule
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Policy data
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/controller.PolicyCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.PolicyRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create policy
+      tags:
+      - Policies
+  /policies/{id}:
+    delete:
+      description: Delete a policy rule by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete policy
+      tags:
+      - Policies
+    get:
+      description: Retrieve a policy rule by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PolicyRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get policy by ID
+      tags:
+      - Policies
+    patch:
+      consumes:
+      - application/json
+      description: Update a policy rule
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Policy data
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/controller.PolicyUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PolicyRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update policy
+      tags:
+      - Policies
+  /sector:
+    post:
+      consumes:
+      - application/json
+      description: Create a sector
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: sector
+        in: body
+        name: sector
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Sector'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create sector
+      tags:
+      - Sector
+  /sector/{id}:
+    delete:
+      description: Delete a sector by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: sector ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete sector by ID
+      tags:
+      - Sector
+    get:
+      description: Retrieve a sector by its ID
+      parameters:
+      - description: sector ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get sector by ID
+      tags:
+      - Sector
+    patch:
+      consumes:
+      - application/json
+      description: Update a sector by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: sector ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: sector
+        in: body
+        name: sector
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Sector'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update sector by ID
+      tags:
+      - Sector
+  /sector/name/{name}:
+    get:
+      description: Retrieve a sector by its ID
+      parameters:
+      - description: sector ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Sector'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      summary: Get sector by ID
+      tags:
+      - Sector
+  /service:
+    post:
+      consumes:
+      - application/json
+      description: Create a service
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create service
+      tags:
+      - Service
+  /service/{id}:
+    delete:
+      description: Delete a service by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete service by ID
+      tags:
+      - Service
+    get:
+      description: Retrieve a service by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get service by ID
+      tags:
+      - Service
+    patch:
+      consumes:
+      - application/json
+      description: Update a service by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.Service'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update service by ID
+      tags:
+      - Service
+  /service/{id}/availability:
+    get:
+      description: Retrieve the availability of a service for the next 30 days
+      parameters:
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Client Time Zone (IANA format, e.g., America/New_York)
+        in: query
+        name: timezone
+        type: string
+      - description: The start date for the forward search in number format
+        in: query
+        name: date_forward_start
+        required: true
+        type: number
+      - description: The end date for the forward search in number format
+        in: query
+        name: date_forward_end
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.ServiceAvailability'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get service availability
+      tags:
+      - Service
+  /service/{id}/design/images:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update images of a service
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile image
+        in: formData
+        name: profile
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update service images
+      tags:
+      - Service
+  /service/{id}/design/images/{image_type}:
+    delete:
+      description: Delete images of a service
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dJSON.Images'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete service images
+      tags:
+      - Service
+  /service/name/{name}:
+    get:
+      description: Retrieve a service by its name
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Service ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.Service'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/mynute-go_core_src_api_dto.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get service by name
+      tags:
+      - Service
+  /users/admin:
+    get:
+      description: Retrieve all admin users
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: List all admins
+      tags:
+      - Admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin user
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin creation data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.AdminCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create admin
+      tags:
+      - Admin
+  /users/admin/{id}:
+    delete:
+      description: Delete an admin by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete admin by ID
+      tags:
+      - Admin
+    get:
+      description: Retrieve an admin by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin by ID
+      tags:
+      - Admin
+    patch:
+      consumes:
+      - application/json
+      description: Update an admin
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Admin
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.AdminUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update admin
+      tags:
+      - Admin
+  /users/admin/are_there_any_superadmin:
+    get:
+      description: Check if there are any superadmin users in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: Check for superadmin existence
+      tags:
+      - Admin
+  /users/admin/first_superadmin:
+    post:
+      consumes:
+      - application/json
+      description: Create the first admin user in the system
+      parameters:
+      - description: Admin creation data
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Create first admin
+      tags:
+      - Admin
+  /users/client:
+    post:
+      consumes:
+      - application/json
+      description: Create a client
+      parameters:
+      - description: Client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.CreateClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Create client
+      tags:
+      - Client
+  /users/client/{id}:
+    delete:
+      description: Delete a client by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete client by ID
+      tags:
+      - Client
+    get:
+      description: Retrieve a client by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get client by ID
+      tags:
+      - Client
+    patch:
+      consumes:
+      - application/json
+      description: Update a client
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Client
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update client
+      tags:
+      - Client
+  /users/client/email/{email}:
+    get:
+      description: Retrieve a client by its email
+      parameters:
+      - description: Client Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+      summary: Get client by email
+      tags:
+      - Client
+  /users/employee:
+    post:
+      consumes:
+      - application/json
+      description: Create an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.CreateEmployee'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.EmployeeBase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create employee
+      tags:
+      - Employee
+  /users/employee/{id}:
+    delete:
+      description: Delete an employee by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete employee by ID
+      tags:
+      - Employee
+    get:
+      description: Retrieve an employee by its ID
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.EmployeeBase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee by ID
+      tags:
+      - Employee
+    patch:
+      consumes:
+      - application/json
+      description: Update an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee
+        in: body
+        name: employee
+        required: true
+        schema:
+          $ref: '#/definitions/mynute-go_auth_config_dto.UpdateEmployeeSwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.EmployeeBase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update employee
+      tags:
+      - Employee
+  /users/employee/email/{email}:
+    get:
+      description: Retrieve an employee by its email
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.EmployeeBase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/mynute-go_auth_config_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee by email
+      tags:
+      - Employee
+securityDefinitions:
+  ApiKeyAuth:
+    description: 'Enter the token in the format: <token>'
+    in: header
+    name: X-Auth-Token
+    type: apiKey
+swagger: "2.0"
