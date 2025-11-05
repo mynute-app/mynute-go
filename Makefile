@@ -186,20 +186,20 @@ seed-help:
 # Generate Swagger documentation for Core service
 swagger-core:
 	@echo "Generating Swagger docs for Core service..."
-	@swag init -g cmd/business-service/main.go -o core/docs --parseDependency --parseInternal
-	@echo "✓ Core service Swagger docs generated at: core/docs"
+	@swag init -g cmd/business-service/main.go -o services/core/docs --parseDependency --parseInternal
+	@echo "✓ Core service Swagger docs generated at: services/core/docs"
 
 # Generate Swagger documentation for Auth service
 swagger-auth:
 	@echo "Generating Swagger docs for Auth service..."
-	@swag init -g cmd/auth-service/main.go -o auth/docs --parseDependency --parseInternal
-	@echo "✓ Auth service Swagger docs generated at: auth/docs"
+	@swag init -g cmd/auth-service/main.go -o services/auth/docs --parseDependency --parseInternal
+	@echo "✓ Auth service Swagger docs generated at: services/auth/docs"
 
 # Generate Swagger documentation for Email service
 swagger-email:
 	@echo "Generating Swagger docs for Email service..."
-	@swag init -g cmd/email-service/main.go -o email/docs --parseDependency --parseInternal
-	@echo "✓ Email service Swagger docs generated at: email/docs"
+	@swag init -g cmd/email-service/main.go -o services/email/docs --parseDependency --parseInternal
+	@echo "✓ Email service Swagger docs generated at: services/email/docs"
 
 # Generate all Swagger documentation
 swagger-all: swagger-core swagger-auth swagger-email
