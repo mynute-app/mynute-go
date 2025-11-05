@@ -1,9 +1,9 @@
 package controller
 
 import (
+	authModel "mynute-go/auth/config/db/model"
 	DTO "mynute-go/auth/config/dto"
 	"mynute-go/auth/lib"
-	authModel "mynute-go/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -96,8 +96,8 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string				true	"Client ID"
-//	@Param			client	body		DTO.UpdateClient	true	"Client"
+//	@Param			id		path		string						true	"Client ID"
+//	@Param			client	body		DTO.UpdateClientRequest		true	"Client"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [patch]
@@ -131,4 +131,3 @@ func UpdateClientById(c *fiber.Ctx) error {
 func DeleteClientById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &authModel.User{})
 }
-

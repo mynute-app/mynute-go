@@ -3,8 +3,8 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"mynute-go/auth/lib"
 	authModel "mynute-go/auth/config/db/model"
+	"mynute-go/auth/lib"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -24,7 +24,7 @@ import (
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Produce		json
 //	@Success		200	{array}		authModel.PolicyRule
-//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies [get]
 func ListPolicies(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -54,8 +54,8 @@ func ListPolicies(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	authModel.PolicyRule
-//	@Failure		400	{object}	DTO.ErrorResponse
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [get]
 func GetPolicyById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -99,7 +99,7 @@ func GetPolicyById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			policy			body		PolicyCreateRequest		true	"Policy data"
 //	@Success		201				{object}	authModel.PolicyRule
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Failure		400				{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies [post]
 func CreatePolicy(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -175,8 +175,8 @@ func CreatePolicy(c *fiber.Ctx) error {
 //	@Param			id				path		string					true	"Policy ID"
 //	@Param			policy			body		PolicyUpdateRequest		true	"Policy data"
 //	@Success		200				{object}	authModel.PolicyRule
-//	@Failure		400				{object}	DTO.ErrorResponse
-//	@Failure		404				{object}	DTO.ErrorResponse
+//	@Failure		400				{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		404				{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [patch]
 func UpdatePolicyById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -272,8 +272,8 @@ func UpdatePolicyById(c *fiber.Ctx) error {
 //	@Param			id				path		string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
-//	@Failure		400	{object}	DTO.ErrorResponse
-//	@Failure		404	{object}	DTO.ErrorResponse
+//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [delete]
 func DeletePolicyById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -331,4 +331,3 @@ type PolicyUpdateRequest struct {
 	EndPointID  *string         `json:"end_point_id,omitempty" validate:"omitempty,uuid"`
 	Conditions  json.RawMessage `json:"conditions,omitempty"`
 }
-

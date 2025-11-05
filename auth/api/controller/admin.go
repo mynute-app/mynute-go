@@ -2,10 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"mynute-go/auth/config/db/model"
 	DTO "mynute-go/auth/config/dto"
 	"mynute-go/auth/handler"
 	"mynute-go/auth/lib"
-	"mynute-go/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -173,8 +173,8 @@ func GetAdminById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string				true	"Admin ID"
-//	@Param			admin	body		DTO.AdminUpdate		true	"Admin"
+//	@Param			id		path		string						true	"Admin ID"
+//	@Param			admin	body		DTO.AdminUpdateRequest		true	"Admin"
 //	@Success		200		{object}	DTO.Admin
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/admin/{id} [patch]
@@ -290,4 +290,3 @@ func requireSuperAdmin(c *fiber.Ctx) error {
 	}
 	return nil
 }
-
