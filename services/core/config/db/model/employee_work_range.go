@@ -27,7 +27,7 @@ type EmployeeWorkSchedule struct {
 type EmployeeWorkRange struct {
 	WorkRangeBase
 	EmployeeID uuid.UUID  `gorm:"type:uuid;not null;index:idx_employee_id" validate:"required" json:"employee_id"`
-	Employee   Employee   `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"employee" validate:"-"`
+	Employee   Employee   `gorm:"foreignKey:EmployeeID;references:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"employee" validate:"-"` // UserID is Employee's primary key
 	Services   []*Service `json:"services" gorm:"many2many:employee_work_range_services;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" validate:"-"`
 }
 

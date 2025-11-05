@@ -10,7 +10,7 @@ import (
 type EmployeeServiceDensity struct {
 	BaseModel
 	EmployeeID uuid.UUID `json:"employee_id" gorm:"primaryKey"`
-	Employee   Employee  `json:"employee" gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"`
+	Employee   Employee  `json:"employee" gorm:"foreignKey:EmployeeID;references:UserID;constraint:OnDelete:CASCADE;"` // UserID is Employee's primary key
 	ServiceID  uuid.UUID `json:"service_id" gorm:"primaryKey"`
 	Service    Service   `json:"service" gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`
 	Density    uint32    `json:"density" gorm:"not null;default:1"` // Use int32 to allow negative values for unbounded

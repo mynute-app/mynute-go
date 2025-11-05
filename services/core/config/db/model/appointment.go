@@ -36,10 +36,10 @@ type AppointmentBase struct {
 
 // This is the foreign key struct for the Appointment model at company schema level.
 type AppointmentFK struct {
-	Service  *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`  // Using your Service type
-	Employee *Employee `gorm:"foreignKey:EmployeeID;references:ID;constraint:OnDelete:CASCADE;"` // Using your Employee type
-	Branch   *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`   // Using your Branch type
-	Payment  *Payment  `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"`  // Using your Payment type
+	Service  *Service  `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE;"`      // Using your Service type
+	Employee *Employee `gorm:"foreignKey:EmployeeID;references:UserID;constraint:OnDelete:CASCADE;"` // Using your Employee type (UserID is the primary key)
+	Branch   *Branch   `gorm:"foreignKey:BranchID;references:ID;constraint:OnDelete:CASCADE;"`       // Using your Branch type
+	Payment  *Payment  `gorm:"foreignKey:PaymentID;references:ID;constraint:OnDelete:CASCADE;"`      // Using your Payment type
 }
 
 type AppointmentJson struct {
