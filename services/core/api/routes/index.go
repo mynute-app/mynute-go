@@ -37,18 +37,13 @@ func Build(DB *gorm.DB, App *fiber.App) {
 
 	// API routes (with /api prefix)
 	apiRoutes := App.Group("/api")
-	
-	// TODO: In production, endpoint authorization should be handled by the auth service API
-	// For now, we'll set up basic routes manually for testing
-	
-	// Company routes (public schema)
-	apiRoutes.Post("/company", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.CreateCompany)
-	apiRoutes.Get("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyById)
-	apiRoutes.Get("/company/name/:name", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyByName)
-	apiRoutes.Get("/company/tax/:taxId", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyByTaxId)
-	apiRoutes.Get("/company/subdomain/:subdomain", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.GetCompanyBySubdomain)
-	apiRoutes.Put("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.UpdateCompanyById)
-	apiRoutes.Delete("/company/:id", middleware.SavePublicSession(DB), middleware.ChangeToPublicSchema, controller.DeleteCompanyById)
-	
-	log.Println("Routes registered manually (endpoint middleware disabled)")
+
+	// Fetch endpoints from auth service API and register routes
+	// TODO: Implement HTTP client to fetch endpoints from http://localhost:4001/api/endpoints
+	// For now, log that routes need to be registered via auth service
+	log.Println("TODO: Fetch endpoints from auth service API at http://localhost:4001/api/endpoints")
+	log.Println("Routes will be registered dynamically after auth service API integration")
+
+	_ = apiRoutes             // Prevent unused variable error
+	_ = middleware.Endpoint{} // Prevent unused import error
 }
