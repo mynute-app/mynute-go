@@ -19,27 +19,27 @@ endif
 # Run all pending migrations
 migrate-up:
 	@echo "Running database migrations..."
-	@go run migrate/main.go -action=up -path=./migrations
+	@go run cmd/migrate/main.go -action=up -path=./migrations
 
 # Rollback the last migration
 migrate-down:
 	@echo "Rolling back last migration..."
-	@go run migrate/main.go -action=down -steps=1 -path=./migrations
+	@go run cmd/migrate/main.go -action=down -steps=1 -path=./migrations
 
 # Rollback N migrations
 migrate-down-n:
 	@echo "Rolling back $(STEPS) migration(s)..."
-	@go run migrate/main.go -action=down -steps=$(STEPS) -path=./migrations
+	@go run cmd/migrate/main.go -action=down -steps=$(STEPS) -path=./migrations
 
 # Check current migration version
 migrate-version:
 	@echo "Checking migration version..."
-	@go run migrate/main.go -action=version -path=./migrations
+	@go run cmd/migrate/main.go -action=version -path=./migrations
 
 # Force migration to specific version (use with caution!)
 migrate-force:
 	@echo "Forcing migration to version $(VERSION)..."
-	@go run migrate/main.go -action=force -version=$(VERSION) -path=./migrations
+	@go run cmd/migrate/main.go -action=force -version=$(VERSION) -path=./migrations
 
 # Create a new migration file (manual)
 migrate-create:
@@ -48,7 +48,7 @@ ifndef NAME
 	@exit 1
 endif
 	@echo "Creating new migration: $(NAME)"
-	@go run migrate/main.go -action=create $(NAME) -path=./migrations
+	@go run cmd/migrate/main.go -action=create $(NAME) -path=./migrations
 
 # Auto-generate migration with template for specific models
 migrate-generate:
@@ -123,8 +123,8 @@ migrate-help:
 # Reset database (down all + up all)
 db-reset:
 	@echo "Resetting database..."
-	@go run migrate/main.go -action=down -steps=100 -path=./migrations || true
-	@go run migrate/main.go -action=up -path=./migrations
+	@go run cmd/migrate/main.go -action=down -steps=100 -path=./migrations || true
+	@go run cmd/migrate/main.go -action=up -path=./migrations
 
 # Fresh database (for development only)
 db-fresh:
