@@ -5,6 +5,7 @@ import (
 	"log"
 	authModel "mynute-go/services/auth/config/db/model"
 	"mynute-go/services/core/api/handler"
+	authClient "mynute-go/services/core/api/lib/auth_client"
 	"reflect"
 	"runtime"
 	"strings"
@@ -63,6 +64,58 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 	}
 
 	log.Println("Routes build finished!")
+	return nil
+}
+
+// BuildFromAPI builds routes from endpoints fetched from the auth service API
+func (ep *Endpoint) BuildFromAPI(r fiber.Router, endpoints []*authClient.EndPoint) error {
+	if len(endpoints) == 0 {
+		log.Println("Warning: No endpoints provided, no routes will be registered")
+		return nil
+	}
+
+	db := ep.DB.DB
+
+	r.Use(WhoAreYou)
+
+	for _, e := range endpoints {
+		handlers := []fiber.Handler{}
+
+		// Sessão
+		if e.NeedsCompanyId {
+			handlers = append(handlers, SaveCompanySession(db))
+		} else {
+			handlers = append(handlers, SavePublicSession(db))
+		}
+
+		// Autorização
+		if e.DenyUnauthorized {
+			handlers = append(handlers, DenyUnauthorized)
+		}
+
+		// Schema
+		if e.NeedsCompanyId {
+			handlers = append(handlers, ChangeToCompanySchema)
+		} else {
+			handlers = append(handlers, ChangeToPublicSchema)
+		}
+
+		controller, err := ep.GetControllerFnc(e.ControllerName)
+		if err != nil {
+			log.Printf("Warning: Controller '%s' not found for endpoint %s %s, skipping",
+				e.ControllerName, e.Method, e.Path)
+			continue
+		}
+
+		// Handler final
+		handlers = append(handlers, controller)
+
+		method := strings.ToUpper(e.Method)
+		r.Add(method, e.Path, handlers...)
+		log.Printf("Registered route: %s %s -> %s", method, e.Path, e.ControllerName)
+	}
+
+	log.Printf("Routes build finished! Registered %d endpoints", len(endpoints))
 	return nil
 }
 

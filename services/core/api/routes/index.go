@@ -4,6 +4,7 @@ import (
 	"log"
 	"mynute-go/services/core/api/controller"
 	"mynute-go/services/core/api/handler"
+	authClient "mynute-go/services/core/api/lib/auth_client"
 	"mynute-go/services/core/api/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -38,12 +39,28 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	// API routes (with /api prefix)
 	apiRoutes := App.Group("/api")
 
-	// Fetch endpoints from auth service API and register routes
-	// TODO: Implement HTTP client to fetch endpoints from http://localhost:4001/api/endpoints
-	// For now, log that routes need to be registered via auth service
-	log.Println("TODO: Fetch endpoints from auth service API at http://localhost:4001/api/endpoints")
-	log.Println("Routes will be registered dynamically after auth service API integration")
+	// Fetch endpoints from auth service API and register routes dynamically
+	client := authClient.NewAuthClient()
 
-	_ = apiRoutes             // Prevent unused variable error
-	_ = middleware.Endpoint{} // Prevent unused import error
+	// Check if auth service is available
+	if !client.IsAvailable() {
+		log.Println("Warning: Auth service is not available. Routes will not be registered.")
+		log.Println("Make sure auth service is running at", client.BaseURL)
+		return
+	}
+
+	endpoints, err := client.FetchEndpoints()
+	if err != nil {
+		log.Printf("Error fetching endpoints from auth service: %v\n", err)
+		log.Println("Routes will not be registered. Please check auth service.")
+		return
+	}
+
+	log.Printf("Successfully fetched %d endpoints from auth service\n", len(endpoints))
+
+	// Register routes using the endpoint middleware
+	ep := &middleware.Endpoint{DB: Gorm}
+	if err := ep.BuildFromAPI(apiRoutes, endpoints); err != nil {
+		log.Printf("Error building routes: %v\n", err)
+	}
 }
