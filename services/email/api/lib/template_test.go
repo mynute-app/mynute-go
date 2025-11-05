@@ -1,8 +1,6 @@
 package email
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,295 +8,175 @@ import (
 )
 
 func TestNewTemplateRenderer(t *testing.T) {
-	renderer := NewTemplateRenderer("templates", "translations")
+	renderer := NewTemplateRenderer("", "")
 	assert.NotNil(t, renderer)
-	assert.Equal(t, "templates", renderer.templateDir)
-	assert.Equal(t, "translations", renderer.translationDir)
 	assert.Equal(t, "en", renderer.defaultLanguage)
 }
 
-func TestTemplateRenderer_RenderEmail(t *testing.T) {
-	// Create temporary directories for test files
-	tempDir := t.TempDir()
-	templateDir := filepath.Join(tempDir, "templates")
-	translationDir := filepath.Join(tempDir, "translations")
-
-	require.NoError(t, os.MkdirAll(templateDir, 0755))
-	require.NoError(t, os.MkdirAll(translationDir, 0755))
-
-	// Create test template
-	templateContent := `<html><body><h1>{{.title}}</h1><p>{{.message}}</p><p>Code: {{.code}}</p></body></html>`
-	templatePath := filepath.Join(templateDir, "test_email.html")
-	require.NoError(t, os.WriteFile(templatePath, []byte(templateContent), 0644))
-
-	// Create test translations
-	translationContent := `{
-		"en": {
-			"subject": "Welcome Email",
-			"title": "Welcome",
-			"message": "Hello World"
-		},
-		"pt": {
-			"subject": "Email de Boas-vindas",
-			"title": "Bem-vindo",
-			"message": "Olá Mundo"
-		},
-		"es": {
-			"subject": "Correo de Bienvenida",
-			"title": "Bienvenido",
-			"message": "Hola Mundo"
-		}
-	}`
-	translationPath := filepath.Join(translationDir, "test_email.json")
-	require.NoError(t, os.WriteFile(translationPath, []byte(translationContent), 0644))
-
-	renderer := NewTemplateRenderer(templateDir, translationDir)
-
-	t.Run("should render email with English translations by default", func(t *testing.T) {
-		result, err := renderer.RenderEmail("test_email", "", TemplateData{
-			"code": "12345",
-		})
-
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "Welcome Email", result.Subject)
-		assert.Contains(t, result.HTMLBody, "<h1>Welcome</h1>")
-		assert.Contains(t, result.HTMLBody, "<p>Hello World</p>")
-		assert.Contains(t, result.HTMLBody, "<p>Code: 12345</p>")
-	})
-
-	t.Run("should render email with Portuguese translations", func(t *testing.T) {
-		result, err := renderer.RenderEmail("test_email", "pt", TemplateData{
-			"code": "67890",
-		})
-
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "Email de Boas-vindas", result.Subject)
-		assert.Contains(t, result.HTMLBody, "<h1>Bem-vindo</h1>")
-		assert.Contains(t, result.HTMLBody, "<p>Olá Mundo</p>")
-		assert.Contains(t, result.HTMLBody, "<p>Code: 67890</p>")
-	})
-
-	t.Run("should render email with Spanish translations", func(t *testing.T) {
-		result, err := renderer.RenderEmail("test_email", "es", TemplateData{
-			"code": "ABCDE",
-		})
-
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "Correo de Bienvenida", result.Subject)
-		assert.Contains(t, result.HTMLBody, "<h1>Bienvenido</h1>")
-		assert.Contains(t, result.HTMLBody, "<p>Hola Mundo</p>")
-		assert.Contains(t, result.HTMLBody, "<p>Code: ABCDE</p>")
-	})
-
-	t.Run("should allow custom data to override translations", func(t *testing.T) {
-		result, err := renderer.RenderEmail("test_email", "en", TemplateData{
-			"title": "Custom Title",
-			"code":  "99999",
-		})
-
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "Welcome Email", result.Subject)
-		assert.Contains(t, result.HTMLBody, "<h1>Custom Title</h1>")
-		assert.Contains(t, result.HTMLBody, "<p>Hello World</p>")
-		assert.Contains(t, result.HTMLBody, "<p>Code: 99999</p>")
-	})
-
-	t.Run("should return error for unsupported language", func(t *testing.T) {
-		result, err := renderer.RenderEmail("test_email", "fr", TemplateData{
-			"code": "12345",
-		})
-
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "language 'fr' not found")
-	})
-
-	t.Run("should return error for non-existent template", func(t *testing.T) {
-		// Create translation file but not template file
-		noTemplateTrans := filepath.Join(translationDir, "non_existent.json")
-		require.NoError(t, os.WriteFile(noTemplateTrans, []byte(`{"en": {"subject": "Test", "test": "value"}}`), 0644))
-
-		result, err := renderer.RenderEmail("non_existent", "en", TemplateData{})
-
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "failed to parse template")
-	})
-
-	t.Run("should return error for non-existent translation file", func(t *testing.T) {
-		// Create a template without corresponding translations
-		noTransPath := filepath.Join(templateDir, "no_trans.html")
-		require.NoError(t, os.WriteFile(noTransPath, []byte("<html><body>{{.test}}</body></html>"), 0644))
-
-		result, err := renderer.RenderEmail("no_trans", "en", TemplateData{})
-
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "failed to load translations")
-	})
-}
-
-func TestTemplateRenderer_LoadTranslations(t *testing.T) {
-	tempDir := t.TempDir()
-	translationDir := filepath.Join(tempDir, "translations")
-	require.NoError(t, os.MkdirAll(translationDir, 0755))
-
-	// Create test translation file
-	translationContent := `{
-		"en": {
-			"key1": "value1",
-			"key2": "value2"
-		},
-		"pt": {
-			"key1": "valor1",
-			"key2": "valor2"
-		}
-	}`
-	translationPath := filepath.Join(translationDir, "test.json")
-	require.NoError(t, os.WriteFile(translationPath, []byte(translationContent), 0644))
-
-	renderer := NewTemplateRenderer("", translationDir)
-
-	t.Run("should load English translations", func(t *testing.T) {
-		translations, err := renderer.loadTranslations("test", "en")
-
-		assert.NoError(t, err)
-		assert.Equal(t, "value1", translations["key1"])
-		assert.Equal(t, "value2", translations["key2"])
-	})
-
-	t.Run("should load Portuguese translations", func(t *testing.T) {
-		translations, err := renderer.loadTranslations("test", "pt")
-
-		assert.NoError(t, err)
-		assert.Equal(t, "valor1", translations["key1"])
-		assert.Equal(t, "valor2", translations["key2"])
-	})
-
-	t.Run("should return error for non-existent language", func(t *testing.T) {
-		translations, err := renderer.loadTranslations("test", "de")
-
-		assert.Error(t, err)
-		assert.Nil(t, translations)
-		assert.Contains(t, err.Error(), "language 'de' not found")
-	})
-
-	t.Run("should return error for invalid JSON", func(t *testing.T) {
-		invalidPath := filepath.Join(translationDir, "invalid.json")
-		require.NoError(t, os.WriteFile(invalidPath, []byte("invalid json"), 0644))
-
-		translations, err := renderer.loadTranslations("invalid", "en")
-
-		assert.Error(t, err)
-		assert.Nil(t, translations)
-		assert.Contains(t, err.Error(), "failed to parse translation JSON")
-	})
-}
-
-func TestTemplateRenderer_MergeData(t *testing.T) {
+func TestTemplateRenderer_RenderFromString(t *testing.T) {
 	renderer := NewTemplateRenderer("", "")
 
-	t.Run("should merge translations with empty custom data", func(t *testing.T) {
-		translations := map[string]any{
-			"key1": "value1",
-			"key2": "value2",
+	t.Run("should render simple template", func(t *testing.T) {
+		templateHTML := `<html><body><h1>{{.title}}</h1></body></html>`
+		data := TemplateData{
+			"title": "Welcome",
 		}
-		customData := TemplateData{}
 
-		merged := renderer.mergeData(translations, customData)
+		result, err := renderer.RenderFromString(templateHTML, data)
 
-		assert.Equal(t, "value1", merged["key1"])
-		assert.Equal(t, "value2", merged["key2"])
+		assert.NoError(t, err)
+		assert.Contains(t, result, "<h1>Welcome</h1>")
 	})
 
-	t.Run("should merge translations with custom data", func(t *testing.T) {
-		translations := map[string]any{
-			"key1": "value1",
-			"key2": "value2",
-		}
-		customData := TemplateData{
-			"key3": "value3",
+	t.Run("should render template with multiple variables", func(t *testing.T) {
+		templateHTML := `<html><body><h1>{{.greeting}}</h1><p>{{.message}}</p><p>Code: {{.code}}</p></body></html>`
+		data := TemplateData{
+			"greeting": "Hello",
+			"message":  "Welcome to our service",
+			"code":     "12345",
 		}
 
-		merged := renderer.mergeData(translations, customData)
+		result, err := renderer.RenderFromString(templateHTML, data)
 
-		assert.Equal(t, "value1", merged["key1"])
-		assert.Equal(t, "value2", merged["key2"])
-		assert.Equal(t, "value3", merged["key3"])
+		assert.NoError(t, err)
+		assert.Contains(t, result, "<h1>Hello</h1>")
+		assert.Contains(t, result, "<p>Welcome to our service</p>")
+		assert.Contains(t, result, "<p>Code: 12345</p>")
+	})
+
+	t.Run("should handle translations merged with custom data", func(t *testing.T) {
+		templateHTML := `<html><body><h1>{{.subject}}</h1><p>{{.greeting}}</p><p>User: {{.username}}</p></body></html>`
+		
+		// Simulate what the controller does: merge translations + custom data
+		translations := map[string]interface{}{
+			"subject":  "Email Verification",
+			"greeting": "Hello",
+		}
+		customData := map[string]interface{}{
+			"username": "John Doe",
+		}
+		
+		// Merge them
+		mergedData := make(TemplateData)
+		for k, v := range translations {
+			mergedData[k] = v
+		}
+		for k, v := range customData {
+			mergedData[k] = v
+		}
+
+		result, err := renderer.RenderFromString(templateHTML, mergedData)
+
+		assert.NoError(t, err)
+		assert.Contains(t, result, "<h1>Email Verification</h1>")
+		assert.Contains(t, result, "<p>Hello</p>")
+		assert.Contains(t, result, "<p>User: John Doe</p>")
 	})
 
 	t.Run("should allow custom data to override translations", func(t *testing.T) {
-		translations := map[string]any{
-			"key1": "value1",
-			"key2": "value2",
+		templateHTML := `<html><body><h1>{{.title}}</h1></body></html>`
+		
+		// Simulate override scenario
+		translations := map[string]interface{}{
+			"title": "Default Title",
 		}
-		customData := TemplateData{
-			"key2": "overridden",
-			"key3": "value3",
+		customData := map[string]interface{}{
+			"title": "Custom Title",
+		}
+		
+		// Merge with custom data taking precedence
+		mergedData := make(TemplateData)
+		for k, v := range translations {
+			mergedData[k] = v
+		}
+		for k, v := range customData {
+			mergedData[k] = v
 		}
 
-		merged := renderer.mergeData(translations, customData)
+		result, err := renderer.RenderFromString(templateHTML, mergedData)
 
-		assert.Equal(t, "value1", merged["key1"])
-		assert.Equal(t, "overridden", merged["key2"])
-		assert.Equal(t, "value3", merged["key3"])
+		assert.NoError(t, err)
+		assert.Contains(t, result, "<h1>Custom Title</h1>")
+		assert.NotContains(t, result, "Default Title")
+	})
+
+	t.Run("should return error for invalid template syntax", func(t *testing.T) {
+		templateHTML := `<html><body>{{.invalid syntax}}</body></html>`
+		data := TemplateData{}
+
+		result, err := renderer.RenderFromString(templateHTML, data)
+
+		assert.Error(t, err)
+		assert.Empty(t, result)
+		assert.Contains(t, err.Error(), "failed to parse template string")
+	})
+
+	t.Run("should handle empty template", func(t *testing.T) {
+		templateHTML := ``
+		data := TemplateData{}
+
+		result, err := renderer.RenderFromString(templateHTML, data)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", result)
+	})
+
+	t.Run("should handle template with no variables", func(t *testing.T) {
+		templateHTML := `<html><body><h1>Static Content</h1></body></html>`
+		data := TemplateData{}
+
+		result, err := renderer.RenderFromString(templateHTML, data)
+
+		assert.NoError(t, err)
+		assert.Equal(t, templateHTML, result)
+	})
+
+	t.Run("should render complex email template from Core service", func(t *testing.T) {
+		// Simulate a real email template that Core would send
+		templateHTML := `<!DOCTYPE html>
+<html>
+<head><title>{{.subject}}</title></head>
+<body>
+	<h1>{{.heading}}</h1>
+	<p>{{.instruction}}</p>
+	<p>Your verification code is: <strong>{{.code}}</strong></p>
+	<a href="{{.link}}">{{.button_text}}</a>
+	<p>{{.footer_notice}}</p>
+</body>
+</html>`
+
+		// Translations from Core service
+		translations := map[string]interface{}{
+			"subject":       "Verify Your Email",
+			"heading":       "Email Verification",
+			"instruction":   "Please use the code below to verify your email",
+			"button_text":   "Verify Email",
+			"footer_notice": "This is an automated message",
+		}
+
+		// Custom data from Core service
+		customData := map[string]interface{}{
+			"code": "ABC123",
+			"link": "https://example.com/verify?code=ABC123",
+		}
+
+		// Merge
+		mergedData := make(TemplateData)
+		for k, v := range translations {
+			mergedData[k] = v
+		}
+		for k, v := range customData {
+			mergedData[k] = v
+		}
+
+		result, err := renderer.RenderFromString(templateHTML, mergedData)
+
+		require.NoError(t, err)
+		assert.Contains(t, result, "<title>Verify Your Email</title>")
+		assert.Contains(t, result, "<h1>Email Verification</h1>")
+		assert.Contains(t, result, "<strong>ABC123</strong>")
+		assert.Contains(t, result, `href="https://example.com/verify?code=ABC123"`)
+		assert.Contains(t, result, "Verify Email")
+		assert.Contains(t, result, "This is an automated message")
 	})
 }
-
-func TestTemplateRenderer_RealLoginValidation(t *testing.T) {
-	// Test with actual login_validation files if they exist
-	// Use absolute path construction from test location
-	staticPath := filepath.Join("..", "..", "..", "static")
-	translationPath := filepath.Join("..", "..", "..", "translation")
-
-	// Check if files exist before running tests
-	if _, err := os.Stat(filepath.Join(translationPath, "login_validation.json")); os.IsNotExist(err) {
-		t.Skip("Skipping test - login_validation.json not found in translation directory")
-	}
-	if _, err := os.Stat(filepath.Join(staticPath, "login_validation.html")); os.IsNotExist(err) {
-		t.Skip("Skipping test - login_validation.html not found in static directory")
-	}
-
-	renderer := NewTemplateRenderer(staticPath, translationPath)
-
-	t.Run("should render login_validation email in English", func(t *testing.T) {
-		result, err := renderer.RenderEmail("login_validation", "en", TemplateData{
-			"ValidationCode": "123456",
-		})
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Contains(t, result.HTMLBody, "Login Validation Code")
-		assert.Contains(t, result.HTMLBody, "123456")
-		assert.Contains(t, result.HTMLBody, "Your Login Validation Code")
-	})
-
-	t.Run("should render login_validation email in Portuguese", func(t *testing.T) {
-		result, err := renderer.RenderEmail("login_validation", "pt", TemplateData{
-			"ValidationCode": "654321",
-		})
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Contains(t, result.HTMLBody, "Código de Validação de Login")
-		assert.Contains(t, result.HTMLBody, "654321")
-		assert.Contains(t, result.HTMLBody, "Seu Código de Validação de Login")
-	})
-
-	t.Run("should render login_validation email in Spanish", func(t *testing.T) {
-		result, err := renderer.RenderEmail("login_validation", "es", TemplateData{
-			"ValidationCode": "ABCDEF",
-		})
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Contains(t, result.HTMLBody, "Código de Validación de Inicio de Sesión")
-		assert.Contains(t, result.HTMLBody, "ABCDEF")
-		assert.Contains(t, result.HTMLBody, "Su Código de Validación de Inicio de Sesión")
-	})
-}
-
