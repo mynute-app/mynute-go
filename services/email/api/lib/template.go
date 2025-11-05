@@ -118,3 +118,22 @@ func (r *TemplateRenderer) mergeData(translations map[string]any, customData Tem
 	return merged
 }
 
+// RenderFromString renders an email template from a string with provided data
+// templateHTML: the HTML template as a string
+// data: data to merge into the template
+func (r *TemplateRenderer) RenderFromString(templateHTML string, data TemplateData) (string, error) {
+	// Parse template from string
+	tmpl, err := template.New("email").Parse(templateHTML)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template string: %w", err)
+	}
+
+	// Execute template
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
