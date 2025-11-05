@@ -20,6 +20,17 @@ type SendTemplateEmailRequest struct {
 	BCC          []string               `json:"bcc,omitempty" example:"bcc@example.com"`
 }
 
+// SendTemplateMergeRequest represents a request to send an email by merging template HTML with translations
+// This is used when the calling service (e.g., Core) sends the template HTML and translations directly
+type SendTemplateMergeRequest struct {
+	To           []string               `json:"to" validate:"required,dive,email" example:"recipient@example.com"`
+	TemplateHTML string                 `json:"template_html" validate:"required" example:"<html><body>{{.greeting}}</body></html>"`
+	Translations map[string]interface{} `json:"translations" validate:"required" example:"{\"subject\":\"Welcome\",\"greeting\":\"Hello\"}"`
+	Data         map[string]interface{} `json:"data,omitempty" example:"{\"name\":\"John\"}"`
+	CC           []string               `json:"cc,omitempty" example:"cc@example.com"`
+	BCC          []string               `json:"bcc,omitempty" example:"bcc@example.com"`
+}
+
 // SendBulkEmailRequest represents a request to send emails to multiple recipients
 type SendBulkEmailRequest struct {
 	Recipients []string `json:"recipients" validate:"required,dive,email" example:"user1@example.com,user2@example.com"`
