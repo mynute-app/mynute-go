@@ -1,0 +1,15 @@
+# # RUN line below for dev & test # #
+# docker-compose -p mynute-go-email -f email/docker-compose.dev.yml up -d --force-recreate
+
+services:
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - mynute-email-network
+   
+networks:
+  mynute-email-network:

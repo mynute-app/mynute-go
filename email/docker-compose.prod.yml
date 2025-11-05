@@ -1,0 +1,21 @@
+# # RUN line below for prod in local machine # #
+# # # docker compose -p mynute-email-prod -f ./email/docker-compose.prod.yml up -d --build --remove-orphans
+
+# # ADD line below for prod in VPS using Dokploy at Advanced > Run Command # #
+# compose build --no-cache && docker compose up -d --force-recreate
+
+services:
+  go-email-app:
+    build: 
+      context: ..
+      dockerfile: ./email/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${EMAIL_SERVICE_PORT:-4002}:${EMAIL_SERVICE_PORT:-4002}"
+    networks:
+      - mynute-email-network
+   
+networks:
+  mynute-email-network:
