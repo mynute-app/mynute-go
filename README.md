@@ -309,9 +309,8 @@ make swagger-email   # Email service
 - `/api/v1/endpoints/*` - Endpoint permissions
 
 **Email Service (Port 4002)**
-- `/api/v1/emails/send` - Send single email
-- `/api/v1/emails/send-template` - Send template email
-- `/api/v1/emails/send-bulk` - Send bulk emails
+- `/api/v1/emails/send` - Send email(s) to single or multiple recipients
+- `/api/v1/emails/send-template-merge` - Send email using template HTML from Core service
 - `/health` - Health check
 
 ## 🗄️ Database Management
