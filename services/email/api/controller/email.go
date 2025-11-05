@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	emailLib "mynute-go/services/email/api/lib"
+	"mynute-go/services/email/api/lib"
 	"mynute-go/services/email/config/dto"
 	"time"
 
@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	EmailProvider    emailLib.Sender
-	TemplateRenderer *emailLib.TemplateRenderer
+	EmailProvider    lib.Sender
+	TemplateRenderer *lib.TemplateRenderer
 )
 
 // SendEmail godoc
 //
-//	@Summary		Send a single email
-//	@Description	Send a plain text or HTML email to a single recipient
+//	@Summary		Send emails to one or more recipients
+//	@Description	Send plain text or HTML emails to single or multiple recipients with individual CC/BCC lists
 //	@Tags			Email
 //	@Accept			json
 //	@Produce		json
@@ -35,71 +35,20 @@ func SendEmail(c *fiber.Ctx) error {
 		})
 	}
 
-	// Create email data
-	emailData := emailLib.EmailData{
-		To:      []string{req.To},
-		Subject: req.Subject,
-		Cc:      req.CC,
-		Bcc:     req.BCC,
-	}
-
-	if req.IsHTML {
-		emailData.Html = req.Body
-	} else {
-		emailData.Text = req.Body
-	}
-
-	// Send email
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := EmailProvider.Send(ctx, emailData); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
-			Error:   "Failed to send email",
-			Details: err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(dto.EmailSuccessResponse{
-		Success: true,
-		Message: "Email sent successfully",
-		To:      req.To,
-	})
-}
-
-// SendBulkEmail godoc
-//
-//	@Summary		Send bulk emails
-//	@Description	Send the same email to multiple recipients
-//	@Tags			Email
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		dto.SendBulkEmailRequest	true	"Bulk email request"
-//	@Success		200		{object}	dto.BulkEmailResponse
-//	@Failure		206		{object}	dto.BulkEmailResponse		"Partial success"
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		500		{object}	dto.ErrorResponse
-//	@Router			/api/v1/emails/send-bulk [post]
-func SendBulkEmail(c *fiber.Ctx) error {
-	var req dto.SendBulkEmailRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResponse{
-			Error:   "Invalid request body",
-			Details: err.Error(),
-		})
-	}
-
-	// Send emails individually (could be optimized with goroutines)
-	successCount := 0
-	failedRecipients := []string{}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	results := []dto.Result{}
+	successCount := 0
+	failedCount := 0
+
+	// Send email to each recipient
 	for _, recipient := range req.Recipients {
-		emailData := emailLib.EmailData{
-			To:      []string{recipient},
+		emailData := lib.EmailData{
+			To:      recipient.To,
 			Subject: req.Subject,
+			Cc:      recipient.CC,
+			Bcc:     recipient.BCC,
 		}
 
 		if req.IsHTML {
@@ -108,36 +57,43 @@ func SendBulkEmail(c *fiber.Ctx) error {
 			emailData.Text = req.Body
 		}
 
-		if err := EmailProvider.Send(ctx, emailData); err != nil {
-			failedRecipients = append(failedRecipients, recipient)
+		// Send email
+		err := EmailProvider.Send(ctx, emailData)
+		
+		result := dto.Result{
+			To:      recipient.To,
+			Success: err == nil,
+		}
+		
+		if err != nil {
+			result.Error = err.Error()
+			failedCount++
 		} else {
 			successCount++
 		}
+		
+		results = append(results, result)
 	}
 
-	response := dto.BulkEmailResponse{
+	// Determine response
+	response := dto.EmailSuccessResponse{
 		Success: successCount > 0,
 		Total:   len(req.Recipients),
 		Sent:    successCount,
-		Failed:  len(failedRecipients),
+		Failed:  failedCount,
+		Results: results,
 	}
 
-	if len(failedRecipients) > 0 {
-		response.FailedRecipients = failedRecipients
-	}
-
-	statusCode := fiber.StatusOK
 	if successCount == 0 {
-		statusCode = fiber.StatusInternalServerError
-		return c.Status(statusCode).JSON(dto.ErrorResponse{
-			Error:   "Failed to send any emails",
-			Details: "All recipients failed",
-		})
-	} else if len(failedRecipients) > 0 {
-		statusCode = fiber.StatusPartialContent
+		response.Message = "Failed to send all emails"
+		return c.Status(fiber.StatusInternalServerError).JSON(response)
+	} else if failedCount > 0 {
+		response.Message = "Some emails failed to send"
+		return c.Status(fiber.StatusPartialContent).JSON(response)
 	}
 
-	return c.Status(statusCode).JSON(response)
+	response.Message = "All emails sent successfully"
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 // HealthCheck godoc
@@ -205,7 +161,7 @@ func SendTemplateMerge(c *fiber.Ctx) error {
 	}
 
 	// Create email data
-	emailData := emailLib.EmailData{
+	emailData := lib.EmailData{
 		To:      req.To,
 		Subject: subject,
 		Html:    rendered,
@@ -227,6 +183,8 @@ func SendTemplateMerge(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(dto.EmailSuccessResponse{
 		Success: true,
 		Message: "Template merge email sent successfully",
-		To:      req.To[0], // Return first recipient
+		Total:   1,
+		Sent:    1,
+		Failed:  0,
 	})
 }

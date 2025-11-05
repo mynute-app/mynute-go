@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"fmt"
@@ -37,5 +37,4 @@ func setupRoutes(app *fiber.App) {
 	emails := api.Group("/emails")
 	emails.Post("/send", controller.SendEmail)
 	emails.Post("/send-template-merge", controller.SendTemplateMerge)
-	emails.Post("/send-bulk", controller.SendBulkEmail)
 }

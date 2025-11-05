@@ -7,9 +7,8 @@ A dedicated microservice for handling all email operations in the mynute-go appl
 The Email Service is responsible for **email delivery only**. It does not store templates or business logic - that responsibility belongs to the Core Service. 
 
 **Email Service provides two delivery methods:**
-1. **Simple Send**: Direct email with subject and body (plain text or HTML)
+1. **Send**: Direct email to one or more recipients (each with their own CC/BCC)
 2. **Template Merge Send**: Receives template HTML and translations from calling service (e.g., Core), merges data, and sends
-3. **Bulk Send**: Send the same email to multiple recipients
 
 ## Architecture Principle
 
@@ -77,17 +76,61 @@ Returns service health status.
 POST /api/v1/emails/send
 ```
 
-Send a single email directly with plain text or HTML content.
+Send emails to one or more recipients with plain text or HTML content. Each recipient can have their own CC and BCC lists.
 
-**Request Body:**
+**Single Recipient Example:**
 ```json
 {
-  "to": "user@example.com",
   "subject": "Welcome",
   "body": "Hello, World!",
-  "cc": ["cc@example.com"],
-  "bcc": ["bcc@example.com"],
-  "is_html": true
+  "is_html": true,
+  "recipients": [
+    {
+      "to": ["user@example.com"],
+      "cc": ["cc@example.com"],
+      "bcc": ["bcc@example.com"]
+    }
+  ]
+}
+```
+
+**Multiple Recipients Example:**
+```json
+{
+  "subject": "Newsletter",
+  "body": "<h1>Monthly Update</h1><p>Here's what's new...</p>",
+  "is_html": true,
+  "recipients": [
+    {
+      "to": ["user1@example.com"],
+      "cc": ["manager1@example.com"]
+    },
+    {
+      "to": ["user2@example.com", "user3@example.com"],
+      "bcc": ["archive@example.com"]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All emails sent successfully",
+  "total": 2,
+  "sent": 2,
+  "failed": 0,
+  "results": [
+    {
+      "to": ["user1@example.com"],
+      "success": true
+    },
+    {
+      "to": ["user2@example.com", "user3@example.com"],
+      "success": true
+    }
+  ]
 }
 ```
 
@@ -124,26 +167,6 @@ POST /api/v1/emails/send-template-merge
 3. Calling service sends both to `/send-template-merge`
 4. Email Service merges `translations` + `data` into `template_html`
 5. Email Service sends the rendered email via configured provider
-
-### Send Bulk Email
-```http
-POST /api/v1/emails/send-bulk
-```
-
-Send emails to multiple recipients.
-
-**Request Body:**
-```json
-{
-  "recipients": [
-    "user1@example.com",
-    "user2@example.com"
-  ],
-  "subject": "Newsletter",
-  "body": "Welcome to our newsletter!",
-  "is_html": true
-}
-```
 
 ## Email Providers
 

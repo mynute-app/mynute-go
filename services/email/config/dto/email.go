@@ -1,13 +1,18 @@
 package dto
 
-// SendEmailRequest represents a request to send a single email
+// SendEmailRequest represents a request to send emails to one or more recipients
 type SendEmailRequest struct {
-	To      string   `json:"to" validate:"required,email" example:"recipient@example.com"`
-	Subject string   `json:"subject" validate:"required" example:"Welcome to Mynute"`
-	Body    string   `json:"body" validate:"required" example:"This is the email body"`
-	CC      []string `json:"cc,omitempty" example:"cc1@example.com,cc2@example.com"`
-	BCC     []string `json:"bcc,omitempty" example:"bcc@example.com"`
-	IsHTML  bool     `json:"is_html" example:"true"`
+	Subject    string      `json:"subject" validate:"required" example:"Welcome to Mynute"`
+	Body       string      `json:"body" validate:"required" example:"This is the email body"`
+	IsHTML     bool        `json:"is_html" example:"true"`
+	Recipients []Recipient `json:"recipients" validate:"required,dive" example:"[{\"to\":[\"user@example.com\"]}]"`
+}
+
+// Recipient represents an email recipient with optional CC and BCC
+type Recipient struct {
+	To  []string `json:"to" validate:"required,min=1,dive,email" example:"recipient@example.com"`
+	CC  []string `json:"cc,omitempty" validate:"omitempty,dive,email" example:"cc@example.com"`
+	BCC []string `json:"bcc,omitempty" validate:"omitempty,dive,email" example:"bcc@example.com"`
 }
 
 // SendTemplateMergeRequest represents a request to send an email by merging template HTML with translations
@@ -21,22 +26,24 @@ type SendTemplateMergeRequest struct {
 	BCC          []string               `json:"bcc,omitempty" example:"bcc@example.com"`
 }
 
-// SendBulkEmailRequest represents a request to send emails to multiple recipients
-type SendBulkEmailRequest struct {
-	Recipients []string `json:"recipients" validate:"required,dive,email" example:"user1@example.com,user2@example.com"`
-	Subject    string   `json:"subject" validate:"required" example:"Newsletter"`
-	Body       string   `json:"body" validate:"required" example:"Monthly newsletter content"`
-	IsHTML     bool     `json:"is_html" example:"true"`
-}
-
 // EmailSuccessResponse represents a successful email send response
 type EmailSuccessResponse struct {
-	Success bool   `json:"success" example:"true"`
-	Message string `json:"message" example:"Email sent successfully"`
-	To      string `json:"to,omitempty" example:"recipient@example.com"`
+	Success bool     `json:"success" example:"true"`
+	Message string   `json:"message" example:"Email sent successfully"`
+	Total   int      `json:"total" example:"5"`
+	Sent    int      `json:"sent" example:"4"`
+	Failed  int      `json:"failed,omitempty" example:"1"`
+	Results []Result `json:"results,omitempty"`
 }
 
-// BulkEmailResponse represents a response for bulk email sending
+// Result represents the result of sending to a specific recipient
+type Result struct {
+	To      []string `json:"to" example:"recipient@example.com"`
+	Success bool     `json:"success" example:"true"`
+	Error   string   `json:"error,omitempty" example:"Failed to send"`
+}
+
+// BulkEmailResponse represents a response for bulk email sending (deprecated, use EmailSuccessResponse)
 type BulkEmailResponse struct {
 	Success          bool     `json:"success" example:"true"`
 	Total            int      `json:"total" example:"10"`
