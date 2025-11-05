@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "mynute-go/docs"
+	_ "mynute-go/services/email/docs"
 	"mynute-go/services/email"
 )
 

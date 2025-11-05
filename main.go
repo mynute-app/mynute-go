@@ -5,7 +5,7 @@ import (
 	"log"
 	"mynute-go/services/auth"
 	"mynute-go/services/core"
-	_ "mynute-go/docs"
+	_ "mynute-go/services/email/docs"
 	"mynute-go/services/email"
 	"os"
 	"os/signal"
