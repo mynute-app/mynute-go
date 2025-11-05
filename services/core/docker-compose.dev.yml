@@ -1,5 +1,5 @@
 # # RUN line below for dev & test # #
-# docker-compose -p mynute-go -f core/docker-compose.dev.yml up -d --force-recreate
+# docker-compose -p mynute-go-core -f services/core/docker-compose.dev.yml up -d --force-recreate
 
 services:
   postgres:

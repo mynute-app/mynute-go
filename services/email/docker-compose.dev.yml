@@ -1,5 +1,5 @@
 # # RUN line below for dev & test # #
-# docker-compose -p mynute-go-email -f email/docker-compose.dev.yml up -d --force-recreate
+# docker-compose -p mynute-go-email -f services/email/docker-compose.dev.yml up -d --force-recreate
 
 services:
   mailhog:
