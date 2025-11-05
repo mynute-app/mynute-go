@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 )
@@ -64,7 +65,9 @@ func startAllServices() {
 		go func(s Service) {
 			defer wg.Done()
 			fmt.Printf("📦 Starting %s...\n", s.Name)
-			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", s.File, "up", "-d", "--force-recreate")
+			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", "docker-compose.dev.yml", "up", "-d", "--force-recreate")
+			// Set working directory to the service directory
+			cmd.Dir = filepath.Dir(s.File)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
@@ -104,7 +107,9 @@ func stopAllServices() {
 		go func(s Service) {
 			defer wg.Done()
 			fmt.Printf("📦 Stopping %s...\n", s.Name)
-			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", s.File, "down")
+			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", "docker-compose.dev.yml", "down")
+			// Set working directory to the service directory
+			cmd.Dir = filepath.Dir(s.File)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
@@ -134,7 +139,9 @@ func showLogs() {
 		wg.Add(1)
 		go func(s Service) {
 			defer wg.Done()
-			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", s.File, "logs", "-f")
+			cmd := exec.Command("docker-compose", "-p", s.Project, "-f", "docker-compose.dev.yml", "logs", "-f")
+			// Set working directory to the service directory
+			cmd.Dir = filepath.Dir(s.File)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
