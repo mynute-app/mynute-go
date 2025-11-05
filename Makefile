@@ -13,6 +13,9 @@ endif
 # Seeding commands
 .PHONY: seed seed-help
 
+# Swagger documentation commands
+.PHONY: swagger-core swagger-auth swagger-email swagger-all swagger-help
+
 # Run all pending migrations
 migrate-up:
 	@echo "Running database migrations..."
@@ -179,3 +182,46 @@ seed-help:
 	@echo ""
 	@echo "Note: Seeding is idempotent - safe to run multiple times"
 	@echo "      Updates existing records, creates new ones"
+
+# Generate Swagger documentation for Core service
+swagger-core:
+	@echo "Generating Swagger docs for Core service..."
+	@swag init -g cmd/business-service/main.go -o core/docs --parseDependency --parseInternal
+	@echo "✓ Core service Swagger docs generated at: core/docs"
+
+# Generate Swagger documentation for Auth service
+swagger-auth:
+	@echo "Generating Swagger docs for Auth service..."
+	@swag init -g cmd/auth-service/main.go -o auth/docs --parseDependency --parseInternal
+	@echo "✓ Auth service Swagger docs generated at: auth/docs"
+
+# Generate Swagger documentation for Email service
+swagger-email:
+	@echo "Generating Swagger docs for Email service..."
+	@swag init -g cmd/email-service/main.go -o email/docs --parseDependency --parseInternal
+	@echo "✓ Email service Swagger docs generated at: email/docs"
+
+# Generate all Swagger documentation
+swagger-all: swagger-core swagger-auth swagger-email
+	@echo "✓ All service Swagger documentation generated"
+
+# Show Swagger help
+swagger-help:
+	@echo "Swagger Documentation Commands:"
+	@echo ""
+	@echo "Commands:"
+	@echo "  make swagger-core      - Generate Swagger docs for Core service (port 4000)"
+	@echo "  make swagger-auth      - Generate Swagger docs for Auth service (port 4001)"
+	@echo "  make swagger-email     - Generate Swagger docs for Email service (port 4002)"
+	@echo "  make swagger-all       - Generate all service Swagger documentation"
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  - Install swag: go install github.com/swaggo/swag/cmd/swag@latest"
+	@echo ""
+	@echo "Access Swagger UI:"
+	@echo "  - Core:  http://localhost:4000/swagger/index.html"
+	@echo "  - Auth:  http://localhost:4001/swagger/index.html"
+	@echo "  - Email: http://localhost:4002/swagger/index.html"
+	@echo ""
+	@echo "Note: Regenerate docs after API changes"
+
