@@ -342,14 +342,41 @@ Structured JSON logging with slog:
 
 ### Running Locally
 
+**With Docker (Recommended)**
+
+Start all infrastructure services (databases, monitoring) with one command:
+
+```bash
+# Start all Docker services
+go run cmd/docker-dev/main.go up
+
+# Stop all Docker services
+go run cmd/docker-dev/main.go down
+
+# Restart all Docker services
+go run cmd/docker-dev/main.go restart
+
+# View logs from all services
+go run cmd/docker-dev/main.go logs
+```
+
+This starts:
+- **Core Service Infrastructure**: PostgreSQL (5432), Prometheus (9090), Grafana, Loki (3100), MinIO
+- **Auth Service Infrastructure**: PostgreSQL (5433)
+- **Email Service Infrastructure**: MailHog SMTP (1025), MailHog UI (8025)
+
+**Run Application Services**
+
+After starting infrastructure, run the application:
+
 ```bash
 # Option 1: Run all services together
-go run main.go
+go run .
 
 # Option 2: Run individually
-go run cmd/business-service/main.go  # Terminal 1
-go run cmd/auth-service/main.go      # Terminal 2
-go run cmd/email-service/main.go     # Terminal 3
+go run ./cmd/business-service  # Core Service (Port 4000)
+go run ./cmd/auth-service      # Auth Service (Port 4001)
+go run ./cmd/email-service     # Email Service (Port 4002)
 ```
 
 ### Testing

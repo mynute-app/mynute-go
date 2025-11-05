@@ -90,6 +90,7 @@ mynute-go/
 │   ├── business-service/     # Core service main.go
 │   ├── auth-service/         # Auth service main.go
 │   ├── email-service/        # Email service main.go
+│   ├── docker-dev/           # Docker Compose orchestrator
 │   ├── migrate/              # Migration tool
 │   ├── job/                  # Job scripts (e.g., create random companies)
 │   ├── seed/                 # Database seeding tools
@@ -192,20 +193,41 @@ mynute-go/
 
 ### Development with Docker (Recommended)
 
-1. **Start development environment**
-   
-   Each service has its own Docker Compose configuration:
-   
-   ```bash
-   # Core/Business Service (Port 4000)
-   docker-compose -p mynute-core -f services/core/docker-compose.dev.yml up -d
-   
-   # Auth Service (Port 4001)
-   docker-compose -p mynute-auth -f services/auth/docker-compose.dev.yml up -d
-   
-   # Email Service (Port 4002)
-   docker-compose -p mynute-email -f services/email/docker-compose.dev.yml up -d
-   ```
+**Quick Start - All Services at Once:**
+
+```bash
+# Start all services with one command
+go run cmd/docker-dev/main.go up
+
+# Stop all services
+go run cmd/docker-dev/main.go down
+
+# Restart all services
+go run cmd/docker-dev/main.go restart
+
+# View logs from all services
+go run cmd/docker-dev/main.go logs
+```
+
+This starts:
+- **Core Service**: PostgreSQL (5432), Prometheus (9090), Grafana, Loki (3100), MinIO
+- **Auth Service**: PostgreSQL (5433)
+- **Email Service**: MailHog SMTP (1025), MailHog UI (8025)
+
+**Alternative - Start Services Individually:**
+
+Each service has its own Docker Compose configuration:
+
+```bash
+# Core/Business Service (Port 4000)
+docker-compose -p mynute-go-core -f services/core/docker-compose.dev.yml up -d
+
+# Auth Service (Port 4001)
+docker-compose -p mynute-go-auth -f services/auth/docker-compose.dev.yml up -d
+
+# Email Service (Port 4002)
+docker-compose -p mynute-go-email -f services/email/docker-compose.dev.yml up -d
+```
 
 2. **Install dependencies**
    ```bash
@@ -214,9 +236,9 @@ mynute-go/
 
 3. **Run the application**
    
-   This project uses a monorepo structure with Go modules.
+   This project uses Go workspaces with separate modules per service.
    
-   **Option A: Run all services together (Recommended)**
+   **Option A: Run all services together**
    ```bash
    go run .
    ```
