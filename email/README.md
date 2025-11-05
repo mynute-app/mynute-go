@@ -222,6 +222,23 @@ POST /api/v1/emails/send-template
 
 ## Development
 
+### API Documentation
+
+Interactive Swagger documentation is available at:
+```
+http://localhost:4002/swagger/index.html
+```
+
+### Regenerating Swagger Docs
+```bash
+swag init -g cmd/email-service/main.go -o email/docs --parseDependency --parseInternal
+```
+
+Or use the Makefile:
+```bash
+make swagger-email
+```
+
 ### Running Tests
 ```bash
 cd email/lib

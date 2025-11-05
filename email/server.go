@@ -5,11 +5,13 @@ import (
 	"log"
 	"log/slog"
 	"mynute-go/core/src/lib"
+	_ "mynute-go/email/docs" // Import swagger docs
 	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	swagger "github.com/gofiber/swagger"
 )
 
 type Server struct {
@@ -59,6 +61,9 @@ func NewServer() *Server {
 			"service": "email",
 		})
 	})
+
+	// Swagger documentation
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Setup email routes
 	setupRoutes(app)
