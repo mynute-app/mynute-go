@@ -55,6 +55,10 @@ mynute-go/
 │   │   ├── server.go         # Server initialization
 │   │   ├── docs/             # Swagger documentation
 │   │   ├── admin/            # Admin panel frontend
+│   │   ├── loki-config.yaml  # Loki logging config
+│   │   ├── prometheus.yml    # Prometheus metrics config
+│   │   ├── docker-compose.*.yml
+│   │   ├── Dockerfile
 │   │   └── src/
 │   │       ├── api/          # API routes, controllers, DTOs
 │   │       ├── config/       # Database models, configs
@@ -64,12 +68,20 @@ mynute-go/
 │   ├── auth/                 # Auth Service (Port 4001)
 │   │   ├── server.go         # Auth server initialization
 │   │   ├── docs/             # Swagger documentation
+│   │   ├── loki-config.yaml  # Loki logging config
+│   │   ├── prometheus.yml    # Prometheus metrics config
+│   │   ├── docker-compose.*.yml
+│   │   ├── Dockerfile
 │   │   ├── api/              # Auth API routes & controllers
 │   │   ├── config/           # Auth DTOs and models
 │   │   └── handler/          # JWT, auth logic, access control
 │   └── email/                # Email Service (Port 4002)
 │       ├── server.go         # Email server initialization
 │       ├── docs/             # Swagger documentation
+│       ├── loki-config.yaml  # Loki logging config
+│       ├── prometheus.yml    # Prometheus metrics config
+│       ├── docker-compose.*.yml
+│       ├── Dockerfile
 │       ├── controller/       # Email HTTP handlers
 │       ├── dto/              # Email request/response types
 │       ├── lib/              # Email providers (Resend, MailHog)
@@ -77,12 +89,18 @@ mynute-go/
 ├── cmd/                      # Service entry points
 │   ├── business-service/     # Core service main.go
 │   ├── auth-service/         # Auth service main.go
-│   └── seed/                 # Database seeding tools
+│   ├── email-service/        # Email service main.go
+│   ├── migrate/              # Migration tool
+│   ├── job/                  # Job scripts (e.g., create random companies)
+│   ├── seed/                 # Database seeding tools
+│   ├── seed-admin/           # Admin seeding
+│   └── seed-auth/            # Auth seeding
 ├── migrations/               # Database migration files
 ├── scripts/                  # Build and deployment scripts
 ├── tools/                    # Development tools
 │   ├── generate-migration/   # Migration generators
 │   └── smart-migration/      # Smart migration tools
+├── prometheus-all-services.yml  # Unified Prometheus config
 └── main.go                   # Multi-service launcher
 ```
 
@@ -298,19 +316,9 @@ make swagger-email   # Email service
 
 ## 🗄️ Database Management
 
-### Important: Database Configuration
-
-⚠️ **Migration tools use `POSTGRES_DB` environment variable to determine the target database.**
-
-Set this explicitly in your `.env` file:
-- Development: `POSTGRES_DB=devdb`
-- Production: `POSTGRES_DB=maindb`
-
-See [docs/MIGRATION_DATABASE_CONFIG.md](docs/MIGRATION_DATABASE_CONFIG.md) for details.
-
 ### Migrations
 
-The project uses golang-migrate for database schema management:
+The project uses a custom migration tool for database schema management:
 
 ```bash
 # Run all pending migrations
@@ -327,6 +335,11 @@ make migrate-version
 
 # Rollback N migrations
 make migrate-down-n STEPS=3
+```
+
+**Manual Migration (if needed):**
+```bash
+go run cmd/migrate/main.go -action=up -path=./migrations
 ```
 
 ### Seeding
@@ -353,8 +366,6 @@ make seed-build
 ./bin/seed
 ```
 
-See [docs/SEEDING.md](docs/SEEDING.md) for detailed production seeding guide.
-
 ### Smart Migration Tools
 
 Generate migrations automatically based on model changes:
@@ -367,6 +378,29 @@ make migrate-smart NAME=update_employee_table MODELS=Employee
 make migrate-generate NAME=new_feature_migration
 ```
 
+## 🔍 Monitoring & Observability
+
+### Prometheus Metrics
+
+Each service has its own Prometheus configuration:
+
+- **Core Service**: `services/core/prometheus.yml`
+- **Auth Service**: `services/auth/prometheus.yml`
+- **Email Service**: `services/email/prometheus.yml`
+
+**Unified Monitoring** (all services):
+```bash
+prometheus --config.file=prometheus-all-services.yml
+```
+
+### Loki Logging
+
+Each service has isolated logging configuration:
+
+- **Core Service**: `services/core/loki-config.yaml` - Port 3100
+- **Auth Service**: `services/auth/loki-config.yaml` - Port 3101
+- **Email Service**: `services/email/loki-config.yaml` - Port 3102
+
 ## 🧪 Testing
 
 ### Run Tests
@@ -377,12 +411,14 @@ go test ./...
 # Run tests with coverage
 go test -v -cover ./...
 
-# Run specific test package
-go test ./core/src/service/...
+# Run specific service tests
+go test ./services/core/...
+go test ./services/auth/...
+go test ./services/email/...
 ```
 
 ### Test Database
-The application automatically uses the test database (`POSTGRES_DB_TEST`) when `APP_ENV=test`.
+The application automatically uses the test database when `APP_ENV=test`.
 
 ## 🚀 Deployment
 
@@ -506,17 +542,15 @@ Each company gets its own database schema for data isolation:
 
 ## 📖 Additional Documentation
 
+- **Architecture**:
+  - [Architecture Overview](ARCHITECTURE.md)
+
 - **Microservices**:
-  - [Core Service Documentation](services/core/README.md)
-  - [Auth Service Documentation](services/auth/README.md)
   - [Email Service Documentation](services/email/README.md)
   
 - **Development**:
   - [Admin Panel Documentation](services/core/admin/README.md)
   - [Integration Tests](services/auth/api/controller/INTEGRATION_TESTS.md)
-  
-- **Deployment**:
-  - [Monorepo Guide](MONOREPO.md)
 
 ## 📄 License
 
@@ -526,8 +560,8 @@ This project is licensed under the Apache 2.0 License - see the LICENSE file for
 
 For support and questions:
 - Create an issue in the GitHub repository
-- Contact: fiber@swagger.io
-- Documentation: Available at `/swagger/` endpoint
+- Email: support@mynute.com
+- Documentation: Available at each service's `/swagger/index.html` endpoint
 
 ## 🔗 Related Projects
 
