@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"testing"
@@ -46,7 +46,7 @@ func TestTemplateRenderer_RenderFromString(t *testing.T) {
 
 	t.Run("should handle translations merged with custom data", func(t *testing.T) {
 		templateHTML := `<html><body><h1>{{.subject}}</h1><p>{{.greeting}}</p><p>User: {{.username}}</p></body></html>`
-		
+
 		// Simulate what the controller does: merge translations + custom data
 		translations := map[string]interface{}{
 			"subject":  "Email Verification",
@@ -55,7 +55,7 @@ func TestTemplateRenderer_RenderFromString(t *testing.T) {
 		customData := map[string]interface{}{
 			"username": "John Doe",
 		}
-		
+
 		// Merge them
 		mergedData := make(TemplateData)
 		for k, v := range translations {
@@ -75,7 +75,7 @@ func TestTemplateRenderer_RenderFromString(t *testing.T) {
 
 	t.Run("should allow custom data to override translations", func(t *testing.T) {
 		templateHTML := `<html><body><h1>{{.title}}</h1></body></html>`
-		
+
 		// Simulate override scenario
 		translations := map[string]interface{}{
 			"title": "Default Title",
@@ -83,7 +83,7 @@ func TestTemplateRenderer_RenderFromString(t *testing.T) {
 		customData := map[string]interface{}{
 			"title": "Custom Title",
 		}
-		
+
 		// Merge with custom data taking precedence
 		mergedData := make(TemplateData)
 		for k, v := range translations {

@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"context"
@@ -157,9 +157,9 @@ func TestResendAdapter_Send(t *testing.T) {
 			defaultFrom: defaultFrom,
 		}
 		data := EmailData{
-			To:       []string{},
-			Subject:  "Test",
-			Html: "<h1>Test</h1>",
+			To:      []string{},
+			Subject: "Test",
+			Html:    "<h1>Test</h1>",
 		}
 
 		err := adapter.Send(context.Background(), data)
@@ -178,9 +178,9 @@ func TestResendAdapter_Send(t *testing.T) {
 			defaultFrom: defaultFrom,
 		}
 		data := EmailData{
-			To:       []string{"recipient@example.com"},
-			Subject:  "Test",
-			Html: "<h1>Test</h1>",
+			To:      []string{"recipient@example.com"},
+			Subject: "Test",
+			Html:    "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
@@ -208,10 +208,10 @@ func TestResendAdapter_Send(t *testing.T) {
 			defaultFrom: defaultFrom,
 		}
 		data := EmailData{
-			From:     "custom@example.com",
-			To:       []string{"recipient@example.com"},
-			Subject:  "Test",
-			Html: "<h1>Test</h1>",
+			From:    "custom@example.com",
+			To:      []string{"recipient@example.com"},
+			Subject: "Test",
+			Html:    "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
@@ -239,9 +239,9 @@ func TestResendAdapter_Send(t *testing.T) {
 			defaultFrom: defaultFrom,
 		}
 		data := EmailData{
-			To:       []string{"recipient@example.com"},
-			Subject:  "Test",
-			Html: "<h1>Test</h1>",
+			To:      []string{"recipient@example.com"},
+			Subject: "Test",
+			Html:    "<h1>Test</h1>",
 		}
 
 		expectedParams := &resend.SendEmailRequest{
@@ -261,4 +261,3 @@ func TestResendAdapter_Send(t *testing.T) {
 		mockEmailsService.AssertExpectations(t)
 	})
 }
-

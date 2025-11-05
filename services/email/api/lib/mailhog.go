@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"context"
@@ -133,21 +133,21 @@ func (m *MailHogAdapter) buildMessage(from string, data EmailData) string {
 
 // MailHogMessage represents an email message from MailHog API
 type MailHogMessage struct {
-	ID      string                 `json:"ID"`
-	From    MailHogPath            `json:"From"`
-	To      []MailHogPath          `json:"To"`
-	Content MailHogContent         `json:"Content"`
-	Created time.Time              `json:"Created"`
-	MIME    *MailHogMIME           `json:"MIME"`
+	ID      string         `json:"ID"`
+	From    MailHogPath    `json:"From"`
+	To      []MailHogPath  `json:"To"`
+	Content MailHogContent `json:"Content"`
+	Created time.Time      `json:"Created"`
+	MIME    *MailHogMIME   `json:"MIME"`
 	Raw     map[string]any `json:"Raw"`
 }
 
 // MailHogPath represents an email address
 type MailHogPath struct {
-	Relays  any `json:"Relays"`
-	Mailbox string      `json:"Mailbox"`
-	Domain  string      `json:"Domain"`
-	Params  string      `json:"Params"`
+	Relays  any    `json:"Relays"`
+	Mailbox string `json:"Mailbox"`
+	Domain  string `json:"Domain"`
+	Params  string `json:"Params"`
 }
 
 // MailHogContent represents email content
@@ -155,7 +155,7 @@ type MailHogContent struct {
 	Headers map[string][]string `json:"Headers"`
 	Body    string              `json:"Body"`
 	Size    int                 `json:"Size"`
-	MIME    any         `json:"MIME"`
+	MIME    any                 `json:"MIME"`
 }
 
 // MailHogMIME represents MIME content
@@ -168,7 +168,7 @@ type MailHogMIMEPart struct {
 	Headers map[string][]string `json:"Headers"`
 	Body    string              `json:"Body"`
 	Size    int                 `json:"Size"`
-	MIME    any         `json:"MIME"`
+	MIME    any                 `json:"MIME"`
 }
 
 // MailHogMessagesResponse represents the API response
@@ -466,4 +466,3 @@ func (m *MailHogAdapter) DeleteAllMessages() error {
 
 	return nil
 }
-

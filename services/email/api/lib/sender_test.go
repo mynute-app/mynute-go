@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"os"
@@ -39,4 +39,3 @@ func TestNewProvider(t *testing.T) {
 		assert.Equal(t, "email provider (unsupported) not implemented", err.Error())
 	})
 }
-

@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"context"
@@ -82,4 +82,3 @@ func NewProvider(opts *ProviderOpts) (Sender, error) {
 		return nil, fmt.Errorf("email provider (%s) not implemented", opts.Provider)
 	}
 }
-

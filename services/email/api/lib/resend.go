@@ -1,4 +1,4 @@
-package email
+package lib
 
 import (
 	"context"
@@ -63,4 +63,3 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 
 	return nil
 }
-
