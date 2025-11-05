@@ -1,0 +1,61 @@
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+auth_enabled: false
+
+common:
+  path_prefix: /loki
+
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+  chunk_idle_period: 3m
+  chunk_retain_period: 1m
+
+limits_config:
+  allow_structured_metadata: true
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  query_timeout: 5m
+
+schema_config:
+  configs:
+    - from: 2022-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/core/index
+    cache_location: /loki/core/cache
+  filesystem:
+    directory: /loki/core/chunks
+
+chunk_store_config:
+  chunk_cache_config:
+    embedded_cache:
+      enabled: true
+      max_size_mb: 100
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 2048
+
+frontend:
+  compress_responses: true
+  max_outstanding_per_tenant: 2048
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 720h

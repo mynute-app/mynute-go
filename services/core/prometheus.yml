@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 3s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'mynute-core-service'
+    static_configs:
+      - targets: ['localhost:4000']
+        labels:
+          service: 'core'
+          environment: 'production'
