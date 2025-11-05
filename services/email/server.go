@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"mynute-go/services/core/api/lib"
+	"mynute-go/services/email/lib"
 	_ "mynute-go/services/email/docs" // Import swagger docs
 	"os"
 
