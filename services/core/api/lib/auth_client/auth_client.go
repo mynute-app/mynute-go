@@ -59,9 +59,9 @@ type TokenValidationResponse struct {
 
 // AccessCheckRequest represents a request to check access
 type AccessCheckRequest struct {
-	UserID    uuid.UUID `json:"user_id"`
-	Method    string    `json:"method"`
-	Path      string    `json:"path"`
+	UserID    uuid.UUID  `json:"user_id"`
+	Method    string     `json:"method"`
+	Path      string     `json:"path"`
 	CompanyID *uuid.UUID `json:"company_id,omitempty"`
 }
 

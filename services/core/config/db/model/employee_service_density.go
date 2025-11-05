@@ -73,4 +73,3 @@ func (esd *EmployeeServiceDensity) BeforeUpdate(tx *gorm.DB) error {
 
 	return nil
 }
-
