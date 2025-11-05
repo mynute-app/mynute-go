@@ -105,7 +105,9 @@ func Connect() *Database {
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
 	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
 
-	// Connect to the auth database
+	// Connect to the auth database (optional in test environment)
+	// In production, core service needs read-only access to auth DB for permission checks
+	// In test environment, auth DB may not be available - tests should mock auth checks
 	authDB := connectAuthDB(app_env, gormConfig)
 
 	dbWrapper := &Database{
@@ -168,6 +170,14 @@ func connectAuthDB(app_env string, gormConfig *gorm.Config) *gorm.DB {
 	// Connect to the auth database
 	authDB, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
+		// In test/dev environments, auth DB might not be available
+		// This is acceptable as tests should mock auth checks
+		if app_env == "test" || app_env == "dev" {
+			log.Printf("Warning: Could not connect to auth database: %v\n", err)
+			log.Println("Continuing without auth DB - auth checks will be skipped")
+			return nil // Return nil instead of failing
+		}
+		// In production, auth DB is required
 		log.Fatal("Failed to connect to the auth database: ", err)
 	}
 
@@ -187,11 +197,77 @@ func connectAuthDB(app_env string, gormConfig *gorm.Config) *gorm.DB {
 
 // Seed the database with initial data
 func (db *Database) InitialSeed() {
-	// Seed auth database
-	authTx, authEnd, err := Transaction(db.AuthDB)
-	defer authEnd(nil)
-	if err != nil {
-		panic(err)
+	// Skip auth database seeding if not connected (e.g., in tests or dev without auth service)
+	if db.AuthDB == nil {
+		log.Println("Skipping auth database seeding - no auth DB connection")
+	} else {
+		// Seed auth database
+		authTx, authEnd, err := Transaction(db.AuthDB)
+		defer authEnd(nil)
+		if err != nil {
+			panic(err)
+		}
+
+		// Allow system role creation temporarily
+		model.AllowSystemRoleCreation = true
+		defer func() { model.AllowSystemRoleCreation = false }()
+
+		// Seed resources in AUTH DB
+		if err := db.WithDB(db.AuthDB).
+			Seed("Resources", resourceSeed.Resources, `"table" = ?`, []string{"Table"}).
+			Error; err != nil {
+			panic(err)
+		}
+
+		// Seed system roles in AUTH DB (no company_id)
+		if err := db.WithDB(db.AuthDB).
+			Seed("System Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
+			Error; err != nil {
+			panic(err)
+		}
+
+		// Seed admin roles in AUTH DB
+		if err := db.WithDB(db.AuthDB).
+			Seed("Admin Roles", model.RoleAdmins, "name = ?", []string{"Name"}).
+			Error; err != nil {
+			panic(err)
+		}
+
+		// Load system and admin role IDs from auth DB
+		if err := model.LoadSystemRoleIDs(authTx); err != nil {
+			panic(fmt.Errorf("failed to load system role IDs: %w", err))
+		}
+
+		if err := model.LoadAdminRoleIDs(authTx); err != nil {
+			panic(fmt.Errorf("failed to load admin role IDs: %w", err))
+		}
+
+		// Collect all endpoints from the separated seed files
+		allEndpoints := collectAllEndpoints()
+
+		// Seed endpoints in AUTH DB
+		if err := db.WithDB(db.AuthDB).
+			Seed("Endpoints", allEndpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
+			Error; err != nil {
+			panic(err)
+		}
+
+		// Load endpoint IDs from auth DB so policies can reference them
+		if err := authModel.LoadEndpointIDs(allEndpoints, authTx); err != nil {
+			panic(fmt.Errorf("failed to load endpoint IDs: %w", err))
+		}
+
+		// Collect all policies from the separated seed files
+		allPolicies := collectAllPolicies()
+
+		// Seed policies in AUTH DB
+		if err := db.WithDB(db.AuthDB).
+			Seed("Policies", allPolicies, "name = ?", []string{"Name"}).
+			Error; err != nil {
+			panic(err)
+		}
+
+		log.Println("Auth database seeding finished!")
 	}
 
 	// Seed main database
@@ -201,69 +277,9 @@ func (db *Database) InitialSeed() {
 		panic(err)
 	}
 
-	// Allow system role creation temporarily
-	model.AllowSystemRoleCreation = true
-	defer func() { model.AllowSystemRoleCreation = false }()
-
-	// Seed resources in AUTH DB
-	if err := db.WithDB(db.AuthDB).
-		Seed("Resources", resourceSeed.Resources, `"table" = ?`, []string{"Table"}).
-		Error; err != nil {
-		panic(err)
-	}
-
-	// Seed system roles in AUTH DB (no company_id)
-	if err := db.WithDB(db.AuthDB).
-		Seed("System Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"}).
-		Error; err != nil {
-		panic(err)
-	}
-
-	// Seed admin roles in AUTH DB
-	if err := db.WithDB(db.AuthDB).
-		Seed("Admin Roles", model.RoleAdmins, "name = ?", []string{"Name"}).
-		Error; err != nil {
-		panic(err)
-	}
-
-	// Load system and admin role IDs from auth DB
-	if err := model.LoadSystemRoleIDs(authTx); err != nil {
-		panic(fmt.Errorf("failed to load system role IDs: %w", err))
-	}
-
-	if err := model.LoadAdminRoleIDs(authTx); err != nil {
-		panic(fmt.Errorf("failed to load admin role IDs: %w", err))
-	}
-
-	// Collect all endpoints from the separated seed files
-	allEndpoints := collectAllEndpoints()
-
-	// Seed endpoints in AUTH DB
-	if err := db.WithDB(db.AuthDB).
-		Seed("Endpoints", allEndpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
-		Error; err != nil {
-		panic(err)
-	}
-
-	// Load endpoint IDs from auth DB so policies can reference them
-	if err := authModel.LoadEndpointIDs(allEndpoints, authTx); err != nil {
-		panic(fmt.Errorf("failed to load endpoint IDs: %w", err))
-	}
-
-	// Collect all policies from the separated seed files
-	allPolicies := collectAllPolicies()
-
-	// Seed policies in AUTH DB
-	if err := db.WithDB(db.AuthDB).
-		Seed("Policies", allPolicies, "name = ?", []string{"Name"}).
-		Error; err != nil {
-		panic(err)
-	}
-
 	// Note: mainTx can be used for future main DB seeding (e.g., sample companies, branches, etc.)
 	_ = mainTx
 
-	log.Println("Auth database seeding finished!")
 	log.Println("Main database ready for business data!")
 }
 
