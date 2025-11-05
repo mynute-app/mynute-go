@@ -4,10 +4,10 @@ package main
 // companies with random data for development purposes only.
 // To run the script, execute command below in
 // terminal at <repo_root> level:
-// go run job/create_random_companies.go 5
+// go run cmd/job/create_random_companies.go 5
 
 import (
-	"mynute-go/job/lib"
+	"mynute-go/cmd/job/lib"
 	"mynute-go/services/core"
 	srcLib "mynute-go/services/core/src/lib"
 	"os"
