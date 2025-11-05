@@ -1,5 +1,5 @@
 # # RUN line below for dev & test # #
-# docker-compose -p mynute-go-auth -f auth/docker-compose.dev.yml up -d --force-recreate
+# docker-compose -p mynute-go-auth -f services/auth/docker-compose.dev.yml up -d --force-recreate
 
 services:
   postgres:
@@ -24,7 +24,7 @@ services:
 
         # Wait for PostgreSQL to be fully ready
         echo '⏳   Waiting for PostgreSQL to start...';
-        until pg_isready -h localhost -p 5432 -U $POSTGRES_USER; do
+        until pg_isready -h localhost -p 5433 -U $POSTGRES_USER; do
           echo '⏳   Still waiting for PostgreSQL...';
           sleep 5;
         done;
@@ -71,15 +71,6 @@ services:
         # Keep PostgreSQL running in the foreground to prevent container exit
         wait
       "
-    networks:
-      - mynute-auth-network
-
-  mailhog:
-    image: mailhog/mailhog
-    restart: always
-    ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
     networks:
       - mynute-auth-network
    
