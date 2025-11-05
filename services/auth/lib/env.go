@@ -17,7 +17,12 @@ func LoadEnv() {
 		}
 	}
 
-	err := godotenv.Load()
+	// Try loading from service directory first, then from root
+	err := godotenv.Load("services/auth/.env")
+	if err != nil {
+		err = godotenv.Load()
+	}
+
 	// In Docker environments, .env file won't exist
 	// Variables will be injected by Docker Compose
 	if err != nil {

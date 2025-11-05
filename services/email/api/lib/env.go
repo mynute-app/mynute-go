@@ -15,9 +15,14 @@ func LoadEnv() {
 		return
 	}
 
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: .env file not found or could not be loaded")
+	// Try loading from service directory first, then from current directory
+	if err := godotenv.Load("services/email/.env"); err != nil {
+		if err := godotenv.Load(); err != nil {
+			log.Println("INFO: .env file not found, proceeding with system-provided environment variables. This is expected in a container environment.")
+		} else {
+			log.Println(".env file loaded successfully")
+		}
 	} else {
-		log.Println(".env file loaded successfully")
+		log.Println(".env file loaded successfully from services/email/.env")
 	}
 }

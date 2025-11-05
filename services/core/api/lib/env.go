@@ -17,7 +17,12 @@ func LoadEnv() {
 		}
 	}
 
-	err := godotenv.Load()
+	// Try loading from service directory first, then from root
+	err := godotenv.Load("services/core/.env")
+	if err != nil {
+		err = godotenv.Load()
+	}
+
 	// NO DOCKER: err não será nil, pois o arquivo .env não existe.
 	// Nós não tratamos isso como um erro fatal.
 	// A aplicação continuará, usando as variáveis injetadas pelo Docker Compose.
@@ -27,4 +32,3 @@ func LoadEnv() {
 		log.Println("INFO: .env file loaded successfully. This is expected in a local environment.")
 	}
 }
-
