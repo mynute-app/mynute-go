@@ -1,11 +1,11 @@
-package email
+package main
 
 import (
 	"fmt"
 	"log"
 	"log/slog"
 	_ "mynute-go/services/email/docs" // Import swagger docs
-	"mynute-go/services/email/lib"
+	"mynute-go/services/email/api/lib"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
