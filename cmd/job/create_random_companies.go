@@ -9,7 +9,7 @@ package main
 import (
 	"mynute-go/cmd/job/lib"
 	"mynute-go/services/core"
-	srcLib "mynute-go/services/core/src/lib"
+	srcLib "mynute-go/services/core/api/lib"
 	"os"
 	"strconv"
 )

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"mynute-go/services/core"
-	DTO "mynute-go/services/core/src/api/dto"
-	coreModel "mynute-go/services/core/src/config/db/model"
-	FileBytes "mynute-go/services/core/src/lib/file_bytes"
+	FileBytes "mynute-go/services/core/api/lib/file_bytes"
+	coreModel "mynute-go/services/core/config/db/model"
+	DTO "mynute-go/services/core/config/dto"
 	"mynute-go/services/core/test/src/handler"
 	"mynute-go/services/core/test/src/model"
 

@@ -1,6 +1,6 @@
 package model
 
-import "mynute-go/services/core/src/config/db/model"
+import "mynute-go/services/core/config/db/model"
 
 type Role struct {
 	Created    *model.Role

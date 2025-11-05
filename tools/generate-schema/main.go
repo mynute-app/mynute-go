@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
 	"os"
 	"path/filepath"
 )

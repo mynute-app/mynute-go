@@ -5,10 +5,10 @@ import (
 	"log"
 	"log/slog"
 	"mynute-go/services/auth/api/routes"
+	database "mynute-go/services/auth/config/db"
+	"mynute-go/services/auth/config/db/model"
 	_ "mynute-go/services/auth/docs"
-	database "mynute-go/services/core/src/config/db"
-	"mynute-go/services/core/src/config/db/model"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/auth/lib"
 	"os"
 
 	"github.com/gofiber/fiber/v2"

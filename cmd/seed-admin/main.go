@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	database "mynute-go/services/core/src/config/db"
-	"mynute-go/services/core/src/config/db/model"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
+	database "mynute-go/services/core/config/db"
+	"mynute-go/services/core/config/db/model"
 	"os"
 
 	"github.com/google/uuid"

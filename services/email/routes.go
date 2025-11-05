@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"mynute-go/services/email/controller"
-	emailLib "mynute-go/services/email/lib"
+	"mynute-go/services/email/api/controller"
+	emailLib "mynute-go/services/email/api/lib"
 
 	"github.com/gofiber/fiber/v2"
 )

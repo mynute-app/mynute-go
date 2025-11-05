@@ -2,7 +2,7 @@ package lib
 
 import (
 	"fmt"
-	"mynute-go/services/core/src/config/namespace"
+	"mynute-go/services/core/config/namespace"
 	"mynute-go/services/core/test/src/handler"
 	"mynute-go/services/core/test/src/model"
 )

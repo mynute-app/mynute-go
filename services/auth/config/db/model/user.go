@@ -2,8 +2,8 @@ package model
 
 import (
 	"fmt"
-	mJSON "mynute-go/services/auth/config/db/model/json"
-	"mynute-go/services/auth/lib"
+	"mynute-go/services/auth/api/lib"
+	mJSON "mynute-go/services/auth/config/db/json"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

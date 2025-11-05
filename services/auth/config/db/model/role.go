@@ -1,8 +1,8 @@
 package model
 
 import (
+	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/namespace"
-	"mynute-go/services/auth/lib"
 
 	"github.com/google/uuid"
 

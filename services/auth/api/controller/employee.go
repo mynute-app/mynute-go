@@ -1,9 +1,9 @@
 package controller
 
 import (
+	"mynute-go/services/auth/api/lib"
 	authModel "mynute-go/services/auth/config/db/model"
 	DTO "mynute-go/services/auth/config/dto"
-	"mynute-go/services/auth/lib"
 
 	"github.com/gofiber/fiber/v2"
 )

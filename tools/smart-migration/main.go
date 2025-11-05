@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	authModel "mynute-go/services/auth/config/db/model"
-	"mynute-go/services/core/src/config/db/model"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
+	"mynute-go/services/core/config/db/model"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -471,4 +471,3 @@ func getSchemaType(m any) string {
 	}
 	return "public"
 }
-

@@ -3,11 +3,11 @@ package model
 import (
 	"bytes"
 	"fmt"
-	DTO "mynute-go/services/core/src/api/dto"
-	"mynute-go/services/core/src/config/db/model"
-	"mynute-go/services/core/src/config/namespace"
-	"mynute-go/services/core/src/lib"
-	"mynute-go/services/core/src/lib/emailclient"
+	"mynute-go/services/core/api/lib"
+	"mynute-go/services/core/api/lib/emailclient"
+	"mynute-go/services/core/config/db/model"
+	DTO "mynute-go/services/core/config/dto"
+	"mynute-go/services/core/config/namespace"
 	"mynute-go/services/core/test/src/handler"
 	"net/url"
 

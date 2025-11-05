@@ -2,8 +2,8 @@ package e2e_test
 
 import (
 	"mynute-go/services/core"
-	"mynute-go/services/core/src/lib"
-	FileBytes "mynute-go/services/core/src/lib/file_bytes"
+	"mynute-go/services/core/api/lib"
+	FileBytes "mynute-go/services/core/api/lib/file_bytes"
 	"mynute-go/services/core/test/src/handler"
 	"mynute-go/services/core/test/src/model"
 

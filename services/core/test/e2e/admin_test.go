@@ -3,7 +3,7 @@ package e2e_test
 import (
 	"fmt"
 	"mynute-go/services/core"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
 	"mynute-go/services/core/test/src/handler"
 	"mynute-go/services/core/test/src/model"
 	"testing"

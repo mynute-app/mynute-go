@@ -10,11 +10,11 @@ import (
 	"time"
 
 	authModel "mynute-go/services/auth/config/db/model"
-	database "mynute-go/services/core/src/config/db"
-	coreModel "mynute-go/services/core/src/config/db/model"
-	endpointSeed "mynute-go/services/core/src/config/db/seed/endpoint"
-	resourceSeed "mynute-go/services/core/src/config/db/seed/resource"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
+	database "mynute-go/services/core/config/db"
+	coreModel "mynute-go/services/core/config/db/model"
+	endpointSeed "mynute-go/services/core/config/db/seed/endpoint"
+	resourceSeed "mynute-go/services/core/config/db/seed/resource"
 )
 
 // SeedAuth sends all endpoints, resources, and policies to the auth service
@@ -152,4 +152,3 @@ func seedEndpoint(client *http.Client, baseURL string, endpoint *authModel.EndPo
 
 	return nil
 }
-

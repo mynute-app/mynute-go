@@ -2,10 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"mynute-go/services/auth/api/handler"
+	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
 	DTO "mynute-go/services/auth/config/dto"
-	"mynute-go/services/auth/handler"
-	"mynute-go/services/auth/lib"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"

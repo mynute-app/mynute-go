@@ -2,10 +2,10 @@ package e2e_test
 
 import (
 	"mynute-go/services/core"
-	DTO "mynute-go/services/core/src/api/dto"
-	mJSON "mynute-go/services/core/src/config/db/model/json"
-	"mynute-go/services/core/src/lib"
-	FileBytes "mynute-go/services/core/src/lib/file_bytes"
+	"mynute-go/services/core/api/lib"
+	FileBytes "mynute-go/services/core/api/lib/file_bytes"
+	mJSON "mynute-go/services/core/config/db/json"
+	DTO "mynute-go/services/core/config/dto"
 	"mynute-go/services/core/test/src/handler"
 	"mynute-go/services/core/test/src/model"
 	"testing"

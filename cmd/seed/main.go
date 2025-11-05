@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	authModel "mynute-go/services/auth/config/db/model"
-	database "mynute-go/services/core/src/config/db"
-	"mynute-go/services/core/src/config/db/model"
-	endpointSeed "mynute-go/services/core/src/config/db/seed/endpoint"
-	policySeed "mynute-go/services/core/src/config/db/seed/policy"
-	resourceSeed "mynute-go/services/core/src/config/db/seed/resource"
-	"mynute-go/services/core/src/lib"
+	"mynute-go/services/core/api/lib"
+	database "mynute-go/services/core/config/db"
+	"mynute-go/services/core/config/db/model"
+	endpointSeed "mynute-go/services/core/config/db/seed/endpoint"
+	policySeed "mynute-go/services/core/config/db/seed/policy"
+	resourceSeed "mynute-go/services/core/config/db/seed/resource"
 	"os"
 )
 
@@ -93,4 +93,3 @@ func main() {
 	fmt.Printf("  - %d Endpoints\n", len(endpoints))
 	fmt.Printf("  - %d Policies\n", len(policies))
 }
-
