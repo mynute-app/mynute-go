@@ -20,6 +20,20 @@ A modern, scalable appointment management system built with Go, Fiber web framew
 
 ## 🏗️ Architecture
 
+### Microservices Architecture
+
+Mynute Go follows a microservices architecture with independent, deployable services:
+
+- **Core Service** (Port 4000): Business logic, appointments, employees, clients, companies
+- **Auth Service** (Port 4001): Authentication, authorization, access control policies
+- **Email Service** (Port 4002): Email sending, templates, bulk emails
+
+Each service has:
+- Independent deployment with Docker
+- Service-specific Swagger documentation at `/swagger/index.html`
+- Isolated configuration and environment variables
+- Own database connection management
+
 ### Tech Stack
 
 - **Backend**: Go 1.23.4 with Fiber v2 web framework
@@ -28,7 +42,7 @@ A modern, scalable appointment management system built with Go, Fiber web framew
 - **Email**: Resend for production, MailHog for testing
 - **Cloud Storage**: AWS S3
 - **Monitoring**: Prometheus
-- **Documentation**: Swagger/OpenAPI
+- **Documentation**: Swagger/OpenAPI 2.0
 - **Containerization**: Docker & Docker Compose
 - **Migrations**: golang-migrate
 
@@ -36,21 +50,40 @@ A modern, scalable appointment management system built with Go, Fiber web framew
 
 ```
 mynute-go/
-├── core/                     # Core application logic
-│   ├── server.go            # Server initialization
-│   └── src/
-│       ├── config/          # Configuration (API routes, DB, cloud)
-│       ├── controller/      # HTTP controllers
-│       ├── handler/         # Business logic handlers
-│       ├── lib/             # Utilities and libraries
-│       ├── middleware/      # HTTP middleware
-│       └── service/         # Business services
-├── docs/                    # API documentation
-├── migrations/              # Database migration files
-├── static/                  # Static assets (email templates, pages)
-├── test/                    # Test files
-├── tools/                   # Development tools
-└── scripts/                 # Build and deployment scripts
+├── services/                  # Microservices
+│   ├── core/                 # Core/Business Service (Port 4000)
+│   │   ├── server.go         # Server initialization
+│   │   ├── docs/             # Swagger documentation
+│   │   ├── admin/            # Admin panel frontend
+│   │   └── src/
+│   │       ├── api/          # API routes, controllers, DTOs
+│   │       ├── config/       # Database models, configs
+│   │       ├── lib/          # Shared utilities
+│   │       ├── middleware/   # HTTP middleware
+│   │       └── service/      # Business logic
+│   ├── auth/                 # Auth Service (Port 4001)
+│   │   ├── server.go         # Auth server initialization
+│   │   ├── docs/             # Swagger documentation
+│   │   ├── api/              # Auth API routes & controllers
+│   │   ├── config/           # Auth DTOs and models
+│   │   └── handler/          # JWT, auth logic, access control
+│   └── email/                # Email Service (Port 4002)
+│       ├── server.go         # Email server initialization
+│       ├── docs/             # Swagger documentation
+│       ├── controller/       # Email HTTP handlers
+│       ├── dto/              # Email request/response types
+│       ├── lib/              # Email providers (Resend, MailHog)
+│       └── routes.go         # Email API routes
+├── cmd/                      # Service entry points
+│   ├── business-service/     # Core service main.go
+│   ├── auth-service/         # Auth service main.go
+│   └── seed/                 # Database seeding tools
+├── migrations/               # Database migration files
+├── scripts/                  # Build and deployment scripts
+├── tools/                    # Development tools
+│   ├── generate-migration/   # Migration generators
+│   └── smart-migration/      # Smart migration tools
+└── main.go                   # Multi-service launcher
 ```
 
 ## 🛠️ Quick Start
@@ -71,25 +104,26 @@ mynute-go/
 
 2. **Create environment files for each service**
    
-   For Core/Business Service:
-   ```bash
-   cp core/.env.example core/.env
-   ```
+   Each service manages its own configuration:
    
-   For Auth Service:
    ```bash
-   cp auth/.env.example auth/.env
-   ```
+   # Core/Business Service
+   cp services/core/.env.example services/core/.env
    
-   Note: The root `.env` and `.env.example` are deprecated. Each service now has its own environment configuration.
+   # Auth Service
+   cp services/auth/.env.example services/auth/.env
+   
+   # Email Service
+   cp services/email/.env.example services/email/.env
+   ```
 
 3. **Configure environment variables** in each service's `.env`:
    
-   Core Service (`core/.env`):
+   Core Service (`services/core/.env`):
    ```env
    # Application
    APP_ENV=dev
-   PORT=4000
+   APP_PORT=4000
    
    # Database
    POSTGRES_HOST=localhost
@@ -97,15 +131,6 @@ mynute-go/
    POSTGRES_USER=your_user
    POSTGRES_PASSWORD=your_password
    POSTGRES_DB=mynute_prod
-   POSTGRES_DB_DEV=mynute_dev
-   POSTGRES_DB_TEST=mynute_test
-   
-   # Authentication
-   JWT_SECRET=your-jwt-secret
-   
-   # Email (Resend)
-   RESEND_API_KEY=your-resend-api-key
-   RESEND_DEFAULT_FROM=noreply@yourdomain.com
    
    # AWS S3
    AWS_ACCESS_KEY_ID=your-access-key
@@ -113,19 +138,55 @@ mynute-go/
    AWS_REGION=us-east-1
    AWS_S3_BUCKET=your-bucket-name
    ```
+   
+   Auth Service (`services/auth/.env`):
+   ```env
+   # Application
+   APP_ENV=dev
+   AUTH_SERVICE_PORT=4001
+   
+   # Database
+   POSTGRES_HOST=localhost
+   POSTGRES_PORT=5432
+   POSTGRES_USER=your_user
+   POSTGRES_PASSWORD=your_password
+   POSTGRES_AUTH_DB=mynute_auth
+   
+   # JWT
+   JWT_SECRET=your-jwt-secret
+   JWT_EXPIRATION=24h
+   ```
+   
+   Email Service (`services/email/.env`):
+   ```env
+   # Application
+   APP_ENV=dev
+   EMAIL_SERVICE_PORT=4002
+   
+   # Resend (Production)
+   RESEND_API_KEY=your-resend-api-key
+   RESEND_DEFAULT_FROM=noreply@yourdomain.com
+   
+   # MailHog (Development)
+   MAILHOG_HOST=localhost
+   MAILHOG_PORT=1025
+   ```
 
 ### Development with Docker (Recommended)
 
 1. **Start development environment**
    
-   For Core/Business Service:
-   ```bash
-   docker-compose -p mynute-go -f core/docker-compose.dev.yml up -d --force-recreate
-   ```
+   Each service has its own Docker Compose configuration:
    
-   For Auth Service:
    ```bash
-   docker-compose -p mynute-go-auth -f auth/docker-compose.dev.yml up -d --force-recreate
+   # Core/Business Service (Port 4000)
+   docker-compose -p mynute-core -f services/core/docker-compose.dev.yml up -d
+   
+   # Auth Service (Port 4001)
+   docker-compose -p mynute-auth -f services/auth/docker-compose.dev.yml up -d
+   
+   # Email Service (Port 4002)
+   docker-compose -p mynute-email -f services/email/docker-compose.dev.yml up -d
    ```
 
 2. **Install dependencies**
@@ -135,22 +196,37 @@ mynute-go/
 
 3. **Run the application**
    
-   Run all services together (Recommended):
+   **Option A: Run all services together (Recommended)**
    ```bash
    go run main.go
    ```
    
-   Or run services individually:
+   **Option B: Run services individually**
    
-   Business Service:
    ```bash
+   # Core/Business Service
    go run cmd/business-service/main.go
-   ```
    
-   Auth Service:
-   ```bash
+   # Auth Service
    go run cmd/auth-service/main.go
+   
+   # Email Service
+   go run cmd/email-service/main.go
    ```
+
+### Access Points
+
+Once running, access each service:
+
+- **Core Service**: http://localhost:4000
+  - Swagger UI: http://localhost:4000/swagger/index.html
+  - Admin Panel: http://localhost:4000/admin
+  
+- **Auth Service**: http://localhost:4001
+  - Swagger UI: http://localhost:4001/swagger/index.html
+  
+- **Email Service**: http://localhost:4002
+  - Swagger UI: http://localhost:4002/swagger/index.html
 
 ### Manual Setup
 
@@ -178,17 +254,47 @@ The application will be available at `http://localhost:4000`
 ## 📚 API Documentation
 
 ### Swagger UI
-Access the interactive API documentation at: `http://localhost:4000/swagger/`
 
-### Key Endpoints
+Each microservice has its own interactive API documentation:
 
-- **Authentication**: `/auth/*` - OAuth login/logout
-- **Appointments**: `/appointments/*` - CRUD operations
-- **Employees**: `/employees/*` - Employee management
-- **Clients**: `/clients/*` - Client management
-- **Services**: `/services/*` - Service configuration
-- **Companies**: `/companies/*` - Multi-tenant company management
-- **Branches**: `/branches/*` - Branch location management
+- **Core Service**: http://localhost:4000/swagger/index.html
+- **Auth Service**: http://localhost:4001/swagger/index.html
+- **Email Service**: http://localhost:4002/swagger/index.html
+
+### Regenerate Swagger Documentation
+
+```bash
+# Generate docs for all services
+make swagger-all
+
+# Or generate for specific service
+make swagger-core    # Core service
+make swagger-auth    # Auth service
+make swagger-email   # Email service
+```
+
+### Key API Endpoints
+
+**Core Service (Port 4000)**
+- `/api/v1/appointments/*` - Appointment management
+- `/api/v1/employees/*` - Employee management
+- `/api/v1/clients/*` - Client management
+- `/api/v1/services/*` - Service configuration
+- `/api/v1/companies/*` - Company management
+- `/api/v1/branches/*` - Branch management
+
+**Auth Service (Port 4001)**
+- `/api/v1/auth/*` - Authentication & login
+- `/api/v1/admin/*` - Admin management
+- `/api/v1/policies/*` - Access control policies
+- `/api/v1/resources/*` - Resource management
+- `/api/v1/endpoints/*` - Endpoint permissions
+
+**Email Service (Port 4002)**
+- `/api/v1/emails/send` - Send single email
+- `/api/v1/emails/send-template` - Send template email
+- `/api/v1/emails/send-bulk` - Send bulk emails
+- `/health` - Health check
 
 ## 🗄️ Database Management
 
@@ -282,67 +388,99 @@ The application automatically uses the test database (`POSTGRES_DB_TEST`) when `
 
 ### Production with Docker
 
-1. **Build production image**
+Each service can be deployed independently:
+
+1. **Build production images**
    
-   For Core/Business Service:
    ```bash
-   docker-compose -f core/docker-compose.prod.yml build
-   ```
+   # Core/Business Service
+   docker-compose -f services/core/docker-compose.prod.yml build
    
-   For Auth Service:
-   ```bash
-   docker-compose -f auth/docker-compose.prod.yml build
+   # Auth Service
+   docker-compose -f services/auth/docker-compose.prod.yml build
+   
+   # Email Service
+   docker-compose -f services/email/docker-compose.prod.yml build
    ```
 
 2. **Deploy with production configuration**
    
-   For Core/Business Service:
    ```bash
-   docker-compose -f core/docker-compose.prod.yml up -d
-   ```
+   # Core/Business Service
+   docker-compose -p mynute-core-prod -f services/core/docker-compose.prod.yml up -d
    
-   For Auth Service:
-   ```bash
-   docker-compose -f auth/docker-compose.prod.yml up -d
+   # Auth Service
+   docker-compose -p mynute-auth-prod -f services/auth/docker-compose.prod.yml up -d
+   
+   # Email Service
+   docker-compose -p mynute-email-prod -f services/email/docker-compose.prod.yml up -d
    ```
 
 ### Manual Production Deployment
 
-1. **Build binary**
+1. **Build service binaries**
    
-   Business Service:
    ```bash
-   CGO_ENABLED=0 GOOS=linux go build -o mynute-backend-app ./cmd/business-service
-   ```
+   # Core/Business Service
+   CGO_ENABLED=0 GOOS=linux go build -o bin/mynute-core ./cmd/business-service
    
-   Auth Service:
-   ```bash
-   CGO_ENABLED=0 GOOS=linux go build -o mynute-auth-app ./cmd/auth-service
+   # Auth Service
+   CGO_ENABLED=0 GOOS=linux go build -o bin/mynute-auth ./cmd/auth-service
+   
+   # Email Service
+   CGO_ENABLED=0 GOOS=linux go build -o bin/mynute-email ./cmd/email-service
    ```
 
-2. **Run migrations manually**
+2. **Run migrations manually** (Core and Auth services only)
    ```bash
    make migrate-up
    ```
 
-3. **Start application**
+3. **Start services**
    ```bash
-   ./mynute-backend-app
+   # Start each service on its designated port
+   ./bin/mynute-core   # Port 4000
+   ./bin/mynute-auth   # Port 4001
+   ./bin/mynute-email  # Port 4002
    ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
+**Core Service**
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `APP_ENV` | Application environment (dev/test/prod) | `dev` |
-| `PORT` | Server port | `4000` |
+| `APP_PORT` | Server port | `4000` |
 | `POSTGRES_HOST` | PostgreSQL host | `localhost` |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `RESEND_API_KEY` | Resend email API key | Required for email |
+| `POSTGRES_DB` | Main database name | Required |
 | `AWS_ACCESS_KEY_ID` | AWS access key | Required for S3 |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Required for S3 |
+
+**Auth Service**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APP_ENV` | Application environment | `dev` |
+| `AUTH_SERVICE_PORT` | Auth service port | `4001` |
+| `POSTGRES_HOST` | PostgreSQL host | `localhost` |
+| `POSTGRES_AUTH_DB` | Auth database name | Required |
+| `JWT_SECRET` | JWT signing secret | Required |
+| `JWT_EXPIRATION` | Token expiration time | `24h` |
+
+**Email Service**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APP_ENV` | Application environment | `dev` |
+| `EMAIL_SERVICE_PORT` | Email service port | `4002` |
+| `RESEND_API_KEY` | Resend email API key | Required (prod) |
+| `RESEND_DEFAULT_FROM` | Default sender email | Required |
+| `MAILHOG_HOST` | MailHog host (dev) | `localhost` |
+| `MAILHOG_PORT` | MailHog port (dev) | `1025` |
 
 ### Multi-tenant Configuration
 
@@ -368,10 +506,17 @@ Each company gets its own database schema for data isolation:
 
 ## 📖 Additional Documentation
 
-- [Database Migrations Guide](docs/MIGRATIONS.md)
-- [Migration Workflow](docs/MIGRATION_WORKFLOW.md)
-- [Email System Documentation](core/src/lib/email/README.md)
-- [API Documentation](docs/swagger.yaml)
+- **Microservices**:
+  - [Core Service Documentation](services/core/README.md)
+  - [Auth Service Documentation](services/auth/README.md)
+  - [Email Service Documentation](services/email/README.md)
+  
+- **Development**:
+  - [Admin Panel Documentation](services/core/admin/README.md)
+  - [Integration Tests](services/auth/api/controller/INTEGRATION_TESTS.md)
+  
+- **Deployment**:
+  - [Monorepo Guide](MONOREPO.md)
 
 ## 📄 License
 
