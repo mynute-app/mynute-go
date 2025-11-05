@@ -26,7 +26,7 @@ func main() {
 	fmt.Println("║          Mynute Microservices Architecture                    ║")
 	fmt.Println("╚═══════════════════════════════════════════════════════════════╝")
 	fmt.Println()
-	fmt.Println("This project has been refactored into separate microservices.")
+	fmt.Println("This project uses separate microservices.")
 	fmt.Println()
 	fmt.Println("Available services:")
 	fmt.Println("  • Business Service (Core) - Port 4000")
