@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"mynute-go/services/core"
+	_ "mynute-go/services/core/docs"
 	"os"
 )
 

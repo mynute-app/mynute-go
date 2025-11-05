@@ -11,7 +11,6 @@ import (
 	"mynute-go/services/core/api/routes"
 	database "mynute-go/services/core/config/db"
 	"mynute-go/services/core/config/db/model"
-	_ "mynute-go/services/core/docs"
 	"os"
 
 	"github.com/gofiber/fiber/v2"

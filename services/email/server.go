@@ -5,7 +5,6 @@ import (
 	"log"
 	"log/slog"
 	"mynute-go/services/email/api/lib"
-	_ "mynute-go/services/email/docs" // Import swagger docs
 	"os"
 
 	"github.com/gofiber/fiber/v2"

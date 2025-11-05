@@ -7,7 +7,6 @@ import (
 	"mynute-go/services/auth/api/routes"
 	database "mynute-go/services/auth/config/db"
 	"mynute-go/services/auth/config/db/model"
-	_ "mynute-go/services/auth/docs"
 	"mynute-go/services/auth/lib"
 	"os"
 

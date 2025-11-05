@@ -6,7 +6,6 @@ import (
 	"mynute-go/services/auth"
 	"mynute-go/services/core"
 	"mynute-go/services/email"
-	_ "mynute-go/services/email/docs"
 	"os"
 	"os/signal"
 	"sync"
