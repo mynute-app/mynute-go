@@ -212,3 +212,78 @@ func HealthCheck(c *fiber.Ctx) error {
 		Version: "1.0",
 	})
 }
+
+// SendTemplateMerge godoc
+//
+//	@Summary		Send email by merging template HTML with translations
+//	@Description	Receives template HTML, translations map, and custom data, merges them, and sends the email
+//	@Tags			Email
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.SendTemplateMergeRequest	true	"Template merge request"
+//	@Success		200		{object}	dto.EmailSuccessResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/v1/emails/send-template-merge [post]
+func SendTemplateMerge(c *fiber.Ctx) error {
+	var req dto.SendTemplateMergeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResponse{
+			Error:   "Invalid request body",
+			Details: err.Error(),
+		})
+	}
+
+	// Get subject from translations
+	subject, ok := req.Translations["subject"].(string)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResponse{
+			Error:   "Missing subject in translations",
+			Details: "translations must contain a 'subject' key",
+		})
+	}
+
+	// Merge translations with custom data (custom data takes precedence)
+	mergedData := make(map[string]interface{})
+	for k, v := range req.Translations {
+		mergedData[k] = v
+	}
+	for k, v := range req.Data {
+		mergedData[k] = v
+	}
+
+	// Render the template with merged data
+	rendered, err := TemplateRenderer.RenderFromString(req.TemplateHTML, mergedData)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
+			Error:   "Failed to render email template",
+			Details: err.Error(),
+		})
+	}
+
+	// Create email data
+	emailData := emailLib.EmailData{
+		To:      req.To,
+		Subject: subject,
+		Html:    rendered,
+		Cc:      req.CC,
+		Bcc:     req.BCC,
+	}
+
+	// Send email
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := EmailProvider.Send(ctx, emailData); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
+			Error:   "Failed to send email",
+			Details: err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.EmailSuccessResponse{
+		Success: true,
+		Message: "Template merge email sent successfully",
+		To:      req.To[0], // Return first recipient
+	})
+}
