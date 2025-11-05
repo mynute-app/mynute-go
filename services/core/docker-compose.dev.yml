@@ -78,7 +78,7 @@ services:
     image: prom/prometheus:v3.4.1
     restart: always
     volumes:
-      - ../prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     depends_on:
@@ -109,7 +109,7 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
-      - ../loki-config.yaml:/etc/loki/loki-config.yaml
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
       - loki-index:/loki/index
       - loki-cache:/loki/cache
       - loki-chunks:/loki/chunks
