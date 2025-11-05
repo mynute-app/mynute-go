@@ -222,7 +222,7 @@ func (u *Client) SendLoginCode(s int) error {
 
 func (u *Client) GetLoginCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)
@@ -258,7 +258,7 @@ func (u *Client) SendPasswordResetEmail(s int) error {
 
 func (u *Client) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)
@@ -315,7 +315,7 @@ func (u *Client) SendVerificationEmail(s int) error {
 
 func (u *Client) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.GetLatestMessageTo(u.Email)

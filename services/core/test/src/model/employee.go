@@ -461,7 +461,7 @@ func (e *Employee) SendLoginCode(s int, x_company_id *string) error {
 
 func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get all messages to find the login validation email
 	messages, err := mailhog.GetMessages()
@@ -470,7 +470,7 @@ func (e *Employee) GetLoginCodeFromEmail() (string, error) {
 	}
 
 	// Search for the most recent login validation email (searching from newest to oldest)
-	var loginMessage *emailclient.MailHogMessage
+	var loginMessage *email.MailHogMessage
 	for i := len(messages) - 1; i >= 0; i-- {
 		msg := &messages[i]
 
@@ -533,7 +533,7 @@ func (e *Employee) SendPasswordResetEmail(s int, x_company_id *string) error {
 
 func (e *Employee) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the employee
 	message, err := mailhog.GetLatestMessageTo(e.Email)
@@ -598,7 +598,7 @@ func (e *Employee) SendVerificationEmail(s int, x_company_id *string) error {
 
 func (e *Employee) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the employee
 	message, err := mailhog.GetLatestMessageTo(e.Email)

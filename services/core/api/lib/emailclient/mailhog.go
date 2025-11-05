@@ -1,4 +1,4 @@
-package emailclient
+package email
 
 import (
 	"encoding/json"

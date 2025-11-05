@@ -93,8 +93,8 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 	language := c.Query("language", "en")
 
 	// Send email using email service
-	emailClient := emailclient.New()
-	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+	emailClient := email.New()
+	err = emailClient.SendTemplate(&email.SendTemplateRequest{
 		To:           user_email,
 		TemplateName: "login_validation_code",
 		Language:     language,
@@ -126,8 +126,8 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 	language := c.Query("language", "en")
 
 	// Send email using email service
-	emailClient := emailclient.New()
-	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+	emailClient := email.New()
+	err = emailClient.SendTemplate(&email.SendTemplateRequest{
 		To:           user_email,
 		TemplateName: "new_password",
 		Language:     language,
@@ -190,8 +190,8 @@ func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
 	}
 
 	// Send email using email service
-	emailClient := emailclient.New()
-	err = emailClient.SendTemplate(&emailclient.SendTemplateRequest{
+	emailClient := email.New()
+	err = emailClient.SendTemplate(&email.SendTemplateRequest{
 		To:           user_email,
 		TemplateName: "email_verification_code",
 		Language:     language,

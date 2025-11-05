@@ -63,7 +63,7 @@ func (a *Admin) SendPasswordResetEmail(s int) error {
 
 func (a *Admin) GetNewPasswordFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the admin
 	message, err := mailhog.FindMessageByRecipient(a.Created.UserID.String() /* Email on User */)
@@ -121,7 +121,7 @@ func (a *Admin) SendVerificationEmail(s int) error {
 
 func (a *Admin) GetVerificationCodeFromEmail() (string, error) {
 	// Initialize MailHog client
-	mailhog := emailclient.NewMailHogClient()
+	mailhog := email.NewMailHogClient()
 
 	// Get the latest email sent to the client
 	message, err := mailhog.FindMessageByRecipient(a.Created.UserID.String() /* Email on User */)
