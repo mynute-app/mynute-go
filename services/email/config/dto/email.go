@@ -10,16 +10,6 @@ type SendEmailRequest struct {
 	IsHTML  bool     `json:"is_html" example:"true"`
 }
 
-// SendTemplateEmailRequest represents a request to send an email using a template
-type SendTemplateEmailRequest struct {
-	To           string                 `json:"to" validate:"required,email" example:"recipient@example.com"`
-	TemplateName string                 `json:"template_name" validate:"required" example:"login_validation_code"`
-	Language     string                 `json:"language" validate:"required" example:"en"`
-	Data         map[string]interface{} `json:"data"`
-	CC           []string               `json:"cc,omitempty" example:"cc@example.com"`
-	BCC          []string               `json:"bcc,omitempty" example:"bcc@example.com"`
-}
-
 // SendTemplateMergeRequest represents a request to send an email by merging template HTML with translations
 // This is used when the calling service (e.g., Core) sends the template HTML and translations directly
 type SendTemplateMergeRequest struct {

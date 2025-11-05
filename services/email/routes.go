@@ -2,7 +2,6 @@ package email
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"mynute-go/services/email/api/controller"
 	emailLib "mynute-go/services/email/api/lib"
@@ -20,10 +19,8 @@ func initEmailServices() error {
 		return fmt.Errorf("failed to initialize email provider: %w", err)
 	}
 
-	// Initialize template renderer
-	staticPath := filepath.Join(".", "static", "email")
-	translationPath := filepath.Join(".", "translation", "email")
-	controller.TemplateRenderer = emailLib.NewTemplateRenderer(staticPath, translationPath)
+	// Initialize template renderer (for send-template-merge endpoint)
+	controller.TemplateRenderer = emailLib.NewTemplateRenderer("", "")
 
 	return nil
 }
@@ -39,7 +36,6 @@ func setupRoutes(app *fiber.App) {
 	// Email endpoints
 	emails := api.Group("/emails")
 	emails.Post("/send", controller.SendEmail)
-	emails.Post("/send-template", controller.SendTemplateEmail)
 	emails.Post("/send-template-merge", controller.SendTemplateMerge)
 	emails.Post("/send-bulk", controller.SendBulkEmail)
 }

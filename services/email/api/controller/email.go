@@ -2,8 +2,8 @@ package controller
 
 import (
 	"context"
-	"mynute-go/services/email/config/dto"
 	emailLib "mynute-go/services/email/api/lib"
+	"mynute-go/services/email/config/dto"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -63,63 +63,6 @@ func SendEmail(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(dto.EmailSuccessResponse{
 		Success: true,
 		Message: "Email sent successfully",
-		To:      req.To,
-	})
-}
-
-// SendTemplateEmail godoc
-//
-//	@Summary		Send an email using a template
-//	@Description	Send an email using a predefined template with dynamic data
-//	@Tags			Email
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		dto.SendTemplateEmailRequest	true	"Template email request"
-//	@Success		200		{object}	dto.EmailSuccessResponse
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		500		{object}	dto.ErrorResponse
-//	@Router			/api/v1/emails/send-template [post]
-func SendTemplateEmail(c *fiber.Ctx) error {
-	var req dto.SendTemplateEmailRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResponse{
-			Error:   "Invalid request body",
-			Details: err.Error(),
-		})
-	}
-
-	// Render the email template
-	rendered, err := TemplateRenderer.RenderEmail(req.TemplateName, req.Language, req.Data)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
-			Error:   "Failed to render email template",
-			Details: err.Error(),
-		})
-	}
-
-	// Create email data
-	emailData := emailLib.EmailData{
-		To:      []string{req.To},
-		Subject: rendered.Subject,
-		Html:    rendered.HTMLBody,
-		Cc:      req.CC,
-		Bcc:     req.BCC,
-	}
-
-	// Send email
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := EmailProvider.Send(ctx, emailData); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
-			Error:   "Failed to send email",
-			Details: err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(dto.EmailSuccessResponse{
-		Success: true,
-		Message: "Template email sent successfully",
 		To:      req.To,
 	})
 }

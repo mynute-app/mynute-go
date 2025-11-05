@@ -4,11 +4,12 @@ A dedicated microservice for handling all email operations in the mynute-go appl
 
 ## Overview
 
-The Email Service is responsible for **email delivery only**. It does not store templates or business logic - that responsibility belongs to the Core Service. The Email Service provides three delivery methods:
+The Email Service is responsible for **email delivery only**. It does not store templates or business logic - that responsibility belongs to the Core Service. 
 
-1. **Simple Send**: Direct email with subject and body
-2. **Template Send**: Uses Email Service's own templates
-3. **Template Merge Send**: Receives template HTML and translations from calling service (e.g., Core)
+**Email Service provides two delivery methods:**
+1. **Simple Send**: Direct email with subject and body (plain text or HTML)
+2. **Template Merge Send**: Receives template HTML and translations from calling service (e.g., Core), merges data, and sends
+3. **Bulk Send**: Send the same email to multiple recipients
 
 ## Architecture Principle
 
@@ -76,7 +77,7 @@ Returns service health status.
 POST /api/v1/emails/send
 ```
 
-Send a single email directly.
+Send a single email directly with plain text or HTML content.
 
 **Request Body:**
 ```json
@@ -90,34 +91,12 @@ Send a single email directly.
 }
 ```
 
-### Send Template Email
-```http
-POST /api/v1/emails/send-template
-```
-
-Send an email using templates stored in the Email Service.
-
-**Request Body:**
-```json
-{
-  "to": "user@example.com",
-  "template_name": "email_verification_code",
-  "language": "en",
-  "data": {
-    "code": "123456",
-    "username": "John Doe"
-  },
-  "cc": [],
-  "bcc": []
-}
-```
-
-### Send Template Merge Email (NEW)
+### Send Template Merge Email
 ```http
 POST /api/v1/emails/send-template-merge
 ```
 
-**Purpose**: Allows other services (like Core) to send their own templates for rendering and delivery.
+**Purpose**: Receives template HTML and translations from calling services (like Core) for rendering and delivery.
 
 **Use Case**: Core Service stores templates at `services/core/api/view/html/email/*.html` and translations at `services/core/api/view/translation/email/*.json`. Core reads these files and sends them to Email Service for merging and delivery.
 
