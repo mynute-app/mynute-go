@@ -62,13 +62,13 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Description	Create a new admin user
 //	@Tags			Admin
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin			body		DTO.AdminCreateRequest	true	"Admin creation data"
-//	@Success		201				{object}	DTO.Admin
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Param			admin	body		DTO.AdminCreateRequest	true	"Admin creation data"
+//	@Success		201		{object}	DTO.Admin
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/admin [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
@@ -173,8 +173,8 @@ func GetAdminById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Admin ID"
-//	@Param			admin	body		DTO.AdminUpdateRequest		true	"Admin"
+//	@Param			id		path		string					true	"Admin ID"
+//	@Param			admin	body		DTO.AdminUpdateRequest	true	"Admin"
 //	@Success		200		{object}	DTO.Admin
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/admin/{id} [patch]

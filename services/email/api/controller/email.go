@@ -21,7 +21,7 @@ var (
 //	@Tags			Email
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.SendEmailRequest		true	"Email request"
+//	@Param			request	body		dto.SendEmailRequest	true	"Email request"
 //	@Success		200		{object}	dto.EmailSuccessResponse
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Failure		500		{object}	dto.ErrorResponse

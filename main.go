@@ -12,14 +12,14 @@ import (
 	"syscall"
 )
 
-// @title						Mynute Microservices
-// @version					1.0
-// @description				Mynute microservices architecture
-// @termsOfService				http://swagger.io/terms/
-// @contact.name				API Support
-// @contact.email				support@mynute.com
-// @license.name				Apache 2.0
-// @license.url				http://www.apache.org/licenses/LICENSE-2.0.html
+//	@title			Mynute Microservices
+//	@version		1.0
+//	@description	Mynute microservices architecture
+//	@termsOfService	http://swagger.io/terms/
+//	@contact.name	API Support
+//	@contact.email	support@mynute.com
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 func main() {
 	fmt.Println("╔═══════════════════════════════════════════════════════════════╗")

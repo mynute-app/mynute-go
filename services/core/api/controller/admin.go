@@ -23,7 +23,7 @@ import (
 //	@Tags			Admin Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			login	body		DTO.AdminLoginRequest	true	"Admin login credentials"
+//	@Param			login	body	DTO.AdminLoginRequest	true	"Admin login credentials"
 //	@Success		200		"Token returned in X-Auth-Token header"
 //	@Failure		401		{object}	DTO.ErrorResponse
 //	@Failure		400		{object}	DTO.ErrorResponse
@@ -87,13 +87,13 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Description	Create a new admin user
 //	@Tags			Admin
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin			body		DTO.AdminCreateRequest	true	"Admin creation data"
-//	@Success		201				{object}	DTO.Admin
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Param			admin	body		DTO.AdminCreateRequest	true	"Admin creation data"
+//	@Success		201		{object}	DTO.Admin
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
@@ -493,7 +493,7 @@ func ResetAdminPasswordByEmail(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			email			path	string	true	"Admin Email"
-//	@Query			language		query	string	false	"Language for the email content"
+//	@Query			language				query	string	false	"Language for the email content"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse

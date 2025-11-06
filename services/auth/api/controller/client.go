@@ -40,7 +40,7 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Summary		Get client by email
 //	@Description	Retrieve a client by its email
 //	@Tags			Client
-//	@Param			email	path		string	true	"Client Email"
+//	@Param			email	path	string	true	"Client Email"
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -96,8 +96,8 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string						true	"Client ID"
-//	@Param			client	body		DTO.UpdateClientRequest		true	"Client"
+//	@Param			id		path		string					true	"Client ID"
+//	@Param			client	body		DTO.UpdateClientRequest	true	"Client"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [patch]

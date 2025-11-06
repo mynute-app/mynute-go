@@ -24,9 +24,9 @@ import (
 //	@Description	Create a service
 //	@Tags			Service
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string				true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	DTO.ErrorResponse
-//	@Param			X-Company-ID	header		string				true	"X-Company-ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.CreateService	true	"Service"
@@ -55,13 +55,13 @@ func CreateService(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object} DTO.ErrorResponse
+//	@Failure		401				{object}	DTO.ErrorResponse
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object} DTO.Service
-//	@Failure		400	{object} DTO.ErrorResponse
+//	@Success		200	{object}	DTO.Service
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [get]
 func GetServiceById(c *fiber.Ctx) error {
 	var service model.Service
@@ -84,13 +84,13 @@ func GetServiceById(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object} DTO.ErrorResponse
+//	@Failure		401				{object}	DTO.ErrorResponse
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Param			name			path		string	true	"Service Name"
 //	@Produce		json
-//	@Success		200	{object} DTO.Service
-//	@Failure		400	{object} DTO.ErrorResponse
+//	@Success		200	{object}	DTO.Service
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/service/name/{name} [get]
 func GetServiceByName(c *fiber.Ctx) error {
 	var service model.Service
@@ -113,14 +113,14 @@ func GetServiceByName(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object} DTO.ErrorResponse
+//	@Failure		401				{object}	DTO.ErrorResponse
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			service	body		DTO.Service	true	"Service"
-//	@Success		200		{object} DTO.Service
-//	@Failure		404		{object} DTO.ErrorResponse
+//	@Success		200		{object}	DTO.Service
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [patch]
 func UpdateServiceById(c *fiber.Ctx) error {
 	var service model.Service
@@ -143,12 +143,12 @@ func UpdateServiceById(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object} DTO.ErrorResponse
+//	@Failure		401				{object}	DTO.ErrorResponse
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
-//	@Success		200	{object} DTO.ErrorResponse
-//	@Failure		404	{object} DTO.ErrorResponse
+//	@Success		200	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/service/{id} [delete]
 func DeleteServiceById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Service{})
@@ -161,7 +161,7 @@ func DeleteServiceById(c *fiber.Ctx) error {
 //	@Tags			Service
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Failure		401				{object} DTO.ErrorResponse
+//	@Failure		401				{object}	DTO.ErrorResponse
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"Service ID"
 //	@Accept			multipart/form-data
@@ -190,8 +190,8 @@ func UpdateServiceImages(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	DTO.ErrorResponse
-//	@Param			X-Company-ID	header		string			true	"X-Company-ID"
-//	@Param			id				path		string			true	"Service ID"
+//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			id				path		string	true	"Service ID"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.Images
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -220,8 +220,8 @@ func DeleteServiceImage(c *fiber.Ctx) error {
 //	@Param			date_forward_start	query	number	true	"The start date for the forward search in number format"
 //	@Param			date_forward_end	query	number	true	"The end date for the forward search in number format"
 //	@Produce		json
-//	@Success		200	{object} DTO.ServiceAvailability
-//	@Failure		400	{object} DTO.ErrorResponse
+//	@Success		200	{object}	DTO.ServiceAvailability
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/service/{id}/availability [get]
 func GetServiceAvailability(c *fiber.Ctx) error {
 	// Step 1: Validate and parse query parameters

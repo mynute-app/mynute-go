@@ -21,7 +21,7 @@ import (
 //	@Description	Retrieve all policy rules
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Produce		json
 //	@Success		200	{array}		authModel.PolicyRule
 //	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
@@ -50,8 +50,8 @@ func ListPolicies(c *fiber.Ctx) error {
 //	@Description	Retrieve a policy rule by its ID
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			id				path		string	true	"Policy ID"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	authModel.PolicyRule
 //	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
@@ -94,12 +94,12 @@ func GetPolicyById(c *fiber.Ctx) error {
 //	@Description	Create a new policy rule
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			policy			body		PolicyCreateRequest		true	"Policy data"
-//	@Success		201				{object}	authModel.PolicyRule
-//	@Failure		400				{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Param			policy	body		PolicyCreateRequest	true	"Policy data"
+//	@Success		201		{object}	authModel.PolicyRule
+//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies [post]
 func CreatePolicy(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -169,14 +169,14 @@ func CreatePolicy(c *fiber.Ctx) error {
 //	@Description	Update a policy rule
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			id				path		string					true	"Policy ID"
-//	@Param			policy			body		PolicyUpdateRequest		true	"Policy data"
-//	@Success		200				{object}	authModel.PolicyRule
-//	@Failure		400				{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404				{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Param			id		path		string				true	"Policy ID"
+//	@Param			policy	body		PolicyUpdateRequest	true	"Policy data"
+//	@Success		200		{object}	authModel.PolicyRule
+//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		404		{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [patch]
 func UpdatePolicyById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -268,8 +268,8 @@ func UpdatePolicyById(c *fiber.Ctx) error {
 //	@Description	Delete a policy rule by its ID
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			id				path		string	true	"Policy ID"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
 //	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse

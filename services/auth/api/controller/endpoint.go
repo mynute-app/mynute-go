@@ -20,7 +20,7 @@ import (
 //	@Description	Retrieve all endpoints
 //	@Tags			Endpoints
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Produce		json
 //	@Success		200	{array}		authModel.EndPoint
 //	@Failure		400	{object}	map[string]string
@@ -49,8 +49,8 @@ func ListEndpoints(c *fiber.Ctx) error {
 //	@Description	Retrieve an endpoint by its ID
 //	@Tags			Endpoints
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			id				path		string	true	"Endpoint ID"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Endpoint ID"
 //	@Produce		json
 //	@Success		200	{object}	authModel.EndPoint
 //	@Failure		400	{object}	map[string]string
@@ -93,12 +93,12 @@ func GetEndpointById(c *fiber.Ctx) error {
 //	@Description	Create a new endpoint
 //	@Tags			Endpoints
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			endpoint		body		EndpointCreateRequest	true	"Endpoint data"
-//	@Success		201				{object}	authModel.EndPoint
-//	@Failure		400				{object}	map[string]string
+//	@Param			endpoint	body		EndpointCreateRequest	true	"Endpoint data"
+//	@Success		201			{object}	authModel.EndPoint
+//	@Failure		400			{object}	map[string]string
 //	@Router			/endpoints [post]
 func CreateEndpoint(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -182,14 +182,14 @@ func CreateEndpoint(c *fiber.Ctx) error {
 //	@Description	Update an endpoint
 //	@Tags			Endpoints
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string					true	"X-Auth-Token"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			id				path		string					true	"Endpoint ID"
-//	@Param			endpoint		body		EndpointUpdateRequest	true	"Endpoint data"
-//	@Success		200				{object}	authModel.EndPoint
-//	@Failure		400				{object}	map[string]string
-//	@Failure		404				{object}	map[string]string
+//	@Param			id			path		string					true	"Endpoint ID"
+//	@Param			endpoint	body		EndpointUpdateRequest	true	"Endpoint data"
+//	@Success		200			{object}	authModel.EndPoint
+//	@Failure		400			{object}	map[string]string
+//	@Failure		404			{object}	map[string]string
 //	@Router			/endpoints/{id} [patch]
 func UpdateEndpointById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -289,8 +289,8 @@ func UpdateEndpointById(c *fiber.Ctx) error {
 //	@Description	Delete an endpoint by its ID
 //	@Tags			Endpoints
 //	@Security		ApiKeyAuth
-//	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			id				path		string	true	"Endpoint ID"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			id				path	string	true	"Endpoint ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
 //	@Failure		400	{object}	map[string]string

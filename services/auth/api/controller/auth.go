@@ -62,11 +62,11 @@ func LoginClientByEmailCode(c *fiber.Ctx) error {
 //	@Summary		Send client login validation code by email
 //	@Description	Send a login validation code to a client's email
 //	@Tags			Client/Auth
-//	@Param			email	path	string	true	"Client Email"
+//	@Param			email		path	string	true	"Client Email"
 //	@Query			language	query	string	false	"Language code (default: en)"
 //	@Produce		json
-//	@Success		200		{object}	nil
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Success		200	{object}	nil
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/auth/client/send-login-code/email/{email} [post]
 func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
 	if err := SendLoginValidationCodeByEmail(namespace.ClientKey.Name, c); err != nil {
@@ -132,7 +132,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Employee Email"
-//	@Query			language		query	string	false	"Language code (default: en)"
+//	@Query			language				query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/auth/employee/send-login-code/email/{email} [post]
@@ -180,7 +180,7 @@ func AdminLoginByPassword(c *fiber.Ctx) error {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			X-Auth-Token	header	string	true	"JWT token to validate"
+//	@Param			X-Auth-Token	header		string	true	"JWT token to validate"
 //	@Success		200				{object}	DTO.Claims
 //	@Failure		401				{object}	DTO.ErrorResponse
 //	@Router			/auth/validate [post]
@@ -206,7 +206,7 @@ func ValidateToken(c *fiber.Ctx) error {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			X-Auth-Token	header	string	true	"JWT admin token to validate"
+//	@Param			X-Auth-Token	header		string	true	"JWT admin token to validate"
 //	@Success		200				{object}	DTO.AdminClaims
 //	@Failure		401				{object}	DTO.ErrorResponse
 //	@Router			/auth/validate-admin [post]
