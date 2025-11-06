@@ -12,19 +12,19 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV} -p ${POSTGRES_PORT}"]
       interval: 300s
       timeout: 5s
       retries: 10
       start_period: 5s
     command: >
       bash -c "
-        echo '✅   Starting PostgreSQL...';
-        docker-entrypoint.sh postgres & 
+        echo '✅   Starting PostgreSQL on port 5433...';
+        docker-entrypoint.sh postgres -p \"$POSTGRES_PORT\" & 
 
         # Wait for PostgreSQL to be fully ready
         echo '⏳   Waiting for PostgreSQL to start...';
-        until pg_isready -h localhost -p 5433 -U $POSTGRES_USER; do
+        until pg_isready -h localhost -p \"$POSTGRES_PORT\" -U $POSTGRES_USER; do
           echo '⏳   Still waiting for PostgreSQL...';
           sleep 5;
         done;
@@ -33,38 +33,38 @@ services:
 
         # Ensure the main database exists
         echo \"Checking if main database '$POSTGRES_DB' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'\" | grep -q 1; then
+        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'\" | grep -q 1; then
           echo '✅   Main database \"$POSTGRES_DB\" already exists.';
         else
           echo '🚀   Creating main database: \"$POSTGRES_DB\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB\\\";\";
+          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB\\\";\";
         fi;
 
         # Check if test database exists and create schema 'public'
         echo \"Checking if test database '$POSTGRES_DB_TEST' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_TEST'\" | grep -q 1; then
+        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_TEST'\" | grep -q 1; then
           echo '✅   Test database \"$POSTGRES_DB_TEST\" already exists.';
         else
           echo '🚀   Creating test database: \"$POSTGRES_DB_TEST\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
+          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
         fi;
 
         echo \"Checking if dev database '$POSTGRES_DB_DEV' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_DEV'\" | grep -q 1; then
+        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_DEV'\" | grep -q 1; then
           echo '✅   Dev database \"$POSTGRES_DB_DEV\" already exists.';
         else
           echo '🚀   Creating dev database: \"$POSTGRES_DB_DEV\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_DEV\\\";\";
+          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_DEV\\\";\";
         fi;
 
         echo '🔧   Ensuring schema public exists on main database...'
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
+        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
         
         echo '🔧   Ensuring schema public exists on test database...';
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
+        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
 
         echo '🔧   Ensuring schema public exists on dev database...'
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_DEV\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
+        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_DEV\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
 
         echo '🎉   Database initialization complete!';
 

@@ -59,7 +59,7 @@ func NewServer() *Server {
 	if app_env == "dev" || app_env == "test" {
 		// Migrate auth database (endpoints, policies, resources, users, roles)
 		log.Println("Migrating auth database...")
-		db.WithDB(db.AuthDB).Migrate(model.AuthDBModels)
+		db.WithDB(db.Gorm).Migrate(model.AuthDBModels)
 
 		// Run initial seeding (auth-related data only)
 		log.Println("Seeding auth database...")
@@ -70,7 +70,7 @@ func NewServer() *Server {
 	}
 
 	// Setup auth routes
-	routes.SetupAuthRoutes(app, db.AuthDB)
+	routes.SetupAuthRoutes(app, db.Gorm)
 
 	// Swagger documentation
 	app.Get("/swagger/*", fiberSwagger.HandlerDefault)

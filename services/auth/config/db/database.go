@@ -12,8 +12,8 @@ import (
 )
 
 type Database struct {
-	AuthDB *gorm.DB // Auth database connection
-	Error  error
+	Gorm  *gorm.DB // Auth database connection
+	Error error
 }
 
 type Test struct {
@@ -21,49 +21,43 @@ type Test struct {
 	name string
 }
 
-// Connect establishes a connection to the auth database
+// Connects to the main business database
 func Connect() *Database {
-	// Get environment variables
-	host := os.Getenv("POSTGRES_AUTH_HOST")
-	user := os.Getenv("POSTGRES_AUTH_USER")
-	password := os.Getenv("POSTGRES_AUTH_PASSWORD")
-	dbName := os.Getenv("POSTGRES_AUTH_DB")
-	port := os.Getenv("POSTGRES_AUTH_PORT")
-
-	// Fallback to main DB connection settings if auth-specific vars not set
-	if host == "" {
-		host = os.Getenv("POSTGRES_HOST")
-	}
-	if user == "" {
-		user = os.Getenv("POSTGRES_USER")
-	}
-	if password == "" {
-		password = os.Getenv("POSTGRES_PASSWORD")
-	}
-	if port == "" {
-		port = os.Getenv("POSTGRES_PORT")
-	}
+		// Get environment variables
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	port := os.Getenv("POSTGRES_PORT")
 
 	app_env := os.Getenv("APP_ENV")
 	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")
 	LogLevel := logger.Warn
 
-	// Set auth database name based on environment
-	if dbName == "" {
-		switch app_env {
-		case "test":
-			dbName = os.Getenv("POSTGRES_DB_TEST")
-			if dbName == "" {
-				dbName = "mynute_auth_test"
-			}
-			LogLevel = logger.Info
-		case "dev":
-			dbName = "mynute_auth_dev"
-			LogLevel = logger.Warn
-		default:
-			dbName = "mynute_auth"
+	dbName := ""
+	switch app_env {
+	case "test":
+		dbName = os.Getenv("POSTGRES_DB_TEST")
+		if dbName == "" {
+			dbName = "testdb"
 		}
+		LogLevel = logger.Info
+	case "dev":
+		dbName = os.Getenv("POSTGRES_DB_DEV")
+		if dbName == "" {
+			dbName = "devdb"
+		}
+		LogLevel = logger.Warn
+	case "prod":
+		dbName = os.Getenv("POSTGRES_DB_PROD")
+		if dbName == "" {
+			dbName = "maindb"
+		}
+	default:
+		panic("APP_ENV must be one of 'dev', 'test', or 'prod'")
 	}
+
+	sslmode := "disable" // You can modify this based on your setup
+	timeZone := "UTC"    // Default time_zone
 
 	switch db_log_level {
 	case "info":
@@ -76,16 +70,14 @@ func Connect() *Database {
 		LogLevel = logger.Warn
 	}
 
-	log.Printf("Auth Service - Running in %s environment. Database: %s\n", app_env, dbName)
+	log.Printf("Running in %s environment. Database: %s\n", app_env, dbName)
 
 	// Build the DSN (Data Source Name)
-	sslmode := "disable"
-	timeZone := "UTC"
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		host, user, password, dbName, port, sslmode, timeZone)
 
 	customGormLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second,
 			LogLevel:                  LogLevel,
@@ -98,10 +90,10 @@ func Connect() *Database {
 		Logger: customGormLogger,
 	}
 
-	// Connect to the auth database
+	// Connect to the database
 	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
-		log.Fatal("Failed to connect to the auth database: ", err)
+		log.Fatal("Failed to connect to the database: ", err)
 	}
 
 	// Set the connection pool settings
@@ -110,14 +102,17 @@ func Connect() *Database {
 		log.Fatal("Failed to get database connection pool: ", err)
 	}
 
-	sqlDB.SetMaxIdleConns(10)                  // Max number of idle connections in the pool
-	sqlDB.SetMaxOpenConns(50)                  // Max number of open connections to the database
+	sqlDB.SetMaxIdleConns(20)                  // Max number of idle connections in the pool
+	sqlDB.SetMaxOpenConns(100)                 // Max number of open connections to the database
 	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Max lifetime of a connection in the pool
 	sqlDB.SetConnMaxIdleTime(2 * time.Second)  // Max idle time for a connection in the pool
 
+	// NOTE: Core service does NOT connect to auth database
+	// All auth operations should go through the auth service API at http://localhost:4001
+
 	dbWrapper := &Database{
-		AuthDB: db,
-		Error:  nil,
+		Gorm:  db,
+		Error: nil,
 	}
 
 	if app_env == "test" {
@@ -129,20 +124,20 @@ func Connect() *Database {
 
 // Migrate runs database migrations for auth models
 func (d *Database) Migrate(models []interface{}) error {
-	return d.AuthDB.AutoMigrate(models...)
+	return d.Gorm.AutoMigrate(models...)
 }
 
 // WithDB allows using a specific database connection
 func (d *Database) WithDB(db *gorm.DB) *Database {
 	return &Database{
-		AuthDB: db,
+		Gorm: db,
 		Error:  d.Error,
 	}
 }
 
 // Disconnect closes the database connection
 func (d *Database) Disconnect() {
-	sqlDB, err := d.AuthDB.DB()
+	sqlDB, err := d.Gorm.DB()
 	if err != nil {
 		log.Println("Failed to get database connection for closing:", err)
 		return
@@ -165,11 +160,11 @@ func (t *Test) Clear() {
 	log.Println("Clearing auth test database...")
 
 	// Delete all records from auth tables
-	t.AuthDB.Exec("DELETE FROM admin_roles")
-	t.AuthDB.Exec("DELETE FROM admins")
-	t.AuthDB.Exec("DELETE FROM policy_rules")
-	t.AuthDB.Exec("DELETE FROM resources")
-	t.AuthDB.Exec("DELETE FROM endpoints")
+	t.Gorm.Exec("DELETE FROM admin_roles")
+	t.Gorm.Exec("DELETE FROM admins")
+	t.Gorm.Exec("DELETE FROM policy_rules")
+	t.Gorm.Exec("DELETE FROM resources")
+	t.Gorm.Exec("DELETE FROM endpoints")
 
 	log.Println("Auth test database cleared")
 }

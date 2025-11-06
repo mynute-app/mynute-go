@@ -29,27 +29,41 @@ type Test struct {
 
 // Connects to the main business database
 func Connect() *Database {
-	// Get environment variables
+		// Get environment variables
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
 	port := os.Getenv("POSTGRES_PORT")
+
 	app_env := os.Getenv("APP_ENV")
 	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")
-	sslmode := "disable" // You can modify this based on your setup
-	timeZone := "UTC"    // Default time_zone
 	LogLevel := logger.Warn
 
-	if app_env == "test" {
+	dbName := ""
+	switch app_env {
+	case "test":
 		dbName = os.Getenv("POSTGRES_DB_TEST")
+		if dbName == "" {
+			dbName = "testdb"
+		}
 		LogLevel = logger.Info
-	} else if app_env == "dev" {
+	case "dev":
 		dbName = os.Getenv("POSTGRES_DB_DEV")
+		if dbName == "" {
+			dbName = "devdb"
+		}
 		LogLevel = logger.Warn
-	} else if app_env != "prod" {
-		log.Fatalf("Invalid APP_ENV: %s", app_env)
+	case "prod":
+		dbName = os.Getenv("POSTGRES_DB_PROD")
+		if dbName == "" {
+			dbName = "maindb"
+		}
+	default:
+		panic("APP_ENV must be one of 'dev', 'test', or 'prod'")
 	}
+
+	sslmode := "disable" // You can modify this based on your setup
+	timeZone := "UTC"    // Default time_zone
 
 	switch db_log_level {
 	case "info":
