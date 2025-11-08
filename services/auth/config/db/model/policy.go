@@ -8,12 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
-var AllowNilCompanyID = false
-var AllowNilCreatedBy = false
-var AllowNilResourceID = false
-
-// --- PolicyRule (Represents a policy rule for access control) ---
-type PolicyRule struct {
+// --- Policy (Represents a policy for access control) ---
+type Policy struct {
 	BaseModel
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
@@ -23,31 +19,22 @@ type PolicyRule struct {
 	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions"`
 }
 
-func (PolicyRule) TableName() string  { return "public.policy_rules" }
-func (PolicyRule) SchemaType() string { return "public" }
-
-func (PolicyRule) Indexes() map[string]string {
-	return map[string]string{
-		"idx_policy_company_endpoint": "CREATE INDEX idx_policy_company_endpoint ON policy_rules (company_id, end_point_id)",
-	}
-}
-
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
 type ConditionNode struct {
-	// Description explains the purpose of this node 
+	// Description explains the purpose of this node
 	// (e.g., "Client Access Check", "Company Membership Check")
 	Description string `json:"description,omitempty"`
 	// --- Fields for Branch Nodes (Logical Operators: AND, OR, NOT) ---
-	// LogicType specifies how to evaluate Children ("AND", "OR"). 
+	// LogicType specifies how to evaluate Children ("AND", "OR").
 	// Required for branch nodes.
-	LogicType string `json:"logic_type,omitempty"` 
-	// Children contains nested nodes to be evaluated. 
+	LogicType string `json:"logic_type,omitempty"`
+	// Children contains nested nodes to be evaluated.
 	// Required for branch nodes.
 	Children []ConditionNode `json:"children,omitempty"`
 	// --- Field for Leaf Nodes (Actual Condition Check) ---
-	// Leaf points to the actual condition details. 
+	// Leaf points to the actual condition details.
 	// Required for leaf nodes.
-	Leaf *ConditionLeaf `json:"leaf,omitempty"` 
+	Leaf *ConditionLeaf `json:"leaf,omitempty"`
 }
 
 // --- ConditionLeaf (Represents a single atomic check) ---
@@ -56,25 +43,25 @@ type ConditionLeaf struct {
 	// e.g., "subject.role_id","resource.employee_id",
 	// "path.employee_id","body.employee_id",
 	// "query.employee_id","header.employee_id"
-	Attribute string `json:"attribute"` 
+	Attribute string `json:"attribute"`
 	// Operator defines the comparison operation
-	// e.g., "Equals" - "==", "NotEquals" - "!=", 
+	// e.g., "Equals" - "==", "NotEquals" - "!=",
 	// "IsNull" - "== null", "IsNotNull" - "!= null"
-	Operator    string `json:"operator"`
-	// Description is a human-readable explanation of 
+	Operator string `json:"operator"`
+	// Description is a human-readable explanation of
 	// the check being performed.
 	// e.g., "Subject must be a Client"
-	Description string `json:"description,omitempty"` 
+	Description string `json:"description,omitempty"`
 	// --- Use EITHER Value OR ResourceAttribute ---
 	// Value is a static JSON value to compare against.
-	Value             json.RawMessage `json:"value,omitempty"`
+	Value json.RawMessage `json:"value,omitempty"`
 	// ResourceAttribute is the name of a dynamic attribute
 	// that can be used for comparison.
-	ResourceAttribute string          `json:"resource_attribute,omitempty"`
+	ResourceAttribute string `json:"resource_attribute,omitempty"`
 }
 
 // GetConditionsNode parses and validates the stored JSON conditions
-func (p *PolicyRule) GetConditionsNode() (ConditionNode, error) {
+func (p *Policy) GetConditionsNode() (ConditionNode, error) {
 	var node ConditionNode // Initialize empty node
 
 	// 1. Check for empty or null JSON content
@@ -234,19 +221,3 @@ func JsonRawMessage(v any) json.RawMessage {
 	}
 	return json.RawMessage(data)
 }
-
-type PolicyCfg struct {
-	AllowNilCompanyID bool // Allow policies to be created without company_id
-	AllowNilCreatedBy bool // Allow policies to be created without created_by
-}
-
-func Policies(policies []*PolicyRule, cfg *PolicyCfg) ([]*PolicyRule, func()) {
-	AllowNilCompanyID = cfg.AllowNilCompanyID
-	AllowNilCreatedBy = cfg.AllowNilCreatedBy
-	deferFnc := func() {
-		AllowNilCompanyID = false
-		AllowNilCreatedBy = false
-	}
-	return policies, deferFnc
-}
-
