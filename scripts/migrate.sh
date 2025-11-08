@@ -15,9 +15,25 @@ if [ -z "$APP_ENV" ]; then
     exit 1
 fi
 
-# Validate environment
-if [ "$APP_ENV" != "prod" ] && [ "$APP_ENV" != "dev" ] && [ "$APP_ENV" != "test" ]; then
-    echo "Error: APP_ENV must be one of: prod, dev, test"
+# Determine the database name based on APP_ENV
+case "$APP_ENV" in
+    prod)
+        DB_NAME="$POSTGRES_DB_PROD"
+        ;;
+    test)
+        DB_NAME="$POSTGRES_DB_TEST"
+        ;;
+    dev)
+        DB_NAME="$POSTGRES_DB_DEV"
+        ;;
+    *)
+        echo "Error: APP_ENV must be one of: prod, dev, test"
+        exit 1
+        ;;
+esac
+
+if [ -z "$DB_NAME" ]; then
+    echo "Error: Database name for the current APP_ENV is not set"
     exit 1
 fi
 
@@ -34,7 +50,7 @@ echo ""
 # Confirmation for production
 if [ "$APP_ENV" = "prod" ]; then
     echo "⚠️  WARNING: Running migrations in PRODUCTION environment!"
-    echo "Database: $POSTGRES_DB"
+    echo "Database: $DB_NAME"
     echo ""
     read -p "Are you sure you want to continue? (yes/no): " -r
     if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
@@ -47,16 +63,16 @@ fi
 # Run migration based on action
 case $ACTION in
     up)
-        echo "Running migrations..."
+        echo "Running migrations on database: $DB_NAME..."
         go run migrate/main.go -action=up -path=./migrations
         ;;
     down)
         STEPS=${2:-1}
-        echo "Rolling back $STEPS migration(s)..."
+        echo "Rolling back $STEPS migration(s) on database: $DB_NAME..."
         go run migrate/main.go -action=down -steps=$STEPS -path=./migrations
         ;;
     version)
-        echo "Checking migration version..."
+        echo "Checking migration version on database: $DB_NAME..."
         go run migrate/main.go -action=version -path=./migrations
         ;;
     force)
@@ -66,7 +82,7 @@ case $ACTION in
             echo "Usage: $0 force VERSION"
             exit 1
         fi
-        echo "Forcing migration to version $VERSION..."
+        echo "Forcing migration to version $VERSION on database: $DB_NAME..."
         go run migrate/main.go -action=force -version=$VERSION -path=./migrations
         ;;
     *)

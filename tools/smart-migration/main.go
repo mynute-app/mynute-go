@@ -108,11 +108,24 @@ func connectToDatabase() *gorm.DB {
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
 	port := os.Getenv("POSTGRES_PORT")
 
+	appEnv := os.Getenv("APP_ENV")
+	var dbName string
+
+	switch appEnv {
+	case "prod":
+		dbName = os.Getenv("POSTGRES_DB_PROD")
+	case "test":
+		dbName = os.Getenv("POSTGRES_DB_TEST")
+	case "dev":
+		dbName = os.Getenv("POSTGRES_DB_DEV")
+	default:
+		log.Fatal("APP_ENV must be one of 'prod', 'test', or 'dev'")
+	}
+
 	if dbName == "" {
-		log.Fatal("POSTGRES_DB environment variable is required")
+		log.Fatal("Database name for the current APP_ENV is not set")
 	}
 
 	log.Printf("Connecting to database: %s\n", dbName)

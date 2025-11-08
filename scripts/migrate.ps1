@@ -32,9 +32,25 @@ if (-not $appEnv) {
     exit 1
 }
 
-# Validate environment
-if ($appEnv -notin @("prod", "dev", "test")) {
-    Write-Error "Error: APP_ENV must be one of: prod, dev, test"
+# Determine the database name based on APP_ENV
+switch ($appEnv) {
+    "prod" {
+        $dbName = $env:POSTGRES_DB_PROD
+    }
+    "test" {
+        $dbName = $env:POSTGRES_DB_TEST
+    }
+    "dev" {
+        $dbName = $env:POSTGRES_DB_DEV
+    }
+    default {
+        Write-Error "Error: APP_ENV must be one of: prod, dev, test"
+        exit 1
+    }
+}
+
+if (-not $dbName) {
+    Write-Error "Error: Database name for the current APP_ENV is not set"
     exit 1
 }
 
@@ -42,13 +58,14 @@ Write-Host "================================" -ForegroundColor Cyan
 Write-Host "Database Migration Runner" -ForegroundColor Cyan
 Write-Host "Environment: $appEnv" -ForegroundColor Cyan
 Write-Host "Action: $Action" -ForegroundColor Cyan
+Write-Host "Database: $dbName" -ForegroundColor Cyan
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Confirmation for production
 if ($appEnv -eq "prod") {
     Write-Host "⚠️  WARNING: Running migrations in PRODUCTION environment!" -ForegroundColor Yellow
-    Write-Host "Database: $env:POSTGRES_DB" -ForegroundColor Yellow
+    Write-Host "Database: $dbName" -ForegroundColor Yellow
     Write-Host ""
     $confirmation = Read-Host "Are you sure you want to continue? (yes/no)"
     if ($confirmation -ne "yes") {
