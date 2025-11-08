@@ -53,10 +53,18 @@ func NewServer() *Server {
 	lib.LoadEnv()
 	db := database.Connect()
 
+	// Validate APP_ENV
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "" {
+		log.Fatal("Error: APP_ENV is not set")
+	}
+	if appEnv != "prod" && appEnv != "test" && appEnv != "dev" {
+		log.Fatal("Error: Invalid APP_ENV. Must be one of 'prod', 'test', or 'dev'")
+	}
+
 	// Only run migrations and seeding in dev/test environments
 	// Production migrations must be run manually before deployment
-	app_env := os.Getenv("APP_ENV")
-	if app_env == "dev" || app_env == "test" {
+	if appEnv == "dev" || appEnv == "test" {
 		// Migrate auth database (endpoints, policies, resources, users, roles)
 		log.Println("Migrating auth database...")
 		db.WithDB(db.Gorm).Migrate(model.AuthDBModels)

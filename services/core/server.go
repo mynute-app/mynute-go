@@ -75,6 +75,16 @@ func NewServer() *Server {
 		panic(err)
 	}
 	debug.Clear()
+
+	// Validate APP_ENV
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "" {
+		log.Fatal("Error: APP_ENV is not set")
+	}
+	if appEnv != "prod" && appEnv != "test" && appEnv != "dev" {
+		log.Fatal("Error: Invalid APP_ENV. Must be one of 'prod', 'test', or 'dev'")
+	}
+
 	return &Server{App: app, Db: db}
 }
 
