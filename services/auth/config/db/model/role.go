@@ -15,7 +15,7 @@ type Role struct {
 	BaseModel              // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
 	Name        string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
 	Description string     `json:"description"`
-	CompanyID   *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
+	TenantID    *uuid.UUID `gorm:"type:uuid;index" json:"tenant_id"` // Optional tenant ID for multi-tenant setups
 	// Company reference removed - business logic belongs in core service
 }
 
@@ -30,7 +30,7 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 	} else if is {
 		return lib.Error.Role.NameReserved
 	}
-	if r.ID == uuid.Nil && !AllowSystemRoleCreation && r.CompanyID == nil {
+	if r.ID == uuid.Nil && !AllowSystemRoleCreation && r.TenantID == nil {
 		return lib.Error.Role.NilCompanyID
 	}
 	return nil
