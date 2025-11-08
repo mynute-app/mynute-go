@@ -16,8 +16,12 @@ services:
       - POSTGRES_HOST=postgres
       - LOKI_HOST=loki
       - APP_ENV=${APP_ENV:-prod}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB_PROD=${POSTGRES_DB_PROD}
+      - POSTGRES_DB_TEST=${POSTGRES_DB_TEST}
+      - POSTGRES_DB_DEV=${POSTGRES_DB_DEV}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-maindb}"]
+      test: ["CMD-SHELL", "case $APP_ENV in prod) DB_NAME=$POSTGRES_DB_PROD ;; test) DB_NAME=$POSTGRES_DB_TEST ;; dev) DB_NAME=$POSTGRES_DB_DEV ;; *) echo 'Invalid APP_ENV'; exit 1 ;; esac; pg_isready -U ${POSTGRES_USER:-postgres} -d $DB_NAME"]
       interval: 300s
       timeout: 5s
       retries: 10
@@ -36,40 +40,39 @@ services:
 
         echo '✅   PostgreSQL is ready! Proceeding with initialization...';
 
+        # Determine the database name based on APP_ENV
+        case $APP_ENV in
+          prod)
+            DB_NAME=$POSTGRES_DB_PROD
+            ;;
+          test)
+            DB_NAME=$POSTGRES_DB_TEST
+            ;;
+          dev)
+            DB_NAME=$POSTGRES_DB_DEV
+            ;;
+          *)
+            echo '❌   APP_ENV must be one of prod, test, or dev';
+            exit 1
+            ;;
+        esac
+
+        # Ensure DB_NAME is not empty
+        if [ -z \"\$DB_NAME\" ]; then
+          echo '❌   ERROR: DB_NAME is not set. Please check your .env file.';
+          echo \"❌   Required: POSTGRES_DB_PROD, POSTGRES_DB_TEST, or POSTGRES_DB_DEV based on APP_ENV=\$APP_ENV\";
+          exit 1
+        fi
+
         # Ensure the main database exists
-        echo \"Checking if main database '$POSTGRES_DB' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'\" | grep -q 1; then
-          echo '✅   Main database \"$POSTGRES_DB\" already exists.';
+        echo \"Checking if main database '\$DB_NAME' exists...\";
+        DB_EXISTS=\$(psql -U \"$POSTGRES_USER\" -d postgres -tAc \\\"SELECT 1 FROM pg_database WHERE datname='\$DB_NAME'\\\" || echo \"0\");
+        if echo \"\$DB_EXISTS\" | grep -q \"1\"; then
+          echo \"✅   Main database '\$DB_NAME' already exists.\";
         else
-          echo '🚀   Creating main database: \"$POSTGRES_DB\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB\\\";\";
+          echo \"🚀   Creating main database: '\$DB_NAME'\";
+          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \$DB_NAME;\";
         fi;
-
-        # Check if test database exists and create schema 'public'
-        echo \"Checking if test database '$POSTGRES_DB_TEST' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_TEST'\" | grep -q 1; then
-          echo '✅   Test database \"$POSTGRES_DB_TEST\" already exists.';
-        else
-          echo '🚀   Creating test database: \"$POSTGRES_DB_TEST\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
-        fi;
-
-        echo \"Checking if dev database '$POSTGRES_DB_DEV' exists...\";
-        if psql -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_DEV'\" | grep -q 1; then
-          echo '✅   Dev database \"$POSTGRES_DB_DEV\" already exists.';
-        else
-          echo '🚀   Creating dev database: \"$POSTGRES_DB_DEV\"';
-          psql -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_DEV\\\";\";
-        fi;
-
-        echo '🔧   Ensuring schema public exists on main database...'
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
-        
-        echo '🔧   Ensuring schema public exists on test database...';
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
-
-        echo '🔧   Ensuring schema public exists on dev database...'
-        psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_DEV\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
 
         echo '🎉   Database initialization complete!';
 

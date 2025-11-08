@@ -5,72 +5,32 @@ services:
   postgres:
     image: postgres:17.5
     restart: always
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+      - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
     env_file:
       - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_DEV}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB_PROD=${POSTGRES_DB_PROD}
+      - POSTGRES_DB_TEST=${POSTGRES_DB_TEST}
+      - POSTGRES_DB_DEV=${POSTGRES_DB_DEV}
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV} -p ${POSTGRES_PORT}"]
+      test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
       interval: 300s
       timeout: 5s
       retries: 10
       start_period: 5s
-    command: >
-      bash -c "
-        echo '✅   Starting PostgreSQL on port 5433...';
-        docker-entrypoint.sh postgres -p \"$POSTGRES_PORT\" & 
-
-        # Wait for PostgreSQL to be fully ready
-        echo '⏳   Waiting for PostgreSQL to start...';
-        until pg_isready -h localhost -p \"$POSTGRES_PORT\" -U $POSTGRES_USER; do
-          echo '⏳   Still waiting for PostgreSQL...';
-          sleep 5;
-        done;
-
-        echo '✅   PostgreSQL is ready! Proceeding with initialization...';
-
-        # Ensure the main database exists
-        echo \"Checking if main database '$POSTGRES_DB' exists...\";
-        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'\" | grep -q 1; then
-          echo '✅   Main database \"$POSTGRES_DB\" already exists.';
-        else
-          echo '🚀   Creating main database: \"$POSTGRES_DB\"';
-          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB\\\";\";
-        fi;
-
-        # Check if test database exists and create schema 'public'
-        echo \"Checking if test database '$POSTGRES_DB_TEST' exists...\";
-        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_TEST'\" | grep -q 1; then
-          echo '✅   Test database \"$POSTGRES_DB_TEST\" already exists.';
-        else
-          echo '🚀   Creating test database: \"$POSTGRES_DB_TEST\"';
-          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_TEST\\\";\";
-        fi;
-
-        echo \"Checking if dev database '$POSTGRES_DB_DEV' exists...\";
-        if psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB_DEV'\" | grep -q 1; then
-          echo '✅   Dev database \"$POSTGRES_DB_DEV\" already exists.';
-        else
-          echo '🚀   Creating dev database: \"$POSTGRES_DB_DEV\"';
-          psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d postgres -c \"CREATE DATABASE \\\"$POSTGRES_DB_DEV\\\";\";
-        fi;
-
-        echo '🔧   Ensuring schema public exists on main database...'
-        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
-        
-        echo '🔧   Ensuring schema public exists on test database...';
-        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_TEST\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
-
-        echo '🔧   Ensuring schema public exists on dev database...'
-        psql -p \"$POSTGRES_PORT\" -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB_DEV\" -c 'CREATE SCHEMA IF NOT EXISTS public;';
-
-        echo '🎉   Database initialization complete!';
-
-        # Keep PostgreSQL running in the foreground to prevent container exit
-        wait
-      "
+    command: ["/docker-entrypoint-initdb.d/init-db.sh"]
     networks:
       - mynute-auth-network
    
