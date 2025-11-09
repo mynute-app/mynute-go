@@ -6,11 +6,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type GeneralRole struct {
+type ClientRole struct {
 	Role
 }
 
-func (r *GeneralRole) BeforeCreate(tx *gorm.DB) error {
+func (r *ClientRole) BeforeCreate(tx *gorm.DB) error {
 	if is, err := r.isRoleNameReserved(tx); err != nil {
 		return err
 	} else if is {
@@ -19,7 +19,7 @@ func (r *GeneralRole) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (r *GeneralRole) BeforeUpdate(tx *gorm.DB) error {
+func (r *ClientRole) BeforeUpdate(tx *gorm.DB) error {
 	if nameIsReserved, err := r.isRoleNameReserved(tx); err != nil {
 		return err
 	} else if nameIsReserved {
@@ -38,10 +38,10 @@ func (r *GeneralRole) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
-func (r *GeneralRole) isRoleNameReserved(tx *gorm.DB) (bool, error) {
+func (r *ClientRole) isRoleNameReserved(tx *gorm.DB) (bool, error) {
 	var count int64
 	if err := tx.
-		Model(&GeneralRole{}).
+		Model(&ClientRole{}).
 		Where("name = ?", r.Name).
 		Count(&count).Error; err != nil {
 		return false, err
