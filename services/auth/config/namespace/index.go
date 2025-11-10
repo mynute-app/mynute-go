@@ -93,9 +93,9 @@ var ClientKey = TypeStruct{
 	Model: "user_model",
 }
 
-var EmployeeKey = TypeStruct{
-	Name:  "employee",
-	Model: "employee_model",
+var TenantKey = TypeStruct{
+	Name:  "tenant",
+	Model: "tenant_model",
 }
 
 var AdminKey = TypeStruct{
@@ -118,13 +118,13 @@ var Role = struct {
 	GeneralManager   string
 	BranchManager    string
 	BranchSupervisor string
-	Employee         string
+	Tenant           string
 }{
 	Owner:            "Owner",
 	GeneralManager:   "General Manager",
 	BranchManager:    "Branch Manager",
 	BranchSupervisor: "Branch Supervisor",
-	Employee:         "Employee",
+	Tenant:           "Tenant",
 }
 
 var (
@@ -137,4 +137,3 @@ var (
 
 var UploadsFolder = "local_uploads"
 var StaticServerFolder = "static"
-

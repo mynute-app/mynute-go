@@ -76,25 +76,25 @@ func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
 }
 
 // =====================
-// EMPLOYEE AUTH
+// TENANT USER AUTH
 // =====================
 
-// LoginEmployeeByPassword logs an employee in
+// LoginTenantByPassword logs a tenant user in
 //
-//	@Summary		Login employee
-//	@Description	Log in an employee using password
-//	@Tags			Employee/Auth
+//	@Summary		Login tenant user
+//	@Description	Log in a tenant user using password
+//	@Tags			Tenant/Auth
 //	@Security		ApiKeyAuth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			employee	body	DTO.LoginEmployee	true	"Employee credentials"
+//	@Param			tenant	body	DTO.LoginTenant	true	"Tenant user credentials"
 //	@Success		200			"Token returned in X-Auth-Token header"
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Failure		401			{object}	nil
-//	@Router			/auth/employee/login [post]
-func LoginEmployeeByPassword(c *fiber.Ctx) error {
-	token, err := LoginByPassword(namespace.EmployeeKey.Name, c)
+//	@Router			/auth/tenant/login [post]
+func LoginTenantByPassword(c *fiber.Ctx) error {
+	token, err := LoginByPassword(namespace.TenantKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -102,20 +102,20 @@ func LoginEmployeeByPassword(c *fiber.Ctx) error {
 	return nil
 }
 
-// LoginEmployeeByEmailCode logs in an employee using email and validation code
+// LoginTenantByEmailCode logs in a tenant user using email and validation code
 //
-//	@Summary		Login employee by email code
-//	@Description	Login employee using email and validation code
-//	@Tags			Employee/Auth
+//	@Summary		Login tenant user by email code
+//	@Description	Login tenant user using email and validation code
+//	@Tags			Tenant/Auth
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body	DTO.LoginByEmailCode	true	"Login credentials"
 //	@Success		200		"Token returned in X-Auth-Token header"
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/auth/employee/login-with-code [post]
-func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
-	token, err := LoginByEmailCode(namespace.EmployeeKey.Name, c)
+//	@Router			/auth/tenant/login-with-code [post]
+func LoginTenantByEmailCode(c *fiber.Ctx) error {
+	token, err := LoginByEmailCode(namespace.TenantKey.Name, c)
 	if err != nil {
 		return err
 	}
@@ -123,21 +123,21 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 	return nil
 }
 
-// SendEmployeeLoginValidationCodeByEmail sends a login validation code to an employee's email
+// SendTenantLoginValidationCodeByEmail sends a login validation code to a tenant user's email
 //
-//	@Summary		Send employee login validation code by email
-//	@Description	Sends a 6-digit login validation code to the employee's email
-//	@Tags			Employee/Auth
+//	@Summary		Send tenant user login validation code by email
+//	@Description	Sends a 6-digit login validation code to the tenant user's email
+//	@Tags			Tenant/Auth
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
-//	@Param			email			path	string	true	"Employee Email"
+//	@Param			email			path	string	true	"Tenant User Email"
 //	@Query			language				query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/auth/employee/send-login-code/email/{email} [post]
-func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
-	if err := SendLoginValidationCodeByEmail(namespace.EmployeeKey.Name, c); err != nil {
+//	@Router			/auth/tenant/send-login-code/email/{email} [post]
+func SendTenantLoginValidationCodeByEmail(c *fiber.Ctx) error {
+	if err := SendLoginValidationCodeByEmail(namespace.TenantKey.Name, c); err != nil {
 		return err
 	}
 	return nil

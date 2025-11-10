@@ -25,10 +25,10 @@ func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
 		auth.Post("/client/login-with-code", controller.LoginClientByEmailCode)
 		auth.Post("/client/send-login-code/email/:email", controller.SendClientLoginValidationCodeByEmail)
 
-		// Employee authentication
-		auth.Post("/employee/login", controller.LoginEmployeeByPassword)
-		auth.Post("/employee/login-with-code", controller.LoginEmployeeByEmailCode)
-		auth.Post("/employee/send-login-code/email/:email", controller.SendEmployeeLoginValidationCodeByEmail)
+		// Tenant User authentication
+		auth.Post("/tenant/login", controller.LoginTenantByPassword)
+		auth.Post("/tenant/login-with-code", controller.LoginTenantByEmailCode)
+		auth.Post("/tenant/send-login-code/email/:email", controller.SendTenantLoginValidationCodeByEmail)
 
 		// Admin authentication
 		auth.Post("/admin/login", controller.AdminLoginByPassword)
@@ -48,12 +48,12 @@ func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
 		users.Patch("/client/:id", controller.UpdateClientById)
 		users.Delete("/client/:id", controller.DeleteClientById)
 
-		// Employee management
-		users.Post("/employee", controller.CreateEmployee)
-		users.Get("/employee/email/:email", controller.GetEmployeeByEmail)
-		users.Get("/employee/:id", controller.GetEmployeeById)
-		users.Patch("/employee/:id", controller.UpdateEmployeeById)
-		users.Delete("/employee/:id", controller.DeleteEmployeeById)
+		// Tenant User management
+		users.Post("/tenant", controller.CreateTenantUser)
+		users.Get("/tenant/email/:email", controller.GetTenantUserByEmail)
+		users.Get("/tenant/:id", controller.GetTenantUserById)
+		users.Patch("/tenant/:id", controller.UpdateTenantUserById)
+		users.Delete("/tenant/:id", controller.DeleteTenantUserById)
 
 		// Admin management
 		users.Get("/admin/are_there_any_superadmin", controller.AreThereAnyAdmin)

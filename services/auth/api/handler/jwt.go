@@ -100,7 +100,7 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 }
 
 // WhoAreYouAdmin checks if the token belongs to an admin and returns admin claims
-func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminClaims, error) {
+func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminUserClaims, error) {
 	auth_token := j.C.Get(namespace.HeadersKey.Auth)
 	if auth_token == "" {
 		return nil, nil
@@ -137,7 +137,7 @@ func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminClaims, error) {
 		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
-	var adminClaim DTO.AdminClaims
+	var adminClaim DTO.AdminUserClaims
 	err = json.Unmarshal(claim_data_bytes, &adminClaim)
 	if err != nil {
 		return nil, lib.Error.Auth.InvalidToken.WithError(err)
