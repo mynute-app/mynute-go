@@ -20,7 +20,7 @@ import (
 //
 //	@Summary		List all tenant policies
 //	@Description	Retrieve all tenant policy rules with pagination
-//	@Tags			Tenant Policies
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -82,7 +82,7 @@ func ListTenantPolicies(c *fiber.Ctx) error {
 //
 //	@Summary		Get tenant policy by ID
 //	@Description	Retrieve a tenant policy rule by its ID
-//	@Tags			Tenant Policies
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -136,7 +136,7 @@ func GetTenantPolicyById(c *fiber.Ctx) error {
 //
 //	@Summary		Create tenant policy
 //	@Description	Create a new tenant policy rule
-//	@Tags			Tenant Policies
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -224,7 +224,7 @@ func CreateTenantPolicy(c *fiber.Ctx) error {
 //
 //	@Summary		Update tenant policy
 //	@Description	Update a tenant policy rule
-//	@Tags			Tenant Policies
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -335,7 +335,7 @@ func UpdateTenantPolicyById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete tenant policy
 //	@Description	Delete a tenant policy rule by its ID
-//	@Tags			Tenant Policies
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"

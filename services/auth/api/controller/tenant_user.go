@@ -16,10 +16,10 @@ import (
 //
 //	@Summary		Create tenant user
 //	@Description	Create a tenant user
-//	@Tags			Tenant User
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -42,10 +42,10 @@ func CreateTenantUser(c *fiber.Ctx) error {
 //
 //	@Summary		Get tenant user by ID
 //	@Description	Retrieve a tenant user by its ID
-//	@Tags			Tenant User
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Tenant User ID"
 //	@Produce		json
@@ -67,10 +67,10 @@ func GetTenantUserById(c *fiber.Ctx) error {
 //
 //	@Summary		Get tenant user by email
 //	@Description	Retrieve a tenant user by its email
-//	@Tags			Tenant User
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Tenant User Email"
 //	@Produce		json
@@ -92,10 +92,10 @@ func GetTenantUserByEmail(c *fiber.Ctx) error {
 //
 //	@Summary		Update tenant user
 //	@Description	Update a tenant user
-//	@Tags			Tenant User
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
@@ -119,10 +119,10 @@ func UpdateTenantUserById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete tenant user by ID
 //	@Description	Delete a tenant user by its ID
-//	@Tags			Tenant User
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header		string	true	"X-Company-ID"
+//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Tenant User ID"
 //	@Produce		json

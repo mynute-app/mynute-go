@@ -20,7 +20,7 @@ import (
 //
 //	@Summary		List all tenant roles
 //	@Description	Retrieve all tenant roles with pagination
-//	@Tags			Tenant Roles
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -91,7 +91,7 @@ func ListTenantRoles(c *fiber.Ctx) error {
 //
 //	@Summary		Get tenant role by ID
 //	@Description	Retrieve a tenant role by its ID
-//	@Tags			Tenant Roles
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -143,7 +143,7 @@ func GetTenantRoleById(c *fiber.Ctx) error {
 //
 //	@Summary		Create tenant role
 //	@Description	Create a new tenant role
-//	@Tags			Tenant Roles
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -197,7 +197,7 @@ func CreateTenantRole(c *fiber.Ctx) error {
 //
 //	@Summary		Update tenant role
 //	@Description	Update a tenant role
-//	@Tags			Tenant Roles
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
@@ -272,7 +272,7 @@ func UpdateTenantRoleById(c *fiber.Ctx) error {
 //
 //	@Summary		Delete tenant role
 //	@Description	Delete a tenant role by its ID
-//	@Tags			Tenant Roles
+//	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
