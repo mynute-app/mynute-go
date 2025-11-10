@@ -9,7 +9,7 @@ import (
 
 func TestLoginClient_Structure(t *testing.T) {
 	t.Run("should create LoginClient with all fields", func(t *testing.T) {
-		login := LoginClient{
+		login := LoginClientUser{
 			Email:    "john.doe@example.com",
 			Password: "1SecurePswd!",
 		}
@@ -19,7 +19,7 @@ func TestLoginClient_Structure(t *testing.T) {
 	})
 
 	t.Run("should handle empty LoginClient", func(t *testing.T) {
-		login := LoginClient{}
+		login := LoginClientUser{}
 
 		assert.Empty(t, login.Email)
 		assert.Empty(t, login.Password)
@@ -28,7 +28,7 @@ func TestLoginClient_Structure(t *testing.T) {
 
 func TestCreateClient_Structure(t *testing.T) {
 	t.Run("should create CreateClient with all fields", func(t *testing.T) {
-		client := CreateClient{
+		client := CreateClientUser{
 			Name:     "John",
 			Surname:  "Doe",
 			Email:    "john.doe@example.com",
@@ -44,7 +44,7 @@ func TestCreateClient_Structure(t *testing.T) {
 	})
 
 	t.Run("should handle partial CreateClient", func(t *testing.T) {
-		client := CreateClient{
+		client := CreateClientUser{
 			Email:    "test@example.com",
 			Password: "Pass123!",
 		}
@@ -60,7 +60,7 @@ func TestCreateClient_Structure(t *testing.T) {
 func TestClient_Structure(t *testing.T) {
 	t.Run("should create Client with all fields", func(t *testing.T) {
 		id := uuid.New()
-		client := Client{
+		client := ClientUser{
 			ID:       id,
 			Name:     "John",
 			Surname:  "Doe",
@@ -78,7 +78,7 @@ func TestClient_Structure(t *testing.T) {
 	})
 
 	t.Run("should default Verified to false", func(t *testing.T) {
-		client := Client{
+		client := ClientUser{
 			ID:    uuid.New(),
 			Email: "test@example.com",
 		}
@@ -90,7 +90,7 @@ func TestClient_Structure(t *testing.T) {
 func TestClientPopulated_Structure(t *testing.T) {
 	t.Run("should create ClientPopulated with all fields", func(t *testing.T) {
 		id := uuid.New()
-		client := ClientPopulated{
+		client := ClientUserPopulated{
 			ID:       id,
 			Name:     "John",
 			Surname:  "Doe",
@@ -115,7 +115,7 @@ func TestClientPopulated_Structure(t *testing.T) {
 		}
 
 		for _, phone := range phoneFormats {
-			client := ClientPopulated{
+			client := ClientUserPopulated{
 				Phone: phone,
 			}
 

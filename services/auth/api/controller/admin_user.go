@@ -23,7 +23,7 @@ import (
 //	@Tags			Admin
 //	@Produce		json
 //	@Success		200	{object}	map[string]bool
-//	@Router			/users/admin/are_there_any_superadmin [get]
+//	@Router			/admin/users/are_there_any_superadmin [get]
 func AreThereAnyAdmin(c *fiber.Ctx) error {
 	hasAdmin, err := areThereAnySuperAdmin(c)
 	if err != nil {
@@ -44,7 +44,7 @@ func AreThereAnyAdmin(c *fiber.Ctx) error {
 //	@Param			admin	body		DTO.Admin	true	"Admin creation data"
 //	@Success		201		{object}	DTO.Admin
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/users/admin/first_superadmin [post]
+//	@Router			/admin/users/first_superadmin [post]
 func CreateFirstAdmin(c *fiber.Ctx) error {
 	hasSuperAdmin, err := areThereAnySuperAdmin(c)
 	if err != nil {
@@ -69,7 +69,7 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Param			admin	body		DTO.AdminCreateRequest	true	"Admin creation data"
 //	@Success		201		{object}	DTO.Admin
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/users/admin [post]
+//	@Router			/admin/users [post]
 func CreateAdmin(c *fiber.Ctx) error {
 	// Verify admin authentication (only superadmin can create admins)
 	hasSuperAdmin, err := areThereAnySuperAdmin(c)
@@ -82,7 +82,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 	}
 
 	// Parse request body
-	var req DTO.AdminCreateRequest
+	var req DTO.AdminUserCreateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
@@ -127,7 +127,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 	}
 
 	// Return user (without password)
-	return lib.ResponseFactory(c).SendDTO(201, &user, &DTO.Admin{})
+	return lib.ResponseFactory(c).SendDTO(201, &user, &DTO.AdminUser{})
 }
 
 // GetAdminById retrieves an admin by ID
@@ -142,7 +142,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.Admin
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/admin/{id} [get]
+//	@Router			/admin/users/{id} [get]
 func GetAdminById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
@@ -153,7 +153,7 @@ func GetAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.AdminUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -173,7 +173,7 @@ func GetAdminById(c *fiber.Ctx) error {
 //	@Param			admin	body		DTO.AdminUpdateRequest	true	"Admin"
 //	@Success		200		{object}	DTO.Admin
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/users/admin/{id} [patch]
+//	@Router			/admin/users/{id} [patch]
 func UpdateAdminById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
@@ -184,7 +184,7 @@ func UpdateAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.AdminUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -202,7 +202,7 @@ func UpdateAdminById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/admin/{id} [delete]
+//	@Router			/admin/users/{id} [delete]
 func DeleteAdminById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
@@ -221,7 +221,7 @@ func DeleteAdminById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{array}		DTO.Admin
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/admin [get]
+//	@Router			/admin/users [get]
 func ListAdmins(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
@@ -237,7 +237,7 @@ func ListAdmins(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).SendDTO(200, &users, &[]DTO.Admin{})
+	return lib.ResponseFactory(c).SendDTO(200, &users, &[]DTO.AdminUser{})
 }
 
 // =====================

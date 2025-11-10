@@ -64,7 +64,7 @@ func TestAdminCreationLogic(t *testing.T) {
 
 func TestAdminValidation(t *testing.T) {
 	t.Run("should validate admin creation request", func(t *testing.T) {
-		validReq := DTO.AdminCreateRequest{
+		validReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "admin@example.com",
 			Password: "SecureP@ss123",
@@ -77,7 +77,7 @@ func TestAdminValidation(t *testing.T) {
 	})
 
 	t.Run("should reject invalid email", func(t *testing.T) {
-		invalidReq := DTO.AdminCreateRequest{
+		invalidReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "not-an-email",
 			Password: "SecureP@ss123",
@@ -88,7 +88,7 @@ func TestAdminValidation(t *testing.T) {
 	})
 
 	t.Run("should reject short password", func(t *testing.T) {
-		invalidReq := DTO.AdminCreateRequest{
+		invalidReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "admin@example.com",
 			Password: "short",
@@ -99,7 +99,7 @@ func TestAdminValidation(t *testing.T) {
 	})
 
 	t.Run("should reject empty name", func(t *testing.T) {
-		invalidReq := DTO.AdminCreateRequest{
+		invalidReq := DTO.AdminUserCreateRequest{
 			Name:     "",
 			Email:    "admin@example.com",
 			Password: "SecureP@ss123",
@@ -110,7 +110,7 @@ func TestAdminValidation(t *testing.T) {
 	})
 
 	t.Run("should reject empty email", func(t *testing.T) {
-		invalidReq := DTO.AdminCreateRequest{
+		invalidReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "",
 			Password: "SecureP@ss123",
@@ -121,7 +121,7 @@ func TestAdminValidation(t *testing.T) {
 	})
 
 	t.Run("should reject empty password", func(t *testing.T) {
-		invalidReq := DTO.AdminCreateRequest{
+		invalidReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "admin@example.com",
 			Password: "",
@@ -132,10 +132,10 @@ func TestAdminValidation(t *testing.T) {
 	})
 }
 
-func TestAdminClaimsStructure(t *testing.T) {
+func TestAdminUserClaimsStructure(t *testing.T) {
 	t.Run("should create admin claims with all fields", func(t *testing.T) {
 		adminID := uuid.New()
-		claims := DTO.AdminClaims{
+		claims := DTO.AdminUserClaims{
 			ID:       adminID,
 			Name:     "Test Admin",
 			Email:    "admin@example.com",
@@ -152,7 +152,7 @@ func TestAdminClaimsStructure(t *testing.T) {
 	})
 
 	t.Run("should support multiple roles", func(t *testing.T) {
-		claims := DTO.AdminClaims{
+		claims := DTO.AdminUserClaims{
 			Roles: []string{"superadmin", "support", "auditor"},
 		}
 
@@ -163,7 +163,7 @@ func TestAdminClaimsStructure(t *testing.T) {
 	})
 
 	t.Run("should support empty roles", func(t *testing.T) {
-		claims := DTO.AdminClaims{
+		claims := DTO.AdminUserClaims{
 			ID:    uuid.New(),
 			Email: "admin@example.com",
 			Roles: []string{},
@@ -174,13 +174,13 @@ func TestAdminClaimsStructure(t *testing.T) {
 	})
 }
 
-func TestAdminUpdateRequest(t *testing.T) {
+func TestAdminUserUpdateRequest(t *testing.T) {
 	t.Run("should validate admin update request", func(t *testing.T) {
 		name := "Updated Admin"
 		surname := "Updated Surname"
 		isActive := true
 
-		validReq := DTO.AdminUpdateRequest{
+		validReq := DTO.AdminUserUpdateRequest{
 			Name:     &name,
 			Surname:  &surname,
 			IsActive: &isActive,
@@ -193,7 +193,7 @@ func TestAdminUpdateRequest(t *testing.T) {
 	t.Run("should allow partial updates", func(t *testing.T) {
 		name := "Only Name Updated"
 
-		partialReq := DTO.AdminUpdateRequest{
+		partialReq := DTO.AdminUserUpdateRequest{
 			Name: &name,
 		}
 
@@ -205,13 +205,13 @@ func TestAdminUpdateRequest(t *testing.T) {
 		validEmail := "updated@example.com"
 		invalidEmail := "not-an-email"
 
-		validReq := DTO.AdminUpdateRequest{
+		validReq := DTO.AdminUserUpdateRequest{
 			Email: &validEmail,
 		}
 		err := lib.MyCustomStructValidator(validReq)
 		assert.NoError(t, err)
 
-		invalidReq := DTO.AdminUpdateRequest{
+		invalidReq := DTO.AdminUserUpdateRequest{
 			Email: &invalidEmail,
 		}
 		err = lib.MyCustomStructValidator(invalidReq)
@@ -222,13 +222,13 @@ func TestAdminUpdateRequest(t *testing.T) {
 		validPassword := "ValidP@ss123"
 		shortPassword := "short"
 
-		validReq := DTO.AdminUpdateRequest{
+		validReq := DTO.AdminUserUpdateRequest{
 			Password: &validPassword,
 		}
 		err := lib.MyCustomStructValidator(validReq)
 		assert.NoError(t, err)
 
-		invalidReq := DTO.AdminUpdateRequest{
+		invalidReq := DTO.AdminUserUpdateRequest{
 			Password: &shortPassword,
 		}
 		err = lib.MyCustomStructValidator(invalidReq)
@@ -294,7 +294,7 @@ func TestAdminPasswordEdgeCases(t *testing.T) {
 	t.Run("should reject empty password for hashing", func(t *testing.T) {
 		// This test verifies behavior - bcrypt will actually hash empty strings
 		// but validation should catch this earlier
-		emptyReq := DTO.AdminCreateRequest{
+		emptyReq := DTO.AdminUserCreateRequest{
 			Name:     "Admin",
 			Email:    "admin@example.com",
 			Password: "",
@@ -315,7 +315,7 @@ func TestAdminEmailEdgeCases(t *testing.T) {
 		}
 
 		for _, email := range validEmails {
-			req := DTO.AdminCreateRequest{
+			req := DTO.AdminUserCreateRequest{
 				Name:     "Admin",
 				Email:    email,
 				Password: "SecureP@ss123",
@@ -336,7 +336,7 @@ func TestAdminEmailEdgeCases(t *testing.T) {
 		}
 
 		for _, email := range invalidEmails {
-			req := DTO.AdminCreateRequest{
+			req := DTO.AdminUserCreateRequest{
 				Name:     "Admin",
 				Email:    email,
 				Password: "SecureP@ss123",
@@ -356,7 +356,7 @@ func TestAdminEmailEdgeCases(t *testing.T) {
 		}
 
 		for _, email := range mixedCaseEmails {
-			req := DTO.AdminCreateRequest{
+			req := DTO.AdminUserCreateRequest{
 				Name:     "Admin",
 				Email:    email,
 				Password: "SecureP@ss123",
@@ -379,7 +379,7 @@ func TestAdminRolesValidation(t *testing.T) {
 		}
 
 		for _, roles := range validRoles {
-			req := DTO.AdminCreateRequest{
+			req := DTO.AdminUserCreateRequest{
 				Name:     "Admin",
 				Email:    "admin@example.com",
 				Password: "SecureP@ss123",
@@ -392,7 +392,7 @@ func TestAdminRolesValidation(t *testing.T) {
 	})
 
 	t.Run("should handle empty roles array", func(t *testing.T) {
-		req := DTO.AdminCreateRequest{
+		req := DTO.AdminUserCreateRequest{
 			Name:     "Admin",
 			Email:    "admin@example.com",
 			Password: "SecureP@ss123",
@@ -407,7 +407,7 @@ func TestAdminRolesValidation(t *testing.T) {
 func TestFirstAdminCreationScenarios(t *testing.T) {
 	t.Run("first admin should be created as superadmin", func(t *testing.T) {
 		// This test documents the expected behavior for first admin creation
-		firstAdminReq := DTO.AdminCreateRequest{
+		firstAdminReq := DTO.AdminUserCreateRequest{
 			Name:     "First Admin",
 			Email:    "first@example.com",
 			Password: "SecureP@ss123",
@@ -441,7 +441,7 @@ func TestFirstAdminCreationScenarios(t *testing.T) {
 		// This test documents that after first admin, authentication is required
 		// The actual endpoint validation would check for valid JWT token
 
-		subsequentAdminReq := DTO.AdminCreateRequest{
+		subsequentAdminReq := DTO.AdminUserCreateRequest{
 			Name:     "Second Admin",
 			Email:    "second@example.com",
 			Password: "SecureP@ss123",

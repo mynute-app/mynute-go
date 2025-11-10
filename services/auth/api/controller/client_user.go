@@ -22,13 +22,13 @@ import (
 //	@Param			client	body		DTO.CreateClient	true	"Client"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/users/client [post]
+//	@Router			/client/users [post]
 func CreateClient(c *fiber.Ctx) error {
-	var user model.User
+	var user model.ClientUser
 	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.ClientUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -43,13 +43,13 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/client/email/{email} [get]
+//	@Router			/client/users/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var user model.User
+	var user model.ClientUser
 	if err := GetOneBy("email", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.ClientUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -67,13 +67,13 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/client/{id} [get]
+//	@Router			/client/users/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	var user model.User
+	var user model.ClientUser
 	if err := GetOneBy("id", c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.ClientUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -93,13 +93,13 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Param			client	body		DTO.UpdateClientRequest	true	"Client"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/users/client/{id} [patch]
+//	@Router			/client/users/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var user model.User
+	var user model.ClientUser
 	if err := UpdateOneById(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.ClientUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -117,7 +117,7 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/users/client/{id} [delete]
+//	@Router			/client/users/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &model.User{})
+	return DeleteOneById(c, &model.ClientUser{})
 }

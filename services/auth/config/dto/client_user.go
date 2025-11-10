@@ -4,12 +4,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type LoginClient struct {
+type LoginClientUser struct {
 	Email    string `json:"email" example:"john.doe@example.com"`
 	Password string `json:"password" example:"1SecurePswd!"`
 }
 
-type CreateClient struct {
+type CreateClientUser struct {
 	Name     string `json:"name" example:"John"`
 	Surname  string `json:"surname" example:"Doe"`
 	Email    string `json:"email" example:"john.doe@example.com"`
@@ -17,14 +17,14 @@ type CreateClient struct {
 	Password string `json:"password" example:"1SecurePswd!"`
 }
 
-type UpdateClientRequest struct {
+type UpdateClientUserRequest struct {
 	Name    *string `json:"name,omitempty" example:"John"`
 	Surname *string `json:"surname,omitempty" example:"Doe"`
 	Email   *string `json:"email,omitempty" example:"john.doe@example.com"`
 	Phone   *string `json:"phone,omitempty" example:"+15555555555"`
 }
 
-type Client struct {
+type ClientUser struct {
 	ID       uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
 	Name     string    `json:"name" example:"John"`
 	Surname  string    `json:"surname" example:"Doe"`
@@ -33,7 +33,7 @@ type Client struct {
 	Verified bool      `json:"verified" example:"false"`
 }
 
-type ClientPopulated struct {
+type ClientUserPopulated struct {
 	ID       uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
 	Name     string    `json:"name" example:"John"`
 	Surname  string    `json:"surname" example:"Doe"`

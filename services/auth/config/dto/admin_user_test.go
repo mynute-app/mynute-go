@@ -1,6 +1,7 @@
 package DTO
 
 import (
+	"mynute-go/services/auth/config/db/model"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,7 +11,7 @@ import (
 func TestAdminClaims_Structure(t *testing.T) {
 	t.Run("should create AdminClaims with all fields", func(t *testing.T) {
 		id := uuid.New()
-		claims := AdminClaims{
+		claims := AdminUserClaims{
 			ID:       id,
 			Name:     "Admin User",
 			Email:    "admin@example.com",
@@ -31,7 +32,7 @@ func TestAdminClaims_Structure(t *testing.T) {
 	})
 
 	t.Run("should handle admin claims without roles", func(t *testing.T) {
-		claims := AdminClaims{
+		claims := AdminUserClaims{
 			ID:       uuid.New(),
 			Email:    "admin@example.com",
 			IsAdmin:  true,
@@ -45,7 +46,7 @@ func TestAdminClaims_Structure(t *testing.T) {
 
 func TestAdminLoginRequest_Structure(t *testing.T) {
 	t.Run("should create AdminLoginRequest with all fields", func(t *testing.T) {
-		login := AdminLoginRequest{
+		login := AdminUserLoginRequest{
 			Email:    "admin@example.com",
 			Password: "StrongPassword123!",
 		}
@@ -55,7 +56,7 @@ func TestAdminLoginRequest_Structure(t *testing.T) {
 	})
 
 	t.Run("should handle empty AdminLoginRequest", func(t *testing.T) {
-		login := AdminLoginRequest{}
+		login := AdminUserLoginRequest{}
 
 		assert.Empty(t, login.Email)
 		assert.Empty(t, login.Password)
@@ -65,14 +66,14 @@ func TestAdminLoginRequest_Structure(t *testing.T) {
 func TestAdmin_Structure(t *testing.T) {
 	t.Run("should create Admin with all fields", func(t *testing.T) {
 		id := uuid.New()
-		admin := Admin{
+		admin := AdminUser{
 			ID:       id,
 			Name:     "John",
 			Surname:  "Doe",
 			Email:    "admin@example.com",
 			IsActive: true,
-			Roles: []AdminRole{
-				{Name: "superadmin"},
+			Roles: []model.AdminRole{
+				{Role: model.Role{Name: "superadmin"}},
 			},
 		}
 
@@ -85,7 +86,7 @@ func TestAdmin_Structure(t *testing.T) {
 	})
 
 	t.Run("should support inactive admins", func(t *testing.T) {
-		admin := Admin{
+		admin := AdminUser{
 			ID:       uuid.New(),
 			Email:    "inactive@example.com",
 			IsActive: false,
@@ -95,9 +96,9 @@ func TestAdmin_Structure(t *testing.T) {
 	})
 }
 
-func TestAdminList_Structure(t *testing.T) {
-	t.Run("should create AdminList with admins", func(t *testing.T) {
-		admins := []Admin{
+func TestAdminUserList_Structure(t *testing.T) {
+	t.Run("should create AdminUserList with admins", func(t *testing.T) {
+		admins := []AdminUser{
 			{
 				ID:       uuid.New(),
 				Name:     "Admin 1",
@@ -112,29 +113,25 @@ func TestAdminList_Structure(t *testing.T) {
 			},
 		}
 
-		adminList := AdminList{
+		adminList := AdminUserList{
 			Admins: admins,
-			Total:  len(admins),
 		}
 
 		assert.Len(t, adminList.Admins, 2)
-		assert.Equal(t, 2, adminList.Total)
 	})
 
 	t.Run("should handle empty admin list", func(t *testing.T) {
-		adminList := AdminList{
-			Admins: []Admin{},
-			Total:  0,
+		adminList := AdminUserList{
+			Admins: []AdminUser{},
 		}
 
 		assert.Empty(t, adminList.Admins)
-		assert.Equal(t, 0, adminList.Total)
 	})
 }
 
 func TestAdminCreateRequest_Structure(t *testing.T) {
 	t.Run("should create AdminCreateRequest with all fields", func(t *testing.T) {
-		request := AdminCreateRequest{
+		request := AdminUserCreateRequest{
 			Name:     "Admin User",
 			Surname:  "Doe",
 			Email:    "admin@example.com",
@@ -152,7 +149,7 @@ func TestAdminCreateRequest_Structure(t *testing.T) {
 	})
 
 	t.Run("should allow creating admin without surname", func(t *testing.T) {
-		request := AdminCreateRequest{
+		request := AdminUserCreateRequest{
 			Name:     "Admin User",
 			Email:    "admin@example.com",
 			Password: "StrongPassword123!",
@@ -169,7 +166,7 @@ func TestAdminUpdateRequest_Structure(t *testing.T) {
 		name := "Updated Name"
 		surname := "Updated Surname"
 
-		request := AdminUpdateRequest{
+		request := AdminUserUpdateRequest{
 			Name:    &name,
 			Surname: &surname,
 		}
@@ -181,7 +178,7 @@ func TestAdminUpdateRequest_Structure(t *testing.T) {
 	})
 
 	t.Run("should handle nil fields in AdminUpdateRequest", func(t *testing.T) {
-		request := AdminUpdateRequest{}
+		request := AdminUserUpdateRequest{}
 
 		assert.Nil(t, request.Name)
 		assert.Nil(t, request.Surname)
@@ -190,7 +187,7 @@ func TestAdminUpdateRequest_Structure(t *testing.T) {
 	t.Run("should allow partial updates", func(t *testing.T) {
 		name := "Just Name Update"
 
-		request := AdminUpdateRequest{
+		request := AdminUserUpdateRequest{
 			Name: &name,
 		}
 
