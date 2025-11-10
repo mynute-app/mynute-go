@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"mynute-go/services/auth/api/handler"
 	"mynute-go/services/auth/api/lib"
-	authModel "mynute-go/services/auth/config/db/model"
+	"mynute-go/services/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -38,7 +38,7 @@ func CheckAccess(c *fiber.Ctx) error {
 	}
 
 	// Find the endpoint
-	var endpoint authModel.EndPoint
+	var endpoint model.EndPoint
 	if err := tx.Where("method = ? AND path = ?", req.Method, req.Path).First(&endpoint).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(404).JSON(AccessCheckResponse{
@@ -50,7 +50,7 @@ func CheckAccess(c *fiber.Ctx) error {
 	}
 
 	// Get all policies for this endpoint
-	var policies []authModel.PolicyRule
+	var policies []model.Policy
 	if err := tx.Where("end_point_id = ?", endpoint.ID).Find(&policies).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -66,8 +66,8 @@ func CheckAccess(c *fiber.Ctx) error {
 	accessCtrl := handler.NewAccessController(tx)
 
 	// Evaluate each policy
-	var allowPolicies []authModel.PolicyRule
-	var denyPolicies []authModel.PolicyRule
+	var allowPolicies []model.Policy
+	var denyPolicies []model.Policy
 
 	for _, policy := range policies {
 		switch policy.Effect {
@@ -187,7 +187,7 @@ func EvaluatePolicy(c *fiber.Ctx) error {
 	}
 
 	// Find the policy
-	var policy authModel.PolicyRule
+	var policy model.Policy
 	if err := tx.Preload("EndPoint").Where("id = ?", policyID).First(&policy).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(404).JSON(AccessCheckResponse{

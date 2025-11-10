@@ -43,7 +43,7 @@ and query parameters.
   - headers: Data extracted from request headers.
   - policy: The specific policy to evaluate.
 */
-func (p *AccessController) Validate(subject, resource, path, body, query, headers map[string]any, policy *model.PolicyRule) AccessDecision {
+func (p *AccessController) Validate(subject, resource, path, body, query, headers map[string]any, policy *model.Policy) AccessDecision {
 	decision := AccessDecision{}
 	if policy == nil {
 		decision.Error = errors.New("AccessController rule cannot be nil")

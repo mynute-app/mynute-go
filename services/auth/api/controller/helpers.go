@@ -32,6 +32,38 @@ func CreateUser(c *fiber.Ctx, modelInstance any) error {
 	return nil
 }
 
+func List(c *fiber.Ctx, model any, result any) (int, int, error) {
+
+	// Parse pagination parameters
+	limit := c.QueryInt("limit", 10)
+	offset := c.QueryInt("offset", 0)
+
+	// Validate pagination parameters
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	tx, err := lib.Session(c)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if err := tx.Model(model).
+		Limit(limit).
+		Offset(offset).
+		Find(result).Error; err != nil {
+		return 0, 0, lib.Error.General.InternalError.WithError(err)
+	}
+
+	return limit, offset, nil
+}
+
 func GetOneBy(param string, c *fiber.Ctx, modelInstance any) error {
 	// Get database session
 	tx, err := lib.Session(c)

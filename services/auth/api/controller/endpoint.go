@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 	"mynute-go/services/auth/api/lib"
-	authModel "mynute-go/services/auth/config/db/model"
+	"mynute-go/services/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -22,7 +22,7 @@ import (
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Produce		json
-//	@Success		200	{array}		authModel.EndPoint
+//	@Success		200	{array}		model.EndPoint
 //	@Failure		400	{object}	map[string]string
 //	@Router			/endpoints [get]
 func ListEndpoints(c *fiber.Ctx) error {
@@ -35,7 +35,7 @@ func ListEndpoints(c *fiber.Ctx) error {
 		return err
 	}
 
-	var endpoints []authModel.EndPoint
+	var endpoints []model.EndPoint
 	if err := tx.Preload("Resource").Find(&endpoints).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -52,7 +52,7 @@ func ListEndpoints(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			id				path	string	true	"Endpoint ID"
 //	@Produce		json
-//	@Success		200	{object}	authModel.EndPoint
+//	@Success		200	{object}	model.EndPoint
 //	@Failure		400	{object}	map[string]string
 //	@Failure		404	{object}	map[string]string
 //	@Router			/endpoints/{id} [get]
@@ -76,7 +76,7 @@ func GetEndpointById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var endpoint authModel.EndPoint
+	var endpoint model.EndPoint
 	if err := tx.Preload("Resource").Where("id = ?", id).First(&endpoint).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("endpoint not found"))
@@ -97,7 +97,7 @@ func GetEndpointById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			endpoint	body		EndpointCreateRequest	true	"Endpoint data"
-//	@Success		201			{object}	authModel.EndPoint
+//	@Success		201			{object}	model.EndPoint
 //	@Failure		400			{object}	map[string]string
 //	@Router			/endpoints [post]
 func CreateEndpoint(c *fiber.Ctx) error {
@@ -124,15 +124,15 @@ func CreateEndpoint(c *fiber.Ctx) error {
 	}
 
 	// Check if endpoint with same method and path already exists
-	var existing authModel.EndPoint
+	var existing model.EndPoint
 	if err := tx.Where("method = ? AND path = ?", req.Method, req.Path).First(&existing).Error; err == nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("endpoint with method %s and path %s already exists", req.Method, req.Path))
 	} else if err != gorm.ErrRecordNotFound {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	endpoint := authModel.EndPoint{
-		BaseModel:        authModel.BaseModel{ID: uuid.New()},
+	endpoint := model.EndPoint{
+		BaseModel:        model.BaseModel{ID: uuid.New()},
 		ControllerName:   req.ControllerName,
 		Description:      req.Description,
 		Method:           req.Method,
@@ -149,7 +149,7 @@ func CreateEndpoint(c *fiber.Ctx) error {
 		}
 
 		// Check if resource exists
-		var resource authModel.Resource
+		var resource model.Resource
 		if err := tx.Where("id = ?", resourceID).First(&resource).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("resource not found"))
@@ -161,8 +161,8 @@ func CreateEndpoint(c *fiber.Ctx) error {
 	}
 
 	// Temporarily allow endpoint creation
-	authModel.AllowEndpointCreation = true
-	defer func() { authModel.AllowEndpointCreation = false }()
+	model.AllowEndpointCreation = true
+	defer func() { model.AllowEndpointCreation = false }()
 
 	if err := tx.Create(&endpoint).Error; err != nil {
 		return lib.Error.General.CreatedError.WithError(err)
@@ -187,7 +187,7 @@ func CreateEndpoint(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id			path		string					true	"Endpoint ID"
 //	@Param			endpoint	body		EndpointUpdateRequest	true	"Endpoint data"
-//	@Success		200			{object}	authModel.EndPoint
+//	@Success		200			{object}	model.EndPoint
 //	@Failure		400			{object}	map[string]string
 //	@Failure		404			{object}	map[string]string
 //	@Router			/endpoints/{id} [patch]
@@ -216,7 +216,7 @@ func UpdateEndpointById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var endpoint authModel.EndPoint
+	var endpoint model.EndPoint
 	if err := tx.Where("id = ?", id).First(&endpoint).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("endpoint not found"))
@@ -259,7 +259,7 @@ func UpdateEndpointById(c *fiber.Ctx) error {
 			}
 
 			// Check if resource exists
-			var resource authModel.Resource
+			var resource model.Resource
 			if err := tx.Where("id = ?", resourceID).First(&resource).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
 					return lib.Error.General.BadRequest.WithError(fmt.Errorf("resource not found"))
@@ -316,7 +316,7 @@ func DeleteEndpointById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var endpoint authModel.EndPoint
+	var endpoint model.EndPoint
 	if err := tx.Where("id = ?", id).First(&endpoint).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("endpoint not found"))
@@ -326,7 +326,7 @@ func DeleteEndpointById(c *fiber.Ctx) error {
 
 	// Check if there are policies referencing this endpoint
 	var policyCount int64
-	if err := tx.Model(&authModel.PolicyRule{}).Where("end_point_id = ?", id).Count(&policyCount).Error; err != nil {
+	if err := tx.Model(&model.Policy{}).Where("end_point_id = ?", id).Count(&policyCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

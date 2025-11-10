@@ -99,7 +99,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 	}
 
 	// Check if user with same email already exists
-	var existingUser model.User
+	var existingUser model.AdminUser
 	if err := tx.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("user with email %s already exists", req.Email))
 	} else if err != gorm.ErrRecordNotFound {
@@ -113,12 +113,13 @@ func CreateAdmin(c *fiber.Ctx) error {
 	}
 
 	// Create admin user with type='admin'
-	user := model.User{
-		BaseModel: model.BaseModel{ID: uuid.New()},
-		Email:     req.Email,
-		Password:  hashedPassword,
-		Type:      "admin",
-		Verified:  true, // Admins are verified by default
+	user := model.AdminUser{
+		User: model.User{
+			BaseModel: model.BaseModel{ID: uuid.New()},
+			Email:     req.Email,
+			Password:  hashedPassword,
+			Verified:  true, // Admins are verified by default
+		},
 	}
 
 	if err := tx.Create(&user).Error; err != nil {
@@ -147,14 +148,9 @@ func GetAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var user model.User
+	var user model.AdminUser
 	if err := GetOneBy("id", c, &user); err != nil {
 		return err
-	}
-
-	// Verify it's an admin user
-	if user.Type != "admin" {
-		return lib.Error.General.RecordNotFound
 	}
 
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
@@ -183,14 +179,9 @@ func UpdateAdminById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var user model.User
+	var user model.AdminUser
 	if err := UpdateOneById(c, &user); err != nil {
 		return err
-	}
-
-	// Verify it's an admin user
-	if user.Type != "admin" {
-		return lib.Error.General.RecordNotFound
 	}
 
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Admin{}); err != nil {
@@ -216,7 +207,7 @@ func DeleteAdminById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
 		return err
 	}
-	return DeleteOneById(c, &model.User{})
+	return DeleteOneById(c, &model.AdminUser{})
 }
 
 // ListAdmins retrieves all admins
@@ -241,7 +232,7 @@ func ListAdmins(c *fiber.Ctx) error {
 		return err
 	}
 
-	var users []model.User
+	var users []model.AdminUser
 	if err := tx.Where("type = ?", "admin").Find(&users).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -261,7 +252,7 @@ func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
 	}
 
 	var count int64
-	if err := tx.Model(&model.User{}).Where("type = ?", "admin").Count(&count).Error; err != nil {
+	if err := tx.Model(&model.AdminUser{}).Where("type = ?", "admin").Count(&count).Error; err != nil {
 		return false, lib.Error.General.InternalError.WithError(err)
 	}
 

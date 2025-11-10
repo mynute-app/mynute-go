@@ -2,7 +2,7 @@ package controller
 
 import (
 	"mynute-go/services/auth/api/lib"
-	authModel "mynute-go/services/auth/config/db/model"
+	"mynute-go/services/auth/config/db/model"
 	DTO "mynute-go/services/auth/config/dto"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,8 +28,7 @@ import (
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee [post]
 func CreateEmployee(c *fiber.Ctx) error {
-	var user authModel.User
-	user.Type = "employee"
+	var user model.User
 	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
@@ -54,12 +53,9 @@ func CreateEmployee(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [get]
 func GetEmployeeById(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := GetOneBy("id", c, &user); err != nil {
 		return err
-	}
-	if user.Type != "employee" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -82,12 +78,9 @@ func GetEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/email/{email} [get]
 func GetEmployeeByEmail(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := GetOneBy("email", c, &user); err != nil {
 		return err
-	}
-	if user.Type != "employee" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -112,12 +105,9 @@ func GetEmployeeByEmail(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [patch]
 func UpdateEmployeeById(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := UpdateOneById(c, &user); err != nil {
 		return err
-	}
-	if user.Type != "employee" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.EmployeeBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -140,5 +130,5 @@ func UpdateEmployeeById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/employee/{id} [delete]
 func DeleteEmployeeById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &authModel.User{})
+	return DeleteOneById(c, &model.User{})
 }

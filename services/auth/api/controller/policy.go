@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mynute-go/services/auth/api/lib"
-	authModel "mynute-go/services/auth/config/db/model"
+	"mynute-go/services/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -15,15 +15,17 @@ import (
 // POLICY MANAGEMENT
 // =====================
 
-// ListPolicies retrieves all policy rules
+// ListPolicies retrieves all policy rules with pagination
 //
 //	@Summary		List all policies
-//	@Description	Retrieve all policy rules
+//	@Description	Retrieve all policy rules with pagination
 //	@Tags			Policies
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			limit			query	int		false	"Number of items per page (default: 10, max: 100)"
+//	@Param			offset			query	int		false	"Number of items to skip (default: 0)"
 //	@Produce		json
-//	@Success		200	{array}		authModel.PolicyRule
+//	@Success		200	{object}	PaginatedPoliciesResponse
 //	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies [get]
 func ListPolicies(c *fiber.Ctx) error {
@@ -31,17 +33,18 @@ func ListPolicies(c *fiber.Ctx) error {
 		return err
 	}
 
-	tx, err := lib.Session(c)
+	// Get paginated policies
+	var policies []model.Policy
+	limit, offset, err := List(c, &model.Policy{}, &policies)
 	if err != nil {
 		return err
 	}
 
-	var policies []authModel.PolicyRule
-	if err := tx.Preload("EndPoint").Find(&policies).Error; err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-
-	return c.JSON(policies)
+	return c.JSON(PaginatedPoliciesResponse{
+		Data:   policies,
+		Limit:  limit,
+		Offset: offset,
+	})
 }
 
 // GetPolicyById retrieves a policy rule by ID
@@ -53,7 +56,7 @@ func ListPolicies(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			id				path	string	true	"Policy ID"
 //	@Produce		json
-//	@Success		200	{object}	authModel.PolicyRule
+//	@Success		200	{object}	model.PolicyRule
 //	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [get]
@@ -77,7 +80,7 @@ func GetPolicyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var policy authModel.PolicyRule
+	var policy model.Policy
 	if err := tx.Preload("EndPoint").Where("id = ?", id).First(&policy).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("policy not found"))
@@ -98,7 +101,7 @@ func GetPolicyById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			policy	body		PolicyCreateRequest	true	"Policy data"
-//	@Success		201		{object}	authModel.PolicyRule
+//	@Success		201		{object}	model.PolicyRule
 //	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies [post]
 func CreatePolicy(c *fiber.Ctx) error {
@@ -123,7 +126,7 @@ func CreatePolicy(c *fiber.Ctx) error {
 	}
 
 	// Validate conditions JSON
-	var conditionsNode authModel.ConditionNode
+	var conditionsNode model.ConditionNode
 	if err := json.Unmarshal(req.Conditions, &conditionsNode); err != nil {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid conditions JSON: %w", err))
 	}
@@ -134,7 +137,7 @@ func CreatePolicy(c *fiber.Ctx) error {
 	}
 
 	// Check if endpoint exists
-	var endpoint authModel.EndPoint
+	var endpoint model.EndPoint
 	if err := tx.Where("id = ?", endpointID).First(&endpoint).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("endpoint not found"))
@@ -142,8 +145,8 @@ func CreatePolicy(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	policy := authModel.PolicyRule{
-		BaseModel:   authModel.BaseModel{ID: uuid.New()},
+	policy := model.Policy{
+		BaseModel:   model.BaseModel{ID: uuid.New()},
 		Name:        req.Name,
 		Description: req.Description,
 		Effect:      req.Effect,
@@ -174,7 +177,7 @@ func CreatePolicy(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			id		path		string				true	"Policy ID"
 //	@Param			policy	body		PolicyUpdateRequest	true	"Policy data"
-//	@Success		200		{object}	authModel.PolicyRule
+//	@Success		200		{object}	model.PolicyRule
 //	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Failure		404		{object}	mynute-go_auth_config_dto.ErrorResponse
 //	@Router			/policies/{id} [patch]
@@ -203,7 +206,7 @@ func UpdatePolicyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var policy authModel.PolicyRule
+	var policy model.Policy
 	if err := tx.Where("id = ?", id).First(&policy).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("policy not found"))
@@ -231,7 +234,7 @@ func UpdatePolicyById(c *fiber.Ctx) error {
 		}
 
 		// Check if endpoint exists
-		var endpoint authModel.EndPoint
+		var endpoint model.EndPoint
 		if err := tx.Where("id = ?", endpointID).First(&endpoint).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return lib.Error.General.BadRequest.WithError(fmt.Errorf("endpoint not found"))
@@ -243,7 +246,7 @@ func UpdatePolicyById(c *fiber.Ctx) error {
 	}
 	if req.Conditions != nil {
 		// Validate conditions JSON
-		var conditionsNode authModel.ConditionNode
+		var conditionsNode model.ConditionNode
 		if err := json.Unmarshal(req.Conditions, &conditionsNode); err != nil {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid conditions JSON: %w", err))
 		}
@@ -295,7 +298,7 @@ func DeletePolicyById(c *fiber.Ctx) error {
 		return err
 	}
 
-	var policy authModel.PolicyRule
+	var policy model.Policy
 	if err := tx.Where("id = ?", id).First(&policy).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("policy not found"))
@@ -315,6 +318,12 @@ func DeletePolicyById(c *fiber.Ctx) error {
 // =====================
 // REQUEST TYPES
 // =====================
+
+type PaginatedPoliciesResponse struct {
+	Data   []model.Policy `json:"data"`
+	Limit  int                `json:"limit"`
+	Offset int                `json:"offset"`
+}
 
 type PolicyCreateRequest struct {
 	Name        string          `json:"name" validate:"required,min=3,max=100"`

@@ -240,32 +240,18 @@ func TestAdminModelStructure(t *testing.T) {
 	t.Run("should create valid admin user model", func(t *testing.T) {
 		hashedPassword, _ := handler.HashPassword("SecureP@ss123")
 
-		admin := model.User{
-			BaseModel: model.BaseModel{ID: uuid.New()},
-			Email:     "admin@example.com",
-			Password:  hashedPassword,
-			Type:      "admin",
-			Verified:  true,
+		admin := model.AdminUser{
+			User: model.User{
+				BaseModel: model.BaseModel{ID: uuid.New()},
+				Email:     "admin@example.com",
+				Password:  hashedPassword,
+				Verified:  true,
+			},
 		}
 
 		assert.NotEqual(t, uuid.Nil, admin.ID)
-		assert.Equal(t, "admin", admin.Type)
 		assert.True(t, admin.Verified)
 		assert.NotEmpty(t, admin.Password)
-	})
-
-	t.Run("should support different user types", func(t *testing.T) {
-		validTypes := []string{"admin", "client", "employee"}
-
-		for _, userType := range validTypes {
-			user := model.User{
-				BaseModel: model.BaseModel{ID: uuid.New()},
-				Email:     "user@example.com",
-				Type:      userType,
-			}
-
-			assert.Equal(t, userType, user.Type)
-		}
 	})
 }
 
@@ -439,16 +425,16 @@ func TestFirstAdminCreationScenarios(t *testing.T) {
 		// First admin is auto-verified
 		hashedPassword, _ := handler.HashPassword("SecureP@ss123")
 
-		firstAdmin := model.User{
-			BaseModel: model.BaseModel{ID: uuid.New()},
-			Email:     "first@example.com",
-			Password:  hashedPassword,
-			Type:      "admin",
-			Verified:  true, // First admin is auto-verified
+		firstAdmin := model.AdminUser{
+			User: model.User{
+				BaseModel: model.BaseModel{ID: uuid.New()},
+				Email:     "admin@example.com",
+				Password:  hashedPassword,
+				Verified:  true,
+			},
 		}
 
 		assert.True(t, firstAdmin.Verified)
-		assert.Equal(t, "admin", firstAdmin.Type)
 	})
 
 	t.Run("subsequent admins require authentication", func(t *testing.T) {

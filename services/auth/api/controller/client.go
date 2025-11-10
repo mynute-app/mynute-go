@@ -2,7 +2,7 @@ package controller
 
 import (
 	"mynute-go/services/auth/api/lib"
-	authModel "mynute-go/services/auth/config/db/model"
+	"mynute-go/services/auth/config/db/model"
 	DTO "mynute-go/services/auth/config/dto"
 
 	"github.com/gofiber/fiber/v2"
@@ -24,8 +24,7 @@ import (
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client [post]
 func CreateClient(c *fiber.Ctx) error {
-	var user authModel.User
-	user.Type = "client"
+	var user model.User
 	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
@@ -46,12 +45,9 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := GetOneBy("email", c, &user); err != nil {
 		return err
-	}
-	if user.Type != "client" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -73,12 +69,9 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := GetOneBy("id", c, &user); err != nil {
 		return err
-	}
-	if user.Type != "client" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -102,12 +95,9 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
-	var user authModel.User
+	var user model.User
 	if err := UpdateOneById(c, &user); err != nil {
 		return err
-	}
-	if user.Type != "client" {
-		return lib.Error.General.RecordNotFound
 	}
 	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.Client{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -129,5 +119,5 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/users/client/{id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
-	return DeleteOneById(c, &authModel.User{})
+	return DeleteOneById(c, &model.User{})
 }
