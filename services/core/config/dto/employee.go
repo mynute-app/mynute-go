@@ -6,10 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type TimeRange struct {
-	Start string `json:"start" example:"09:00"`
-	End   string `json:"end" example:"17:00"`
-}
 
 type LoginEmployee struct {
 	Email    string `json:"email" example:"john.clark@gmail.com"`
