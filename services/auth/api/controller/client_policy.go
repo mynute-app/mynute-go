@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -145,17 +146,19 @@ func CreateClientPolicy(c *fiber.Ctx) error {
 	}
 
 	policy := model.ClientPolicy{
-		Policy: model.Policy{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
-			Name:        req.Name,
-			Description: req.Description,
-			Effect:      req.Effect,
-			EndPointID:  endpointID,
-			Conditions:  req.Conditions,
-		},
+		BaseModel:   model.BaseModel{ID: uuid.New()},
+		Name:        req.Name,
+		Description: req.Description,
+		Effect:      req.Effect,
+		EndPointID:  endpointID,
+		Conditions:  req.Conditions,
 	}
 
 	if err := tx.Create(&policy).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("policy with name '%s' already exists", req.Name))
+		}
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -255,6 +258,10 @@ func UpdateClientPolicyById(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Save(&policy).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("policy with name '%s' already exists", policy.Name))
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

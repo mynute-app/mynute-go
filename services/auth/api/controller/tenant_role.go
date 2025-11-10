@@ -5,6 +5,7 @@ import (
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
 	DTO "mynute-go/services/auth/config/dto"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -175,15 +176,17 @@ func CreateTenantRole(c *fiber.Ctx) error {
 	}
 
 	role := model.TenantRole{
-		Role: model.Role{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
-			Name:        req.Name,
-			Description: req.Description,
-		},
-		TenantID: tenantID,
+		BaseModel:   model.BaseModel{ID: uuid.New()},
+		TenantID:    tenantID,
+		Name:        req.Name,
+		Description: req.Description,
 	}
 
 	if err := tx.Create(&role).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "idx_tenant_role_name") || strings.Contains(err.Error(), "duplicate key") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("role with name '%s' already exists for tenant %s", req.Name, tenantID))
+		}
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -255,6 +258,10 @@ func UpdateTenantRoleById(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Save(&role).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "idx_tenant_role_name") || strings.Contains(err.Error(), "duplicate key") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("role with name '%s' already exists for tenant %s", role.Name, tenantID))
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

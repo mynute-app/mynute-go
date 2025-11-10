@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"mynute-go/services/auth/api/lib"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -26,6 +27,10 @@ func CreateUser(c *fiber.Ctx, modelInstance any) error {
 
 	// Create the user record
 	if err := tx.Create(modelInstance).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("user with this email already exists"))
+		}
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -124,6 +129,10 @@ func UpdateOneById(c *fiber.Ctx, modelInstance any) error {
 
 	// Update the record
 	if err := tx.Model(modelInstance).Where("id = ?", id).Updates(updates).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("a record with this unique value already exists"))
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

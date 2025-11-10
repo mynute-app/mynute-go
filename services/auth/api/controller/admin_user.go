@@ -112,14 +112,12 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Create admin user with type='admin'
+	// Create admin user
 	user := model.AdminUser{
-		User: model.User{
-			BaseModel: model.BaseModel{ID: uuid.New()},
-			Email:     req.Email,
-			Password:  hashedPassword,
-			Verified:  true, // Admins are verified by default
-		},
+		BaseModel: model.BaseModel{ID: uuid.New()},
+		Email:     req.Email,
+		Password:  hashedPassword,
+		Verified:  true, // Admins are verified by default
 	}
 
 	if err := tx.Create(&user).Error; err != nil {

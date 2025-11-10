@@ -102,7 +102,7 @@ type ErrorCategory struct {
 	AppointmentArchive AppointmentArchiveErrors
 	Branch             BranchErrors
 	Client             ClientErrors
-	Company            CompanyErrors
+	Tenant             TenantErrors
 	Employee           EmployeeErrors
 	General            GeneralErrors
 	Role               RoleErrors
@@ -161,7 +161,7 @@ type ClientErrors struct {
 	CompanyIdNotFound ErrorStruct
 }
 
-type CompanyErrors struct {
+type TenantErrors struct {
 	NotFound              ErrorStruct
 	CnpjAlreadyExists     ErrorStruct
 	NotSame               ErrorStruct
@@ -255,7 +255,7 @@ var Error = ErrorCategory{
 		CompanyLimit:      NewError("Client already has a company associated", "Usuário já possui uma empresa associada", fiber.StatusBadRequest),
 		CompanyIdNotFound: NewError("Client company ID not found. This is an internal error", "ID da empresa do usuário não encontrado. Este é um erro interno", fiber.StatusInternalServerError),
 	},
-	Company: CompanyErrors{
+	Tenant: TenantErrors{
 		NotFound:              NewError("Company not found", "Empresa não encontrada", fiber.StatusNotFound),
 		BranchDoesNotBelong:   NewError("Branch does not belong to the specified company", "Filial não pertence à empresa especificada", fiber.StatusBadRequest),
 		EmployeeDoesNotBelong: NewError("Employee does not belong to the specified company", "Funcionário não pertence à empresa especificada", fiber.StatusBadRequest),

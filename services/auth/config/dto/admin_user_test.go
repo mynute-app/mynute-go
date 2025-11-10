@@ -66,6 +66,7 @@ func TestAdminLoginRequest_Structure(t *testing.T) {
 func TestAdmin_Structure(t *testing.T) {
 	t.Run("should create Admin with all fields", func(t *testing.T) {
 		id := uuid.New()
+		roleID := uuid.New()
 		admin := AdminUser{
 			ID:       id,
 			Name:     "John",
@@ -73,7 +74,11 @@ func TestAdmin_Structure(t *testing.T) {
 			Email:    "admin@example.com",
 			IsActive: true,
 			Roles: []model.AdminRole{
-				{Role: model.Role{Name: "superadmin"}},
+				{
+					BaseModel:   model.BaseModel{ID: roleID},
+					Name:        "superadmin",
+					Description: "Super administrator role",
+				},
 			},
 		}
 

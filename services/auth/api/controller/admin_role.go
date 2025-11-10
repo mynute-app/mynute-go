@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -100,14 +101,16 @@ func CreateAdminRole(c *fiber.Ctx) error {
 	}
 
 	role := model.AdminRole{
-		Role: model.Role{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
-			Name:        req.Name,
-			Description: req.Description,
-		},
+		BaseModel:   model.BaseModel{ID: uuid.New()},
+		Name:        req.Name,
+		Description: req.Description,
 	}
 
 	if err := tx.Create(&role).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("role with name '%s' already exists", req.Name))
+		}
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -171,6 +174,10 @@ func UpdateAdminRoleById(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Save(&role).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("role with name '%s' already exists", role.Name))
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 

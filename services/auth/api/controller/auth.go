@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"fmt"
 	"mynute-go/services/auth/api/handler"
 	"mynute-go/services/auth/api/lib"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // =====================
@@ -245,33 +245,78 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		return "", err
 	}
 
-	// Find user by email and type
-	var user model.User
-	if err := tx.Where("email = ? AND type = ?", body.Email, user_type).First(&user).Error; err != nil {
-		if err.Error() == "record not found" {
-			return "", lib.Error.Client.NotFound
+	// Find user by email based on user type
+	var userID uuid.UUID
+	var userEmail string
+	var userPassword string
+	var userVerified bool
+
+	switch user_type {
+	case namespace.AdminKey.Name:
+		var user model.AdminUser
+		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
 		}
-		return "", lib.Error.General.InternalError.WithError(err)
+		userID = user.ID
+		userEmail = user.Email
+		userPassword = user.Password
+		userVerified = user.Verified
+
+	case namespace.ClientKey.Name:
+		var user model.ClientUser
+		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+		userID = user.ID
+		userEmail = user.Email
+		userPassword = user.Password
+		userVerified = user.Verified
+
+	case namespace.TenantKey.Name:
+		// Get tenant_id from header
+		tenantIDStr := c.Get(namespace.HeadersKey.Company)
+		if tenantIDStr == "" {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("missing tenant ID in header"))
+		}
+		tenantID, err := uuid.Parse(tenantIDStr)
+		if err != nil {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tenant ID format"))
+		}
+
+		var user model.TenantUser
+		if err := tx.Where("email = ? AND tenant_id = ?", body.Email, tenantID).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+		userID = user.ID
+		userEmail = user.Email
+		userPassword = user.Password
+		userVerified = user.Verified
+
+	default:
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid user type: %s", user_type))
 	}
 
 	// Validate user status and password
-	if !user.Verified {
+	if !userVerified {
 		return "", lib.Error.Client.NotVerified
 	}
-	if !handler.ComparePassword(user.Password, body.Password) {
+	if !handler.ComparePassword(userPassword, body.Password) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
 
 	// Create JWT claims from user data
-	userBytes, err := json.Marshal(&user)
-	if err != nil {
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
-
 	var claims DTO.Claims
-	if err := json.Unmarshal(userBytes, &claims); err != nil {
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
+	claims.ID = userID
+	claims.Email = userEmail
 	claims.Type = user_type
 
 	// Generate JWT token
@@ -297,37 +342,109 @@ func LoginByEmailCode(user_type string, c *fiber.Ctx) (string, error) {
 		return "", err
 	}
 
-	// Find user by email and type
-	var user model.User
-	if err := tx.Where("email = ? AND type = ?", body.Email, user_type).First(&user).Error; err != nil {
-		if err.Error() == "record not found" {
-			return "", lib.Error.Client.NotFound
+	// Find user by email based on user type and validate code
+	var userID uuid.UUID
+	var userEmail string
+	var userToUpdate interface{}
+
+	switch user_type {
+	case namespace.AdminKey.Name:
+		var user model.AdminUser
+		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
 		}
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
 
-	// Check if code exists
-	if user.Meta.Login.ValidationCode == nil {
-		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
-	}
+		// Check validation code
+		if user.Meta.Login.ValidationCode == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
+		}
+		if user.Meta.Login.ValidationExpiry == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if time.Now().After(*user.Meta.Login.ValidationExpiry) {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if *user.Meta.Login.ValidationCode != body.Code {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+		}
 
-	// Check if expiry exists
-	if user.Meta.Login.ValidationExpiry == nil {
-		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
-	}
+		userID = user.ID
+		userEmail = user.Email
+		userToUpdate = &user
 
-	// Check if code has expired
-	if time.Now().After(*user.Meta.Login.ValidationExpiry) {
-		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
-	}
+	case namespace.ClientKey.Name:
+		var user model.ClientUser
+		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
 
-	// Verify the code
-	if *user.Meta.Login.ValidationCode != body.Code {
-		return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+		// Check validation code
+		if user.Meta.Login.ValidationCode == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
+		}
+		if user.Meta.Login.ValidationExpiry == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if time.Now().After(*user.Meta.Login.ValidationExpiry) {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if *user.Meta.Login.ValidationCode != body.Code {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+		}
+
+		userID = user.ID
+		userEmail = user.Email
+		userToUpdate = &user
+
+	case namespace.TenantKey.Name:
+		// Get tenant_id from header
+		tenantIDStr := c.Get(namespace.HeadersKey.Company)
+		if tenantIDStr == "" {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("missing tenant ID in header"))
+		}
+		tenantID, err := uuid.Parse(tenantIDStr)
+		if err != nil {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tenant ID format"))
+		}
+
+		var user model.TenantUser
+		if err := tx.Where("email = ? AND tenant_id = ?", body.Email, tenantID).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.Client.NotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+
+		// Check validation code
+		if user.Meta.Login.ValidationCode == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("no validation code found"))
+		}
+		if user.Meta.Login.ValidationExpiry == nil {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if time.Now().After(*user.Meta.Login.ValidationExpiry) {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("validation code has expired"))
+		}
+		if *user.Meta.Login.ValidationCode != body.Code {
+			return "", lib.Error.Auth.InvalidLogin.WithError(fmt.Errorf("invalid validation code"))
+		}
+
+		userID = user.ID
+		userEmail = user.Email
+		userToUpdate = &user
+
+	default:
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid user type: %s", user_type))
 	}
 
 	// Clear the validation code after successful use
-	if err := tx.Model(&user).Updates(map[string]interface{}{
+	if err := tx.Model(userToUpdate).Updates(map[string]interface{}{
 		"meta": map[string]interface{}{
 			"login": map[string]interface{}{
 				"validation_code":   nil,
@@ -340,15 +457,9 @@ func LoginByEmailCode(user_type string, c *fiber.Ctx) (string, error) {
 	}
 
 	// Generate JWT token
-	userBytes, err := json.Marshal(&user)
-	if err != nil {
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
-
 	var claims DTO.Claims
-	if err := json.Unmarshal(userBytes, &claims); err != nil {
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
+	claims.ID = userID
+	claims.Email = userEmail
 	claims.Type = user_type
 
 	token, err := handler.JWT(c).Encode(&claims)
@@ -373,15 +484,6 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 		return "", lib.Error.General.BadRequest.WithError(err)
 	}
 
-	// Find user by email and type
-	var user model.User
-	if err := tx.Where("email = ? AND type = ?", user_email, user_type).First(&user).Error; err != nil {
-		if err.Error() == "record not found" {
-			return "", lib.Error.General.RecordNotFound
-		}
-		return "", lib.Error.General.InternalError.WithError(err)
-	}
-
 	// Generate 6-digit validation code
 	code := lib.GenerateRandomInt(6)
 	codeString := fmt.Sprintf("%06d", code)
@@ -390,7 +492,7 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 	expiryTime := time.Now().Add(15 * time.Minute)
 	now := time.Now()
 
-	// Update the database with new validation code
+	// Update the database with new validation code based on user type
 	updates := map[string]interface{}{
 		"meta": map[string]interface{}{
 			"login": map[string]interface{}{
@@ -401,8 +503,55 @@ func GenerateLoginValidationCode(c *fiber.Ctx, user_email string, user_type stri
 		},
 	}
 
-	if err := tx.Model(&user).Updates(updates).Error; err != nil {
-		return "", lib.Error.General.InternalError.WithError(err)
+	switch user_type {
+	case namespace.AdminKey.Name:
+		var user model.AdminUser
+		if err := tx.Where("email = ?", user_email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.General.RecordNotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+		if err := tx.Model(&user).Updates(updates).Error; err != nil {
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+
+	case namespace.ClientKey.Name:
+		var user model.ClientUser
+		if err := tx.Where("email = ?", user_email).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.General.RecordNotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+		if err := tx.Model(&user).Updates(updates).Error; err != nil {
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+
+	case namespace.TenantKey.Name:
+		// Get tenant_id from header
+		tenantIDStr := c.Get(namespace.HeadersKey.Company)
+		if tenantIDStr == "" {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("missing tenant ID in header"))
+		}
+		tenantID, err := uuid.Parse(tenantIDStr)
+		if err != nil {
+			return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid tenant ID format"))
+		}
+
+		var user model.TenantUser
+		if err := tx.Where("email = ? AND tenant_id = ?", user_email, tenantID).First(&user).Error; err != nil {
+			if err.Error() == "record not found" {
+				return "", lib.Error.General.RecordNotFound
+			}
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+		if err := tx.Model(&user).Updates(updates).Error; err != nil {
+			return "", lib.Error.General.InternalError.WithError(err)
+		}
+
+	default:
+		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid user type: %s", user_type))
 	}
 
 	return codeString, nil

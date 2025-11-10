@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -194,18 +195,20 @@ func CreateTenantPolicy(c *fiber.Ctx) error {
 	}
 
 	policy := model.TenantPolicy{
-		Policy: model.Policy{
-			BaseModel:   model.BaseModel{ID: uuid.New()},
-			Name:        req.Name,
-			Description: req.Description,
-			Effect:      req.Effect,
-			EndPointID:  endpointID,
-			Conditions:  req.Conditions,
-		},
-		TenantID: tenantID,
+		BaseModel:   model.BaseModel{ID: uuid.New()},
+		TenantID:    tenantID,
+		Name:        req.Name,
+		Description: req.Description,
+		Effect:      req.Effect,
+		EndPointID:  endpointID,
+		Conditions:  req.Conditions,
 	}
 
 	if err := tx.Create(&policy).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "idx_tenant_policy_name") || strings.Contains(err.Error(), "duplicate key") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("policy with name '%s' already exists for tenant %s", req.Name, tenantID))
+		}
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
@@ -313,6 +316,10 @@ func UpdateTenantPolicyById(c *fiber.Ctx) error {
 	}
 
 	if err := tx.Save(&policy).Error; err != nil {
+		// Check for unique constraint violation
+		if strings.Contains(err.Error(), "idx_tenant_policy_name") || strings.Contains(err.Error(), "duplicate key") {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("policy with name '%s' already exists for tenant %s", policy.Name, tenantID))
+		}
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
