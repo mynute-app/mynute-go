@@ -220,3 +220,23 @@ func JsonRawMessage(v any) json.RawMessage {
 	}
 	return json.RawMessage(data)
 }
+
+// --- Database Models Collection ---
+
+// AuthDBModels contains all models that should be migrated for the auth service
+var AuthDBModels = []any{
+	&AdminUser{},
+	&AdminRole{},
+	&AdminPolicy{},
+	&TenantUser{},
+	&TenantRole{},
+	&TenantPolicy{},
+	&TenantGeneralRole{},
+	&TenantGeneralPolicy{},
+	&ClientUser{},
+	&ClientRole{},
+	&ClientPolicy{},
+	&EndPoint{},
+	&Resource{},
+	&Property{},
+}
