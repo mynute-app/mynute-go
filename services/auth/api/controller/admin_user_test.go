@@ -241,12 +241,10 @@ func TestAdminModelStructure(t *testing.T) {
 		hashedPassword, _ := handler.HashPassword("SecureP@ss123")
 
 		admin := model.AdminUser{
-			User: model.User{
-				BaseModel: model.BaseModel{ID: uuid.New()},
-				Email:     "admin@example.com",
-				Password:  hashedPassword,
-				Verified:  true,
-			},
+			BaseModel: model.BaseModel{ID: uuid.New()},
+			Email:     "admin@example.com",
+			Password:  hashedPassword,
+			Verified:  true,
 		}
 
 		assert.NotEqual(t, uuid.Nil, admin.ID)
@@ -426,12 +424,10 @@ func TestFirstAdminCreationScenarios(t *testing.T) {
 		hashedPassword, _ := handler.HashPassword("SecureP@ss123")
 
 		firstAdmin := model.AdminUser{
-			User: model.User{
-				BaseModel: model.BaseModel{ID: uuid.New()},
-				Email:     "admin@example.com",
-				Password:  hashedPassword,
-				Verified:  true,
-			},
+			BaseModel: model.BaseModel{ID: uuid.New()},
+			Email:     "admin@example.com",
+			Password:  hashedPassword,
+			Verified:  true,
 		}
 
 		assert.True(t, firstAdmin.Verified)
