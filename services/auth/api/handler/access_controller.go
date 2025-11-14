@@ -41,18 +41,18 @@ and query parameters.
   - body: Data parsed from the request body.
   - query: Data extracted from URL query string parameters.
   - headers: Data extracted from request headers.
-  - policy: The specific policy to evaluate.
+  - policy: The specific policy to evaluate (TenantPolicy, ClientPolicy, or AdminPolicy).
 */
-func (p *AccessController) Validate(subject, resource, path, body, query, headers map[string]any, policy *model.Policy) AccessDecision {
+func (p *AccessController) Validate(subject, resource, path, body, query, headers map[string]any, policy model.PolicyInterface) AccessDecision {
 	decision := AccessDecision{}
 	if policy == nil {
 		decision.Error = errors.New("AccessController rule cannot be nil")
 		return decision
 	}
 
-	policyIdentifier := fmt.Sprintf("ID %s", policy.ID.String())
-	if policy.Name != "" {
-		policyIdentifier = fmt.Sprintf("'%s' (ID %s)", policy.Name, policy.ID.String())
+	policyIdentifier := fmt.Sprintf("ID %s", policy.GetID().String())
+	if policy.GetName() != "" {
+		policyIdentifier = fmt.Sprintf("'%s' (ID %s)", policy.GetName(), policy.GetID().String())
 	}
 
 	// Validation should now allow 'header.' prefix
@@ -69,9 +69,9 @@ func (p *AccessController) Validate(subject, resource, path, body, query, header
 		return decision
 	}
 
-	effectDesc := fmt.Sprintf("[%s]", policy.Effect)
+	effectDesc := fmt.Sprintf("[%s]", policy.GetEffect())
 
-	switch policy.Effect {
+	switch policy.GetEffect() {
 	case "Allow":
 		decision.Allowed = result
 		if !decision.Allowed {
@@ -93,7 +93,7 @@ func (p *AccessController) Validate(subject, resource, path, body, query, header
 			}
 		}
 	default:
-		decision.Error = fmt.Errorf("unknown policy effect '%s' in policy %s", policy.Effect, policyIdentifier)
+		decision.Error = fmt.Errorf("unknown policy effect '%s' in policy %s", policy.GetEffect(), policyIdentifier)
 	}
 
 	return decision
