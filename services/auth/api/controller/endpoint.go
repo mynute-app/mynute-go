@@ -324,14 +324,25 @@ func DeleteEndpointById(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Check if there are policies referencing this endpoint
-	var policyCount int64
-	if err := tx.Model(&model.Policy{}).Where("end_point_id = ?", id).Count(&policyCount).Error; err != nil {
+	// Check if there are policies referencing this endpoint across all policy types
+	var tenantPolicyCount, clientPolicyCount, adminPolicyCount int64
+
+	if err := tx.Model(&model.TenantPolicy{}).Where("end_point_id = ?", id).Count(&tenantPolicyCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if policyCount > 0 {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("cannot delete endpoint: %d policies are referencing it", policyCount))
+	if err := tx.Model(&model.ClientPolicy{}).Where("end_point_id = ?", id).Count(&clientPolicyCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if err := tx.Model(&model.AdminPolicy{}).Where("end_point_id = ?", id).Count(&adminPolicyCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	totalPolicyCount := tenantPolicyCount + clientPolicyCount + adminPolicyCount
+	if totalPolicyCount > 0 {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("cannot delete endpoint: %d policies are referencing it (tenant: %d, client: %d, admin: %d)",
+			totalPolicyCount, tenantPolicyCount, clientPolicyCount, adminPolicyCount))
 	}
 
 	if err := tx.Delete(&endpoint).Error; err != nil {
