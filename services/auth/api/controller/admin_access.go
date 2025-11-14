@@ -7,43 +7,30 @@ import (
 	"mynute-go/services/auth/config/db/model"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // =====================
-// TENANT AUTHORIZATION
+// ADMIN AUTHORIZATION
 // =====================
 
-// AuthorizeTenant evaluates tenant-specific policies for access control
+// AuthorizeAdmin evaluates admin-specific policies for access control
 //
-//	@Summary		Authorize tenant access
-//	@Description	Evaluate if a tenant can access a resource based on tenant policies
-//	@Tags			Tenant
+//	@Summary		Authorize admin access
+//	@Description	Evaluate if an admin can access a resource based on admin policies
+//	@Tags			Admin
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		TenantAuthRequest	true	"Authorization request"
-//	@Success		200	{object}	AuthorizationResponse
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Router			/tenant/authorize [post]
-func AuthorizeTenant(c *fiber.Ctx) error {
-	var req TenantAuthRequest
+//	@Param			request	body		AdminAuthRequest	true	"Authorization request"
+//	@Success		200		{object}	AuthorizationResponse
+//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Router			/admin/authorize [post]
+func AuthorizeAdmin(c *fiber.Ctx) error {
+	var req AdminAuthRequest
 	if err := c.BodyParser(&req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
-	}
-
-	// Get tenant ID from header
-	tenantIDStr := c.Get("X-Company-ID")
-	if tenantIDStr == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("X-Company-ID header is required"))
-	}
-
-	tenantID, err := uuid.Parse(tenantIDStr)
-	if err != nil {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid X-Company-ID format"))
 	}
 
 	tx, err := lib.Session(c)
@@ -63,16 +50,16 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Get all tenant policies for this endpoint and tenant
-	var policies []model.TenantPolicy
-	if err := tx.Where("end_point_id = ? AND tenant_id = ?", endpoint.ID, tenantID).Find(&policies).Error; err != nil {
+	// Get all admin policies for this endpoint
+	var policies []model.AdminPolicy
+	if err := tx.Where("end_point_id = ?", endpoint.ID).Find(&policies).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	if len(policies) == 0 {
 		return c.JSON(AuthorizationResponse{
 			Allowed: false,
-			Reason:  fmt.Sprintf("no tenant policies defined for endpoint: %s %s", req.Method, req.Path),
+			Reason:  fmt.Sprintf("no admin policies defined for endpoint: %s %s", req.Method, req.Path),
 		})
 	}
 
@@ -80,8 +67,8 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 	accessCtrl := handler.NewAccessController(tx)
 
 	// Separate allow and deny policies
-	var allowPolicies []model.TenantPolicy
-	var denyPolicies []model.TenantPolicy
+	var allowPolicies []model.AdminPolicy
+	var denyPolicies []model.AdminPolicy
 
 	for _, policy := range policies {
 		switch policy.Effect {
@@ -167,7 +154,7 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 // REQUEST/RESPONSE TYPES
 // =====================
 
-type TenantAuthRequest struct {
+type AdminAuthRequest struct {
 	Method     string                 `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
 	Path       string                 `json:"path" validate:"required"`
 	Subject    map[string]interface{} `json:"subject" validate:"required"`
@@ -176,13 +163,4 @@ type TenantAuthRequest struct {
 	Body       map[string]interface{} `json:"body,omitempty"`
 	Query      map[string]interface{} `json:"query,omitempty"`
 	Headers    map[string]interface{} `json:"headers,omitempty"`
-}
-
-type AuthorizationResponse struct {
-	Allowed    bool   `json:"allowed"`
-	Reason     string `json:"reason"`
-	PolicyID   string `json:"policy_id,omitempty"`
-	PolicyName string `json:"policy_name,omitempty"`
-	Effect     string `json:"effect,omitempty"`
-	Error      string `json:"error,omitempty"`
 }
