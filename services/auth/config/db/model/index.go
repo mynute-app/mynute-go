@@ -4,7 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/google/uuid"
 )
+
+// --- PolicyInterface (Common interface for all policy types) ---
+type PolicyInterface interface {
+	GetID() uuid.UUID
+	GetName() string
+	GetDescription() string
+	GetEffect() string
+	GetEndPointID() uuid.UUID
+	GetConditions() json.RawMessage
+	GetConditionsNode() (ConditionNode, error)
+}
 
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
 type ConditionNode struct {
@@ -82,7 +95,6 @@ func GetConditionsNode(PolicyName, PolicyID string, Conditions json.RawMessage) 
 	// 4. Return the successfully parsed and validated node
 	return node, nil
 }
-
 
 // validateConditionNode performs recursive validation on a condition node structure.
 func validateConditionNode(node ConditionNode) error {
