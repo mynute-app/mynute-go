@@ -68,11 +68,26 @@ func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
 	// Policy management routes (for admin use)
 	policies := app.Group("/policies")
 	{
-		policies.Get("/", controller.ListPolicies)
-		policies.Post("/", controller.CreatePolicy)
-		policies.Get("/:id", controller.GetPolicyById)
-		policies.Patch("/:id", controller.UpdatePolicyById)
-		policies.Delete("/:id", controller.DeletePolicyById)
+		// Tenant policies
+		policies.Get("/tenant", controller.ListTenantPolicies)
+		policies.Post("/tenant", controller.CreateTenantPolicy)
+		policies.Get("/tenant/:id", controller.GetTenantPolicyById)
+		policies.Patch("/tenant/:id", controller.UpdateTenantPolicyById)
+		policies.Delete("/tenant/:id", controller.DeleteTenantPolicyById)
+
+		// Client policies
+		policies.Get("/client", controller.ListClientPolicies)
+		policies.Post("/client", controller.CreateClientPolicy)
+		policies.Get("/client/:id", controller.GetClientPolicyById)
+		policies.Patch("/client/:id", controller.UpdateClientPolicyById)
+		policies.Delete("/client/:id", controller.DeleteClientPolicyById)
+
+		// Admin policies
+		policies.Get("/admin", controller.ListAdminPolicies)
+		policies.Post("/admin", controller.CreateAdminPolicy)
+		policies.Get("/admin/:id", controller.GetAdminPolicyById)
+		policies.Patch("/admin/:id", controller.UpdateAdminPolicyById)
+		policies.Delete("/admin/:id", controller.DeleteAdminPolicyById)
 	}
 
 	// Endpoint management routes (for admin use)
@@ -88,22 +103,38 @@ func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
 	// Authorization routes (runtime access control checks)
 	authorize := app.Group("/authorize")
 	{
-		// Check access by HTTP method and path
-		authorize.Post("/by-method-and-path", controller.CheckAccess)
+		// Tenant authorization
+		authorize.Post("/tenant", controller.AuthorizeTenant)
 
-		// Evaluate a single policy (admin only, for testing)
-		authorize.Post("/test-policy/:id", controller.EvaluatePolicy)
+		// Client authorization
+		authorize.Post("/client", controller.AuthorizeClient)
+
+		// Admin authorization
+		authorize.Post("/admin", controller.AuthorizeAdmin)
 	}
 
 	// Role management routes
 	roles := app.Group("/roles")
-	_ = roles // TODO: Remove this when endpoints are implemented
 	{
-		// TODO: Implement role endpoints
-		// roles.Get("/", controllers.ListRoles)
-		// roles.Post("/", controllers.CreateRole)
-		// roles.Get("/:id", controllers.GetRole)
-		// roles.Put("/:id", controllers.UpdateRole)
-		// roles.Delete("/:id", controllers.DeleteRole)
+		// Tenant roles
+		roles.Get("/tenant", controller.ListTenantRoles)
+		roles.Post("/tenant", controller.CreateTenantRole)
+		roles.Get("/tenant/:id", controller.GetTenantRoleById)
+		roles.Patch("/tenant/:id", controller.UpdateTenantRoleById)
+		roles.Delete("/tenant/:id", controller.DeleteTenantRoleById)
+
+		// Client roles
+		roles.Get("/client", controller.ListClientRoles)
+		roles.Post("/client", controller.CreateClientRole)
+		roles.Get("/client/:id", controller.GetClientRoleById)
+		roles.Patch("/client/:id", controller.UpdateClientRoleById)
+		roles.Delete("/client/:id", controller.DeleteClientRoleById)
+
+		// Admin roles
+		roles.Get("/admin", controller.ListAdminRoles)
+		roles.Post("/admin", controller.CreateAdminRole)
+		roles.Get("/admin/:id", controller.GetAdminRoleById)
+		roles.Patch("/admin/:id", controller.UpdateAdminRoleById)
+		roles.Delete("/admin/:id", controller.DeleteAdminRoleById)
 	}
 }
