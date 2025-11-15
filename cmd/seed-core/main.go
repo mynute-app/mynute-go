@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	authModel "mynute-go/services/auth/config/db/model"
 	"mynute-go/services/core/api/lib"
 	database "mynute-go/services/core/config/db"
 	"mynute-go/services/core/config/db/model"
 	endpointSeed "mynute-go/services/core/config/db/seed/endpoint"
-	policySeed "mynute-go/services/core/config/db/seed/policy"
+	tenantPolicySeed "mynute-go/services/core/config/db/seed/policy"
 	resourceSeed "mynute-go/services/core/config/db/seed/resource"
 	"os"
 )
@@ -38,10 +37,8 @@ func main() {
 
 	// Seed system roles (if not already seeded by migrations)
 	model.AllowSystemRoleCreation = true
-	authModel.AllowEndpointCreation = true
 	defer func() {
 		model.AllowSystemRoleCreation = false
-		authModel.AllowEndpointCreation = false
 	}()
 
 	if err := db.
@@ -58,11 +55,6 @@ func main() {
 
 	// Seed endpoints
 	endpoints := endpointSeed.GetAllEndpoints()
-	endpoints, deferEndpoint, err := authModel.EndPoints(endpoints, &authModel.EndpointCfg{AllowCreation: true}, tx)
-	if err != nil {
-		log.Fatalf("Failed to prepare endpoints: %v", err)
-	}
-	defer deferEndpoint()
 
 	if err := db.
 		Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).
@@ -70,20 +62,26 @@ func main() {
 		log.Fatalf("Failed to seed endpoints: %v", err)
 	}
 
-	// Load endpoint IDs from database so policies can reference them
-	if err := authModel.LoadEndpointIDs(endpoints, tx); err != nil {
-		log.Fatalf("Failed to load endpoint IDs: %v", err)
+	// Load endpoint IDs from database for reference
+	for i, endpoint := range endpoints {
+		var dbEndpoint model.EndPoint
+		if err := tx.Where("method = ? AND path = ?", endpoint.Method, endpoint.Path).First(&dbEndpoint).Error; err != nil {
+			log.Printf("⚠️  Warning: Failed to load endpoint ID for '%s %s': %v\n", endpoint.Method, endpoint.Path, err)
+			continue
+		}
+		endpoints[i] = &dbEndpoint
 	}
 
-	// Seed policies
-	allPolicies := policySeed.GetAllPolicies()
-	policies, deferPolicies := authModel.Policies(allPolicies, &authModel.PolicyCfg{AllowNilCompanyID: true, AllowNilCreatedBy: true})
-	defer deferPolicies()
+	// Seed tenant policies
+	tenantPolicies := tenantPolicySeed.GetAllTenantPolicies()
+	if err := db.Seed("TenantPolicies", tenantPolicies, "name = ?", []string{"Name"}).Error; err != nil {
+		log.Fatalf("Failed to seed tenant policies: %v", err)
+	}
 
-	if err := db.
-		Seed("Policies", policies, "name = ?", []string{"Name"}).
-		Error; err != nil {
-		log.Fatalf("Failed to seed policies: %v", err)
+	// Seed client policies
+	clientPolicies := tenantPolicySeed.GetAllClientPolicies()
+	if err := db.Seed("ClientPolicies", clientPolicies, "name = ?", []string{"Name"}).Error; err != nil {
+		log.Fatalf("Failed to seed client policies: %v", err)
 	}
 
 	log.Println("✓ Seeding completed successfully!")
@@ -91,5 +89,6 @@ func main() {
 	fmt.Println("  - Resources")
 	fmt.Println("  - System Roles")
 	fmt.Printf("  - %d Endpoints\n", len(endpoints))
-	fmt.Printf("  - %d Policies\n", len(policies))
+	fmt.Printf("  - %d Tenant Policies\n", len(tenantPolicies))
+	fmt.Printf("  - %d Client Policies\n", len(clientPolicies))
 }

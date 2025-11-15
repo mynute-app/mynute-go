@@ -9,10 +9,9 @@ import (
 	"os"
 	"time"
 
-	authModel "mynute-go/services/auth/config/db/model"
 	"mynute-go/services/core/api/lib"
 	database "mynute-go/services/core/config/db"
-	coreModel "mynute-go/services/core/config/db/model"
+	"mynute-go/services/core/config/db/model"
 	endpointSeed "mynute-go/services/core/config/db/seed/endpoint"
 	resourceSeed "mynute-go/services/core/config/db/seed/resource"
 )
@@ -61,20 +60,22 @@ func main() {
 	// Step 2: Seed Endpoints
 	log.Println("\n=== Seeding Endpoints ===")
 
-	// Enable endpoint creation temporarily
-	coreModel.AllowSystemRoleCreation = true
-	authModel.AllowEndpointCreation = true
-	defer func() {
-		coreModel.AllowSystemRoleCreation = false
-		authModel.AllowEndpointCreation = false
-	}()
-
 	endpoints := endpointSeed.GetAllEndpoints()
-	endpoints, deferEndpoints, err := authModel.EndPoints(endpoints, &authModel.EndpointCfg{AllowCreation: true}, tx)
-	if err != nil {
-		log.Fatalf("Failed to prepare endpoints: %v", err)
+
+	// Ensure endpoints have IDs by creating them in database first
+	if err := db.Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).Error; err != nil {
+		log.Fatalf("Failed to seed endpoints in database: %v", err)
 	}
-	defer deferEndpoints()
+
+	// Load endpoint IDs
+	for i, endpoint := range endpoints {
+		var dbEndpoint model.EndPoint
+		if err := tx.Where("method = ? AND path = ?", endpoint.Method, endpoint.Path).First(&dbEndpoint).Error; err != nil {
+			log.Printf("⚠️  Warning: Failed to load endpoint ID for '%s %s': %v\n", endpoint.Method, endpoint.Path, err)
+			continue
+		}
+		endpoints[i] = &dbEndpoint
+	}
 
 	successCount := 0
 	for _, endpoint := range endpoints {
@@ -92,7 +93,7 @@ func main() {
 }
 
 // seedResource sends a resource to the auth service
-func seedResource(client *http.Client, baseURL string, resource *authModel.Resource) error {
+func seedResource(client *http.Client, baseURL string, resource *model.Resource) error {
 	// For now, we'll skip resources since they might need to be created via a dedicated endpoint
 	// Or we can add them directly to the auth database
 	// This is a placeholder for future implementation
@@ -100,7 +101,7 @@ func seedResource(client *http.Client, baseURL string, resource *authModel.Resou
 }
 
 // seedEndpoint sends an endpoint to the auth service
-func seedEndpoint(client *http.Client, baseURL string, endpoint *authModel.EndPoint) error {
+func seedEndpoint(client *http.Client, baseURL string, endpoint *model.EndPoint) error {
 	// Prepare endpoint data
 	data := map[string]interface{}{
 		"method":      endpoint.Method,
