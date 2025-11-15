@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	authModel "mynute-go/services/auth/config/db/model"
 	"mynute-go/services/core/api/lib"
 	"time"
 
@@ -52,10 +51,11 @@ var MainDBModels = []any{
 
 // AuthDBModels are authentication/authorization models that live in the auth database
 var AuthDBModels = []any{
-	&authModel.EndPoint{},
-	&authModel.PolicyRule{},
-	&authModel.Resource{},
-	&authModel.Property{},
+	&EndPoint{},
+	&TenantPolicy{},
+	&ClientPolicy{},
+	&AdminPolicy{},
+	&Resource{},
 	&Client{},    // User authentication
 	&Employee{},  // User authentication
 	&Admin{},     // Admin users
@@ -69,11 +69,12 @@ var GeneralModels = []any{
 	&Company{},
 	&Holiday{},
 	&Client{},
-	&authModel.EndPoint{},
+	&EndPoint{},
 	&Role{},
-	&authModel.PolicyRule{},
-	&authModel.Resource{},
-	&authModel.Property{},
+	&TenantPolicy{},
+	&ClientPolicy{},
+	&AdminPolicy{},
+	&Resource{},
 	&Subdomain{},
 	&ClientAppointment{},
 	&Admin{},
