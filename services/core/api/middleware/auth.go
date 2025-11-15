@@ -44,7 +44,7 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 		return lib.Error.Auth.InvalidToken
 	}
 
-	var policies []*authModel.PolicyRule
+	var policies []*authModel.TenantPolicy
 	PoliciesWhereClause := "end_point_id = ?"
 	if err := tx.Where(PoliciesWhereClause, EndPoint.ID).Find(&policies).Error; err != nil {
 		// Note: gorm.ErrRecordNotFound is handled by the len(policies) == 0 check later
