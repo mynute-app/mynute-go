@@ -37,10 +37,10 @@ func Test_Client(t *testing.T) {
 	tt.Describe("Login client with wrong password fails").Test(client1.LoginByPassword(401, "wrong-password"))
 
 	// Test login with email code
-	tt.Describe("Send login code to client email").Test(client1.SendLoginValidationCodeByEmail(200))
+	tt.Describe("Send login code to client email").Test(client1.SendLoginCode(200))
 
 	tt.Describe("Login client with email code").Test(func() error {
-		code, err := client1.GetValidationCodeFromEmail()
+		code, err := client1.GetLoginCodeFromEmail()
 		if err != nil {
 			return fmt.Errorf("failed to get login code: %w", err)
 		}

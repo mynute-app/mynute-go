@@ -20,21 +20,21 @@ func Test_Tenant(t *testing.T) {
 	tt.Describe("Create superadmin").Test(superadmin.Set([]string{}, nil))
 
 	company := &model.Company{}
-	tt.Describe("Create company").Test(company.Create(200, &superadmin.X_Auth_Token, nil))
+	tt.Describe("Create company").Test(company.Create(200))
 
 	// Create first employee (tenant user)
 	employee1 := &model.Employee{Company: company}
 	tt.Describe("Create first tenant employee").Test(employee1.Create(200, &superadmin.X_Auth_Token, nil))
 
 	// Test tenant user verification
-	tt.Describe("Send verification email to tenant").Test(employee1.SendVerificationEmail(200, &superadmin.X_Auth_Token, nil))
+	tt.Describe("Send verification email to tenant").Test(employee1.SendVerificationEmail(200, nil))
 
 	tt.Describe("Verify tenant email with code").Test(func() error {
 		code, err := employee1.GetVerificationCodeFromEmail()
 		if err != nil {
 			return fmt.Errorf("failed to get verification code: %w", err)
 		}
-		return employee1.VerifyEmailByCode(200, code, &superadmin.X_Auth_Token, nil)
+		return employee1.VerifyEmailByCode(200, code, nil)
 	}())
 
 	// Test tenant login with password
@@ -44,10 +44,10 @@ func Test_Tenant(t *testing.T) {
 	tt.Describe("Login tenant with wrong password fails").Test(employee1.LoginByPassword(401, "wrong-password", nil))
 
 	// Test login with email code
-	tt.Describe("Send login code to tenant email").Test(employee1.SendLoginValidationCodeByEmail(200, nil))
+	tt.Describe("Send login code to tenant email").Test(employee1.SendLoginCode(200, nil))
 
 	tt.Describe("Login tenant with email code").Test(func() error {
-		code, err := employee1.GetValidationCodeFromEmail()
+		code, err := employee1.GetLoginCodeFromEmail()
 		if err != nil {
 			return fmt.Errorf("failed to get login code: %w", err)
 		}
@@ -59,14 +59,14 @@ func Test_Tenant(t *testing.T) {
 	tt.Describe("Create second tenant employee").Test(employee2.Create(200, &superadmin.X_Auth_Token, nil))
 
 	tt.Describe("Verify second employee email").Test(func() error {
-		if err := employee2.SendVerificationEmail(200, &superadmin.X_Auth_Token, nil); err != nil {
+		if err := employee2.SendVerificationEmail(200, nil); err != nil {
 			return err
 		}
 		code, err := employee2.GetVerificationCodeFromEmail()
 		if err != nil {
 			return err
 		}
-		return employee2.VerifyEmailByCode(200, code, &superadmin.X_Auth_Token, nil)
+		return employee2.VerifyEmailByCode(200, code, nil)
 	}())
 
 	tt.Describe("Login second employee").Test(employee2.LoginByPassword(200, employee2.Password, nil))
@@ -218,7 +218,7 @@ func Test_Tenant(t *testing.T) {
 
 	// Test cross-company isolation - employee from one company cannot access another company
 	company2 := &model.Company{}
-	tt.Describe("Create second company").Test(company2.Create(200, &superadmin.X_Auth_Token, nil))
+	tt.Describe("Create second company").Test(company2.Create(200))
 
 	employee3 := &model.Employee{Company: company2}
 	tt.Describe("Create employee in second company").Test(employee3.Create(200, &superadmin.X_Auth_Token, nil))
