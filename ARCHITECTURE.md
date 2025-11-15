@@ -28,7 +28,8 @@ Mynute Go is built as a microservices architecture with three independent servic
 
 **Database**: 
 - Main DB: Business data with per-company schemas
-- Auth DB: Shared authentication data (read-only access)
+- Policy storage: TenantPolicy, ClientPolicy, AdminPolicy models
+- Auth DB: Shared authentication data (read-only access from Auth service)
 
 **API Endpoints**: `/api/v1/*`
 
@@ -39,9 +40,10 @@ Mynute Go is built as a microservices architecture with three independent servic
 **Responsibilities**:
 - User authentication (JWT tokens)
 - Admin user management
-- Access control policies (RBAC)
+- Policy-based access control (PBAC)
+- Policy evaluation and validation
 - Resource and endpoint permissions
-- Policy evaluation
+- Condition tree evaluation for authorization
 - OAuth integration (future)
 
 **Key Technologies**:
@@ -138,11 +140,17 @@ Services communicate via **HTTP REST APIs**. Each service exposes endpoints that
 ### Schema Isolation
 
 **Auth Database**: Single schema for all authentication data
-- Tables: admins, admin_roles, policies, resources, endpoints
+- Tables: admins, admin_roles, resources, endpoints
+
+**Policy Database**: Stored in Core service, evaluated by Auth service
+- Tables: tenant_policies, client_policies, admin_policies
+- Policy types separated by user context (tenant/client/admin)
+- Each policy contains JSONB condition trees for authorization logic
 
 **Main Database**: Multi-tenant with schema per company
-- Public schema: companies, sectors, system data
+- Public schema: companies, sectors, system data, policies (tenant_policies, client_policies, admin_policies), resources, endpoints
 - Company schemas: company_{uuid} containing appointments, employees, clients, services, branches
+- Policy models store condition trees as JSONB for flexible authorization rules
 
 ## Project Structure
 
@@ -155,12 +163,20 @@ mynute-go/
 │   │   ├── admin/              # Admin panel frontend
 │   │   ├── docker-compose.*.yml
 │   │   ├── Dockerfile
-│   │   └── src/
-│   │       ├── api/            # Routes, controllers, DTOs
-│   │       ├── config/         # DB models, configs
-│   │       ├── lib/            # Utilities, email, auth
-│   │       ├── middleware/     # HTTP middleware
-│   │       └── service/        # Business logic
+│   │   ├── api/                # Routes, controllers, DTOs
+│   │   │   ├── middleware/     # Auth middleware (calls Auth service)
+│   │   │   └── ...
+│   │   ├── config/             # DB models, configs
+│   │   │   └── db/
+│   │   │       ├── model/      # Data models (policy.go, endpoint.go, resource.go)
+│   │   │       └── seed/       # Seed data
+│   │   │           ├── policy/ # Policy definitions by domain
+│   │   │           │   ├── tenant_*.go  # Tenant-specific policies
+│   │   │           │   ├── client_*.go  # Client-specific policies
+│   │   │           │   └── helpers_*.go # Reusable condition checks
+│   │   │           ├── endpoint/        # Endpoint definitions
+│   │   │           └── resource/        # Resource definitions
+│   │   └── lib/                # Utilities, email, auth
 │   │
 │   ├── auth/                   # Auth Service
 │   │   ├── server.go           # Auth server
@@ -295,6 +311,90 @@ Use reverse proxy (nginx, Traefik) to distribute traffic:
    ┌────▼────┐       ┌─────▼────┐      ┌─────▼────┐
    │ Core #1 │       │ Core #2  │      │ Core #3  │
    └─────────┘       └──────────┘      └──────────┘
+```
+
+## Authorization Architecture
+
+### Policy-Based Access Control (PBAC)
+
+Mynute uses a sophisticated policy-based authorization system with clear separation of concerns:
+
+#### Policy Types
+
+**TenantPolicy**: Tenant/company user authorization
+- Contains `tenant_id` for multi-tenant isolation
+- Used for employees, managers, company operations
+- Examples: company owners, branch managers, employees
+
+**ClientPolicy**: Client/customer authorization
+- No tenant association (clients access multiple companies)
+- Used for appointment booking, profile management
+- Examples: view own appointments, update profile
+
+**AdminPolicy**: System administrator authorization
+- Platform-wide access control
+- Used for system management, super admin operations
+- Examples: manage companies, system configuration
+
+#### Policy Structure
+
+Policies are stored as **JSONB condition trees**:
+
+```json
+{
+  "description": "Allow company owner to update company",
+  "logic_type": "AND",
+  "children": [
+    {
+      "leaf": {
+        "attribute": "subject.roles[*].id",
+        "operator": "Contains",
+        "value": "owner-role-uuid"
+      }
+    },
+    {
+      "leaf": {
+        "attribute": "subject.company_id",
+        "operator": "Equals",
+        "resource_attribute": "resource.id"
+      }
+    }
+  ]
+}
+```
+
+#### Service Responsibilities
+
+**Core Service** (`/core`):
+- Stores policy data models (TenantPolicy, ClientPolicy, AdminPolicy)
+- Defines policy seed data organized by domain
+- Contains only basic field definitions
+- No policy validation or evaluation logic
+
+**Auth Service** (`/auth`):
+- Evaluates policies during authorization checks
+- Validates condition tree structure
+- Executes condition logic (operators, comparisons)
+- Returns allow/deny decisions
+
+#### Policy Organization
+
+Policies are organized by domain for maintainability:
+
+```
+services/core/config/db/seed/policy/
+├── helpers_tenant.go      # Reusable tenant condition checks
+├── helpers_client.go      # Reusable client condition checks
+├── tenant_company.go      # Company-level policies
+├── tenant_employee.go     # Employee management policies
+├── tenant_branch.go       # Branch operation policies
+├── tenant_service.go      # Service management policies
+├── tenant_holiday.go      # Holiday management policies
+├── tenant_appointment.go  # Tenant appointment policies
+├── client_profile.go      # Client profile policies
+├── client_appointment.go  # Client appointment policies
+├── all_tenant.go          # Aggregates all tenant policies
+└── all_client.go          # Aggregates all client policies
 ```
 
 ## Security
@@ -439,9 +539,17 @@ air
 
 ### Database Access
 
-- Core Service: Read/Write to Main DB, Read-only to Auth DB
-- Auth Service: Read/Write to Auth DB only
-- Email Service: No database access
+- **Core Service**: 
+  - Read/Write to Main DB (business data, policies)
+  - Stores policy definitions (TenantPolicy, ClientPolicy, AdminPolicy)
+  - No policy evaluation logic
+  
+- **Auth Service**: 
+  - Reads policies from Core DB for evaluation
+  - Validates and executes policy condition trees
+  - Returns authorization decisions
+  
+- **Email Service**: No database access (stateless)
 
 ---
 

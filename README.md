@@ -5,6 +5,7 @@ A modern, scalable appointment management system built with Go, Fiber web framew
 ## 🚀 Features
 
 - **Multi-tenant Architecture**: Support for multiple companies with isolated data schemas
+- **Policy-Based Access Control**: Flexible authorization with condition trees for tenant, client, and admin policies
 - **Appointment Management**: Full CRUD operations for appointments with scheduling capabilities
 - **Employee Management**: Handle employee profiles, roles, and availability
 - **Client Management**: Manage client information and appointment history  
@@ -59,12 +60,22 @@ mynute-go/
 │   │   ├── prometheus.yml    # Prometheus metrics config
 │   │   ├── docker-compose.*.yml
 │   │   ├── Dockerfile
-│   │   └── src/
-│   │       ├── api/          # API routes, controllers, DTOs
-│   │       ├── config/       # Database models, configs
-│   │       ├── lib/          # Shared utilities
-│   │       ├── middleware/   # HTTP middleware
-│   │       └── service/      # Business logic
+│   │   ├── api/              # API routes, controllers, DTOs
+│   │   │   ├── middleware/   # Auth middleware
+│   │   │   └── ...
+│   │   └── config/           # Database models, configs
+│   │       ├── db/
+│   │       │   ├── model/    # Data models (policy.go, endpoint.go, resource.go)
+│   │       │   └── seed/     # Seed data
+│   │       │       ├── policy/   # Policy definitions organized by domain
+│   │       │       │   ├── tenant_*.go  # Tenant policies (company, employee, branch, etc.)
+│   │       │       │   ├── client_*.go  # Client policies (profile, appointments)
+│   │       │       │   ├── helpers_*.go # Reusable condition checks
+│   │       │       │   ├── all_tenant.go # Aggregates tenant policies
+│   │       │       │   └── all_client.go # Aggregates client policies
+│   │       │       ├── endpoint/     # Endpoint definitions
+│   │       │       └── resource/     # Resource definitions
+│   │       └── lib/          # Shared utilities
 │   ├── auth/                 # Auth Service (Port 4001)
 │   │   ├── server.go         # Auth server initialization
 │   │   ├── docs/             # Swagger documentation
@@ -74,7 +85,7 @@ mynute-go/
 │   │   ├── Dockerfile
 │   │   ├── api/              # Auth API routes & controllers
 │   │   ├── config/           # Auth DTOs and models
-│   │   └── handler/          # JWT, auth logic, access control
+│   │   └── handler/          # JWT, auth logic, policy evaluation engine
 │   └── email/                # Email Service (Port 4002)
 │       ├── server.go         # Email server initialization
 │       ├── docs/             # Swagger documentation
@@ -324,13 +335,15 @@ make swagger-email   # Email service
 - `/api/v1/services/*` - Service configuration
 - `/api/v1/companies/*` - Company management
 - `/api/v1/branches/*` - Branch management
+- `/api/v1/policies/*` - Policy definitions (storage only, evaluation by Auth)
+- `/api/v1/resources/*` - Resource definitions
+- `/api/v1/endpoints/*` - Endpoint definitions
 
 **Auth Service (Port 4001)**
 - `/api/v1/auth/*` - Authentication & login
 - `/api/v1/admin/*` - Admin management
-- `/api/v1/policies/*` - Access control policies
-- `/api/v1/resources/*` - Resource management
-- `/api/v1/endpoints/*` - Endpoint permissions
+- Policy evaluation engine (reads from Core DB)
+- Access control with condition tree validation
 
 **Email Service (Port 4002)**
 - `/api/v1/emails/send` - Send email(s) to single or multiple recipients
