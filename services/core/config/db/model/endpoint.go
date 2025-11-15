@@ -9,6 +9,8 @@ import (
 
 var AllowEndpointCreation = false
 
+// EndPoint model for Core Service
+// /auth service handles endpoint-based authorization logic
 type EndPoint struct {
 	BaseModel
 	ControllerName   string     `gorm:"type:varchar(100)" json:"controller_name"`
@@ -45,7 +47,7 @@ type EndpointCfg struct {
 func EndPoints(endpoints []*EndPoint, cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 	AllowEndpointCreation = cfg.AllowCreation
 
-	// Recuperar os recursos corretos do banco
+	// Retrieve resources from database
 	resourceMap := map[string]uuid.UUID{}
 	var resources []Resource
 	if err := db.Find(&resources).Error; err != nil {
@@ -75,8 +77,6 @@ func EndPoints(endpoints []*EndPoint, cfg *EndpointCfg, db *gorm.DB) ([]*EndPoin
 
 // LoadEndpointIDs loads the IDs of the endpoints from the database
 // and updates the endpoint variables with their corresponding IDs.
-// This should be called after seeding endpoints to ensure that
-// policies can reference the correct endpoint IDs.
 func LoadEndpointIDs(endpoints []*EndPoint, db *gorm.DB) error {
 	for _, ep := range endpoints {
 		var existing EndPoint

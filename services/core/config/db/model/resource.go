@@ -7,6 +7,8 @@ import (
 	"fmt"
 )
 
+// Resource model for Core Service
+// /auth service handles resource-based authorization logic
 type Resource struct {
 	BaseModel
 	Name        string             `json:"name" gorm:"unique;not null"`
@@ -18,48 +20,44 @@ type Resource struct {
 func (Resource) TableName() string  { return "public.resources" }
 func (Resource) SchemaType() string { return "public" }
 
-// --- Define ResourceReference first ---
+// ResourceReference defines how to find a resource from request data
 type ResourceReference struct {
-	DatabaseKey string `json:"database_key"` // The key in the database, e.g. "id", "tax_id".
-	RequestKey  string `json:"request_key"`  // The key in the request body, query, path, header...
-	RequestRef  string `json:"request_ref"`  // "query", "body", "header", "path".
+	DatabaseKey string `json:"database_key"` // The key in the database, e.g. "id", "tax_id"
+	RequestKey  string `json:"request_key"`  // The key in the request body, query, path, header
+	RequestRef  string `json:"request_ref"`  // "query", "body", "header", "path"
 }
 
-// --- Define the custom slice type ---
+// ResourceReferences is a slice of ResourceReference
 type ResourceReferences []ResourceReference
 
-// --- Implement the Valuer interface for ResourceReferences ---
+// Value implements the driver.Valuer interface for JSONB storage
 func (r ResourceReferences) Value() (driver.Value, error) {
 	if len(r) == 0 {
-		return nil, nil // Store empty slice as NULL in DB
+		return nil, nil
 	}
-	// Marshal the slice into JSON bytes
 	return json.Marshal(r)
 }
 
-// --- Implement the Scanner interface for ResourceReferences ---
+// Scan implements the sql.Scanner interface for JSONB retrieval
 func (r *ResourceReferences) Scan(value any) error {
-	// Get bytes from the database value
 	bytes, ok := value.([]byte)
 	if !ok {
-		// Handle the case where the database value might be nil
 		if value == nil {
-			*r = nil // Set the slice to nil if DB value is NULL
+			*r = nil
 			return nil
 		}
 		return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", value))
 	}
 
-	// Handle empty byte slice if necessary (e.g., if DB stores '' instead of NULL/[])
 	if len(bytes) == 0 {
 		*r = nil
 		return nil
 	}
 
-	// Unmarshal the JSON bytes into the slice (use pointer *r)
 	return json.Unmarshal(bytes, r)
 }
 
+// Helper functions to create common resource reference patterns
 func SingleQueryRef() ResourceReference {
 	return ResourceReference{
 		DatabaseKey: "id",
