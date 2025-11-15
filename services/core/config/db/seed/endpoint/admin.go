@@ -1,7 +1,7 @@
 package endpointSeed
 
 import (
-	"mynute-go/services/auth/config/db/model"
+	"mynute-go/services/core/config/db/model"
 	"mynute-go/services/core/config/namespace"
 )
 
@@ -139,3 +139,4 @@ var DeleteAdminRoleByID = &model.EndPoint{
 	Description:      "Delete role by ID",
 	DenyUnauthorized: true,
 }
+

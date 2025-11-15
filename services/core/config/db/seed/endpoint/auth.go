@@ -1,7 +1,7 @@
 package endpointSeed
 
 import (
-	"mynute-go/services/auth/config/db/model"
+	"mynute-go/services/core/config/db/model"
 	"mynute-go/services/core/config/namespace"
 )
 
@@ -25,3 +25,4 @@ var LogoutProvider = &model.EndPoint{
 	ControllerName: "LogoutProvider",
 	Description:    "Logout provider",
 }
+
