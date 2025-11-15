@@ -1,145 +1,145 @@
 package resourceSeed
 
 import (
-	authModel "mynute-go/services/auth/config/db/model"
-	coreModel "mynute-go/services/core/config/db/model"
+	
+	model "mynute-go/services/core/config/db/model"
 )
 
-var Appointment = &authModel.Resource{
+var Appointment = &model.Resource{
 	Name:        "appointment",
 	Description: "Appointment resource",
-	Table:       coreModel.AppointmentTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("appointment_id", "id"),
-		authModel.MultipleQueryRef("appointment_id", "id"),
-		authModel.MultipleBodyRef("appointment_id", "id"),
-		authModel.MultiplePathRef("name", "name"),
+	Table:       model.AppointmentTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("appointment_id", "id"),
+		model.MultipleQueryRef("appointment_id", "id"),
+		model.MultipleBodyRef("appointment_id", "id"),
+		model.MultiplePathRef("name", "name"),
 	},
 }
 
-var Branch = &authModel.Resource{
+var Branch = &model.Resource{
 	Name:        "branch",
 	Description: "Branch resource",
-	Table:       coreModel.BranchTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("branch_id", "id"),
-		authModel.MultipleQueryRef("branch_id", "id"),
-		authModel.MultipleBodyRef("branch_id", "id"),
-		authModel.MultiplePathRef("name", "name"),
+	Table:       model.BranchTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("branch_id", "id"),
+		model.MultipleQueryRef("branch_id", "id"),
+		model.MultipleBodyRef("branch_id", "id"),
+		model.MultiplePathRef("name", "name"),
 	},
 }
 
-var Client = &authModel.Resource{
+var Client = &model.Resource{
 	Name:        "client",
 	Description: "Client resource",
-	Table:       coreModel.ClientTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("client_id", "id"),
-		authModel.MultipleQueryRef("client_id", "id"),
-		authModel.MultipleBodyRef("client_id", "id"),
-		authModel.MultiplePathRef("email", "email"),
+	Table:       model.ClientTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("client_id", "id"),
+		model.MultipleQueryRef("client_id", "id"),
+		model.MultipleBodyRef("client_id", "id"),
+		model.MultiplePathRef("email", "email"),
 	},
 }
 
-var Company = &authModel.Resource{
+var Company = &model.Resource{
 	Name:        "company",
 	Description: "Company resource",
-	Table:       coreModel.CompanyTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("company_id", "id"),
-		authModel.MultipleQueryRef("company_id", "id"),
-		authModel.MultipleBodyRef("company_id", "id"),
+	Table:       model.CompanyTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("company_id", "id"),
+		model.MultipleQueryRef("company_id", "id"),
+		model.MultipleBodyRef("company_id", "id"),
 	},
 }
 
-var Employee = &authModel.Resource{
+var Employee = &model.Resource{
 	Name:        "employee",
 	Description: "Employee resource",
-	Table:       coreModel.EmployeeTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("employee_id", "id"),
-		authModel.MultipleQueryRef("employee_id", "id"),
-		authModel.MultipleBodyRef("employee_id", "id"),
-		authModel.MultiplePathRef("email", "email"),
+	Table:       model.EmployeeTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("employee_id", "id"),
+		model.MultipleQueryRef("employee_id", "id"),
+		model.MultipleBodyRef("employee_id", "id"),
+		model.MultiplePathRef("email", "email"),
 	},
 }
 
-var Holiday = &authModel.Resource{
+var Holiday = &model.Resource{
 	Name:        "holiday",
 	Description: "Holiday resource",
-	Table:       coreModel.HolidayTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("holiday_id", "id"),
-		authModel.MultipleQueryRef("holiday_id", "id"),
-		authModel.MultipleBodyRef("holiday_id", "id"),
+	Table:       model.HolidayTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("holiday_id", "id"),
+		model.MultipleQueryRef("holiday_id", "id"),
+		model.MultipleBodyRef("holiday_id", "id"),
 	},
 }
 
-var Role = &authModel.Resource{
+var Role = &model.Resource{
 	Name:        "role",
 	Description: "Role resource",
-	Table:       coreModel.RoleTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("role_id", "id"),
-		authModel.MultipleQueryRef("role_id", "id"),
-		authModel.MultipleBodyRef("role_id", "id"),
+	Table:       model.RoleTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("role_id", "id"),
+		model.MultipleQueryRef("role_id", "id"),
+		model.MultipleBodyRef("role_id", "id"),
 	},
 }
 
-var Sector = &authModel.Resource{
+var Sector = &model.Resource{
 	Name:        "sector",
 	Description: "Sector resource",
-	Table:       coreModel.SectorTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("sector_id", "id"),
-		authModel.MultipleQueryRef("sector_id", "id"),
-		authModel.MultipleBodyRef("sector_id", "id"),
+	Table:       model.SectorTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("sector_id", "id"),
+		model.MultipleQueryRef("sector_id", "id"),
+		model.MultipleBodyRef("sector_id", "id"),
 	},
 }
 
-var Service = &authModel.Resource{
+var Service = &model.Resource{
 	Name:        "service",
 	Description: "Service resource",
-	Table:       coreModel.ServiceTableName,
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("service_id", "id"),
-		authModel.MultipleQueryRef("service_id", "id"),
-		authModel.MultipleBodyRef("service_id", "id"),
+	Table:       model.ServiceTableName,
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("service_id", "id"),
+		model.MultipleQueryRef("service_id", "id"),
+		model.MultipleBodyRef("service_id", "id"),
 	},
 }
 
-var Auth = &authModel.Resource{
+var Auth = &model.Resource{
 	Name:        "auth",
 	Description: "Auth resource",
 	Table:       "auth",
-	References: authModel.ResourceReferences{
-		authModel.SingleQueryRef(),
-		authModel.SinglePathRef(),
-		authModel.MultiplePathRef("auth_id", "id"),
-		authModel.MultipleQueryRef("auth_id", "id"),
-		authModel.MultipleBodyRef("auth_id", "id"),
+	References: model.ResourceReferences{
+		model.SingleQueryRef(),
+		model.SinglePathRef(),
+		model.MultiplePathRef("auth_id", "id"),
+		model.MultipleQueryRef("auth_id", "id"),
+		model.MultipleBodyRef("auth_id", "id"),
 	},
 }
 
-var Resources = []*authModel.Resource{
+var Resources = []*model.Resource{
 	Appointment,
 	Branch,
 	Client,
@@ -151,3 +151,4 @@ var Resources = []*authModel.Resource{
 	Service,
 	Auth,
 }
+
