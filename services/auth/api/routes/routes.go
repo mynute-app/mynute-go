@@ -2,6 +2,7 @@ package routes
 
 import (
 	"mynute-go/services/auth/api/controller"
+	"mynute-go/services/auth/config/namespace"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -9,6 +10,12 @@ import (
 
 // SetupAuthRoutes configures all authentication and authorization routes
 func SetupAuthRoutes(app *fiber.App, authDB *gorm.DB) {
+	// Middleware to inject database session into context
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals(namespace.GeneralKey.DatabaseSession, authDB)
+		return c.Next()
+	})
+
 	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{

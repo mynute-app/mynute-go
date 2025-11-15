@@ -23,7 +23,7 @@ services:
       - POSTGRES_DB_TEST=${POSTGRES_DB_TEST}
       - POSTGRES_DB_DEV=${POSTGRES_DB_DEV}
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${POSTGRES_PORT}:5432"
     healthcheck:
       test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
       interval: 300s
