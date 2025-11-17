@@ -8,8 +8,8 @@ __debug
 *local_uploads*
 *my_files*
 debug/output
-/build
-/bin
+*build*
+*bin*
 node_modules
 
 # Playwright
