@@ -255,7 +255,7 @@ func ResetEmployeePasswordByEmail(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/design/images [patch]
 func UpdateEmployeeImages(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 
 	var employee model.Employee
 	Design, err := UpdateImagesById(c, employee.TableName(), &employee, img_types_allowed)
@@ -282,7 +282,7 @@ func UpdateEmployeeImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/design/images/{image_type} [delete]
 func DeleteEmployeeImage(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 	var employee model.Employee
 	Design, err := DeleteImageById(c, employee.TableName(), &employee, img_types_allowed)
 	if err != nil {

@@ -165,7 +165,7 @@ func DeleteBranchById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images [patch]
 func UpdateBranchImages(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 
 	var branch model.Branch
 	Design, err := UpdateImagesById(c, branch.TableName(), &branch, img_types_allowed)
@@ -191,7 +191,7 @@ func UpdateBranchImages(c *fiber.Ctx) error {
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/branch/{id}/design/images/{image_type} [delete]
 func DeleteBranchImage(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 	var branch model.Branch
 	Design, err := DeleteImageById(c, branch.TableName(), &branch, img_types_allowed)
 	if err != nil {

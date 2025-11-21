@@ -171,7 +171,7 @@ func DeleteServiceById(c *fiber.Ctx) error {
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/service/{id}/design/images [patch]
 func UpdateServiceImages(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 
 	var service model.Service
 	Design, err := UpdateImagesById(c, service.TableName(), &service, img_types_allowed)
@@ -197,7 +197,7 @@ func UpdateServiceImages(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/service/{id}/design/images/{image_type} [delete]
 func DeleteServiceImage(c *fiber.Ctx) error {
-	img_types_allowed := map[string]bool{"profile": true}
+	img_types_allowed := map[string]bool{"profile": true, "logo": true, "banner": true, "background": true}
 
 	var service model.Service
 	Design, err := DeleteImageById(c, service.TableName(), &service, img_types_allowed)
