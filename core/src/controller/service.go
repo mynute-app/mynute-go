@@ -327,13 +327,15 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		StartTime  time.Time
 		Count      int64
 	}
-	
+
 	var appointmentCounts []appointmentCountResult
 
 	if len(employeeIDs) > 0 {
+		// IMPORTANT: We fetch ALL appointments for the employees, not just for this service
+		// This prevents double-booking when an employee serves multiple services
 		err = tx.Model(&model.Appointment{}).
 			Select("employee_id, start_time, count(*) as count").
-			Where("company_id = ? AND service_id = ? AND employee_id IN ? AND is_cancelled = false", companyID, serviceID, employeeIDs).
+			Where("company_id = ? AND employee_id IN ? AND is_cancelled = false", companyID, employeeIDs).
 			Where("start_time >= ? AND start_time < ?", startDate, endDate). // Date range filter
 			Group("employee_id, start_time").
 			Find(&appointmentCounts).Error
@@ -511,9 +513,9 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	var serviceDuration uint16
 	if client_public_id != "" {
 		if err := tx.
-		Model(&model.Service{}).
-		Where("id = ?", serviceID).
-		Pluck("duration", &serviceDuration).Error; err != nil {
+			Model(&model.Service{}).
+			Where("id = ?", serviceID).
+			Pluck("duration", &serviceDuration).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}
 	}
@@ -532,7 +534,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 				}
 			}
 
-			slotLoop:
+		slotLoop:
 			for timeStr, empIDs := range slots {
 				// Filter out times where the client already has an appointment
 				if client_public_id != "" {
@@ -552,8 +554,8 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 						if appt.StartTime.Before(slotTime) && appt.EndTime.After(slotTime) {
 							continue slotLoop
 						}
-						// If appt.StartTime is After slotTime 
-						// AND 
+						// If appt.StartTime is After slotTime
+						// AND
 						// appt.StartTime is Before slotTime + service duration then there is a conflict
 						slotTime_end := slotTime.Add(time.Minute * time.Duration(serviceDuration))
 						if appt.StartTime.After(slotTime) && appt.StartTime.Before(slotTime_end) {
