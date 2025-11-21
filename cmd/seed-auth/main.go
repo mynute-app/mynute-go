@@ -9,8 +9,7 @@ import (
 	"os"
 	"time"
 
-	"mynute-go/services/core/api/lib"
-	database "mynute-go/services/core/config/db"
+	"mynute-go/services/auth/lib"
 	"mynute-go/services/core/config/db/model"
 	endpointSeed "mynute-go/services/core/config/db/seed/endpoint"
 	resourceSeed "mynute-go/services/core/config/db/seed/resource"
@@ -30,16 +29,6 @@ func main() {
 	}
 
 	log.Printf("Auth service URL: %s\n", authServiceURL)
-
-	// Connect to database to load endpoint IDs if needed
-	db := database.Connect()
-	defer db.Disconnect()
-
-	tx, end, err := database.Transaction(db.Gorm)
-	defer end(nil)
-	if err != nil {
-		log.Fatalf("Failed to start transaction: %v", err)
-	}
 
 	// Create HTTP client
 	client := &http.Client{
@@ -61,21 +50,6 @@ func main() {
 	log.Println("\n=== Seeding Endpoints ===")
 
 	endpoints := endpointSeed.GetAllEndpoints()
-
-	// Ensure endpoints have IDs by creating them in database first
-	if err := db.Seed("Endpoints", endpoints, "method = ? AND path = ?", []string{"Method", "Path"}).Error; err != nil {
-		log.Fatalf("Failed to seed endpoints in database: %v", err)
-	}
-
-	// Load endpoint IDs
-	for i, endpoint := range endpoints {
-		var dbEndpoint model.EndPoint
-		if err := tx.Where("method = ? AND path = ?", endpoint.Method, endpoint.Path).First(&dbEndpoint).Error; err != nil {
-			log.Printf("⚠️  Warning: Failed to load endpoint ID for '%s %s': %v\n", endpoint.Method, endpoint.Path, err)
-			continue
-		}
-		endpoints[i] = &dbEndpoint
-	}
 
 	successCount := 0
 	for _, endpoint := range endpoints {
