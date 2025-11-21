@@ -14,7 +14,7 @@ type TenantPolicy struct {
 	Effect      string          `json:"effect"` // "Allow" / "Deny"
 	EndPointID  uuid.UUID       `json:"end_point_id"`
 	EndPoint    EndPoint        `gorm:"foreignKey:EndPointID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"end_point"`
-	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions"`
+	Conditions  json.RawMessage `gorm:"type:jsonb" json:"conditions" swaggertype:"string"`
 }
 
 // PolicyInterface implementation for TenantPolicy
