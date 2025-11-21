@@ -16,14 +16,610 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin": {
+        "/admin/authorize": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Evaluate if an admin can access a resource based on admin policies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Authorize admin access",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Authorization request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.AdminAuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.AuthorizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/policies": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get list of all admin users with their roles",
+                "description": "Retrieve all admin policy rules with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Policies"
+                ],
+                "summary": "List all admin policies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedAdminPoliciesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new admin policy rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Policies"
+                ],
+                "summary": "Create admin policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Policy data",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.AdminPolicyCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/policies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve an admin policy rule by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Policies"
+                ],
+                "summary": "Get admin policy by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an admin policy rule by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Policies"
+                ],
+                "summary": "Delete admin policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an admin policy rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Policies"
+                ],
+                "summary": "Update admin policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Policy data",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.AdminPolicyUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/roles": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all admin roles with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Roles"
+                ],
+                "summary": "List all admin roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedAdminRolesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new admin role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Roles"
+                ],
+                "summary": "Create admin role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Role data",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.AdminRoleCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve an admin role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Roles"
+                ],
+                "summary": "Get admin role by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an admin role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Roles"
+                ],
+                "summary": "Delete admin role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an admin role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin Roles"
+                ],
+                "summary": "Update admin role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Role data",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.AdminRoleUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all admin users",
                 "produces": [
                     "application/json"
                 ],
@@ -46,8 +642,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminList"
+                                "$ref": "#/definitions/DTO.AdminUser"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -86,7 +688,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminCreateRequest"
+                            "$ref": "#/definitions/DTO.AdminUserCreateRequest"
                         }
                     }
                 ],
@@ -94,13 +696,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -109,7 +711,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/are_there_any_superadmin": {
+        "/admin/users/are_there_any_superadmin": {
             "get": {
                 "description": "Check if there are any superadmin users in the system",
                 "produces": [
@@ -132,57 +734,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/email/{email}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an admin by email address",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get admin by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Admin email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/first_superadmin": {
+        "/admin/users/first_superadmin": {
             "post": {
                 "description": "Create the first admin user in the system",
                 "consumes": [
@@ -202,7 +754,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUser"
                         }
                     }
                 ],
@@ -210,407 +762,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/admin/login": {
-            "post": {
-                "description": "Authenticate admin user and return JWT token in X-Auth-Token header",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Auth"
-                ],
-                "summary": "Admin login",
-                "parameters": [
-                    {
-                        "description": "Admin login credentials",
-                        "name": "login",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminLoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Token returned in X-Auth-Token header"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/reset-password/{email}": {
-            "post": {
-                "description": "Reset the password of an admin by its email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Reset admin password by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Admin Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.PasswordReseted"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/role": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get list of all admin roles",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Role"
-                ],
-                "summary": "List admin roles",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminRole"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a new admin role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Role"
-                ],
-                "summary": "Create admin role",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Role data",
-                        "name": "role",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.RoleAdminCreateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminRole"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/admin/role/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an admin role by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Role"
-                ],
-                "summary": "Get admin role by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Role ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminRole"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Soft delete an admin role",
-                "tags": [
-                    "Admin Role"
-                ],
-                "summary": "Delete admin role by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Role ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update an existing admin role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin Role"
-                ],
-                "summary": "Update admin role",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Role ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Role update data",
-                        "name": "role",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.RoleAdminUpdateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminRole"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/admin/send-verification-code/email/{email}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Send a verification code to an admin's email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Send admin verification code by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Admin Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/verify-email/{email}/{code}": {
-            "get": {
-                "description": "Verify an admin's email using the verification code",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Verify admin email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Admin Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Verification Code",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/{id}": {
+        "/admin/users/{id}": {
             "get": {
                 "security": [
                     {
@@ -645,17 +809,17 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
                     }
                 }
             },
@@ -665,11 +829,14 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Soft delete an admin user",
+                "description": "Delete an admin by its ID",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Delete admin",
+                "summary": "Delete admin by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -687,17 +854,17 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No Content"
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
                     }
                 }
             },
@@ -707,7 +874,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update admin user information",
+                "description": "Update an admin",
                 "consumes": [
                     "application/json"
                 ],
@@ -734,12 +901,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Admin update data",
+                        "description": "Admin",
                         "name": "admin",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUserUpdateRequest"
                         }
                     }
                 ],
@@ -747,385 +914,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
+                            "$ref": "#/definitions/DTO.AdminUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/emails/send": {
-            "post": {
-                "description": "Send a plain text or HTML email to a single recipient",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Email"
-                ],
-                "summary": "Send a single email",
-                "parameters": [
-                    {
-                        "description": "Email request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.SendEmailRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.EmailSuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/emails/send-bulk": {
-            "post": {
-                "description": "Send the same email to multiple recipients",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Email"
-                ],
-                "summary": "Send bulk emails",
-                "parameters": [
-                    {
-                        "description": "Bulk email request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.SendBulkEmailRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BulkEmailResponse"
-                        }
-                    },
-                    "206": {
-                        "description": "Partial success",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BulkEmailResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/emails/send-template": {
-            "post": {
-                "description": "Send an email using a predefined template with dynamic data",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Email"
-                ],
-                "summary": "Send an email using a template",
-                "parameters": [
-                    {
-                        "description": "Template email request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.SendTemplateEmailRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.EmailSuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/appointment": {
-            "post": {
-                "description": "Create an appointment",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Appointment"
-                ],
-                "summary": "Create appointment",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Appointment",
-                        "name": "appointment",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateAppointment"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Appointment"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/appointment/{id}": {
-            "get": {
-                "description": "Get an appointment by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Appointment"
-                ],
-                "summary": "Get appointment",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Appointment"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete an appointment by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Appointment"
-                ],
-                "summary": "Delete appointment",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Appointment"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update an appointment by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Appointment"
-                ],
-                "summary": "Update appointment",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Appointment",
-                        "name": "appointment",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateAppointment"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Appointment"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -1154,7 +949,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.AdminLoginRequest"
+                            "$ref": "#/definitions/DTO.AdminUserLoginRequest"
                         }
                     }
                 ],
@@ -1165,13 +960,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -1197,7 +992,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.LoginClient"
+                            "$ref": "#/definitions/DTO.LoginClientUser"
                         }
                     }
                 ],
@@ -1208,7 +1003,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -1234,7 +1029,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.LoginByEmailCode"
+                            "$ref": "#/definitions/DTO.LoginByEmailCode"
                         }
                     }
                 ],
@@ -1245,7 +1040,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -1277,20 +1072,20 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/auth/employee/login": {
+        "/auth/tenant/login": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Log in an employee using password",
+                "description": "Log in a tenant user using password",
                 "consumes": [
                     "application/json"
                 ],
@@ -1298,9 +1093,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee/Auth"
+                    "Tenant/Auth"
                 ],
-                "summary": "Login employee",
+                "summary": "Login tenant user",
                 "parameters": [
                     {
                         "type": "string",
@@ -1310,12 +1105,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Employee credentials",
-                        "name": "employee",
+                        "description": "Tenant user credentials",
+                        "name": "tenant",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.LoginEmployee"
+                            "$ref": "#/definitions/DTO.LoginTenantUser"
                         }
                     }
                 ],
@@ -1326,7 +1121,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -1335,9 +1130,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/employee/login-with-code": {
+        "/auth/tenant/login-with-code": {
             "post": {
-                "description": "Login employee using email and validation code",
+                "description": "Login tenant user using email and validation code",
                 "consumes": [
                     "application/json"
                 ],
@@ -1345,9 +1140,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee/Auth"
+                    "Tenant/Auth"
                 ],
-                "summary": "Login employee by email code",
+                "summary": "Login tenant user by email code",
                 "parameters": [
                     {
                         "type": "string",
@@ -1362,7 +1157,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.LoginByEmailCode"
+                            "$ref": "#/definitions/DTO.LoginByEmailCode"
                         }
                     }
                 ],
@@ -1373,15 +1168,15 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/auth/employee/send-login-code/email/{email}": {
+        "/auth/tenant/send-login-code/email/{email}": {
             "post": {
-                "description": "Sends a 6-digit login validation code to the employee's email",
+                "description": "Sends a 6-digit login validation code to the tenant user's email",
                 "consumes": [
                     "application/json"
                 ],
@@ -1389,9 +1184,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee/Auth"
+                    "Tenant/Auth"
                 ],
-                "summary": "Send employee login validation code by email",
+                "summary": "Send tenant user login validation code by email",
                 "parameters": [
                     {
                         "type": "string",
@@ -1402,7 +1197,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Employee Email",
+                        "description": "Tenant User Email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -1415,7 +1210,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -1447,13 +1242,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Claims"
+                            "$ref": "#/definitions/DTO.Claims"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -1485,21 +1280,26 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.AdminClaims"
+                            "$ref": "#/definitions/DTO.AdminUserClaims"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/authorize/check": {
+        "/client/authorize": {
             "post": {
-                "description": "Evaluate if a subject can access a resource based on endpoint policies",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Evaluate if a client can access a resource based on client policies",
                 "consumes": [
                     "application/json"
                 ],
@@ -1507,17 +1307,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authorization"
+                    "Client"
                 ],
-                "summary": "Check access authorization",
+                "summary": "Authorize client access",
                 "parameters": [
                     {
-                        "description": "Access check request",
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Authorization request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.AccessCheckRequest"
+                            "$ref": "#/definitions/controller.ClientAuthRequest"
                         }
                     }
                 ],
@@ -1525,24 +1332,76 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.AccessCheckResponse"
+                            "$ref": "#/definitions/controller.AuthorizationResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/authorize/policy/{id}/evaluate": {
+        "/client/policies": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all client policy rules with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Policies"
+                ],
+                "summary": "List all client policies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedClientPoliciesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
-                "description": "Test a specific policy against request context",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new client policy rule",
                 "consumes": [
                     "application/json"
                 ],
@@ -1550,10 +1409,174 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authorization"
+                    "Client Policies"
                 ],
-                "summary": "Evaluate single policy",
+                "summary": "Create client policy",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Policy data",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ClientPolicyCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/policies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a client policy rule by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Policies"
+                ],
+                "summary": "Get client policy by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientPolicy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a client policy rule by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Policies"
+                ],
+                "summary": "Delete client policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a client policy rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Policies"
+                ],
+                "summary": "Update client policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Policy ID",
@@ -1562,12 +1585,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Policy evaluation request",
-                        "name": "request",
+                        "description": "Policy data",
+                        "name": "policy",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.PolicyEvaluateRequest"
+                            "$ref": "#/definitions/controller.ClientPolicyUpdateRequest"
                         }
                     }
                 ],
@@ -1575,439 +1598,229 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.AccessCheckResponse"
+                            "$ref": "#/definitions/model.ClientPolicy"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/roles": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all client roles with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Roles"
+                ],
+                "summary": "List all client roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedClientRolesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new client role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Roles"
+                ],
+                "summary": "Create client role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Role data",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ClientRoleCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/client/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a client role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Roles"
+                ],
+                "summary": "Get client role by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a client role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Roles"
+                ],
+                "summary": "Delete client role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/branch": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a branch",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Create branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Branch",
-                        "name": "branch",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateBranch"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{branch_id}/appointments": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all appointments for a branch with pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Get all branch appointments",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/DTO.AppointmentList"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/branch/{branch_id}/employee/{employee_id}/services": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all services of an employee included in the branch ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Get employee services included in the branch ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{branch_id}/service/{service_id}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add a service to a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Add service to branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove a service from a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Remove service from branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a branch by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Get branch by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a branch by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Delete branch by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             },
@@ -2017,7 +1830,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a branch",
+                "description": "Update a client role",
                 "consumes": [
                     "application/json"
                 ],
@@ -2025,9 +1838,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Branch"
+                    "Client Roles"
                 ],
-                "summary": "Update branch",
+                "summary": "Update client role",
                 "parameters": [
                     {
                         "type": "string",
@@ -2038,32 +1851,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
+                        "description": "Role ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Branch",
-                        "name": "branch",
+                        "description": "Role data",
+                        "name": "role",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.UpdateBranch"
+                            "$ref": "#/definitions/controller.ClientRoleUpdateRequest"
                         }
                     }
                 ],
@@ -2071,577 +1870,27 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
+                            "$ref": "#/definitions/model.ClientRole"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{id}/design/images": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a branch's images",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Update branch images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Profile image",
-                        "name": "profile",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{id}/design/images/{image_type}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a branch's image",
-                "tags": [
-                    "Branch"
-                ],
-                "summary": "Delete branch image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Image Type",
-                        "name": "image_type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/branch/{id}/work_range/{work_range_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a branch's work range by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Get branch work range By ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchWorkRange"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a branch's work range",
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Update branch work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Work Range",
-                        "name": "work_range",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.UpdateWorkRange"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a branch's work range",
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Delete branch work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchWorkRange"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/branch/{id}/work_range/{work_range_id}/service/{service_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove a service from a branch's work range",
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Remove service from branch work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/branch/{id}/work_range/{work_range_id}/services": {
+        "/client/users": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add services to a branch's work range",
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Add services to branch work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Services",
-                        "name": "services",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchWorkRangeServices"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/branch/{id}/work_schedule": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all work ranges for a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Get all branch work ranges",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a work schedule for a branch",
-                "tags": [
-                    "BranchWorkSchedule"
-                ],
-                "summary": "Create work schedule for a branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Branch Work Schedule",
-                        "name": "work_schedule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateBranchWorkSchedule"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.BranchFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client": {
-            "post": {
-                "description": "Create an client",
+                "description": "Create a client",
                 "consumes": [
                     "application/json"
                 ],
@@ -2659,7 +1908,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.CreateClient"
+                            "$ref": "#/definitions/DTO.CreateClientUser"
                         }
                     }
                 ],
@@ -2667,21 +1916,21 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
+                            "$ref": "#/definitions/DTO.ClientUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/client/email/{email}": {
+        "/client/users/email/{email}": {
             "get": {
-                "description": "Retrieve an client by its email",
+                "description": "Retrieve a client by its email",
                 "produces": [
                     "application/json"
                 ],
@@ -2702,292 +1951,26 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
+                            "$ref": "#/definitions/DTO.ClientUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/client/login": {
-            "post": {
-                "description": "Log in an client using password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Login",
-                "parameters": [
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.LoginClient"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/login-with-code": {
-            "post": {
-                "description": "Login client using email and validation code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client/auth"
-                ],
-                "summary": "Login client by email code",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.LoginByEmailCode"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/reset-password/{email}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Reset the password of a client by its email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Reset client password by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.PasswordReseted"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/client/send-login-code/email/{email}": {
-            "post": {
-                "description": "Send a login validation code to a client's email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Send client login validation code by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/send-verification-code/email/{email}": {
-            "post": {
-                "description": "Send a verification code to a client's email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Send client verification code by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/verify-email/{email}/{code}": {
-            "get": {
-                "description": "Verify a client's email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Verify client email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/verify-email/{email}/{code}/{company_id}": {
-            "get": {
-                "description": "Verify an employee's email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Verify employee email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Verification Code",
-                        "name": "verification_code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "company_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/{id}": {
+        "/client/users/{id}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve an client by its ID",
+                "description": "Retrieve a client by its ID",
                 "produces": [
                     "application/json"
                 ],
@@ -3015,13 +1998,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
+                            "$ref": "#/definitions/DTO.ClientUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -3035,14 +2018,14 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete an client",
+                "description": "Delete a client by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Client"
                 ],
-                "summary": "Delete client",
+                "summary": "Delete client by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3063,11 +2046,14 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found"
                     }
                 }
             },
@@ -3077,7 +2063,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update an client",
+                "description": "Update a client",
                 "consumes": [
                     "application/json"
                 ],
@@ -3109,7 +2095,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
+                            "$ref": "#/definitions/DTO.UpdateClientUserRequest"
                         }
                     }
                 ],
@@ -3117,2182 +2103,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
+                            "$ref": "#/definitions/DTO.ClientUser"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/client/{id}/appointments": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get only the appointments field from a client",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Get client appointments",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dJSON.ClientAppointment"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/{id}/design/images": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update the design images of an client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Update client design images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Profile image",
-                        "name": "profile",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.Client"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/client/{id}/design/images/{image_type}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete the design images of an client",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Delete client design images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Image Type",
-                        "name": "image_type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/company": {
-            "post": {
-                "description": "Create a company",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Create company",
-                "parameters": [
-                    {
-                        "description": "Company",
-                        "name": "company",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateCompany"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/name/{name}": {
-            "get": {
-                "description": "Retrieve a company by its name",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Get company by name",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Company Name",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/subdomain/{subdomain_name}": {
-            "get": {
-                "description": "Retrieve a company by its subdomain",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Get company ID by subdomain",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Subdomain Name",
-                        "name": "subdomain_name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyBase"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/tax_id/{tax_id}": {
-            "get": {
-                "description": "Retrieve a company by its tax identification number",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Get company by tax ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Company Tax ID",
-                        "name": "tax_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/tax_id/{tax_id}/exists": {
-            "get": {
-                "description": "Check if a company exists by its tax identification number",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Check if company exists by tax ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Company Tax ID",
-                        "name": "tax_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/{id}": {
-            "get": {
-                "description": "Retrieve a company by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Get company by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a company by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Delete company by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a company by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Update company by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Company",
-                        "name": "company",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateCompany"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CompanyFull"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/company/{id}/design/colors": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update the primary, secondary, tertiary, and quaternary colors of a company",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Update company colors",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Colors",
-                        "name": "colors",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mJSON.Colors"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Colors"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/company/{id}/design/images": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Upload and update design images (logo, banner, etc.)",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Update company design images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Logo image",
-                        "name": "logo",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Banner image",
-                        "name": "banner",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Favicon image",
-                        "name": "favicon",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Background image",
-                        "name": "background",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/company/{id}/design/images/{image_type}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete logo, banner, favicon or background",
-                "tags": [
-                    "Company"
-                ],
-                "summary": "Delete a specific company design image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Type of image to delete (logo, banner, favicon, background)",
-                        "name": "image_type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Design"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Create employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Employee",
-                        "name": "employee",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.CreateEmployee"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/email/{email}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an employee by its email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/login": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Log in an employee using password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Login",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Employee",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.LoginEmployee"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/login-with-code": {
-            "post": {
-                "description": "Login employee using email and validation code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Login employee by email code",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Login credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.LoginByEmailCode"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employee/reset-password/{email}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Sets a random password of an employee using its email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Reset employee password to a random value",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.PasswordReseted"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employee/send-login-code/email/{email}": {
-            "post": {
-                "description": "Sends a 6-digit login validation code to the employee's email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Send login validation code to employee email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employee/send-verification-code/email/{email}/{company_id}": {
-            "post": {
-                "description": "Send a verification email to an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Send employee verification email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Company ID",
-                        "name": "company_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employee/{employee_id}/branch/{branch_id}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add an employee to a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Add employee to branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove an employee from a branch",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Remove employee from branch",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{employee_id}/service/{service_id}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add a service to an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Add service to employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove a service from an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Remove service from employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{employee_id}/work_range/{work_range_id}/service/{service_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Remove a service from an employee's work range",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Remove service from employee's work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "service_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{employee_id}/work_range/{work_range_id}/services": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add services to an employee's work range",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Add services to employee's work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "employee_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Services",
-                        "name": "services",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkRangeServices"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an employee by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete an employee by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete employee by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Update employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Employee",
-                        "name": "employee",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.UpdateEmployeeSwagger"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/appointments": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve appointments for a specific employee with pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee appointments",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of items per page",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.AppointmentList"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/design/images": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update the images of an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Update employee images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Profile image",
-                        "name": "profile",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/design/images/{image_type}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete an image of an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete employee image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Image Type (logo, banner, favicon, background)",
-                        "name": "image_type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_range/{work_range_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a work range for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get work range by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkRange"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a work range for an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Update work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Work Range",
-                        "name": "work_range",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.UpdateWorkRange"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a work schedule for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_schedule": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all work ranges for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get all employee's work ranges",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a work schedule for an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Create work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Work Schedule",
-                        "name": "work_schedule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployeeWorkSchedule"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -5588,34 +2405,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/health": {
-            "get": {
-                "description": "Check if the email service is running",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Health check",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.HealthResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/holidays": {
+        "/tenant/authorize": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a holiday",
+                "description": "Evaluate if a tenant can access a resource based on tenant policies",
                 "consumes": [
                     "application/json"
                 ],
@@ -5623,9 +2420,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Holidays"
+                    "Tenant"
                 ],
-                "summary": "Create holiday",
+                "summary": "Authorize tenant access",
                 "parameters": [
                     {
                         "type": "string",
@@ -5635,12 +2432,19 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Holiday",
-                        "name": "holiday",
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Authorization request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
+                            "$ref": "#/definitions/controller.TenantAuthRequest"
                         }
                     }
                 ],
@@ -5648,104 +2452,33 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
+                            "$ref": "#/definitions/controller.AuthorizationResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/holidays/name/{name}": {
-            "get": {
-                "description": "Retrieve a holiday by its name",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Holidays"
-                ],
-                "summary": "Get holiday by name",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Holiday Name",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/holidays/{id}": {
+        "/tenant/policies": {
             "get": {
-                "description": "Retrieve a holiday by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Holidays"
-                ],
-                "summary": "Get holiday by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Holiday ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a holiday by its ID",
+                "description": "Retrieve all tenant policy rules with pagination",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Holidays"
+                    "Tenant"
                 ],
-                "summary": "Delete holiday by ID",
+                "summary": "List all tenant policies",
                 "parameters": [
                     {
                         "type": "string",
@@ -5756,129 +2489,35 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Holiday ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a holiday",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Holidays"
-                ],
-                "summary": "Update holiday",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Holiday ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
+                        "in": "query"
                     },
                     {
-                        "description": "Holiday",
-                        "name": "holiday",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
-                        }
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Holidays"
+                            "$ref": "#/definitions/controller.PaginatedTenantPoliciesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/policies": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all policy rules",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Policies"
-                ],
-                "summary": "List all policies",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.PolicyRule"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -5889,7 +2528,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a new policy rule",
+                "description": "Create a new tenant policy rule",
                 "consumes": [
                     "application/json"
                 ],
@@ -5897,14 +2536,21 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Policies"
+                    "Tenant"
                 ],
-                "summary": "Create policy",
+                "summary": "Create tenant policy",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -5914,7 +2560,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.PolicyCreateRequest"
+                            "$ref": "#/definitions/controller.TenantPolicyCreateRequest"
                         }
                     }
                 ],
@@ -5922,38 +2568,45 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/model.PolicyRule"
+                            "$ref": "#/definitions/model.TenantPolicy"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/policies/{id}": {
+        "/tenant/policies/{id}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a policy rule by its ID",
+                "description": "Retrieve a tenant policy rule by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Policies"
+                    "Tenant"
                 ],
-                "summary": "Get policy by ID",
+                "summary": "Get tenant policy by ID",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -5969,19 +2622,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.PolicyRule"
+                            "$ref": "#/definitions/model.TenantPolicy"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -5992,19 +2645,26 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a policy rule by its ID",
+                "description": "Delete a tenant policy rule by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Policies"
+                    "Tenant"
                 ],
-                "summary": "Delete policy",
+                "summary": "Delete tenant policy",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -6029,13 +2689,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
@@ -6046,7 +2706,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a policy rule",
+                "description": "Update a tenant policy rule",
                 "consumes": [
                     "application/json"
                 ],
@@ -6054,14 +2714,21 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Policies"
+                    "Tenant"
                 ],
-                "summary": "Update policy",
+                "summary": "Update tenant policy",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
                         "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
                         "in": "header",
                         "required": true
                     },
@@ -6078,7 +2745,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.PolicyUpdateRequest"
+                            "$ref": "#/definitions/controller.TenantPolicyUpdateRequest"
                         }
                     }
                 ],
@@ -6086,337 +2753,39 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.PolicyRule"
+                            "$ref": "#/definitions/model.TenantPolicy"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/sector": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a sector",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sector"
-                ],
-                "summary": "Create sector",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "sector",
-                        "name": "sector",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/sector/name/{name}": {
-            "get": {
-                "description": "Retrieve a sector by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sector"
-                ],
-                "summary": "Get sector by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "sector ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/sector/{id}": {
-            "get": {
-                "description": "Retrieve a sector by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sector"
-                ],
-                "summary": "Get sector by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "sector ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a sector by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sector"
-                ],
-                "summary": "Delete sector by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "sector ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a sector by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sector"
-                ],
-                "summary": "Update sector by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "sector ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "sector",
-                        "name": "sector",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Sector"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/service": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a service",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Create service",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Service",
-                        "name": "service",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateService"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/service/name/{name}": {
+        "/tenant/roles": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a service by its name",
+                "description": "Retrieve all tenant roles with pagination",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Service"
+                    "Tenant"
                 ],
-                "summary": "Get service by name",
+                "summary": "List all tenant roles",
                 "parameters": [
                     {
                         "type": "string",
@@ -6433,475 +2802,30 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service Name",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/service/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a service by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Get service by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a service by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Delete service by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a service by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Update service by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Service",
-                        "name": "service",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.Service"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/service/{id}/availability": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve the availability of a service for the next 30 days",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Get service availability",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Client Time Zone (IANA format, e.g., America/New_York)",
-                        "name": "timezone",
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10, max: 100)",
+                        "name": "limit",
                         "in": "query"
                     },
                     {
-                        "type": "number",
-                        "description": "The start date for the forward search in number format",
-                        "name": "date_forward_start",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "number",
-                        "description": "The end date for the forward search in number format",
-                        "name": "date_forward_end",
-                        "in": "query",
-                        "required": true
+                        "type": "integer",
+                        "description": "Number of items to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DTO.ServiceAvailability"
+                            "$ref": "#/definitions/controller.PaginatedTenantRolesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    }
-                }
-            }
-        },
-        "/service/{id}/design/images": {
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update images of a service",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Update service images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Profile image",
-                        "name": "profile",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/service/{id}/design/images/{image_type}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete images of a service",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Delete service images",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_core_src_api_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/admin": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all admin users",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "List all admins",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             },
@@ -6911,7 +2835,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a new admin user",
+                "description": "Create a new tenant role",
                 "consumes": [
                     "application/json"
                 ],
@@ -6919,9 +2843,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "Tenant"
                 ],
-                "summary": "Create admin",
+                "summary": "Create tenant role",
                 "parameters": [
                     {
                         "type": "string",
@@ -6931,12 +2855,19 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Admin creation data",
-                        "name": "admin",
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Role data",
+                        "name": "role",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.AdminCreateRequest"
+                            "$ref": "#/definitions/controller.TenantRoleCreateRequest"
                         }
                     }
                 ],
@@ -6944,175 +2875,135 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
+                            "$ref": "#/definitions/model.TenantRole"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             }
         },
-        "/users/admin/are_there_any_superadmin": {
+        "/tenant/roles/{id}": {
             "get": {
-                "description": "Check if there are any superadmin users in the system",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a tenant role by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "Tenant"
                 ],
-                "summary": "Check for superadmin existence",
+                "summary": "Get tenant role by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.TenantRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a tenant role by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenant"
+                ],
+                "summary": "Delete tenant role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "type": "boolean"
+                                "type": "string"
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/users/admin/first_superadmin": {
-            "post": {
-                "description": "Create the first admin user in the system",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Create first admin",
-                "parameters": [
-                    {
-                        "description": "Admin creation data",
-                        "name": "admin",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
-                        }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    }
-                }
-            }
-        },
-        "/users/admin/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an admin by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get admin by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
                     },
-                    {
-                        "type": "string",
-                        "description": "Admin ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete an admin by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Delete admin by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Admin ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             },
@@ -7122,7 +3013,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update an admin",
+                "description": "Update a tenant role",
                 "consumes": [
                     "application/json"
                 ],
@@ -7130,9 +3021,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "Tenant"
                 ],
-                "summary": "Update admin",
+                "summary": "Update tenant role",
                 "parameters": [
                     {
                         "type": "string",
@@ -7143,18 +3034,25 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Admin ID",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Admin",
-                        "name": "admin",
+                        "description": "Role data",
+                        "name": "role",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.AdminUpdateRequest"
+                            "$ref": "#/definitions/controller.TenantRoleUpdateRequest"
                         }
                     }
                 ],
@@ -7162,13 +3060,78 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Admin"
+                            "$ref": "#/definitions/model.TenantRole"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenant/users": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a tenant user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenant"
+                ],
+                "summary": "Create tenant user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Tenant-ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Tenant User",
+                        "name": "tenant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.CreateTenantUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.TenantUserBase"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -7177,60 +3140,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/client": {
-            "post": {
-                "description": "Create a client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Create client",
-                "parameters": [
-                    {
-                        "description": "Client",
-                        "name": "client",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.CreateClient"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Client"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/client/email/{email}": {
+        "/tenant/users/email/{email}": {
             "get": {
-                "description": "Retrieve a client by its email",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a tenant user by its email",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Tenant"
                 ],
-                "summary": "Get client by email",
+                "summary": "Get tenant user by email",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Client Email",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Tenant-ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant User Email",
                         "name": "email",
                         "in": "path",
                         "required": true
@@ -7240,33 +3182,36 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Client"
+                            "$ref": "#/definitions/DTO.TenantUserBase"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
         },
-        "/users/client/{id}": {
+        "/tenant/users/{id}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a client by its ID",
+                "description": "Retrieve a tenant user by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Tenant"
                 ],
-                "summary": "Get client by ID",
+                "summary": "Get tenant user by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7277,7 +3222,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Client ID",
+                        "description": "X-Tenant-ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -7287,13 +3239,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Client"
+                            "$ref": "#/definitions/DTO.TenantUserBase"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -7307,14 +3259,14 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a client by its ID",
+                "description": "Delete a tenant user by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Tenant"
                 ],
-                "summary": "Delete client by ID",
+                "summary": "Delete tenant user by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7325,7 +3277,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Client ID",
+                        "description": "X-Tenant-ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -7338,7 +3297,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -7352,7 +3311,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a client",
+                "description": "Update a tenant user",
                 "consumes": [
                     "application/json"
                 ],
@@ -7360,9 +3319,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Tenant"
                 ],
-                "summary": "Update client",
+                "summary": "Update tenant user",
                 "parameters": [
                     {
                         "type": "string",
@@ -7373,18 +3332,25 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Client ID",
+                        "description": "X-Tenant-ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tenant User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Client",
-                        "name": "client",
+                        "description": "Tenant User",
+                        "name": "tenant",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.UpdateClientRequest"
+                            "$ref": "#/definitions/DTO.UpdateTenantUserSwagger"
                         }
                     }
                 ],
@@ -7392,308 +3358,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.Client"
+                            "$ref": "#/definitions/DTO.TenantUserBase"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/users/employee": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Create employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Employee",
-                        "name": "employee",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.CreateEmployee"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.EmployeeBase"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/users/employee/email/{email}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an employee by its email",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee Email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.EmployeeBase"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/users/employee/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve an employee by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.EmployeeBase"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete an employee by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete employee by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Update employee",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Employee",
-                        "name": "employee",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.UpdateEmployeeSwagger"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.EmployeeBase"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/mynute-go_auth_config_dto.ErrorResponse"
+                            "$ref": "#/definitions/DTO.ErrorResponse"
                         }
                     },
                     "401": {
@@ -7704,984 +3375,177 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "DTO.Appointment": {
+        "DTO.AdminUser": {
             "type": "object",
             "properties": {
-                "branch_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "cancel_time": {
-                    "type": "string",
-                    "example": "2021-01-01T08:00:00Z"
-                },
-                "cancelled": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "cancelled_employee_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "client_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "comments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dJSON.Comment"
-                    }
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "employee_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "end_time": {
-                    "type": "string",
-                    "example": "2021-01-01T10:00:00Z"
-                },
-                "history": {
-                    "$ref": "#/definitions/dJSON.AppointmentHistory"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "is_cancelled": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_cancelled_by_client": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "is_cancelled_by_employee": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_confirmed_by_client": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_fulfilled": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "payment_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "rescheduled": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "service_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
-                },
-                "time_zone": {
-                    "type": "string",
-                    "example": "America/New_York"
-                }
-            }
-        },
-        "DTO.AppointmentList": {
-            "type": "object",
-            "properties": {
-                "appointments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
-                    }
-                },
-                "page": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "page_size": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "total_count": {
-                    "type": "integer",
-                    "example": 100
-                }
-            }
-        },
-        "DTO.AvailableDate": {
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "time_slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.AvailableTime"
-                    }
-                }
-            }
-        },
-        "DTO.AvailableTime": {
-            "type": "object",
-            "properties": {
-                "employees": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
-        "DTO.BranchBase": {
-            "description": "Branch Base DTO",
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "example": "New York"
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "complement": {
-                    "type": "string",
-                    "example": "Suite 100"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "USA"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Main Branch"
-                },
-                "neighborhood": {
-                    "type": "string",
-                    "example": "Downtown"
-                },
-                "number": {
-                    "type": "string",
-                    "example": "456"
-                },
-                "state": {
-                    "type": "string",
-                    "example": "NY"
-                },
-                "street": {
-                    "type": "string",
-                    "example": "123 Main St"
-                },
-                "time_zone": {
-                    "description": "Time zone in IANA format",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "total_service_density": {
-                    "type": "integer",
-                    "example": 100
-                },
-                "zip_code": {
-                    "type": "string",
-                    "example": "10001"
-                }
-            }
-        },
-        "DTO.BranchFull": {
-            "description": "Branch Full DTO",
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "example": "New York"
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "complement": {
-                    "type": "string",
-                    "example": "Suite 100"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "USA"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "employees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.EmployeeBase"
-                    }
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Main Branch"
-                },
-                "neighborhood": {
-                    "type": "string",
-                    "example": "Downtown"
-                },
-                "number": {
-                    "type": "string",
-                    "example": "456"
-                },
-                "service_density": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.ServiceDensity"
-                    }
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.ServiceBase"
-                    }
-                },
-                "state": {
-                    "type": "string",
-                    "example": "NY"
-                },
-                "street": {
-                    "type": "string",
-                    "example": "123 Main St"
-                },
-                "time_zone": {
-                    "description": "Time zone in IANA format",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "total_service_density": {
-                    "type": "integer",
-                    "example": 100
-                },
-                "zip_code": {
-                    "type": "string",
-                    "example": "10001"
-                }
-            }
-        },
-        "DTO.BranchWorkRange": {
-            "description": "represents a work range for a branch, including its ID and the data required to create it.",
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "description": "Branch ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "end_time": {
-                    "description": "End time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "17:00"
-                },
-                "id": {
-                    "description": "Work range ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                },
-                "start_time": {
-                    "description": "Start time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "09:00"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "weekday": {
-                    "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "DTO.BranchWorkRangeServices": {
-            "type": "object",
-            "properties": {
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                }
-            }
-        },
-        "DTO.BranchWorkSchedule": {
-            "description": "represents a work schedule for a branch, which is a collection of work ranges.",
-            "type": "object",
-            "properties": {
-                "branch_work_ranges": {
-                    "description": "List of work ranges for the branch",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchWorkRange"
-                    }
-                }
-            }
-        },
-        "DTO.CompanyBase": {
-            "description": "Company Base DTO",
-            "type": "object",
-            "properties": {
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "id": {
-                    "description": "Primary key",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "legal_name": {
-                    "type": "string",
-                    "example": "Your Company Legal Name"
-                },
-                "sectors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Sector"
-                    }
-                },
-                "subdomains": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Subdomain"
-                    }
-                },
-                "tax_id": {
-                    "type": "string",
-                    "example": "00000000000000"
-                },
-                "trading_name": {
-                    "type": "string",
-                    "example": "Your Company Trading Name"
-                }
-            }
-        },
-        "DTO.CompanyFull": {
-            "description": "Company Full DTO",
-            "type": "object",
-            "properties": {
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchBase"
-                    }
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "employees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.EmployeeBase"
-                    }
-                },
-                "id": {
-                    "description": "Primary key",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "legal_name": {
-                    "type": "string",
-                    "example": "Your Company Legal Name"
-                },
-                "sectors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Sector"
-                    }
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.ServiceBase"
-                    }
-                },
-                "subdomains": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.Subdomain"
-                    }
-                },
-                "tax_id": {
-                    "type": "string",
-                    "example": "00000000000000"
-                },
-                "trading_name": {
-                    "type": "string",
-                    "example": "Your Company Trading Name"
-                }
-            }
-        },
-        "DTO.CreateAppointment": {
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "client_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "employee_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "service_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2028-01-01T09:00:00Z"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                }
-            }
-        },
-        "DTO.CreateBranch": {
-            "description": "Branch Create DTO",
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "example": "New York"
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "complement": {
-                    "type": "string",
-                    "example": "Suite 100"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "USA"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Main Branch"
-                },
-                "neighborhood": {
-                    "type": "string",
-                    "example": "Downtown"
-                },
-                "number": {
-                    "type": "string",
-                    "example": "456"
-                },
-                "state": {
-                    "type": "string",
-                    "example": "NY"
-                },
-                "street": {
-                    "type": "string",
-                    "example": "123 Main St"
-                },
-                "time_zone": {
-                    "description": "Time zone in IANA format",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "zip_code": {
-                    "type": "string",
-                    "example": "10001"
-                }
-            }
-        },
-        "DTO.CreateBranchWorkRange": {
-            "description": "represents the data required to create a work range for a branch.",
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "description": "Branch ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "end_time": {
-                    "description": "End time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "17:00"
-                },
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                },
-                "start_time": {
-                    "description": "Start time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "09:00"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "weekday": {
-                    "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "DTO.CreateBranchWorkSchedule": {
-            "description": "represents the data required to create a work schedule for a branch.",
-            "type": "object",
-            "properties": {
-                "branch_work_ranges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.CreateBranchWorkRange"
-                    }
-                }
-            }
-        },
-        "DTO.CreateCompany": {
-            "type": "object",
-            "required": [
-                "owner_email",
-                "owner_password",
-                "owner_phone",
-                "owner_time_zone",
-                "start_subdomain"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "Your Company Legal Name"
-                },
-                "owner_email": {
-                    "type": "string",
-                    "example": "john.clark@gmail.com"
-                },
-                "owner_name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "owner_password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "owner_phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "owner_surname": {
-                    "type": "string",
-                    "example": "Clark"
-                },
-                "owner_time_zone": {
-                    "description": "Use a valid timezone",
-                    "type": "string",
-                    "example": "America/Sao_Paulo"
-                },
-                "start_subdomain": {
-                    "type": "string",
-                    "example": "your-company-subdomain"
-                },
-                "tax_id": {
-                    "type": "string",
-                    "example": "00000000000000"
-                },
-                "trading_name": {
-                    "type": "string",
-                    "example": "Your Company Trading Name"
-                }
-            }
-        },
-        "DTO.CreateEmployeeWorkRange": {
-            "description": "represents the data required to create a work range for an employee.",
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "description": "Branch ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "employee_id": {
-                    "description": "Employee ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "end_time": {
-                    "description": "End time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "17:00"
-                },
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                },
-                "start_time": {
-                    "description": "Start time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "09:00"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "weekday": {
-                    "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "DTO.CreateEmployeeWorkSchedule": {
-            "description": "represents the data required to create a work schedule for an employee.",
-            "type": "object",
-            "properties": {
-                "employee_work_ranges": {
-                    "description": "List of work ranges for the employee",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.CreateEmployeeWorkRange"
-                    }
-                }
-            }
-        },
-        "DTO.CreateService": {
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "A 60-minute in-depth business consultation"
-                },
-                "duration": {
-                    "type": "integer",
-                    "example": 60
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Premium Consultation"
-                },
-                "price": {
-                    "type": "integer",
-                    "example": 150
-                }
-            }
-        },
-        "DTO.EmployeeFull": {
-            "description": "Employee Full DTO",
-            "type": "object",
-            "properties": {
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchBase"
-                    }
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
                 "email": {
                     "type": "string",
-                    "example": "john.doe@example.com"
+                    "example": "admin@example.com"
                 },
                 "id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
                 "name": {
                     "type": "string",
                     "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
                 },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.RolePopulated"
-                    }
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.ServiceBase"
+                        "$ref": "#/definitions/model.AdminRole"
                     }
                 },
                 "surname": {
                     "type": "string",
                     "example": "Doe"
-                },
-                "time_zone": {
+                }
+            }
+        },
+        "DTO.AdminUserClaims": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string",
-                    "example": "America/Sao_Paulo"
+                    "example": "admin@example.com"
                 },
-                "total_service_density": {
-                    "type": "integer",
-                    "example": 100
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "verified": {
+                "is_active": {
                     "type": "boolean",
                     "example": true
                 },
-                "work_schedule": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.EmployeeWorkRange"
-                    }
-                }
-            }
-        },
-        "DTO.EmployeeWorkRange": {
-            "description": "represents a work range for an employee, including its ID and the data required to create it.",
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "description": "Branch ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "employee_id": {
-                    "description": "Employee ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "end_time": {
-                    "description": "End time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "17:00"
-                },
-                "id": {
-                    "description": "Work range ID",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                },
-                "start_time": {
-                    "description": "Start time (date ignored)",
-                    "type": "string",
-                    "format": "HH:mm",
-                    "example": "09:00"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "weekday": {
-                    "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "DTO.EmployeeWorkRangeServices": {
-            "type": "object",
-            "properties": {
-                "services": {
-                    "description": "List of services associated with the work range",
-                    "type": "array",
-                    "items": {
-                        "type": "object"
-                    }
-                }
-            }
-        },
-        "DTO.EmployeeWorkSchedule": {
-            "description": "represents a work schedule for an employee, which is a collection of work ranges.",
-            "type": "object",
-            "properties": {
-                "employee_work_ranges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.EmployeeWorkRange"
-                    }
-                }
-            }
-        },
-        "DTO.Holidays": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string",
-                    "example": "2025-01-01T00:00:00Z"
-                },
-                "dayMonth": {
-                    "type": "string",
-                    "example": "01-01"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Celebration of the first day of the new year"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
+                "is_admin": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "name": {
                     "type": "string",
-                    "example": "New Year's Day"
+                    "example": "Admin User"
                 },
-                "recurrent": {
-                    "type": "boolean",
-                    "example": true
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[superadmin]"
+                    ]
                 },
                 "type": {
-                    "type": "string",
-                    "example": "Public"
-                }
-            }
-        },
-        "DTO.PasswordReseted": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "DTO.RolePopulated": {
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Administrator role"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "is_system_role": {
-                    "type": "boolean"
-                },
-                "name": {
                     "type": "string",
                     "example": "admin"
                 }
             }
         },
-        "DTO.Sector": {
+        "DTO.AdminUserCreateRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
             "properties": {
-                "description": {
+                "email": {
                     "type": "string",
-                    "example": "The Company Sector Description"
+                    "example": "admin@example.com"
                 },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "name": {
                     "type": "string",
-                    "example": "Your Company Sector Name"
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Admin User"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "StrongPassword123!"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[superadmin]"
+                    ]
+                },
+                "surname": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Doe"
                 }
             }
         },
-        "DTO.Service": {
-            "description": "Service Full DTO",
+        "DTO.AdminUserLoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "StrongPassword123!"
+                }
+            }
+        },
+        "DTO.AdminUserUpdateRequest": {
             "type": "object",
             "properties": {
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchBase"
-                    }
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
                 },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Admin User"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "NewPassword123!"
+                },
+                "surname": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Doe"
+                }
+            }
+        },
+        "DTO.Claims": {
+            "type": "object",
+            "properties": {
                 "company_id": {
                     "type": "string",
-                    "example": "1"
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "description": {
+                "email": {
                     "type": "string",
-                    "example": "A 60-minute in-depth business consultation"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "duration": {
-                    "type": "integer",
-                    "example": 60
-                },
-                "employees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.EmployeeBase"
-                    }
+                    "example": "john.doe@example.com"
                 },
                 "id": {
                     "type": "string",
@@ -8689,58 +3553,194 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "Premium Consultation"
+                    "example": "John"
                 },
-                "price": {
-                    "type": "integer",
-                    "example": 150
+                "password": {
+                    "type": "string",
+                    "example": "StrongPswrd1!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "employee"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
-        "DTO.ServiceAvailability": {
+        "DTO.ClientUser": {
             "type": "object",
             "properties": {
-                "available_dates": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.AvailableDate"
-                    }
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 },
-                "branch_info": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DTO.BranchBase"
-                    }
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "employee_info": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.EmployeeBase"
-                    }
+                "name": {
+                    "type": "string",
+                    "example": "John"
                 },
-                "service_id": {
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "verified": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "DTO.CreateClientUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
+        "DTO.CreateTenantUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "joseph.doe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Joseph"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555551"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "client"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "time_zone": {
+                    "description": "Use a valid timezone",
+                    "type": "string",
+                    "example": "America/Sao_Paulo"
+                }
+            }
+        },
+        "DTO.ErrorResponse": {
+            "description": "Error Response Model",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Not Found"
+                }
+            }
+        },
+        "DTO.LoginByEmailCode": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                }
+            }
+        },
+        "DTO.LoginClientUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                }
+            }
+        },
+        "DTO.LoginTenantUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.clark@gmail.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "1SecurePswd!"
+                }
+            }
+        },
+        "DTO.TenantRoleBase": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tenant_id": {
                     "type": "string"
                 }
             }
         },
-        "DTO.ServiceBase": {
-            "description": "Service Base DTO",
+        "DTO.TenantUserBase": {
+            "description": "Tenant Base DTO - Auth service only handles basic tenant user info",
             "type": "object",
             "properties": {
-                "company_id": {
+                "email": {
                     "type": "string",
-                    "example": "1"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "A 60-minute in-depth business consultation"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
-                "duration": {
-                    "type": "integer",
-                    "example": 60
+                    "example": "john.doe@example.com"
                 },
                 "id": {
                     "type": "string",
@@ -8748,66 +3748,27 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "Premium Consultation"
+                    "example": "John"
                 },
-                "price": {
-                    "type": "integer",
-                    "example": 150
-                }
-            }
-        },
-        "DTO.ServiceDensity": {
-            "type": "object",
-            "properties": {
-                "max_schedules_overlap": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "service_id": {
+                "phone": {
                     "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                }
-            }
-        },
-        "DTO.Subdomain": {
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "description": "Foreign key to Company",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "tenant_id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "id": {
-                    "description": "Primary key",
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "description": "Subdomain name",
-                    "type": "string",
-                    "example": "agenda-yourcompany"
+                "verified": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
-        "DTO.UpdateBranch": {
-            "description": "Branch Update DTO",
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Main Branch Updated"
-                },
-                "street": {
-                    "type": "string",
-                    "example": "556 Main St"
-                }
-            }
-        },
-        "DTO.UpdateClientRequest": {
+        "DTO.UpdateClientUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -8828,34 +3789,20 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.UpdateWorkRange": {
+        "DTO.UpdateTenantUserSwagger": {
             "type": "object",
             "properties": {
-                "end_time": {
-                    "description": "End time (date ignored)",
+                "name": {
                     "type": "string",
-                    "format": "HH:mm",
-                    "example": "17:00"
+                    "example": "John"
                 },
-                "start_time": {
-                    "description": "Start time (date ignored)",
+                "surname": {
                     "type": "string",
-                    "format": "HH:mm",
-                    "example": "09:00"
-                },
-                "time_zone": {
-                    "description": "Timezone in IANA format, e.g., \"America/New_York\"",
-                    "type": "string",
-                    "example": "America/New_York"
-                },
-                "weekday": {
-                    "description": "Weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)",
-                    "type": "integer",
-                    "example": 1
+                    "example": "Clark"
                 }
             }
         },
-        "controller.AccessCheckRequest": {
+        "controller.AdminAuthRequest": {
             "type": "object",
             "required": [
                 "method",
@@ -8902,7 +3849,96 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.AccessCheckResponse": {
+        "controller.AdminPolicyCreateRequest": {
+            "type": "object",
+            "required": [
+                "conditions",
+                "effect",
+                "end_point_id",
+                "name"
+            ],
+            "properties": {
+                "conditions": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "type": "string",
+                    "enum": [
+                        "Allow",
+                        "Deny"
+                    ]
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.AdminPolicyUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "conditions": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "type": "string",
+                    "enum": [
+                        "Allow",
+                        "Deny"
+                    ]
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.AdminRoleCreateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.AdminRoleUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.AuthorizationResponse": {
             "type": "object",
             "properties": {
                 "allowed": {
@@ -8922,6 +3958,142 @@ const docTemplate = `{
                 },
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.ClientAuthRequest": {
+            "type": "object",
+            "required": [
+                "method",
+                "path",
+                "subject"
+            ],
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "path": {
+                    "type": "string"
+                },
+                "path_params": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "query": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "resource": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "subject": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "controller.ClientPolicyCreateRequest": {
+            "type": "object",
+            "required": [
+                "conditions",
+                "effect",
+                "end_point_id",
+                "name"
+            ],
+            "properties": {
+                "conditions": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "type": "string",
+                    "enum": [
+                        "Allow",
+                        "Deny"
+                    ]
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.ClientPolicyUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "conditions": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "type": "string",
+                    "enum": [
+                        "Allow",
+                        "Deny"
+                    ]
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.ClientRoleCreateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "controller.ClientRoleUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
                 }
             }
         },
@@ -9000,44 +4172,113 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.PolicyCreateRequest": {
+        "controller.PaginatedAdminPoliciesResponse": {
             "type": "object",
-            "required": [
-                "conditions",
-                "effect",
-                "end_point_id",
-                "name"
-            ],
             "properties": {
-                "conditions": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.AdminPolicy"
                     }
                 },
-                "description": {
-                    "type": "string"
+                "limit": {
+                    "type": "integer"
                 },
-                "effect": {
-                    "type": "string",
-                    "enum": [
-                        "Allow",
-                        "Deny"
-                    ]
-                },
-                "end_point_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3
+                "offset": {
+                    "type": "integer"
                 }
             }
         },
-        "controller.PolicyEvaluateRequest": {
+        "controller.PaginatedAdminRolesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.AdminRole"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.PaginatedClientPoliciesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ClientPolicy"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.PaginatedClientRolesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ClientRole"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.PaginatedTenantPoliciesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TenantPolicy"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.PaginatedTenantRolesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.TenantRoleBase"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.TenantAuthRequest": {
             "type": "object",
             "required": [
+                "method",
+                "path",
                 "subject"
             ],
             "properties": {
@@ -9048,6 +4289,19 @@ const docTemplate = `{
                 "headers": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "path": {
+                    "type": "string"
                 },
                 "path_params": {
                     "type": "object",
@@ -9067,14 +4321,17 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.PolicyUpdateRequest": {
+        "controller.TenantPolicyCreateRequest": {
             "type": "object",
+            "required": [
+                "conditions",
+                "effect",
+                "end_point_id",
+                "name"
+            ],
             "properties": {
                 "conditions": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -9096,477 +4353,166 @@ const docTemplate = `{
                 }
             }
         },
-        "dJSON.AppointmentHistory": {
+        "controller.TenantPolicyUpdateRequest": {
             "type": "object",
             "properties": {
-                "field_changes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dJSON.FieldChange"
-                    }
+                "conditions": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "type": "string",
+                    "enum": [
+                        "Allow",
+                        "Deny"
+                    ]
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
                 }
             }
         },
-        "dJSON.ClientAppointment": {
+        "controller.TenantRoleCreateRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
-                "branch_address": {
+                "description": {
                     "type": "string",
-                    "example": "76, Example street, My city, My country, 09090790"
+                    "maxLength": 255
                 },
-                "company_id": {
+                "name": {
                     "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "company_name": {
-                    "type": "string",
-                    "example": "Company name example"
-                },
-                "service_name": {
-                    "type": "string",
-                    "example": "Service name example"
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
+                    "maxLength": 20,
+                    "minLength": 3
                 }
             }
         },
-        "dJSON.Colors": {
+        "controller.TenantRoleUpdateRequest": {
             "type": "object",
             "properties": {
-                "primary": {
+                "description": {
                     "type": "string",
-                    "example": "#FF5733"
+                    "maxLength": 255
                 },
-                "quaternary": {
+                "name": {
                     "type": "string",
-                    "example": "#FF33A1"
-                },
-                "secondary": {
-                    "type": "string",
-                    "example": "#33FF57"
-                },
-                "tertiary": {
-                    "type": "string",
-                    "example": "#3357FF"
+                    "maxLength": 20,
+                    "minLength": 3
                 }
             }
         },
-        "dJSON.Comment": {
+        "model.AdminPolicy": {
             "type": "object",
             "properties": {
-                "comment": {
-                    "type": "string",
-                    "example": "Some comment example text"
+                "conditions": {
+                    "type": "string"
                 },
                 "created_at": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
+                    "type": "string"
                 },
-                "created_by": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
+                "description": {
+                    "type": "string"
                 },
-                "deleted_at": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
+                "effect": {
+                    "description": "\"Allow\" / \"Deny\"",
+                    "type": "string"
                 },
-                "from_client": {
-                    "type": "boolean",
-                    "example": true
+                "end_point": {
+                    "$ref": "#/definitions/model.EndPoint"
                 },
-                "from_employee": {
-                    "type": "boolean",
-                    "example": false
+                "end_point_id": {
+                    "type": "string"
                 },
-                "last_updated_by": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
+                "id": {
+                    "type": "string"
                 },
-                "old_versions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dJSON.CommentVersion"
-                    }
-                },
-                "type": {
-                    "description": "\"internal\" or \"external\"",
-                    "type": "string",
-                    "example": "internal"
+                "name": {
+                    "type": "string"
                 },
                 "updated_at": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
+                    "type": "string"
                 }
             }
         },
-        "dJSON.CommentVersion": {
-            "type": "object",
-            "properties": {
-                "comment": {
-                    "type": "string",
-                    "example": "Some different version comment text"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
-                },
-                "created_by": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                }
-            }
-        },
-        "dJSON.Design": {
-            "type": "object",
-            "properties": {
-                "colors": {
-                    "$ref": "#/definitions/dJSON.Colors"
-                },
-                "images": {
-                    "$ref": "#/definitions/dJSON.Images"
-                }
-            }
-        },
-        "dJSON.FieldChange": {
+        "model.AdminRole": {
             "type": "object",
             "properties": {
                 "created_at": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
-                },
-                "field": {
-                    "type": "string",
-                    "example": "field_name"
-                },
-                "new_value": {
-                    "type": "string",
-                    "example": "new_value"
-                },
-                "old_value": {
-                    "type": "string",
-                    "example": "old_value"
-                },
-                "reason": {
-                    "type": "string",
-                    "example": "Some reason."
-                }
-            }
-        },
-        "dJSON.Image": {
-            "type": "object",
-            "properties": {
-                "alt": {
-                    "type": "string",
-                    "example": "Image of something"
-                },
-                "caption": {
-                    "type": "string",
-                    "example": "This is the image we talk about"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Title of this image"
-                },
-                "url": {
-                    "type": "string",
-                    "example": "https://example.com/image.png"
-                }
-            }
-        },
-        "dJSON.Images": {
-            "type": "object",
-            "properties": {
-                "background": {
-                    "$ref": "#/definitions/dJSON.Image"
-                },
-                "banner": {
-                    "$ref": "#/definitions/dJSON.Image"
-                },
-                "favicon": {
-                    "$ref": "#/definitions/dJSON.Image"
-                },
-                "logo": {
-                    "$ref": "#/definitions/dJSON.Image"
-                },
-                "profile": {
-                    "$ref": "#/definitions/dJSON.Image"
-                }
-            }
-        },
-        "dto.BulkEmailResponse": {
-            "type": "object",
-            "properties": {
-                "failed": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "failed_recipients": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "failed@example.com"
-                    ]
-                },
-                "sent": {
-                    "type": "integer",
-                    "example": 9
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 10
-                }
-            }
-        },
-        "dto.EmailSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Email sent successfully"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "to": {
-                    "type": "string",
-                    "example": "recipient@example.com"
-                }
-            }
-        },
-        "dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string",
-                    "example": "Missing required field: to"
-                },
-                "error": {
-                    "type": "string",
-                    "example": "Invalid request body"
-                }
-            }
-        },
-        "dto.HealthResponse": {
-            "type": "object",
-            "properties": {
-                "service": {
-                    "type": "string",
-                    "example": "email"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "healthy"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "1.0"
-                }
-            }
-        },
-        "dto.SendBulkEmailRequest": {
-            "type": "object",
-            "required": [
-                "body",
-                "recipients",
-                "subject"
-            ],
-            "properties": {
-                "body": {
-                    "type": "string",
-                    "example": "Monthly newsletter content"
-                },
-                "is_html": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "recipients": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "user1@example.com",
-                        "user2@example.com"
-                    ]
-                },
-                "subject": {
-                    "type": "string",
-                    "example": "Newsletter"
-                }
-            }
-        },
-        "dto.SendEmailRequest": {
-            "type": "object",
-            "required": [
-                "body",
-                "subject",
-                "to"
-            ],
-            "properties": {
-                "bcc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "bcc@example.com"
-                    ]
-                },
-                "body": {
-                    "type": "string",
-                    "example": "This is the email body"
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "cc1@example.com",
-                        "cc2@example.com"
-                    ]
-                },
-                "is_html": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "subject": {
-                    "type": "string",
-                    "example": "Welcome to Mynute"
-                },
-                "to": {
-                    "type": "string",
-                    "example": "recipient@example.com"
-                }
-            }
-        },
-        "dto.SendTemplateEmailRequest": {
-            "type": "object",
-            "required": [
-                "language",
-                "template_name",
-                "to"
-            ],
-            "properties": {
-                "bcc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "bcc@example.com"
-                    ]
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "cc@example.com"
-                    ]
-                },
-                "data": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "language": {
-                    "type": "string",
-                    "example": "en"
-                },
-                "template_name": {
-                    "type": "string",
-                    "example": "login_validation_code"
-                },
-                "to": {
-                    "type": "string",
-                    "example": "recipient@example.com"
-                }
-            }
-        },
-        "gorm.DeletedAt": {
-            "type": "object",
-            "properties": {
-                "time": {
                     "type": "string"
                 },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
-                }
-            }
-        },
-        "mJSON.Colors": {
-            "type": "object",
-            "properties": {
-                "primary": {
+                "description": {
                     "type": "string"
                 },
-                "quaternary": {
+                "id": {
                     "type": "string"
                 },
-                "secondary": {
+                "name": {
                     "type": "string"
                 },
-                "tertiary": {
+                "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "mJSON.DesignConfig": {
+        "model.ClientPolicy": {
             "type": "object",
             "properties": {
-                "colors": {
-                    "$ref": "#/definitions/mJSON.Colors"
+                "conditions": {
+                    "type": "string"
                 },
-                "images": {
-                    "$ref": "#/definitions/mJSON.Images"
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "description": "\"Allow\" / \"Deny\"",
+                    "type": "string"
+                },
+                "end_point": {
+                    "$ref": "#/definitions/model.EndPoint"
+                },
+                "end_point_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
-        "mJSON.Image": {
+        "model.ClientRole": {
             "type": "object",
             "properties": {
-                "alt": {
+                "created_at": {
                     "type": "string"
                 },
-                "caption": {
+                "description": {
                     "type": "string"
                 },
-                "title": {
+                "id": {
                     "type": "string"
                 },
-                "url": {
+                "name": {
                     "type": "string"
-                }
-            }
-        },
-        "mJSON.Images": {
-            "type": "object",
-            "properties": {
-                "background": {
-                    "$ref": "#/definitions/mJSON.Image"
                 },
-                "banner": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "favicon": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "logo": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "profile": {
-                    "$ref": "#/definitions/mJSON.Image"
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -9578,9 +4524,6 @@ const docTemplate = `{
                 },
                 "created_at": {
                     "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deny_unauthorized": {
                     "type": "boolean"
@@ -9611,53 +4554,11 @@ const docTemplate = `{
                 }
             }
         },
-        "model.PolicyRule": {
-            "type": "object",
-            "properties": {
-                "conditions": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "effect": {
-                    "description": "\"Allow\" / \"Deny\"",
-                    "type": "string"
-                },
-                "end_point": {
-                    "$ref": "#/definitions/model.EndPoint"
-                },
-                "end_point_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "model.Resource": {
             "type": "object",
             "properties": {
                 "created_at": {
                     "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "description": {
                     "type": "string"
@@ -9699,769 +4600,62 @@ const docTemplate = `{
                 }
             }
         },
-        "mynute-go_auth_config_dto.Admin": {
+        "model.TenantPolicy": {
             "type": "object",
             "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
+                "conditions": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "description": "\"Allow\" / \"Deny\"",
+                    "type": "string"
+                },
+                "end_point": {
+                    "$ref": "#/definitions/model.EndPoint"
+                },
+                "end_point_id": {
+                    "type": "string"
                 },
                 "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
+                    "type": "string"
                 },
                 "name": {
-                    "type": "string",
-                    "example": "John"
+                    "type": "string"
                 },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_auth_config_dto.AdminRole"
-                    }
+                "tenant_id": {
+                    "type": "string"
                 },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
-        "mynute-go_auth_config_dto.AdminClaims": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_admin": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Admin User"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "[superadmin]"
-                    ]
-                },
-                "type": {
-                    "type": "string",
-                    "example": "admin"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.AdminCreateRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Admin User"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "StrongPassword123!"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "[superadmin]"
-                    ]
-                },
-                "surname": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.AdminLoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "StrongPassword123!"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.AdminRole": {
+        "model.TenantRole": {
             "type": "object",
             "properties": {
                 "created_at": {
-                    "type": "string",
-                    "example": "2025-01-01T00:00:00Z"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Full access to all resources"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "superadmin"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2025-01-01T00:00:00Z"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.AdminUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Admin User"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "NewPassword123!"
-                },
-                "surname": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.Claims": {
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "StrongPswrd1!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "type": {
-                    "type": "string",
-                    "example": "employee"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.Client": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.CreateClient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.CreateEmployee": {
-            "type": "object",
-            "properties": {
-                "company_id": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string",
-                    "example": "joseph.doe@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Joseph"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555551"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "client"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "time_zone": {
-                    "description": "Use a valid timezone",
-                    "type": "string",
-                    "example": "America/Sao_Paulo"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.EmployeeBase": {
-            "description": "Employee Base DTO - Auth service only handles basic employee info",
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.ErrorResponse": {
-            "description": "Error Response Model",
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Not Found"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.LoginByEmailCode": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "123456"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.LoginClient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.LoginEmployee": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.clark@gmail.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                }
-            }
-        },
-        "mynute-go_auth_config_dto.UpdateEmployeeSwagger": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Clark"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.Admin": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.AdminRole"
-                    }
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.AdminCreateRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Admin User"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "StrongPassword123!"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "[superadmin]"
-                    ]
-                },
-                "surname": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.AdminList": {
-            "type": "object",
-            "properties": {
-                "admins": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/mynute-go_core_src_api_dto.Admin"
-                    }
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.AdminLoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "admin@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "StrongPassword123!"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.AdminRole": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string",
-                    "example": "2025-01-01T00:00:00Z"
-                },
                 "description": {
-                    "type": "string",
-                    "example": "Full access to all resources"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "superadmin"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2025-01-01T00:00:00Z"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.Client": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.CreateClient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555555"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.CreateEmployee": {
-            "type": "object",
-            "properties": {
-                "company_id": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string",
-                    "example": "joseph.doe@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Joseph"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+15555555551"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "client"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
-                },
-                "time_zone": {
-                    "description": "Use a valid timezone",
-                    "type": "string",
-                    "example": "America/Sao_Paulo"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.EmployeeBase": {
-            "description": "Employee Base DTO",
-            "type": "object",
-            "properties": {
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
                 "id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
+                    "type": "string"
                 },
                 "name": {
-                    "type": "string",
-                    "example": "John"
+                    "type": "string"
                 },
-                "surname": {
-                    "type": "string",
-                    "example": "Doe"
+                "tenant_id": {
+                    "type": "string"
                 },
-                "time_zone": {
-                    "type": "string",
-                    "example": "America/Sao_Paulo"
-                },
-                "total_service_density": {
-                    "type": "integer",
-                    "example": 100
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.ErrorResponse": {
-            "description": "Error Response Model",
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Not Found"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.LoginByEmailCode": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "123456"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.LoginClient": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.LoginEmployee": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john.clark@gmail.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "1SecurePswd!"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.RoleAdminCreateRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Customer support role with limited access"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "support"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.RoleAdminUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Updated description"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 3,
-                    "example": "support"
-                }
-            }
-        },
-        "mynute-go_core_src_api_dto.UpdateEmployeeSwagger": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "John"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Clark"
+                "updated_at": {
+                    "type": "string"
                 }
             }
         }
