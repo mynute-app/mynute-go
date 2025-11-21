@@ -170,3 +170,4 @@ func DeleteOneById(c *fiber.Ctx, modelInstance any) error {
 	// Return success
 	return lib.ResponseFactory(c).Send(200, map[string]string{"message": "Deleted successfully"})
 }
+

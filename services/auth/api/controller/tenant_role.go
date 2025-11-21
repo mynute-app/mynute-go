@@ -28,7 +28,7 @@ import (
 //	@Param			offset			query	int		false	"Number of items to skip (default: 0)"
 //	@Produce		json
 //	@Success		200	{object}	PaginatedTenantRolesResponse
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/tenant/roles [get]
 func ListTenantRoles(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -98,8 +98,8 @@ func ListTenantRoles(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Role ID"
 //	@Produce		json
 //	@Success		200	{object}	model.TenantRole
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/tenant/roles/{id} [get]
 func GetTenantRoleById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -151,7 +151,7 @@ func GetTenantRoleById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			role	body		TenantRoleCreateRequest	true	"Role data"
 //	@Success		201		{object}	model.TenantRole
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/roles [post]
 func CreateTenantRole(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -206,8 +206,8 @@ func CreateTenantRole(c *fiber.Ctx) error {
 //	@Param			id		path		string					true	"Role ID"
 //	@Param			role	body		TenantRoleUpdateRequest	true	"Role data"
 //	@Success		200		{object}	model.TenantRole
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/tenant/roles/{id} [patch]
 func UpdateTenantRoleById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -279,8 +279,8 @@ func UpdateTenantRoleById(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Role ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/tenant/roles/{id} [delete]
 func DeleteTenantRoleById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -345,3 +345,4 @@ type TenantRoleUpdateRequest struct {
 	Name        *string `json:"name,omitempty" validate:"omitempty,min=3,max=20"`
 	Description *string `json:"description,omitempty" validate:"omitempty,max=255"`
 }
+

@@ -26,8 +26,8 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		TenantAuthRequest	true	"Authorization request"
-//	@Success		200	{object}	AuthorizationResponse
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Success		200		{object}	AuthorizationResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/authorize [post]
 func AuthorizeTenant(c *fiber.Ctx) error {
 	var req TenantAuthRequest
@@ -213,3 +213,4 @@ type AuthorizationResponse struct {
 	Effect     string `json:"effect,omitempty"`
 	Error      string `json:"error,omitempty"`
 }
+

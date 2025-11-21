@@ -25,7 +25,7 @@ import (
 //	@Produce		json
 //	@Param			request	body		AdminAuthRequest	true	"Authorization request"
 //	@Success		200		{object}	AuthorizationResponse
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/authorize [post]
 func AuthorizeAdmin(c *fiber.Ctx) error {
 	var req AdminAuthRequest
@@ -164,3 +164,4 @@ type AdminAuthRequest struct {
 	Query      map[string]interface{} `json:"query,omitempty"`
 	Headers    map[string]interface{} `json:"headers,omitempty"`
 }
+

@@ -26,7 +26,7 @@ import (
 //	@Param			offset			query	int		false	"Number of items to skip (default: 0)"
 //	@Produce		json
 //	@Success		200	{object}	PaginatedClientRolesResponse
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/roles [get]
 func ListClientRoles(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -56,8 +56,8 @@ func ListClientRoles(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Role ID"
 //	@Produce		json
 //	@Success		200	{object}	model.ClientRole
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/roles/{id} [get]
 func GetClientRoleById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -83,7 +83,7 @@ func GetClientRoleById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			role	body		ClientRoleCreateRequest	true	"Role data"
 //	@Success		201		{object}	model.ClientRole
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/roles [post]
 func CreateClientRole(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -129,8 +129,8 @@ func CreateClientRole(c *fiber.Ctx) error {
 //	@Param			id		path		string					true	"Role ID"
 //	@Param			role	body		ClientRoleUpdateRequest	true	"Role data"
 //	@Success		200		{object}	model.ClientRole
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/client/roles/{id} [patch]
 func UpdateClientRoleById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -194,8 +194,8 @@ func UpdateClientRoleById(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Role ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/client/roles/{id} [delete]
 func DeleteClientRoleById(c *fiber.Ctx) error {
 	if err := requireSuperAdmin(c); err != nil {
@@ -224,3 +224,4 @@ type ClientRoleUpdateRequest struct {
 	Name        *string `json:"name,omitempty" validate:"omitempty,min=3,max=20"`
 	Description *string `json:"description,omitempty" validate:"omitempty,max=255"`
 }
+

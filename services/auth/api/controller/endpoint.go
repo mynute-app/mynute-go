@@ -377,3 +377,4 @@ type EndpointUpdateRequest struct {
 	NeedsCompanyId   *bool   `json:"needs_company_id,omitempty"`
 	ResourceID       *string `json:"resource_id,omitempty" validate:"omitempty,uuid"`
 }
+
