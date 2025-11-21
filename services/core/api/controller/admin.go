@@ -493,7 +493,7 @@ func ResetAdminPasswordByEmail(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			email			path	string	true	"Admin Email"
-//	@Query			language				query	string	false	"Language for the email content"
+//	@Query			language								query	string	false	"Language for the email content"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		400	{object}	DTO.ErrorResponse
