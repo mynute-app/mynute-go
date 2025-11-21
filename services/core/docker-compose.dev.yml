@@ -29,7 +29,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
-    command: ["/docker-entrypoint-initdb.d/init-db.sh"]
     networks:
       - mynute-app-network
 
