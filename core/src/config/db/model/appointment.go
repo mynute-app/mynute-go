@@ -433,7 +433,10 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	}
 	a.IsCancelled = true
 	a.CancelTime = time.Now()
-	err := tx.Save(a).Error
+	err := tx.Model(a).Updates(map[string]interface{}{
+		"is_cancelled": true,
+		"cancel_time":  time.Now(),
+	}).Error
 	if err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling appointment: %w", err))
 	}

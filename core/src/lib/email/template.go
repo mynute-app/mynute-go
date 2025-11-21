@@ -106,14 +106,39 @@ func (r *TemplateRenderer) loadTranslations(templateName, language string) (map[
 
 // mergeData merges translations with custom data
 // Custom data takes precedence over translations
+// Also processes template variables in translation strings
 func (r *TemplateRenderer) mergeData(translations map[string]any, customData TemplateData) TemplateData {
 	merged := make(TemplateData)
 
-	// Copy translations first
+	// First, merge translations and custom data
 	maps.Copy(merged, translations)
-
-	// Override with custom data
 	maps.Copy(merged, customData)
 
-	return merged
+	// Process template variables in translation strings
+	processedTranslations := make(TemplateData)
+	for key, value := range translations {
+		if strValue, ok := value.(string); ok {
+			// Parse and execute the translation string as a template
+			tmpl, err := template.New(key).Parse(strValue)
+			if err == nil {
+				var buf bytes.Buffer
+				if err := tmpl.Execute(&buf, merged); err == nil {
+					processedTranslations[key] = buf.String()
+				} else {
+					processedTranslations[key] = strValue // Keep original if execution fails
+				}
+			} else {
+				processedTranslations[key] = strValue // Keep original if parsing fails
+			}
+		} else {
+			processedTranslations[key] = value
+		}
+	}
+
+	// Final merge with processed translations taking precedence
+	finalMerged := make(TemplateData)
+	maps.Copy(finalMerged, processedTranslations)
+	maps.Copy(finalMerged, customData)
+
+	return finalMerged
 }
