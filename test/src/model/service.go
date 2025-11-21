@@ -158,6 +158,13 @@ func (s *Service) UploadImages(status int, files map[string][]byte, x_auth_token
 		return fmt.Errorf("failed to upload service images: %w", err)
 	}
 
+	// Refresh the service data to get all images including previously uploaded ones
+	if status >= 200 && status < 300 {
+		if err := s.GetById(200, x_auth_token, x_company_id); err != nil {
+			return fmt.Errorf("failed to refresh service data after image upload: %w", err)
+		}
+	}
+
 	return nil
 }
 

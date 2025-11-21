@@ -821,6 +821,13 @@ func (e *Employee) UploadImages(status int, files map[string][]byte, x_auth_toke
 		return fmt.Errorf("failed to upload employee images: %w", err)
 	}
 
+	// Refresh the employee data to get all images including previously uploaded ones
+	if status >= 200 && status < 300 {
+		if err := e.GetById(200, x_auth_token, x_company_id); err != nil {
+			return fmt.Errorf("failed to refresh employee data after image upload: %w", err)
+		}
+	}
+
 	return nil
 }
 
