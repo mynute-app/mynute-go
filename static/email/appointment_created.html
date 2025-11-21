@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <div style="display: none; max-height: 0; overflow: hidden;">
+        {{.preheader}}
+    </div>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="padding: 40px; text-align: center;">
+                            <h1 style="color: #28a745; margin: 0;">{{.heading}}</h1>
+                            <p style="color: #555555; font-size: 16px; margin: 20px 0 0;">{{.greeting}}</p>
+                            <p style="color: #555555; font-size: 16px; margin: 10px 0 0;">{{.confirmation_message}}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0 40px 40px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f9f9f9; border-radius: 8px; padding: 20px;">
+                                <tr>
+                                    <td>
+                                        <h2 style="color: #333333; margin: 0 0 15px 0; font-size: 18px;">{{.details_heading}}</h2>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.service_label}}:</strong> {{.ServiceName}}</p>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.employee_label}}:</strong> {{.EmployeeName}}</p>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.date_label}}:</strong> {{.AppointmentDate}}</p>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.time_label}}:</strong> {{.AppointmentTime}}</p>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.duration_label}}:</strong> {{.Duration}}</p>
+                                        <p style="color: #555555; font-size: 14px; margin: 8px 0;"><strong>{{.location_label}}:</strong> {{.BranchAddress}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0 40px 40px; text-align: center;">
+                            <p style="color: #555555; font-size: 14px; margin: 0;">{{.reminder_message}}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f9f9f9; padding: 20px; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="color: #888888; font-size: 12px; margin: 0;">
+                                {{.footer_automated}}
+                            </p>
+                            <p style="color: #888888; font-size: 12px; margin: 5px 0 0;">
+                                {{.footer_do_not_reply}}
+                            </p>
+                            <p style="color: #888888; font-size: 12px; margin: 5px 0 0;">
+                                Mynute App
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

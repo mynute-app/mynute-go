@@ -1,14 +1,18 @@
 package controller
 
 import (
+	"context"
 	"fmt"
+	"log"
 	DTO "mynute-go/core/src/config/api/dto"
 	database "mynute-go/core/src/config/db"
 	"mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/handler"
 	"mynute-go/core/src/lib"
+	"mynute-go/core/src/lib/email"
 	"mynute-go/core/src/middleware"
 	"mynute-go/debug"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -35,6 +39,32 @@ func CreateAppointment(c *fiber.Ctx) error {
 	if err := debug.Output("controller_CreateAppointment", appointment); err != nil {
 		return err
 	}
+
+	// Send appointment created emails
+	go func() {
+		ctx := context.Background()
+		tx, err := lib.Session(c)
+		if err != nil {
+			log.Printf("Failed to get database session for email: %v", err)
+			return
+		}
+
+		// Initialize email service
+		sender, err := email.NewProvider(nil)
+		if err != nil {
+			log.Printf("Failed to create email provider: %v", err)
+			return
+		}
+
+		templateDir := filepath.Join("static", "email")
+		translationDir := filepath.Join("translation", "email")
+		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
+
+		if err := emailService.SendAppointmentCreatedEmails(ctx, tx, &appointment); err != nil {
+			log.Printf("Failed to send appointment created emails: %v", err)
+		}
+	}()
+
 	if err := lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
@@ -127,6 +157,25 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
+	// Send appointment updated emails
+	go func() {
+		ctx := context.Background()
+		// Initialize email service
+		sender, err := email.NewProvider(nil)
+		if err != nil {
+			log.Printf("Failed to create email provider: %v", err)
+			return
+		}
+
+		templateDir := filepath.Join("static", "email")
+		translationDir := filepath.Join("translation", "email")
+		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
+
+		if err := emailService.SendAppointmentUpdatedEmails(ctx, tx, &appointment); err != nil {
+			log.Printf("Failed to send appointment updated emails: %v", err)
+		}
+	}()
+
 	if err = lib.ResponseFactory(c).SendDTO(200, &appointment, &DTO.Appointment{}); err != nil {
 		return lib.Error.General.UpdatedError.WithError(err)
 	}
@@ -164,9 +213,35 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
+	// Load appointment data before cancelling for email
+	if err := tx.Where("id = ?", uuid).First(&appointment).Error; err != nil {
+		return lib.Error.Appointment.NotFound.WithError(err)
+	}
+
 	if err := appointment.Cancel(tx); err != nil {
 		return err
 	}
+
+	// Send appointment cancelled emails
+	go func() {
+		ctx := context.Background()
+		// Initialize email service
+		sender, err := email.NewProvider(nil)
+		if err != nil {
+			log.Printf("Failed to create email provider: %v", err)
+			return
+		}
+
+		templateDir := filepath.Join("static", "email")
+		translationDir := filepath.Join("translation", "email")
+		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
+
+		if err := emailService.SendAppointmentCancelledEmails(ctx, tx, &appointment); err != nil {
+			log.Printf("Failed to send appointment cancelled emails: %v", err)
+		}
+	}()
+
 	return nil
 }
 
