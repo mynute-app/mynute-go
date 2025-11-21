@@ -137,10 +137,13 @@ func (h *httpActions) Send(body any) *httpActions {
 		if !json.Valid(bodyBytes) {
 			h.ResBody = map[string]any{"data": string(bodyBytes)}
 		} else {
+			// Try to decode as map first
 			decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
 			decoder.UseNumber()
 			if err := decoder.Decode(&h.ResBody); err != nil {
-				return h.set_error(fmt.Sprintf("failed to unmarshal response body: %v", err))
+				// If it fails (e.g., array response), we'll handle it in ParseResponse
+				// Just store the raw body and continue
+				h.ResBody = nil
 			}
 		}
 	}
