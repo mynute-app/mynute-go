@@ -433,7 +433,8 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	}
 	a.IsCancelled = true
 	a.CancelTime = time.Now()
-	err := tx.Model(a).Updates(map[string]interface{}{
+	// Use UpdateColumn instead of Updates to skip hooks
+	err := tx.Model(a).UpdateColumns(map[string]interface{}{
 		"is_cancelled": true,
 		"cancel_time":  time.Now(),
 	}).Error
@@ -457,8 +458,11 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 		}
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error loading client appointment: %w", err))
 	}
-	clientAppointment.IsCancelled = true
-	err = tx.Save(&clientAppointment).Error
+	err = tx.Model(&ClientAppointment{}).
+		Where("appointment_id = ?", a.ID).
+		UpdateColumns(map[string]interface{}{
+			"is_cancelled": true,
+		}).Error
 	if err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling client appointment: %w", err))
 	}
