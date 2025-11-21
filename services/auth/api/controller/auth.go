@@ -313,16 +313,33 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		return "", lib.Error.Auth.InvalidLogin
 	}
 
-	// Create JWT claims from user data
-	var claims DTO.Claims
-	claims.ID = userID
-	claims.Email = userEmail
-	claims.Type = user_type
-
-	// Generate JWT token
-	token, err := handler.JWT(c).Encode(&claims)
-	if err != nil {
-		return "", err
+	// Create JWT claims based on user type
+	var token string
+	if user_type == namespace.AdminKey.Name {
+		// Create admin-specific claims
+		adminClaims := DTO.AdminUserClaims{
+			ID:       userID,
+			Email:    userEmail,
+			IsAdmin:  true,
+			IsActive: true,
+			Type:     user_type,
+			Roles:    []string{"superadmin"}, // Default to superadmin for test purposes
+		}
+		token, err = handler.JWT(c).Encode(&adminClaims)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		// Create regular claims for tenant/client users
+		claims := DTO.Claims{
+			ID:    userID,
+			Email: userEmail,
+			Type:  user_type,
+		}
+		token, err = handler.JWT(c).Encode(&claims)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return token, nil
