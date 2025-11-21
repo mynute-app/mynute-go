@@ -466,7 +466,8 @@ func (a *Appointment) Cancel(tx *gorm.DB) error {
 	if err != nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("error cancelling client appointment: %w", err))
 	}
-	if err := lib.ChangeToCompanySchema(tx, a.CompanyID.String()); err != nil {
+	companySchema := fmt.Sprintf("company_%s", a.CompanyID.String())
+	if err := lib.ChangeToCompanySchema(tx, companySchema); err != nil {
 		return lib.Error.General.InternalError.WithError(fmt.Errorf("error changing to company schema: %w", err))
 	}
 	return nil
