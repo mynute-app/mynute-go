@@ -69,7 +69,13 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	if len(policies) == 0 {
+	// Also get general tenant policies that apply to all tenants
+	var generalPolicies []model.TenantGeneralPolicy
+	if err := tx.Where("end_point_id = ?", endpoint.ID).Find(&generalPolicies).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	if len(policies) == 0 && len(generalPolicies) == 0 {
 		return c.JSON(AuthorizationResponse{
 			Allowed: false,
 			Reason:  fmt.Sprintf("no tenant policies defined for endpoint: %s %s", req.Method, req.Path),
@@ -79,21 +85,42 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 	// Create access controller
 	accessCtrl := handler.NewAccessController(tx)
 
-	// Separate allow and deny policies
-	var allowPolicies []model.TenantPolicy
-	var denyPolicies []model.TenantPolicy
+	// Combine policies into a unified list for processing
+	// We'll check tenant-specific policies first, then general policies
+	type policyItem struct {
+		policy model.PolicyInterface
+		effect string
+	}
 
+	var allPolicies []policyItem
+
+	// Add tenant-specific policies
 	for _, policy := range policies {
-		switch policy.Effect {
+		p := policy // Create a copy to avoid pointer issues
+		allPolicies = append(allPolicies, policyItem{policy: &p, effect: p.Effect})
+	}
+
+	// Add general policies
+	for _, policy := range generalPolicies {
+		p := policy // Create a copy to avoid pointer issues
+		allPolicies = append(allPolicies, policyItem{policy: &p, effect: p.Effect})
+	}
+
+	// Separate allow and deny policies
+	var allowPolicies []policyItem
+	var denyPolicies []policyItem
+
+	for _, item := range allPolicies {
+		switch item.effect {
 		case "Allow":
-			allowPolicies = append(allowPolicies, policy)
+			allowPolicies = append(allowPolicies, item)
 		case "Deny":
-			denyPolicies = append(denyPolicies, policy)
+			denyPolicies = append(denyPolicies, item)
 		}
 	}
 
 	// Check deny policies first (explicit deny takes precedence)
-	for _, policy := range denyPolicies {
+	for _, item := range denyPolicies {
 		decision := accessCtrl.Validate(
 			req.Subject,
 			req.Resource,
@@ -101,7 +128,7 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 			req.Body,
 			req.Query,
 			req.Headers,
-			&policy,
+			item.policy,
 		)
 
 		if decision.Error != nil {
@@ -117,15 +144,15 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 			return c.JSON(AuthorizationResponse{
 				Allowed:    false,
 				Reason:     decision.Reason,
-				PolicyID:   policy.ID.String(),
-				PolicyName: policy.Name,
+				PolicyID:   item.policy.GetID().String(),
+				PolicyName: item.policy.GetName(),
 				Effect:     "Deny",
 			})
 		}
 	}
 
 	// Check allow policies
-	for _, policy := range allowPolicies {
+	for _, item := range allowPolicies {
 		decision := accessCtrl.Validate(
 			req.Subject,
 			req.Resource,
@@ -133,7 +160,7 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 			req.Body,
 			req.Query,
 			req.Headers,
-			&policy,
+			item.policy,
 		)
 
 		if decision.Error != nil {
@@ -149,8 +176,8 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 			return c.JSON(AuthorizationResponse{
 				Allowed:    true,
 				Reason:     "Access granted",
-				PolicyID:   policy.ID.String(),
-				PolicyName: policy.Name,
+				PolicyID:   item.policy.GetID().String(),
+				PolicyName: item.policy.GetName(),
 				Effect:     "Allow",
 			})
 		}
