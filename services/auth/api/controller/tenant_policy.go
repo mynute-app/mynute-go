@@ -28,7 +28,7 @@ import (
 //	@Param			offset			query	int		false	"Number of items to skip (default: 0)"
 //	@Produce		json
 //	@Success		200	{object}	PaginatedTenantPoliciesResponse
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/tenant/policies [get]
 func ListTenantPolicies(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -89,8 +89,8 @@ func ListTenantPolicies(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	model.TenantPolicy
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/tenant/policies/{id} [get]
 func GetTenantPolicyById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -144,7 +144,7 @@ func GetTenantPolicyById(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			policy	body		TenantPolicyCreateRequest	true	"Policy data"
 //	@Success		201		{object}	model.TenantPolicy
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/policies [post]
 func CreateTenantPolicy(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -233,8 +233,8 @@ func CreateTenantPolicy(c *fiber.Ctx) error {
 //	@Param			id		path		string						true	"Policy ID"
 //	@Param			policy	body		TenantPolicyUpdateRequest	true	"Policy data"
 //	@Success		200		{object}	model.TenantPolicy
-//	@Failure		400		{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404		{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		404		{object}	DTO.ErrorResponse
 //	@Router			/tenant/policies/{id} [patch]
 func UpdateTenantPolicyById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -342,8 +342,8 @@ func UpdateTenantPolicyById(c *fiber.Ctx) error {
 //	@Param			id				path	string	true	"Policy ID"
 //	@Produce		json
 //	@Success		200	{object}	map[string]string
-//	@Failure		400	{object}	mynute-go_auth_config_dto.ErrorResponse
-//	@Failure		404	{object}	mynute-go_auth_config_dto.ErrorResponse
+//	@Failure		400	{object}	DTO.ErrorResponse
+//	@Failure		404	{object}	DTO.ErrorResponse
 //	@Router			/tenant/policies/{id} [delete]
 func DeleteTenantPolicyById(c *fiber.Ctx) error {
 	// Get tenant ID from header
@@ -404,7 +404,7 @@ type TenantPolicyCreateRequest struct {
 	Description string          `json:"description"`
 	Effect      string          `json:"effect" validate:"required,oneof=Allow Deny"`
 	EndPointID  string          `json:"end_point_id" validate:"required,uuid"`
-	Conditions  json.RawMessage `json:"conditions" validate:"required"`
+	Conditions  json.RawMessage `json:"conditions" validate:"required" swaggertype:"string"`
 }
 
 type TenantPolicyUpdateRequest struct {
@@ -412,5 +412,5 @@ type TenantPolicyUpdateRequest struct {
 	Description *string         `json:"description,omitempty"`
 	Effect      *string         `json:"effect,omitempty" validate:"omitempty,oneof=Allow Deny"`
 	EndPointID  *string         `json:"end_point_id,omitempty" validate:"omitempty,uuid"`
-	Conditions  json.RawMessage `json:"conditions,omitempty"`
+	Conditions  json.RawMessage `json:"conditions,omitempty" swaggertype:"string"`
 }
