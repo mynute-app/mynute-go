@@ -1,20 +1,10 @@
 #!/bin/bash
 set -e
 
-# Trap SIGTERM and SIGINT for graceful shutdown
-trap 'echo "🛑 Received shutdown signal, stopping PostgreSQL gracefully..."; pg_ctl stop -D "$PGDATA" -m fast; exit 0' SIGTERM SIGINT
+# This script is run by docker-entrypoint.sh after PostgreSQL has started
+# We don't need to start PostgreSQL ourselves
 
-echo '✅ Starting PostgreSQL...'
-docker-entrypoint.sh postgres &
-PG_PID=$!
-
-echo '⏳ Waiting for PostgreSQL to start...'
-until pg_isready -h localhost -p 5432 -U "${POSTGRES_USER}"; do
-  echo '⏳ Still waiting for PostgreSQL...'
-  sleep 2
-done
-
-echo '✅ PostgreSQL is ready! Proceeding with initialization...'
+echo '✅ PostgreSQL initialization script starting...'
 
 DB_NAME=""
 case ${APP_ENV} in
@@ -51,6 +41,3 @@ else
 fi
 
 echo '🎉 Database initialization complete!'
-
-# Keep PostgreSQL running in the foreground and wait for it
-wait $PG_PID
