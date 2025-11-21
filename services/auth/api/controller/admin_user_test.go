@@ -448,3 +448,4 @@ func TestFirstAdminCreationScenarios(t *testing.T) {
 		// In actual endpoint, would also verify JWT token presence
 	})
 }
+

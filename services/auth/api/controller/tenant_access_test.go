@@ -135,3 +135,4 @@ func TestTenantAuthRequestValidation(t *testing.T) {
 		assert.NotNil(t, req.Subject["roles"])
 	})
 }
+

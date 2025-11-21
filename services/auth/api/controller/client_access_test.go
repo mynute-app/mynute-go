@@ -77,3 +77,4 @@ func TestClientAuthRequestValidation(t *testing.T) {
 		assert.Equal(t, "scheduled", resource["status"])
 	})
 }
+

@@ -93,3 +93,4 @@ func TestAdminAuthRequestValidation(t *testing.T) {
 		assert.Contains(t, req.Path, "/admin/")
 	})
 }
+

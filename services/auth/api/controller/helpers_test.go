@@ -177,3 +177,4 @@ func TestUpdateMapValidation(t *testing.T) {
 		assert.IsType(t, 0.0, updates["balance"])
 	})
 }
+

@@ -220,3 +220,4 @@ func TestEndpointPathValidation(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
