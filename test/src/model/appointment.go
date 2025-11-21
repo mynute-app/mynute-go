@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"mynute-go/core/src/config/api/dto"
+	DTO "mynute-go/core/src/config/api/dto"
 	coreModel "mynute-go/core/src/config/db/model"
 	"mynute-go/core/src/config/namespace"
 	"mynute-go/core/src/lib"
@@ -271,22 +271,28 @@ func (a *Appointment) Cancel(s int, x_auth_token string, x_company_id *string) e
 		return nil
 	}
 	// Delete appointment from Employee, Branch and Client
-	for i, appt := range a.Employee.Appointments {
-		if appt.Created.ID == a.Created.ID {
-			a.Employee.Appointments = slices.Delete(a.Employee.Appointments, i, i+1)
-			break
+	if a.Employee != nil {
+		for i, appt := range a.Employee.Appointments {
+			if appt.Created.ID == a.Created.ID {
+				a.Employee.Appointments = slices.Delete(a.Employee.Appointments, i, i+1)
+				break
+			}
 		}
 	}
-	for i, appt := range a.Branch.Appointments {
-		if appt.Created.ID == a.Created.ID {
-			a.Branch.Appointments = slices.Delete(a.Branch.Appointments, i, i+1)
-			break
+	if a.Branch != nil {
+		for i, appt := range a.Branch.Appointments {
+			if appt.Created.ID == a.Created.ID {
+				a.Branch.Appointments = slices.Delete(a.Branch.Appointments, i, i+1)
+				break
+			}
 		}
 	}
-	for i, appt := range a.Client.Appointments {
-		if appt.Created.ID == a.Created.ID {
-			a.Client.Appointments = slices.Delete(a.Client.Appointments, i, i+1)
-			break
+	if a.Client != nil {
+		for i, appt := range a.Client.Appointments {
+			if appt.Created.ID == a.Created.ID {
+				a.Client.Appointments = slices.Delete(a.Client.Appointments, i, i+1)
+				break
+			}
 		}
 	}
 	a.Reset() // Reset the Appointment struct after cancellation

@@ -1,11 +1,11 @@
 package email
 
 import (
-	"maps"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"maps"
 	"os"
 	"path/filepath"
 )
@@ -33,8 +33,6 @@ type RenderedEmail struct {
 	HTMLBody string
 	Subject  string
 }
-
-
 
 // RenderEmail renders an email template with translations and custom data
 // templateName: name of the HTML template file (without extension)
