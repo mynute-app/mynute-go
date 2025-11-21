@@ -1,11 +1,12 @@
 package e2e_test
 
 import (
+	"fmt"
 	"mynute-go/core"
-	"mynute-go/core/src/config/api/dto"
-	"mynute-go/core/src/config/db/model/json"
+	DTO "mynute-go/core/src/config/api/dto"
+	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/file_bytes"
+	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
 	"testing"
@@ -84,6 +85,27 @@ func Test_Company(t *testing.T) {
 	tt.Describe("Recheck banner image").Test(company.GetImage(200, company.Created.Design.Images.Banner.URL, &FileBytes.PNG_FILE_2))
 	tt.Describe("Recheck favicon image").Test(company.GetImage(200, company.Created.Design.Images.Favicon.URL, &FileBytes.PNG_FILE_3))
 	tt.Describe("Recheck background image").Test(company.GetImage(200, company.Created.Design.Images.Background.URL, &FileBytes.PNG_FILE_4))
+
+	// Test that GET company returns all images in design.images
+	tt.Describe("Get company by ID and verify all images are returned").Test(func() error {
+		if err := company.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		images := company.Created.Design.Images
+		if images.Logo.URL == "" {
+			return fmt.Errorf("Expected logo image URL in response")
+		}
+		if images.Banner.URL == "" {
+			return fmt.Errorf("Expected banner image URL in response")
+		}
+		if images.Favicon.URL == "" {
+			return fmt.Errorf("Expected favicon image URL in response")
+		}
+		if images.Background.URL == "" {
+			return fmt.Errorf("Expected background image URL in response")
+		}
+		return nil
+	}())
 
 	tt.Describe("Change primary color only").Test(company.ChangeColors(200, mJSON.Colors{
 		Primary: "#123456",

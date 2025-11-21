@@ -168,6 +168,55 @@ func Test_Employee(t *testing.T) {
 
 	tt.Describe("Get overwritten profile image").Test(employee.GetImage(200, employee.Created.Meta.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
 
+	// Test that GET employee returns images in meta.design.images
+	tt.Describe("Get employee by ID and verify images are returned").Test(func() error {
+		if err := employee.GetById(200, &c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		if employee.Created.Meta.Design.Images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL to be returned in GET response, but got empty string")
+		}
+		return nil
+	}())
+
+	tt.Describe("Get employee by email and verify images are returned").Test(func() error {
+		if err := employee.GetByEmail(200, &c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		if employee.Created.Meta.Design.Images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL to be returned in GET response, but got empty string")
+		}
+		return nil
+	}())
+
+	// Upload multiple images to test all image types
+	tt.Describe("Upload multiple images (logo, banner, background)").Test(employee.UploadImages(200, map[string][]byte{
+		"logo":       FileBytes.PNG_FILE_1,
+		"banner":     FileBytes.PNG_FILE_2,
+		"background": FileBytes.PNG_FILE_3,
+	}, nil, nil))
+
+	// Verify all images are returned in GET response
+	tt.Describe("Get employee and verify all uploaded images are returned").Test(func() error {
+		if err := employee.GetById(200, &c.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		images := employee.Created.Meta.Design.Images
+		if images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL in response")
+		}
+		if images.Logo.URL == "" {
+			return fmt.Errorf("Expected logo image URL in response")
+		}
+		if images.Banner.URL == "" {
+			return fmt.Errorf("Expected banner image URL in response")
+		}
+		if images.Background.URL == "" {
+			return fmt.Errorf("Expected background image URL in response")
+		}
+		return nil
+	}())
+
 	tt.Describe("Employee deletion").Test(employee.Delete(200, nil, nil))
 
 	tt.Describe("Get deleted employee by ID").Test(employee.GetById(404, &c.Owner.X_Auth_Token, nil))

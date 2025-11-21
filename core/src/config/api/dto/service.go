@@ -1,7 +1,7 @@
 package DTO
 
 import (
-	mJSON "mynute-go/core/src/config/db/model/json"
+	dJSON "mynute-go/core/src/config/api/dto/json"
 
 	"github.com/google/uuid"
 )
@@ -27,13 +27,13 @@ type Service struct {
 // @name			ServiceBaseDTO
 // @tag.name		service.base.dto
 type ServiceBase struct {
-	ID          uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	CompanyID   uuid.UUID          `json:"company_id" gorm:"not null;index;foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" example:"1"`
-	Name        string             `json:"name" example:"Premium Consultation"`
-	Description string             `json:"description" example:"A 60-minute in-depth business consultation"`
-	Price       int32              `json:"price" example:"150"`
-	Duration    uint               `json:"duration" example:"60"`
-	Design      mJSON.DesignConfig `json:"design"`
+	ID          uuid.UUID    `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID   uuid.UUID    `json:"company_id" gorm:"not null;index;foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" example:"1"`
+	Name        string       `json:"name" example:"Premium Consultation"`
+	Description string       `json:"description" example:"A 60-minute in-depth business consultation"`
+	Price       int32        `json:"price" example:"150"`
+	Duration    uint         `json:"duration" example:"60"`
+	Design      dJSON.Design `json:"design"`
 }
 
 type ServiceID struct {

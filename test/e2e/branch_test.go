@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"mynute-go/core"
-	"mynute-go/core/src/config/api/dto"
-	"mynute-go/core/src/lib/file_bytes"
+	DTO "mynute-go/core/src/config/api/dto"
+	coreModel "mynute-go/core/src/config/db/model"
+	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
-	coreModel "mynute-go/core/src/config/db/model"
 
 	"testing"
 
@@ -123,6 +123,45 @@ func Test_Branch(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Get overwritten profile image").Test(branch.GetImage(200, branch.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+
+	// Test that GET branch returns images in design.images
+	tt.Describe("Get branch by ID and verify images are returned").Test(func() error {
+		if err := branch.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		if branch.Created.Design.Images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL to be returned in GET response, but got empty string")
+		}
+		return nil
+	}())
+
+	// Upload multiple images to test all image types
+	tt.Describe("Upload multiple images (logo, banner, background)").Test(branch.UploadImages(200, map[string][]byte{
+		"logo":       FileBytes.PNG_FILE_1,
+		"banner":     FileBytes.PNG_FILE_2,
+		"background": FileBytes.PNG_FILE_3,
+	}, company.Owner.X_Auth_Token, nil))
+
+	// Verify all images are returned in GET response
+	tt.Describe("Get branch and verify all uploaded images are returned").Test(func() error {
+		if err := branch.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		images := branch.Created.Design.Images
+		if images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL in response")
+		}
+		if images.Logo.URL == "" {
+			return fmt.Errorf("Expected logo image URL in response")
+		}
+		if images.Banner.URL == "" {
+			return fmt.Errorf("Expected banner image URL in response")
+		}
+		if images.Background.URL == "" {
+			return fmt.Errorf("Expected background image URL in response")
+		}
+		return nil
+	}())
 
 	img_url := branch.Created.Design.Images.Profile.URL
 

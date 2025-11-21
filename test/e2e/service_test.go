@@ -1,9 +1,10 @@
 package e2e_test
 
 import (
+	"fmt"
 	"mynute-go/core"
 	"mynute-go/core/src/lib"
-	"mynute-go/core/src/lib/file_bytes"
+	FileBytes "mynute-go/core/src/lib/file_bytes"
 	"mynute-go/test/src/handler"
 	"mynute-go/test/src/model"
 
@@ -53,6 +54,45 @@ func Test_Service(t *testing.T) {
 	}, company.Owner.X_Auth_Token, nil))
 
 	tt.Describe("Get overwritten profile image").Test(service.GetImage(200, service.Created.Design.Images.Profile.URL, &FileBytes.PNG_FILE_3))
+
+	// Test that GET service returns images in design.images
+	tt.Describe("Get service by ID and verify images are returned").Test(func() error {
+		if err := service.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		if service.Created.Design.Images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL to be returned in GET response, but got empty string")
+		}
+		return nil
+	}())
+
+	// Upload multiple images to test all image types
+	tt.Describe("Upload multiple images (logo, banner, background)").Test(service.UploadImages(200, map[string][]byte{
+		"logo":       FileBytes.PNG_FILE_1,
+		"banner":     FileBytes.PNG_FILE_2,
+		"background": FileBytes.PNG_FILE_4,
+	}, company.Owner.X_Auth_Token, nil))
+
+	// Verify all images are returned in GET response
+	tt.Describe("Get service and verify all uploaded images are returned").Test(func() error {
+		if err := service.GetById(200, company.Owner.X_Auth_Token, nil); err != nil {
+			return err
+		}
+		images := service.Created.Design.Images
+		if images.Profile.URL == "" {
+			return fmt.Errorf("Expected profile image URL in response")
+		}
+		if images.Logo.URL == "" {
+			return fmt.Errorf("Expected logo image URL in response")
+		}
+		if images.Banner.URL == "" {
+			return fmt.Errorf("Expected banner image URL in response")
+		}
+		if images.Background.URL == "" {
+			return fmt.Errorf("Expected background image URL in response")
+		}
+		return nil
+	}())
 
 	img_url := service.Created.Design.Images.Profile.URL
 

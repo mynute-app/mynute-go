@@ -1,7 +1,7 @@
 package DTO
 
 import (
-	mJSON "mynute-go/core/src/config/db/model/json"
+	dJSON "mynute-go/core/src/config/api/dto/json"
 
 	"github.com/google/uuid"
 )
@@ -33,11 +33,11 @@ type CompanyFull struct {
 // @name			CompanyBaseDTO
 // @tag.name		company.base.dto
 type CompanyBase struct {
-	ID         uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
-	LegalName  string             `json:"legal_name" example:"Your Company Legal Name"`
-	TradeName  string             `json:"trading_name" example:"Your Company Trading Name"`
-	TaxID      string             `json:"tax_id" example:"00000000000000"`
-	Design     mJSON.DesignConfig `json:"design"`
-	Sectors    []*Sector          `json:"sectors"`
-	Subdomains []*Subdomain       `json:"subdomains"`
+	ID         uuid.UUID    `json:"id" example:"00000000-0000-0000-0000-000000000000"` // Primary key
+	LegalName  string       `json:"legal_name" example:"Your Company Legal Name"`
+	TradeName  string       `json:"trading_name" example:"Your Company Trading Name"`
+	TaxID      string       `json:"tax_id" example:"00000000000000"`
+	Design     dJSON.Design `json:"design"`
+	Sectors    []*Sector    `json:"sectors"`
+	Subdomains []*Subdomain `json:"subdomains"`
 }

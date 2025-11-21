@@ -1,7 +1,7 @@
 package DTO
 
 import (
-	mJSON "mynute-go/core/src/config/db/model/json"
+	dJSON "mynute-go/core/src/config/api/dto/json"
 
 	"github.com/google/uuid"
 )
@@ -67,11 +67,11 @@ type EmployeeFull struct {
 // @name			EmployeeBaseDTO
 // @tag.name		employee.base.dto
 type EmployeeBase struct {
-	ID                  uuid.UUID          `json:"id" example:"00000000-0000-0000-0000-000000000000"`
-	CompanyID           uuid.UUID          `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
-	Name                string             `json:"name" example:"John"`
-	Surname             string             `json:"surname" example:"Doe"`
-	TimeZone            string             `json:"time_zone" example:"America/Sao_Paulo"`
-	TotalServiceDensity uint32             `json:"total_service_density" example:"100"`
-	Design              mJSON.DesignConfig `json:"design"`
+	ID                  uuid.UUID      `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	CompanyID           uuid.UUID      `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
+	Name                string         `json:"name" example:"John"`
+	Surname             string         `json:"surname" example:"Doe"`
+	TimeZone            string         `json:"time_zone" example:"America/Sao_Paulo"`
+	TotalServiceDensity uint32         `json:"total_service_density" example:"100"`
+	Meta                dJSON.UserMeta `json:"meta"`
 }
