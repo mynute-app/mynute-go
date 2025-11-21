@@ -41,8 +41,8 @@ func AreThereAnyAdmin(c *fiber.Ctx) error {
 //	@Tags			Admin
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin	body		DTO.Admin	true	"Admin creation data"
-//	@Success		201		{object}	DTO.Admin
+//	@Param			admin	body		DTO.AdminUser	true	"Admin creation data"
+//	@Success		201		{object}	DTO.AdminUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/users/first_superadmin [post]
 func CreateFirstAdmin(c *fiber.Ctx) error {
@@ -66,8 +66,8 @@ func CreateFirstAdmin(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin	body		DTO.AdminCreateRequest	true	"Admin creation data"
-//	@Success		201		{object}	DTO.Admin
+//	@Param			admin	body		DTO.AdminUserCreateRequest	true	"Admin creation data"
+//	@Success		201		{object}	DTO.AdminUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/users [post]
 func CreateAdmin(c *fiber.Ctx) error {
@@ -138,7 +138,7 @@ func CreateAdmin(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Admin ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Admin
+//	@Success		200	{object}	DTO.AdminUser
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/admin/users/{id} [get]
 func GetAdminById(c *fiber.Ctx) error {
@@ -168,8 +168,8 @@ func GetAdminById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string					true	"Admin ID"
-//	@Param			admin	body		DTO.AdminUpdateRequest	true	"Admin"
-//	@Success		200		{object}	DTO.Admin
+//	@Param			admin	body		DTO.AdminUserUpdateRequest	true	"Admin"
+//	@Success		200		{object}	DTO.AdminUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/users/{id} [patch]
 func UpdateAdminById(c *fiber.Ctx) error {
@@ -217,7 +217,7 @@ func DeleteAdminById(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Produce		json
-//	@Success		200	{array}		DTO.Admin
+//	@Success		200	{array}		DTO.AdminUser
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/admin/users [get]
 func ListAdmins(c *fiber.Ctx) error {

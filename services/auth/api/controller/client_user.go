@@ -19,8 +19,8 @@ import (
 //	@Tags			Client
 //	@Accept			json
 //	@Produce		json
-//	@Param			client	body		DTO.CreateClient	true	"Client"
-//	@Success		200		{object}	DTO.Client
+//	@Param			client	body		DTO.CreateClientUser	true	"Client"
+//	@Success		200		{object}	DTO.ClientUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/users [post]
 func CreateClient(c *fiber.Ctx) error {
@@ -41,7 +41,7 @@ func CreateClient(c *fiber.Ctx) error {
 //	@Tags			Client
 //	@Param			email	path	string	true	"Client Email"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Client
+//	@Success		200	{object}	DTO.ClientUser
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/users/email/{email} [get]
 func GetClientByEmail(c *fiber.Ctx) error {
@@ -65,7 +65,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Client ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Client
+//	@Success		200	{object}	DTO.ClientUser
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/users/{id} [get]
 func GetClientById(c *fiber.Ctx) error {
@@ -90,8 +90,8 @@ func GetClientById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string					true	"Client ID"
-//	@Param			client	body		DTO.UpdateClientRequest	true	"Client"
-//	@Success		200		{object}	DTO.Client
+//	@Param			client	body		DTO.UpdateClientUserRequest	true	"Client"
+//	@Success		200		{object}	DTO.ClientUser
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/users/{id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {

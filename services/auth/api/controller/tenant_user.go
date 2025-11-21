@@ -19,13 +19,13 @@ import (
 //	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
+//	@Param			X-Tenant-ID		header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			tenant	body		DTO.CreateTenant	true	"Tenant User"
-//	@Success		200			{object}	DTO.TenantBase
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Param			tenant	body		DTO.CreateTenantUser	true	"Tenant User"
+//	@Success		200		{object}	DTO.TenantUserBase
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/users [post]
 func CreateTenantUser(c *fiber.Ctx) error {
 	var user model.TenantUser
@@ -45,11 +45,11 @@ func CreateTenantUser(c *fiber.Ctx) error {
 //	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
+//	@Param			X-Tenant-ID		header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Tenant User ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.TenantBase
+//	@Success		200	{object}	DTO.TenantUserBase
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/tenant/users/{id} [get]
 func GetTenantUserById(c *fiber.Ctx) error {
@@ -70,11 +70,11 @@ func GetTenantUserById(c *fiber.Ctx) error {
 //	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
+//	@Param			X-Tenant-ID		header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Tenant User Email"
 //	@Produce		json
-//	@Success		200	{object}	DTO.TenantBase
+//	@Success		200	{object}	DTO.TenantUserBase
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/tenant/users/email/{email} [get]
 func GetTenantUserByEmail(c *fiber.Ctx) error {
@@ -95,14 +95,14 @@ func GetTenantUserByEmail(c *fiber.Ctx) error {
 //	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
+//	@Param			X-Tenant-ID		header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id			path		string						true	"Tenant User ID"
-//	@Param			tenant	body		DTO.UpdateTenantSwagger	true	"Tenant User"
-//	@Success		200			{object}	DTO.TenantBase
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Param			id		path		string					true	"Tenant User ID"
+//	@Param			tenant	body		DTO.UpdateTenantUserSwagger	true	"Tenant User"
+//	@Success		200		{object}	DTO.TenantUserBase
+//	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/users/{id} [patch]
 func UpdateTenantUserById(c *fiber.Ctx) error {
 	var user model.TenantUser
@@ -122,7 +122,7 @@ func UpdateTenantUserById(c *fiber.Ctx) error {
 //	@Tags			Tenant
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
-//	@Param			X-Tenant-ID	header		string	true	"X-Tenant-ID"
+//	@Param			X-Tenant-ID		header		string	true	"X-Tenant-ID"
 //	@Failure		401				{object}	nil
 //	@Param			id				path		string	true	"Tenant User ID"
 //	@Produce		json
@@ -132,3 +132,7 @@ func UpdateTenantUserById(c *fiber.Ctx) error {
 func DeleteTenantUserById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.TenantUser{})
 }
+
+
+
+

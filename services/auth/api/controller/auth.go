@@ -24,7 +24,7 @@ import (
 //	@Tags			Client/Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			client	body	DTO.LoginClient	true	"Client credentials"
+//	@Param			client	body	DTO.LoginClientUser	true	"Client credentials"
 //	@Success		200		"Token returned in X-Auth-Token header"
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/auth/client/login [post]
@@ -88,10 +88,10 @@ func SendClientLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			tenant	body	DTO.LoginTenant	true	"Tenant user credentials"
-//	@Success		200			"Token returned in X-Auth-Token header"
-//	@Failure		400			{object}	DTO.ErrorResponse
-//	@Failure		401			{object}	nil
+//	@Param			tenant	body	DTO.LoginTenantUser	true	"Tenant user credentials"
+//	@Success		200		"Token returned in X-Auth-Token header"
+//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		401		{object}	nil
 //	@Router			/auth/tenant/login [post]
 func LoginTenantByPassword(c *fiber.Ctx) error {
 	token, err := LoginByPassword(namespace.TenantKey.Name, c)
@@ -132,7 +132,7 @@ func LoginTenantByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Tenant User Email"
-//	@Query			language				query	string	false	"Language code (default: en)"
+//	@Query			language												query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/auth/tenant/send-login-code/email/{email} [post]
@@ -154,7 +154,7 @@ func SendTenantLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Tags			Admin/Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			login	body	DTO.AdminLoginRequest	true	"Admin login credentials"
+//	@Param			login	body	DTO.AdminUserLoginRequest	true	"Admin login credentials"
 //	@Success		200		"Token returned in X-Auth-Token header"
 //	@Failure		401		{object}	DTO.ErrorResponse
 //	@Failure		400		{object}	DTO.ErrorResponse
@@ -207,7 +207,7 @@ func ValidateToken(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth-Token	header		string	true	"JWT admin token to validate"
-//	@Success		200				{object}	DTO.AdminClaims
+//	@Success		200				{object}	DTO.AdminUserClaims
 //	@Failure		401				{object}	DTO.ErrorResponse
 //	@Router			/auth/validate-admin [post]
 func ValidateAdminToken(c *fiber.Ctx) error {
