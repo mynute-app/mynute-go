@@ -9,7 +9,42 @@ import (
 func AuthenticateAsSuperAdmin() (string, error) {
 	http := NewHttpClient()
 
-	// Login credentials for test superadmin (created in InitialSeed)
+	// First, check if any superadmin exists
+	var checkResponse map[string]interface{}
+	if err := http.
+		Method("GET").
+		URL("/users/admin/are_there_any_superadmin").
+		Send(nil).
+		ExpectedStatus(200).
+		ParseResponse(&checkResponse).
+		Error; err != nil {
+		return "", fmt.Errorf("failed to check for superadmin: %w", err)
+	}
+
+	hasSuperAdmin, _ := checkResponse["has_superadmin"].(bool)
+
+	// If no superadmin exists, create the first one
+	if !hasSuperAdmin {
+		createData := map[string]interface{}{
+			"name":     "Test",
+			"surname":  "Superadmin",
+			"email":    "test-superadmin@mynute.local",
+			"password": "test123456",
+		}
+
+		var createResponse map[string]interface{}
+		if err := http.
+			Method("POST").
+			URL("/users/admin/first_superadmin").
+			ExpectedStatus(201).
+			Send(createData).
+			ParseResponse(&createResponse).
+			Error; err != nil {
+			return "", fmt.Errorf("failed to create first superadmin: %w", err)
+		}
+	}
+
+	// Login credentials for test superadmin
 	loginData := map[string]interface{}{
 		"email":    "test-superadmin@mynute.local",
 		"password": "test123456",
