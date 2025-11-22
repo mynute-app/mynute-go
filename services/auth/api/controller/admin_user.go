@@ -37,23 +37,84 @@ func AreThereAnyAdmin(c *fiber.Ctx) error {
 // CreateFirstAdmin creates the first admin user in the system
 //
 //	@Summary		Create first admin
-//	@Description	Create the first admin user in the system
+//	@Description	Create the first admin user in the system (only works when no admins exist)
 //	@Tags			Admin
 //	@Accept			json
 //	@Produce		json
-//	@Param			admin	body		DTO.AdminUser	true	"Admin creation data"
+//	@Param			admin	body		DTO.AdminUserCreateRequest	true	"Admin creation data"
 //	@Success		201		{object}	DTO.AdminUser
 //	@Failure		400		{object}	DTO.ErrorResponse
+//	@Failure		403		{object}	DTO.ErrorResponse
 //	@Router			/admin/users/first_superadmin [post]
 func CreateFirstAdmin(c *fiber.Ctx) error {
-	hasSuperAdmin, err := areThereAnySuperAdmin(c)
+	// Check if any admin users already exist
+	hasAdmin, err := areThereAnySuperAdmin(c)
 	if err != nil {
 		return err
-	} else if hasSuperAdmin {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("first admin already exists"))
+	}
+	if hasAdmin {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("cannot create first admin: admin users already exist"))
 	}
 
-	return CreateAdmin(c)
+	// Parse request body
+	var req DTO.AdminUserCreateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Validate request
+	if err := lib.MyCustomStructValidator(req); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Get database session
+	tx, err := lib.Session(c)
+	if err != nil {
+		return err
+	}
+
+	// Check if user with same email already exists
+	var existingUser model.AdminUser
+	if err := tx.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("user with email %s already exists", req.Email))
+	} else if err != gorm.ErrRecordNotFound {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Hash the password
+	hashedPassword, err := handler.HashPassword(req.Password)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Create first admin user
+	user := model.AdminUser{
+		BaseModel: model.BaseModel{ID: uuid.New()},
+		Email:     req.Email,
+		Password:  hashedPassword,
+		Verified:  true, // Admins are verified by default
+	}
+
+	if err := tx.Create(&user).Error; err != nil {
+		return lib.Error.General.CreatedError.WithError(err)
+	}
+
+	// Always assign superadmin role to the first admin
+	var superadminRole model.AdminRole
+	if err := tx.Where("name = ?", "superadmin").First(&superadminRole).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("superadmin role not found: %w", err))
+	}
+	if err := tx.Model(&user).Association("Roles").Append(&superadminRole); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Reload user with roles for response
+	if err := tx.Preload("Roles").Where("id = ?", user.ID).First(&user).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Return user (without password)
+	return lib.ResponseFactory(c).SendDTO(201, &user, &DTO.AdminUser{})
 }
 
 // CreateAdmin creates a new admin user
