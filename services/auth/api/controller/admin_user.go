@@ -353,13 +353,19 @@ func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
 
 // requireSuperAdmin checks if the current user is a superadmin
 func requireSuperAdmin(c *fiber.Ctx) error {
-	claims, err := handler.JWT(c).WhoAreYouAdmin()
+	claims, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return lib.Error.Auth.InvalidToken.WithError(err)
 	}
 	if claims == nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("authentication required"))
+	}
+
+	// Verify this is an admin token
+	if !claims.IsAdmin {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin token required"))
 	}
+
 	// Check if admin has superadmin role
 	hasSuperAdmin := false
 	for _, role := range claims.Roles {

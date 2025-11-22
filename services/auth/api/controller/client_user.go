@@ -28,7 +28,7 @@ func CreateClient(c *fiber.Ctx) error {
 	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.ClientUser{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(201, &user, &DTO.ClientUser{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil

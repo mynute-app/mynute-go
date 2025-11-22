@@ -32,7 +32,7 @@ func CreateTenantUser(c *fiber.Ctx) error {
 	if err := CreateUser(c, &user); err != nil {
 		return err
 	}
-	if err := lib.ResponseFactory(c).SendDTO(200, &user, &DTO.TenantUserBase{}); err != nil {
+	if err := lib.ResponseFactory(c).SendDTO(201, &user, &DTO.TenantUserBase{}); err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 	return nil
@@ -132,7 +132,3 @@ func UpdateTenantUserById(c *fiber.Ctx) error {
 func DeleteTenantUserById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.TenantUser{})
 }
-
-
-
-

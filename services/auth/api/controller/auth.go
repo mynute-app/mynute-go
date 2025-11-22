@@ -207,17 +207,22 @@ func ValidateToken(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth-Token	header		string	true	"JWT admin token to validate"
-//	@Success		200				{object}	DTO.AdminUserClaims
+//	@Success		200				{object}	DTO.Claims
 //	@Failure		401				{object}	DTO.ErrorResponse
 //	@Router			/auth/validate-admin [post]
 func ValidateAdminToken(c *fiber.Ctx) error {
 	// Parse the admin token from header
-	claims, err := handler.JWT(c).WhoAreYouAdmin()
+	claims, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return lib.Error.Auth.InvalidToken.WithError(err)
 	}
 	if claims == nil {
-		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("no admin token provided"))
+		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("no token provided"))
+	}
+
+	// Verify this is an admin token
+	if !claims.IsAdmin {
+		return lib.Error.Auth.InvalidToken.WithError(fmt.Errorf("admin token required"))
 	}
 
 	// Return the claims as JSON
