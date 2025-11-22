@@ -1,6 +1,7 @@
 package controller
 
 import (
+	DTO "mynute-go/services/auth/config/dto"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 
 func TestTenantAuthRequest(t *testing.T) {
 	t.Run("should create valid tenant auth request", func(t *testing.T) {
-		req := TenantAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "GET",
 			Path:   "/api/resource",
 			// Subject is now extracted from JWT token
@@ -22,7 +23,7 @@ func TestTenantAuthRequest(t *testing.T) {
 		methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 		for _, method := range methods {
-			req := TenantAuthRequest{
+			req := DTO.AuthRequest{
 				Method: method,
 				Path:   "/api/resource",
 				// Subject is now extracted from JWT token
@@ -33,7 +34,7 @@ func TestTenantAuthRequest(t *testing.T) {
 	})
 
 	t.Run("should support optional context parameters", func(t *testing.T) {
-		req := TenantAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "POST",
 			Path:   "/api/resource",
 			// Subject is now extracted from JWT token
@@ -95,7 +96,7 @@ func TestAuthorizationResponse(t *testing.T) {
 
 func TestTenantAuthRequestValidation(t *testing.T) {
 	t.Run("should validate request structure without subject", func(t *testing.T) {
-		req := TenantAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "GET",
 			Path:   "/api/resource",
 			// Subject extracted from JWT token - not in request
@@ -117,7 +118,7 @@ func TestTenantAuthRequestValidation(t *testing.T) {
 	})
 
 	t.Run("should support optional parameters", func(t *testing.T) {
-		req := TenantAuthRequest{
+		req := DTO.AuthRequest{
 			Method:     "PUT",
 			Path:       "/api/resource/:id",
 			PathParams: map[string]interface{}{"id": "123"},

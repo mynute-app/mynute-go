@@ -1,6 +1,7 @@
 package controller
 
 import (
+	DTO "mynute-go/services/auth/config/dto"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 
 func TestClientAuthRequest(t *testing.T) {
 	t.Run("should create valid client auth request", func(t *testing.T) {
-		req := ClientAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "GET",
 			Path:   "/api/client/resource",
 			// Subject is now extracted from JWT token
@@ -19,7 +20,7 @@ func TestClientAuthRequest(t *testing.T) {
 	})
 
 	t.Run("should support client-specific context", func(t *testing.T) {
-		req := ClientAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "POST",
 			Path:   "/api/appointments",
 			// Subject is now extracted from JWT token
@@ -36,7 +37,7 @@ func TestClientAuthRequest(t *testing.T) {
 		methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 		for _, method := range methods {
-			req := ClientAuthRequest{
+			req := DTO.AuthRequest{
 				Method: method,
 				Path:   "/api/resource",
 				// Subject is now extracted from JWT token
@@ -49,7 +50,7 @@ func TestClientAuthRequest(t *testing.T) {
 
 func TestClientAuthRequestValidation(t *testing.T) {
 	t.Run("should validate request structure without subject", func(t *testing.T) {
-		req := ClientAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "GET",
 			Path:   "/api/client/profile",
 			// Subject extracted from JWT token - not in request
@@ -71,7 +72,7 @@ func TestClientAuthRequestValidation(t *testing.T) {
 	})
 
 	t.Run("should support optional parameters", func(t *testing.T) {
-		req := ClientAuthRequest{
+		req := DTO.AuthRequest{
 			Method:     "POST",
 			Path:       "/api/appointments",
 			Body:       map[string]interface{}{"date": "2025-01-01"},

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	DTO "mynute-go/services/auth/config/dto"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 
 func TestAdminAuthRequest(t *testing.T) {
 	t.Run("should create valid admin auth request", func(t *testing.T) {
-		req := AdminAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "DELETE",
 			Path:   "/api/admin/users",
 			// Subject is now extracted from JWT token
@@ -19,7 +20,7 @@ func TestAdminAuthRequest(t *testing.T) {
 	})
 
 	t.Run("should support admin-specific context", func(t *testing.T) {
-		req := AdminAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "POST",
 			Path:   "/api/admin/policies",
 			// Subject is now extracted from JWT token
@@ -36,7 +37,7 @@ func TestAdminAuthRequest(t *testing.T) {
 		methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 		for _, method := range methods {
-			req := AdminAuthRequest{
+			req := DTO.AuthRequest{
 				Method: method,
 				Path:   "/api/admin/resource",
 				// Subject is now extracted from JWT token
@@ -49,7 +50,7 @@ func TestAdminAuthRequest(t *testing.T) {
 
 func TestAdminAuthRequestValidation(t *testing.T) {
 	t.Run("should validate request structure without subject", func(t *testing.T) {
-		req := AdminAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "GET",
 			Path:   "/api/admin/users",
 			// Subject extracted from JWT token - not in request
@@ -60,7 +61,7 @@ func TestAdminAuthRequestValidation(t *testing.T) {
 	})
 
 	t.Run("should support resource and body context", func(t *testing.T) {
-		req := AdminAuthRequest{
+		req := DTO.AuthRequest{
 			Method: "POST",
 			Path:   "/api/admin/system/config",
 			// Subject extracted from JWT token
@@ -78,7 +79,7 @@ func TestAdminAuthRequestValidation(t *testing.T) {
 	})
 
 	t.Run("should support optional parameters", func(t *testing.T) {
-		req := AdminAuthRequest{
+		req := DTO.AuthRequest{
 			Method:     "PATCH",
 			Path:       "/api/admin/users/:id",
 			PathParams: map[string]interface{}{"id": "123"},
