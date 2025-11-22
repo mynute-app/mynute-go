@@ -12,10 +12,10 @@ type Claims struct {
 	CompanyID uuid.UUID `json:"company_id" example:"00000000-0000-0000-0000-000000000000"`
 	Password  string    `json:"password" example:"StrongPswrd1!"`
 	Type      string    `json:"type" example:"employee"`
+	Roles     []string  `json:"roles" example:"[client]"`
 }
 
 type LoginByEmailCode struct {
 	Email string `json:"email" example:"john.doe@example.com"`
 	Code  string `json:"code" example:"123456"`
 }
-
