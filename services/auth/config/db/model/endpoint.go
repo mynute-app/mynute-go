@@ -26,7 +26,7 @@ func (EndPoint) SchemaType() string { return "public" }
 
 func (EndPoint) Indexes() map[string]string {
 	return map[string]string{
-		"idx_method_path": "CREATE UNIQUE INDEX idx_method_path ON routes (method, path)",
+		"idx_method_path": "CREATE UNIQUE INDEX IF NOT EXISTS idx_method_path ON public.endpoints (method, path)",
 	}
 }
 
@@ -77,7 +77,7 @@ func EndPoints(endpoints []*EndPoint, cfg *EndpointCfg, db *gorm.DB) ([]*EndPoin
 // and updates the endpoint variables with their corresponding IDs.
 // This should be called after seeding endpoints to ensure that
 // policies can reference the correct endpoint IDs.
-func LoadEndpointIDs(endpoints []*EndPoint,db *gorm.DB) error {
+func LoadEndpointIDs(endpoints []*EndPoint, db *gorm.DB) error {
 	for _, ep := range endpoints {
 		var existing EndPoint
 		if err := db.
@@ -89,4 +89,3 @@ func LoadEndpointIDs(endpoints []*EndPoint,db *gorm.DB) error {
 	}
 	return nil
 }
-
