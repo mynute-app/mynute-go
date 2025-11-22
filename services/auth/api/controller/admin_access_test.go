@@ -9,32 +9,26 @@ import (
 func TestAdminAuthRequest(t *testing.T) {
 	t.Run("should create valid admin auth request", func(t *testing.T) {
 		req := AdminAuthRequest{
-			Method:  "DELETE",
-			Path:    "/api/admin/users",
-			Subject: map[string]interface{}{"id": "admin-123", "roles": []string{"superadmin"}},
+			Method: "DELETE",
+			Path:   "/api/admin/users",
+			// Subject is now extracted from JWT token
 		}
 
 		assert.Equal(t, "DELETE", req.Method)
 		assert.Equal(t, "/api/admin/users", req.Path)
-		assert.NotNil(t, req.Subject)
 	})
 
 	t.Run("should support admin-specific context", func(t *testing.T) {
 		req := AdminAuthRequest{
 			Method: "POST",
 			Path:   "/api/admin/policies",
-			Subject: map[string]interface{}{
-				"id":    "admin-123",
-				"email": "admin@example.com",
-				"roles": []string{"superadmin", "support"},
-			},
+			// Subject is now extracted from JWT token
 			Body: map[string]interface{}{
 				"name":   "New Policy",
 				"effect": "Allow",
 			},
 		}
 
-		assert.Contains(t, req.Subject, "roles")
 		assert.NotNil(t, req.Body)
 	})
 
@@ -43,9 +37,9 @@ func TestAdminAuthRequest(t *testing.T) {
 
 		for _, method := range methods {
 			req := AdminAuthRequest{
-				Method:  method,
-				Path:    "/api/admin/resource",
-				Subject: map[string]interface{}{"id": "admin-123"},
+				Method: method,
+				Path:   "/api/admin/resource",
+				// Subject is now extracted from JWT token
 			}
 
 			assert.Equal(t, method, req.Method)
@@ -54,43 +48,46 @@ func TestAdminAuthRequest(t *testing.T) {
 }
 
 func TestAdminAuthRequestValidation(t *testing.T) {
-	t.Run("should validate admin subject structure", func(t *testing.T) {
-		subject := map[string]interface{}{
-			"id":    "admin-123",
-			"email": "admin@example.com",
-			"roles": []string{"superadmin"},
+	t.Run("should validate request structure without subject", func(t *testing.T) {
+		req := AdminAuthRequest{
+			Method: "GET",
+			Path:   "/api/admin/users",
+			// Subject extracted from JWT token - not in request
 		}
 
-		assert.Contains(t, subject, "id")
-		assert.Contains(t, subject, "roles")
+		assert.NotEmpty(t, req.Method)
+		assert.NotEmpty(t, req.Path)
 	})
 
-	t.Run("should support multiple admin roles", func(t *testing.T) {
-		subject := map[string]interface{}{
-			"id":    "admin-123",
-			"roles": []string{"superadmin", "support", "auditor"},
-		}
-
-		roles := subject["roles"].([]string)
-		assert.Len(t, roles, 3)
-		assert.Contains(t, roles, "superadmin")
-	})
-
-	t.Run("should handle system-wide operations", func(t *testing.T) {
+	t.Run("should support resource and body context", func(t *testing.T) {
 		req := AdminAuthRequest{
 			Method: "POST",
 			Path:   "/api/admin/system/config",
-			Subject: map[string]interface{}{
-				"id":    "admin-123",
-				"roles": []string{"superadmin"},
-			},
+			// Subject extracted from JWT token
 			Body: map[string]interface{}{
 				"setting": "value",
+			},
+			Resource: map[string]interface{}{
+				"type": "system_config",
 			},
 		}
 
 		assert.NotNil(t, req.Body)
+		assert.NotNil(t, req.Resource)
 		assert.Contains(t, req.Path, "/admin/")
 	})
-}
 
+	t.Run("should support optional parameters", func(t *testing.T) {
+		req := AdminAuthRequest{
+			Method:     "PATCH",
+			Path:       "/api/admin/users/:id",
+			PathParams: map[string]interface{}{"id": "123"},
+			Query:      map[string]interface{}{"include": "roles"},
+			Headers:    map[string]interface{}{"X-Custom": "value"},
+		}
+
+		assert.NotNil(t, req.PathParams)
+		assert.NotNil(t, req.Query)
+		assert.NotNil(t, req.Headers)
+	})
+}

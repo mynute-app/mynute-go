@@ -9,14 +9,13 @@ import (
 func TestTenantAuthRequest(t *testing.T) {
 	t.Run("should create valid tenant auth request", func(t *testing.T) {
 		req := TenantAuthRequest{
-			Method:  "GET",
-			Path:    "/api/resource",
-			Subject: map[string]interface{}{"id": "user-123", "tenant_id": "tenant-456"},
+			Method: "GET",
+			Path:   "/api/resource",
+			// Subject is now extracted from JWT token
 		}
 
 		assert.Equal(t, "GET", req.Method)
 		assert.Equal(t, "/api/resource", req.Path)
-		assert.NotNil(t, req.Subject)
 	})
 
 	t.Run("should support all HTTP methods", func(t *testing.T) {
@@ -24,9 +23,9 @@ func TestTenantAuthRequest(t *testing.T) {
 
 		for _, method := range methods {
 			req := TenantAuthRequest{
-				Method:  method,
-				Path:    "/api/resource",
-				Subject: map[string]interface{}{"id": "user-123"},
+				Method: method,
+				Path:   "/api/resource",
+				// Subject is now extracted from JWT token
 			}
 
 			assert.Equal(t, method, req.Method)
@@ -35,9 +34,9 @@ func TestTenantAuthRequest(t *testing.T) {
 
 	t.Run("should support optional context parameters", func(t *testing.T) {
 		req := TenantAuthRequest{
-			Method:     "POST",
-			Path:       "/api/resource",
-			Subject:    map[string]interface{}{"id": "user-123"},
+			Method: "POST",
+			Path:   "/api/resource",
+			// Subject is now extracted from JWT token
 			Resource:   map[string]interface{}{"id": "resource-123"},
 			PathParams: map[string]interface{}{"id": "123"},
 			Body:       map[string]interface{}{"name": "test"},
@@ -95,17 +94,15 @@ func TestAuthorizationResponse(t *testing.T) {
 }
 
 func TestTenantAuthRequestValidation(t *testing.T) {
-	t.Run("should validate subject context structure", func(t *testing.T) {
-		subject := map[string]interface{}{
-			"id":        "user-123",
-			"tenant_id": "tenant-456",
-			"roles":     []string{"admin"},
-			"email":     "user@example.com",
+	t.Run("should validate request structure without subject", func(t *testing.T) {
+		req := TenantAuthRequest{
+			Method: "GET",
+			Path:   "/api/resource",
+			// Subject extracted from JWT token - not in request
 		}
 
-		assert.Contains(t, subject, "id")
-		assert.Contains(t, subject, "tenant_id")
-		assert.Contains(t, subject, "roles")
+		assert.NotEmpty(t, req.Method)
+		assert.NotEmpty(t, req.Path)
 	})
 
 	t.Run("should validate resource context structure", func(t *testing.T) {
@@ -119,20 +116,19 @@ func TestTenantAuthRequestValidation(t *testing.T) {
 		assert.Contains(t, resource, "tenant_id")
 	})
 
-	t.Run("should handle nested context values", func(t *testing.T) {
+	t.Run("should support optional parameters", func(t *testing.T) {
 		req := TenantAuthRequest{
-			Method: "GET",
-			Path:   "/api/resource",
-			Subject: map[string]interface{}{
-				"id": "user-123",
-				"roles": []map[string]interface{}{
-					{"id": "role-1", "name": "admin"},
-					{"id": "role-2", "name": "user"},
-				},
-			},
+			Method:     "PUT",
+			Path:       "/api/resource/:id",
+			PathParams: map[string]interface{}{"id": "123"},
+			Body:       map[string]interface{}{"status": "active"},
+			Query:      map[string]interface{}{"notify": "true"},
+			Headers:    map[string]interface{}{"X-Tenant": "tenant-456"},
 		}
 
-		assert.NotNil(t, req.Subject["roles"])
+		assert.NotNil(t, req.PathParams)
+		assert.NotNil(t, req.Body)
+		assert.NotNil(t, req.Query)
+		assert.NotNil(t, req.Headers)
 	})
 }
-
