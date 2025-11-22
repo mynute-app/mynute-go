@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -349,28 +348,6 @@ func (d *Database) InitialSeed() {
 		EndPointID:  serviceEndpoint.ID,
 		Conditions:  []byte(`{"logic_type":"AND","children":[{"leaf":{"attribute":"subject.role","operator":"Equals","value":"client"}}]}`),
 	}, model.ClientPolicy{Name: "client-list-services"})
-
-	// Create test superadmin user for authentication in tests
-	// Password: "test123456" (hashed)
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("test123456"), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("Warning: Failed to hash test admin password: %v", err)
-	} else {
-		testSuperAdmin := model.AdminUser{
-			Email:    "test-superadmin@mynute.local",
-			Password: string(hashedPassword),
-			Verified: true,
-		}
-		// Create or get the admin user
-		if err := d.Gorm.Where(model.AdminUser{Email: testSuperAdmin.Email}).FirstOrCreate(&testSuperAdmin).Error; err != nil {
-			log.Printf("Warning: Failed to create test superadmin: %v", err)
-		} else {
-			// Assign superadmin role to the test admin
-			// Clear existing roles first, then assign superadmin
-			d.Gorm.Model(&testSuperAdmin).Association("Roles").Clear()
-			d.Gorm.Model(&testSuperAdmin).Association("Roles").Append(&superadminRole)
-		}
-	}
 
 	log.Println("Auth database seeding completed")
 }
