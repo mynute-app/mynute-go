@@ -161,6 +161,11 @@ func (d *Database) Test() *Test {
 func (t *Test) Clear() {
 	log.Println("Clearing auth test database...")
 
+	// Delete junction tables first to avoid foreign key violations
+	t.Gorm.Exec("DELETE FROM admin_role_admins")
+	t.Gorm.Exec("DELETE FROM client_user_roles")
+	t.Gorm.Exec("DELETE FROM tenant_user_roles")
+
 	// Delete all records from auth tables
 	t.Gorm.Exec("DELETE FROM admin_policies")
 	t.Gorm.Exec("DELETE FROM admin_roles")
@@ -356,7 +361,15 @@ func (d *Database) InitialSeed() {
 			Password: string(hashedPassword),
 			Verified: true,
 		}
-		d.Gorm.FirstOrCreate(&testSuperAdmin, model.AdminUser{Email: testSuperAdmin.Email})
+		// Create or get the admin user
+		if err := d.Gorm.Where(model.AdminUser{Email: testSuperAdmin.Email}).FirstOrCreate(&testSuperAdmin).Error; err != nil {
+			log.Printf("Warning: Failed to create test superadmin: %v", err)
+		} else {
+			// Assign superadmin role to the test admin
+			// Clear existing roles first, then assign superadmin
+			d.Gorm.Model(&testSuperAdmin).Association("Roles").Clear()
+			d.Gorm.Model(&testSuperAdmin).Association("Roles").Append(&superadminRole)
+		}
 	}
 
 	log.Println("Auth database seeding completed")
