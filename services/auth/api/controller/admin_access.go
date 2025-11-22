@@ -5,6 +5,8 @@ import (
 	"mynute-go/services/auth/api/handler"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	DTO "mynute-go/services/auth/config/dto"
+	"mynute-go/services/auth/config/namespace"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -23,36 +25,54 @@ import (
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		AdminAuthRequest	true	"Authorization request"
+//	@Param			request	body		DTO.AuthRequest	true	"Authorization request"
 //	@Success		200		{object}	AuthorizationResponse
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/admin/authorize [post]
 func AuthorizeAdmin(c *fiber.Ctx) error {
-	var req AdminAuthRequest
+	var req DTO.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
 	// Extract admin claims from JWT token
-	adminClaims, err := handler.JWT(c).WhoAreYouAdmin()
+	claims, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return lib.Error.Auth.InvalidToken.WithError(err)
 	}
-	if adminClaims == nil {
+	if claims == nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("authentication required"))
+	}
+
+	// Verify this is an admin token
+	if !claims.IsAdmin || claims.Type != namespace.AdminKey.Name {
 		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin token required"))
 	}
 
 	// Build subject from token claims
 	subject := map[string]interface{}{
-		"user_id": adminClaims.ID.String(),
-		"email":   adminClaims.Email,
-		"type":    adminClaims.Type,
+		"user_id": claims.ID.String(),
+		"email":   claims.Email,
+		"type":    claims.Type,
 	}
 	// Add roles to subject - check if user has specific role
-	if len(adminClaims.Roles) > 0 {
+	if len(claims.Roles) > 0 {
 		// For authorization, we check the primary role
-		subject["role"] = adminClaims.Roles[0]
-		subject["roles"] = adminClaims.Roles
+		subject["role"] = claims.Roles[0]
+		subject["roles"] = claims.Roles
+
+		// Superadmin has unrestricted access to everything
+		for _, role := range claims.Roles {
+			if role == "superadmin" {
+				return c.JSON(AuthorizationResponse{
+					Allowed:    true,
+					Reason:     "Superadmin has unrestricted access",
+					PolicyID:   "",
+					PolicyName: "superadmin-unrestricted",
+					Effect:     "Allow",
+				})
+			}
+		}
 	}
 
 	tx, err := lib.Session(c)
@@ -173,16 +193,5 @@ func AuthorizeAdmin(c *fiber.Ctx) error {
 }
 
 // =====================
-// REQUEST/RESPONSE TYPES
+// RESPONSE TYPES
 // =====================
-
-type AdminAuthRequest struct {
-	Method string `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
-	Path   string `json:"path" validate:"required"`
-	// Subject is now extracted from JWT token, not from request body
-	Resource   map[string]interface{} `json:"resource,omitempty"`
-	PathParams map[string]interface{} `json:"path_params,omitempty"`
-	Body       map[string]interface{} `json:"body,omitempty"`
-	Query      map[string]interface{} `json:"query,omitempty"`
-	Headers    map[string]interface{} `json:"headers,omitempty"`
-}

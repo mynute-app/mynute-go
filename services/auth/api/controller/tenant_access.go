@@ -5,6 +5,7 @@ import (
 	"mynute-go/services/auth/api/handler"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	DTO "mynute-go/services/auth/config/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -25,23 +26,23 @@ import (
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		TenantAuthRequest	true	"Authorization request"
+//	@Param			request	body		DTO.AuthRequest	true	"Authorization request"
 //	@Success		200		{object}	AuthorizationResponse
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/tenant/authorize [post]
 func AuthorizeTenant(c *fiber.Ctx) error {
-	var req TenantAuthRequest
+	var req DTO.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
-	// Extract tenant claims from JWT token
+	// Extract claims from JWT token
 	claims, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return lib.Error.Auth.InvalidToken.WithError(err)
 	}
 	if claims == nil {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("tenant token required"))
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("authentication token required"))
 	}
 
 	// Build subject from token claims
@@ -216,19 +217,8 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 }
 
 // =====================
-// REQUEST/RESPONSE TYPES
+// RESPONSE TYPES
 // =====================
-
-type TenantAuthRequest struct {
-	Method string `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
-	Path   string `json:"path" validate:"required"`
-	// Subject is now extracted from JWT token, not from request body
-	Resource   map[string]interface{} `json:"resource,omitempty"`
-	PathParams map[string]interface{} `json:"path_params,omitempty"`
-	Body       map[string]interface{} `json:"body,omitempty"`
-	Query      map[string]interface{} `json:"query,omitempty"`
-	Headers    map[string]interface{} `json:"headers,omitempty"`
-}
 
 type AuthorizationResponse struct {
 	Allowed    bool   `json:"allowed"`

@@ -5,6 +5,7 @@ import (
 	"mynute-go/services/auth/api/handler"
 	"mynute-go/services/auth/api/lib"
 	"mynute-go/services/auth/config/db/model"
+	DTO "mynute-go/services/auth/config/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -23,23 +24,23 @@ import (
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		ClientAuthRequest	true	"Authorization request"
+//	@Param			request	body		DTO.AuthRequest	true	"Authorization request"
 //	@Success		200		{object}	AuthorizationResponse
 //	@Failure		400		{object}	DTO.ErrorResponse
 //	@Router			/client/authorize [post]
 func AuthorizeClient(c *fiber.Ctx) error {
-	var req ClientAuthRequest
+	var req DTO.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
-	// Extract client claims from JWT token
+	// Extract claims from JWT token
 	claims, err := handler.JWT(c).WhoAreYou()
 	if err != nil {
 		return lib.Error.Auth.InvalidToken.WithError(err)
 	}
 	if claims == nil {
-		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("client token required"))
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("authentication token required"))
 	}
 
 	// Build subject from token claims
@@ -175,16 +176,5 @@ func AuthorizeClient(c *fiber.Ctx) error {
 }
 
 // =====================
-// REQUEST/RESPONSE TYPES
+// RESPONSE TYPES
 // =====================
-
-type ClientAuthRequest struct {
-	Method string `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
-	Path   string `json:"path" validate:"required"`
-	// Subject is now extracted from JWT token, not from request body
-	Resource   map[string]interface{} `json:"resource,omitempty"`
-	PathParams map[string]interface{} `json:"path_params,omitempty"`
-	Body       map[string]interface{} `json:"body,omitempty"`
-	Query      map[string]interface{} `json:"query,omitempty"`
-	Headers    map[string]interface{} `json:"headers,omitempty"`
-}

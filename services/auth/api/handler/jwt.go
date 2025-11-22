@@ -50,6 +50,7 @@ func (j *jsonWebToken) CreateClaims(data any) jwt.Claims {
 	}
 }
 
+// WhoAreYou validates and returns JWT claims for all user types (admin, client, tenant)
 func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 	auth_token := j.C.Get(namespace.HeadersKey.Auth)
 	if auth_token == "" {
@@ -82,73 +83,19 @@ func (j *jsonWebToken) WhoAreYou() (*DTO.Claims, error) {
 		return nil, lib.Error.Auth.InvalidToken.WithError(errors.New("invalid claim.data passed"))
 	}
 
-	// Parse claim_data into model.Client{} struct
-
 	// Turn claim_data into bytes
 	claim_data_bytes, err := json.Marshal(claim_data)
 	if err != nil {
 		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
-	var client DTO.Claims
-	err = json.Unmarshal(claim_data_bytes, &client)
+	var userClaims DTO.Claims
+	err = json.Unmarshal(claim_data_bytes, &userClaims)
 	if err != nil {
 		return nil, lib.Error.Auth.InvalidToken.WithError(err)
 	}
 
-	return &client, nil
-}
-
-// WhoAreYouAdmin checks if the token belongs to an admin and returns admin claims
-func (j *jsonWebToken) WhoAreYouAdmin() (*DTO.AdminUserClaims, error) {
-	auth_token := j.C.Get(namespace.HeadersKey.Auth)
-	if auth_token == "" {
-		return nil, nil
-	}
-
-	parseCallback := func(token *jwt.Token) (any, error) {
-		// Validate the algorithm
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return getSecret(), nil
-	}
-
-	token, err := jwt.Parse(auth_token, parseCallback)
-	if err != nil {
-		return nil, lib.Error.Auth.InvalidToken.WithError(err)
-	} else if token == nil {
-		return nil, nil
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return nil, lib.Error.Auth.InvalidToken.WithError(errors.New("invalid jwt.MapClaims passed"))
-	}
-
-	claim_data, ok := claims["data"].(map[string]any)
-	if !ok {
-		return nil, lib.Error.Auth.InvalidToken.WithError(errors.New("invalid claim.data passed"))
-	}
-
-	// Turn claim_data into bytes
-	claim_data_bytes, err := json.Marshal(claim_data)
-	if err != nil {
-		return nil, lib.Error.Auth.InvalidToken.WithError(err)
-	}
-
-	var adminClaim DTO.AdminUserClaims
-	err = json.Unmarshal(claim_data_bytes, &adminClaim)
-	if err != nil {
-		return nil, lib.Error.Auth.InvalidToken.WithError(err)
-	}
-
-	// Verify this is an admin token
-	if !adminClaim.IsAdmin || adminClaim.Type != namespace.AdminKey.Name {
-		return nil, nil
-	}
-
-	return &adminClaim, nil
+	return &userClaims, nil
 }
 
 // getSecret retrieves the JWT secret from an environment variable
