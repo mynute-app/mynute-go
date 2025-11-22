@@ -250,11 +250,14 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 	var userEmail string
 	var userPassword string
 	var userVerified bool
+	var adminUser *model.AdminUser   // Keep admin user for role extraction
+	var clientUser *model.ClientUser // Keep client user for role extraction
+	var tenantUser *model.TenantUser // Keep tenant user for role extraction
 
 	switch user_type {
 	case namespace.AdminKey.Name:
 		var user model.AdminUser
-		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+		if err := tx.Preload("Roles").Where("email = ?", body.Email).First(&user).Error; err != nil {
 			if err.Error() == "record not found" {
 				return "", lib.Error.Client.NotFound
 			}
@@ -264,10 +267,11 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		userEmail = user.Email
 		userPassword = user.Password
 		userVerified = user.Verified
+		adminUser = &user
 
 	case namespace.ClientKey.Name:
 		var user model.ClientUser
-		if err := tx.Where("email = ?", body.Email).First(&user).Error; err != nil {
+		if err := tx.Preload("Roles").Where("email = ?", body.Email).First(&user).Error; err != nil {
 			if err.Error() == "record not found" {
 				return "", lib.Error.Client.NotFound
 			}
@@ -277,6 +281,7 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		userEmail = user.Email
 		userPassword = user.Password
 		userVerified = user.Verified
+		clientUser = &user
 
 	case namespace.TenantKey.Name:
 		// Get tenant_id from header
@@ -290,7 +295,7 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		}
 
 		var user model.TenantUser
-		if err := tx.Where("email = ? AND tenant_id = ?", body.Email, tenantID).First(&user).Error; err != nil {
+		if err := tx.Preload("Roles").Where("email = ? AND tenant_id = ?", body.Email, tenantID).First(&user).Error; err != nil {
 			if err.Error() == "record not found" {
 				return "", lib.Error.Client.NotFound
 			}
@@ -300,6 +305,7 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 		userEmail = user.Email
 		userPassword = user.Password
 		userVerified = user.Verified
+		tenantUser = &user
 
 	default:
 		return "", lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid user type: %s", user_type))
@@ -316,6 +322,17 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 	// Create JWT claims based on user type
 	var token string
 	if user_type == namespace.AdminKey.Name {
+		// Extract role names from admin user
+		var roleNames []string
+		if adminUser != nil && len(adminUser.Roles) > 0 {
+			for _, role := range adminUser.Roles {
+				roleNames = append(roleNames, role.Name)
+			}
+		} else {
+			// If no roles assigned, default to superadmin for first admin
+			roleNames = []string{"superadmin"}
+		}
+
 		// Create admin-specific claims
 		adminClaims := DTO.AdminUserClaims{
 			ID:       userID,
@@ -323,19 +340,47 @@ func LoginByPassword(user_type string, c *fiber.Ctx) (string, error) {
 			IsAdmin:  true,
 			IsActive: true,
 			Type:     user_type,
-			Roles:    []string{"superadmin"}, // Default to superadmin for test purposes
+			Roles:    roleNames,
 		}
 		token, err = handler.JWT(c).Encode(&adminClaims)
 		if err != nil {
 			return "", err
 		}
 	} else {
+		// Extract role names based on user type
+		var roleNames []string
+		if user_type == namespace.ClientKey.Name && clientUser != nil && len(clientUser.Roles) > 0 {
+			for _, role := range clientUser.Roles {
+				roleNames = append(roleNames, role.Name)
+			}
+		} else if user_type == namespace.TenantKey.Name && tenantUser != nil && len(tenantUser.Roles) > 0 {
+			for _, role := range tenantUser.Roles {
+				roleNames = append(roleNames, role.Name)
+			}
+		}
+
+		// Default role if none assigned
+		if len(roleNames) == 0 {
+			if user_type == namespace.ClientKey.Name {
+				roleNames = []string{"client"}
+			} else if user_type == namespace.TenantKey.Name {
+				roleNames = []string{"employee"}
+			}
+		}
+
 		// Create regular claims for tenant/client users
 		claims := DTO.Claims{
 			ID:    userID,
 			Email: userEmail,
 			Type:  user_type,
+			Roles: roleNames,
 		}
+
+		// Add company_id for tenant users
+		if user_type == namespace.TenantKey.Name && tenantUser != nil {
+			claims.CompanyID = tenantUser.TenantID
+		}
+
 		token, err = handler.JWT(c).Encode(&claims)
 		if err != nil {
 			return "", err
