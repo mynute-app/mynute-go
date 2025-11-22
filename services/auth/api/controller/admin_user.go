@@ -124,6 +124,39 @@ func CreateAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.CreatedError.WithError(err)
 	}
 
+	// Assign roles to the admin user
+	if len(req.Roles) > 0 {
+		// Find and assign the specified roles
+		var roles []model.AdminRole
+		for _, roleName := range req.Roles {
+			var role model.AdminRole
+			if err := tx.Where("name = ?", roleName).First(&role).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return lib.Error.General.BadRequest.WithError(fmt.Errorf("role '%s' not found", roleName))
+				}
+				return lib.Error.General.InternalError.WithError(err)
+			}
+			roles = append(roles, role)
+		}
+		if err := tx.Model(&user).Association("Roles").Append(roles); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	} else if !hasSuperAdmin {
+		// If this is the first admin and no roles specified, assign superadmin role
+		var superadminRole model.AdminRole
+		if err := tx.Where("name = ?", "superadmin").First(&superadminRole).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("superadmin role not found"))
+		}
+		if err := tx.Model(&user).Association("Roles").Append(&superadminRole); err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+	}
+
+	// Reload user with roles for response
+	if err := tx.Preload("Roles").Where("id = ?", user.ID).First(&user).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	// Return user (without password)
 	return lib.ResponseFactory(c).SendDTO(201, &user, &DTO.AdminUser{})
 }
@@ -231,7 +264,7 @@ func ListAdmins(c *fiber.Ctx) error {
 	}
 
 	var users []model.AdminUser
-	if err := tx.Where("type = ?", "admin").Find(&users).Error; err != nil {
+	if err := tx.Preload("Roles").Find(&users).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
@@ -250,7 +283,7 @@ func areThereAnySuperAdmin(c *fiber.Ctx) (bool, error) {
 	}
 
 	var count int64
-	if err := tx.Model(&model.AdminUser{}).Where("type = ?", "admin").Count(&count).Error; err != nil {
+	if err := tx.Model(&model.AdminUser{}).Count(&count).Error; err != nil {
 		return false, lib.Error.General.InternalError.WithError(err)
 	}
 
