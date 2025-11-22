@@ -23,6 +23,7 @@ type httpActions struct {
 	reqHeaders      http.Header
 	rawResponseBody []byte
 	log_level       string
+	isArrayResponse bool // Track if response is an array
 }
 
 func NewHttpClient() *httpActions {
@@ -137,13 +138,23 @@ func (h *httpActions) Send(body any) *httpActions {
 		if !json.Valid(bodyBytes) {
 			h.ResBody = map[string]any{"data": string(bodyBytes)}
 		} else {
-			// Try to decode as map first
-			decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
-			decoder.UseNumber()
-			if err := decoder.Decode(&h.ResBody); err != nil {
-				// If it fails (e.g., array response), we'll handle it in ParseResponse
-				// Just store the raw body and continue
-				h.ResBody = nil
+			// Check if it's an array response
+			trimmed := bytes.TrimSpace(bodyBytes)
+			if len(trimmed) > 0 && trimmed[0] == '[' {
+				// It's an array, store it in ResBody with a key and set flag
+				var arrayData []interface{}
+				if err := json.Unmarshal(bodyBytes, &arrayData); err == nil {
+					h.ResBody = map[string]any{"_array_data": arrayData}
+					h.isArrayResponse = true
+				}
+			} else {
+				// Try to decode as map
+				decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
+				decoder.UseNumber()
+				if err := decoder.Decode(&h.ResBody); err != nil {
+					// If it fails, store raw body
+					h.ResBody = nil
+				}
 			}
 		}
 	}
@@ -186,6 +197,20 @@ func (h *httpActions) ParseResponse(to any) *httpActions {
 	if m, ok := to.(*map[string]interface{}); ok {
 		*m = h.ResBody
 		return h
+	}
+
+	// If the response is an array and destination is a slice, handle specially
+	if h.isArrayResponse {
+		if arrayData, ok := h.ResBody["_array_data"].([]interface{}); ok {
+			jsonBytes, err := json.Marshal(arrayData)
+			if err != nil {
+				return h.set_error(fmt.Sprintf("failed to marshal array response: %v", err))
+			}
+			if err := json.Unmarshal(jsonBytes, to); err != nil {
+				return h.set_error(fmt.Sprintf("failed to unmarshal array response: %v", err))
+			}
+			return h
+		}
 	}
 
 	// Otherwise, marshal ResBody and unmarshal to destination
