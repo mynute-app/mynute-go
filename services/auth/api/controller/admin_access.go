@@ -33,6 +33,28 @@ func AuthorizeAdmin(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
+	// Extract admin claims from JWT token
+	adminClaims, err := handler.JWT(c).WhoAreYouAdmin()
+	if err != nil {
+		return lib.Error.Auth.InvalidToken.WithError(err)
+	}
+	if adminClaims == nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("admin token required"))
+	}
+
+	// Build subject from token claims
+	subject := map[string]interface{}{
+		"user_id": adminClaims.ID.String(),
+		"email":   adminClaims.Email,
+		"type":    adminClaims.Type,
+	}
+	// Add roles to subject - check if user has specific role
+	if len(adminClaims.Roles) > 0 {
+		// For authorization, we check the primary role
+		subject["role"] = adminClaims.Roles[0]
+		subject["roles"] = adminClaims.Roles
+	}
+
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
@@ -82,7 +104,7 @@ func AuthorizeAdmin(c *fiber.Ctx) error {
 	// Check deny policies first (explicit deny takes precedence)
 	for _, policy := range denyPolicies {
 		decision := accessCtrl.Validate(
-			req.Subject,
+			subject,
 			req.Resource,
 			req.PathParams,
 			req.Body,
@@ -114,7 +136,7 @@ func AuthorizeAdmin(c *fiber.Ctx) error {
 	// Check allow policies
 	for _, policy := range allowPolicies {
 		decision := accessCtrl.Validate(
-			req.Subject,
+			subject,
 			req.Resource,
 			req.PathParams,
 			req.Body,
@@ -155,13 +177,12 @@ func AuthorizeAdmin(c *fiber.Ctx) error {
 // =====================
 
 type AdminAuthRequest struct {
-	Method     string                 `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
-	Path       string                 `json:"path" validate:"required"`
-	Subject    map[string]interface{} `json:"subject" validate:"required"`
+	Method string `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
+	Path   string `json:"path" validate:"required"`
+	// Subject is now extracted from JWT token, not from request body
 	Resource   map[string]interface{} `json:"resource,omitempty"`
 	PathParams map[string]interface{} `json:"path_params,omitempty"`
 	Body       map[string]interface{} `json:"body,omitempty"`
 	Query      map[string]interface{} `json:"query,omitempty"`
 	Headers    map[string]interface{} `json:"headers,omitempty"`
 }
-

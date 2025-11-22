@@ -35,6 +35,31 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 		return lib.Error.General.BadRequest.WithError(err)
 	}
 
+	// Extract tenant claims from JWT token
+	claims, err := handler.JWT(c).WhoAreYou()
+	if err != nil {
+		return lib.Error.Auth.InvalidToken.WithError(err)
+	}
+	if claims == nil {
+		return lib.Error.Auth.Unauthorized.WithError(fmt.Errorf("tenant token required"))
+	}
+
+	// Build subject from token claims
+	subject := map[string]interface{}{
+		"user_id":    claims.ID.String(),
+		"email":      claims.Email,
+		"type":       claims.Type,
+		"company_id": claims.CompanyID.String(),
+	}
+	// Add role from claims (use first role or default)
+	if len(claims.Roles) > 0 {
+		subject["role"] = claims.Roles[0]
+		subject["roles"] = claims.Roles
+	} else {
+		subject["role"] = "employee"
+		subject["roles"] = []string{"employee"}
+	}
+
 	// Get tenant ID from header
 	tenantIDStr := c.Get("X-Company-ID")
 	if tenantIDStr == "" {
@@ -122,7 +147,7 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 	// Check deny policies first (explicit deny takes precedence)
 	for _, item := range denyPolicies {
 		decision := accessCtrl.Validate(
-			req.Subject,
+			subject,
 			req.Resource,
 			req.PathParams,
 			req.Body,
@@ -154,7 +179,7 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 	// Check allow policies
 	for _, item := range allowPolicies {
 		decision := accessCtrl.Validate(
-			req.Subject,
+			subject,
 			req.Resource,
 			req.PathParams,
 			req.Body,
@@ -195,9 +220,9 @@ func AuthorizeTenant(c *fiber.Ctx) error {
 // =====================
 
 type TenantAuthRequest struct {
-	Method     string                 `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
-	Path       string                 `json:"path" validate:"required"`
-	Subject    map[string]interface{} `json:"subject" validate:"required"`
+	Method string `json:"method" validate:"required,oneof=GET POST PUT PATCH DELETE"`
+	Path   string `json:"path" validate:"required"`
+	// Subject is now extracted from JWT token, not from request body
 	Resource   map[string]interface{} `json:"resource,omitempty"`
 	PathParams map[string]interface{} `json:"path_params,omitempty"`
 	Body       map[string]interface{} `json:"body,omitempty"`
@@ -213,4 +238,3 @@ type AuthorizationResponse struct {
 	Effect     string `json:"effect,omitempty"`
 	Error      string `json:"error,omitempty"`
 }
-
