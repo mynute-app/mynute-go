@@ -13,4 +13,5 @@ type TenantUser struct {
 	Password string         `gorm:"type:varchar(255);not null" json:"-"`
 	Verified bool           `gorm:"default:false" json:"verified"`
 	Meta     mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
+	Roles    []TenantRole   `gorm:"many2many:tenant_user_roles;" json:"roles"`
 }

@@ -10,4 +10,5 @@ type ClientUser struct {
 	Password string         `gorm:"type:varchar(255);not null" json:"-"`
 	Verified bool           `gorm:"default:false" json:"verified"`
 	Meta     mJSON.UserMeta `gorm:"type:jsonb" json:"meta"`
+	Roles    []ClientRole   `gorm:"many2many:client_user_roles;" json:"roles"`
 }
