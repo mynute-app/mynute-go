@@ -288,6 +288,14 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 	startDate := midnight.AddDate(0, 0, dfs)
 	endDate := midnight.AddDate(0, 0, dfe).Add(24 * time.Hour) // Para incluir o dia final inteiro
 
+	// Fetch service duration early - needed for slot validation
+	var serviceDuration uint16
+	if err := tx.Model(&model.Service{}).
+		Where("id = ?", serviceID).
+		Pluck("duration", &serviceDuration).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
 	// =========================================================================
 	// Step 2: Fetch all necessary data in fewer, more efficient queries
 	// =========================================================================
@@ -328,19 +336,42 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		Count      int64
 	}
 
-	var appointmentCounts []appointmentCountResult
-
+	// Fetch actual appointments with their details for overlap checking
+	var appointments []model.Appointment
 	if len(employeeIDs) > 0 {
-		// IMPORTANT: We fetch ALL appointments for the employees, not just for this service
-		// This prevents double-booking when an employee serves multiple services
 		err = tx.Model(&model.Appointment{}).
-			Select("employee_id, start_time, count(*) as count").
 			Where("company_id = ? AND employee_id IN ? AND is_cancelled = false", companyID, employeeIDs).
-			Where("start_time >= ? AND start_time < ?", startDate, endDate). // Date range filter
-			Group("employee_id, start_time").
-			Find(&appointmentCounts).Error
+			Where("start_time >= ? AND start_time < ?", startDate, endDate).
+			Preload("Service"). // Need service info for duration
+			Find(&appointments).Error
 		if err != nil {
 			return err
+		}
+	}
+
+	// Build appointment counts map (for density checking)
+	var appointmentCounts []appointmentCountResult
+	appointmentsByEmployee := make(map[uuid.UUID][]model.Appointment)
+
+	for _, appt := range appointments {
+		appointmentsByEmployee[appt.EmployeeID] = append(appointmentsByEmployee[appt.EmployeeID], appt)
+
+		// Count appointments by start time for density checking
+		found := false
+		for i := range appointmentCounts {
+			if appointmentCounts[i].EmployeeID == appt.EmployeeID &&
+				appointmentCounts[i].StartTime.Equal(appt.StartTime) {
+				appointmentCounts[i].Count++
+				found = true
+				break
+			}
+		}
+		if !found {
+			appointmentCounts = append(appointmentCounts, appointmentCountResult{
+				EmployeeID: appt.EmployeeID,
+				StartTime:  appt.StartTime,
+				Count:      1,
+			})
 		}
 	}
 
@@ -445,41 +476,97 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 							maxCapacity = specificDensity
 						}
 
+						// Check if the current slot has capacity
 						if uint32(currentBookings) < maxCapacity {
-							// This slot is available, add it to the results
-							dateStr := d.Format("2006-01-02")
-							timeStr := slot.Format("15:04")
+							// Check if there's enough time for the service to complete before the work shift ends
+							slotEndTime := slot.Add(time.Duration(serviceDuration) * time.Minute)
 
-							if _, ok := availabilityMap[dateStr]; !ok {
-								availabilityMap[dateStr] = map[uuid.UUID]map[string][]uuid.UUID{}
-							}
-							if _, ok := availabilityMap[dateStr][branchID]; !ok {
-								availabilityMap[dateStr][branchID] = map[string][]uuid.UUID{}
-							}
-							availabilityMap[dateStr][branchID][timeStr] = append(availabilityMap[dateStr][branchID][timeStr], emp.ID)
+							// Only show this slot if the service can be completed within the work shift
+							if !slotEndTime.After(endOfDay) {
+								// Check for overlaps with existing appointments
+								// A new appointment at [slot, slotEndTime) would overlap with existing appointment at [apptStart, apptEnd) if:
+								// slot < apptEnd AND slotEndTime > apptStart
+								hasOverlap := false
+								empAppointments := appointmentsByEmployee[emp.ID]
 
-							// Populate info maps if not already present
-							if _, ok := branchInfoMap[branchID]; !ok {
-								empRangeBranchBytes, err := json.Marshal(empRange.Branch)
-								if err != nil {
-									return fmt.Errorf("failed to marshal branch info: %w", err)
+								for _, appt := range empAppointments {
+									apptStart := appt.StartTime.In(loc)
+									var apptEnd time.Time
+									if !appt.EndTime.IsZero() {
+										apptEnd = appt.EndTime.In(loc)
+									} else if appt.Service != nil {
+										apptEnd = apptStart.Add(time.Duration(appt.Service.Duration) * time.Minute)
+									} else {
+										// Fallback: assume service duration
+										apptEnd = apptStart.Add(time.Duration(serviceDuration) * time.Minute)
+									}
+
+									// Check if [slot, slotEndTime) overlaps with [apptStart, apptEnd)
+									if slot.Before(apptEnd) && slotEndTime.After(apptStart) {
+										// There's an overlap, but we need to check if density allows it
+										// Count how many appointments at this start time
+										overlapCount := int64(0)
+										for _, a := range empAppointments {
+											aStart := a.StartTime.In(loc)
+											// Count appointments that would overlap with our proposed slot
+											var aEnd time.Time
+											if !a.EndTime.IsZero() {
+												aEnd = a.EndTime.In(loc)
+											} else if a.Service != nil {
+												aEnd = aStart.Add(time.Duration(a.Service.Duration) * time.Minute)
+											} else {
+												aEnd = aStart.Add(time.Duration(serviceDuration) * time.Minute)
+											}
+
+											if slot.Before(aEnd) && slotEndTime.After(aStart) {
+												overlapCount++
+											}
+										}
+
+										if uint32(overlapCount) >= maxCapacity {
+											hasOverlap = true
+											break
+										}
+									}
 								}
-								var dtoBranchBase DTO.BranchBase
-								if err := json.Unmarshal(empRangeBranchBytes, &dtoBranchBase); err != nil {
-									return fmt.Errorf("failed to unmarshal branch info: %w", err)
+
+								if !hasOverlap {
+									// This slot is available and has enough time, add it to the results
+									dateStr := d.Format("2006-01-02")
+									timeStr := slot.Format("15:04")
+
+									if _, ok := availabilityMap[dateStr]; !ok {
+										availabilityMap[dateStr] = map[uuid.UUID]map[string][]uuid.UUID{}
+									}
+									if _, ok := availabilityMap[dateStr][branchID]; !ok {
+										availabilityMap[dateStr][branchID] = map[string][]uuid.UUID{}
+									}
+									availabilityMap[dateStr][branchID][timeStr] = append(availabilityMap[dateStr][branchID][timeStr], emp.ID)
+
+									// Populate info maps if not already present
+									if _, ok := branchInfoMap[branchID]; !ok {
+										empRangeBranchBytes, err := json.Marshal(empRange.Branch)
+										if err != nil {
+											return fmt.Errorf("failed to marshal branch info: %w", err)
+										}
+										var dtoBranchBase DTO.BranchBase
+										if err := json.Unmarshal(empRangeBranchBytes, &dtoBranchBase); err != nil {
+											return fmt.Errorf("failed to unmarshal branch info: %w", err)
+										}
+										branchInfoMap[branchID] = dtoBranchBase
+									}
+									if _, ok := employeeInfoMap[emp.ID]; !ok {
+										empBytes, err := json.Marshal(emp)
+										if err != nil {
+											return fmt.Errorf("failed to marshal employee info: %w", err)
+										}
+										var dtoEmployeeBase DTO.EmployeeBase
+										if err := json.Unmarshal(empBytes, &dtoEmployeeBase); err != nil {
+											return fmt.Errorf("failed to unmarshal employee info: %w", err)
+										}
+										employeeInfoMap[emp.ID] = dtoEmployeeBase
+									}
 								}
-								branchInfoMap[branchID] = dtoBranchBase
-							}
-							if _, ok := employeeInfoMap[emp.ID]; !ok {
-								empBytes, err := json.Marshal(emp)
-								if err != nil {
-									return fmt.Errorf("failed to marshal employee info: %w", err)
-								}
-								var dtoEmployeeBase DTO.EmployeeBase
-								if err := json.Unmarshal(empBytes, &dtoEmployeeBase); err != nil {
-									return fmt.Errorf("failed to unmarshal employee info: %w", err)
-								}
-								employeeInfoMap[emp.ID] = dtoEmployeeBase
 							}
 						}
 
@@ -509,16 +596,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		}
 	}
 
-	// Get service duration to help with conflict checking
-	var serviceDuration uint16
-	if client_public_id != "" {
-		if err := tx.
-			Model(&model.Service{}).
-			Where("id = ?", serviceID).
-			Pluck("duration", &serviceDuration).Error; err != nil {
-			return lib.Error.General.InternalError.WithError(err)
-		}
-	}
+	// serviceDuration is already fetched earlier in the function
 
 	for date, branches := range availabilityMap {
 		if _, ok := availableDateMap[date]; !ok {
