@@ -788,7 +788,17 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/branch/{branch_id}/appointments [get]
 func GetBranchAppointmentsById(c *fiber.Ctx) error {
-	branch_id := c.Params("branch_id")
+	branch_id := c.Params("id")
+
+	// Validate branch_id is not empty and is a valid UUID
+	if branch_id == "" {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("branch_id parameter is required"))
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(branch_id); err != nil {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("invalid branch_id format"))
+	}
 
 	var appointments []model.Appointment
 	tx, err := lib.Session(c)
@@ -800,12 +810,28 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 	pageSize := c.QueryInt("page_size", 10)
 	offset := (page - 1) * pageSize
 
+	// Verify branch exists
+	var count int64
+	if err := tx.Model(&model.Branch{}).Where("id = ?", branch_id).Count(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if count == 0 {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("branch not found"))
+	}
+
+	// Get total count for pagination
+	var totalCount int64
+	if err := tx.Model(&model.Appointment{}).Where("branch_id = ?", branch_id).Count(&totalCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Get appointments with pagination
 	if err := tx.
 		Where("branch_id = ?", branch_id).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&appointments).Error; err != nil {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointments not found"))
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	bytes, err := json.Marshal(appointments)
@@ -821,7 +847,7 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		Appointments: appointmentsDTO,
 		Page:         page,
 		PageSize:     pageSize,
-		TotalCount:   len(appointments),
+		TotalCount:   int(totalCount),
 	}
 
 	if err := lib.ResponseFactory(c).Send(200, &AppointmentList); err != nil {
