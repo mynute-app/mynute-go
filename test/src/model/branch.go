@@ -409,6 +409,31 @@ func (b *Branch) DeleteWorkRange(status int, wrID string, x_auth_token string, x
 	return nil
 }
 
+func (b *Branch) GetAppointments(status int, page int, pageSize int, x_auth_token string, x_company_id *string) (*DTO.AppointmentList, error) {
+	companyIDStr := b.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var appointmentList DTO.AppointmentList
+	url := fmt.Sprintf("/branch/%s/appointments?page=%d&page_size=%d", b.Created.ID.String(), page, pageSize)
+
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL(url).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, x_auth_token).
+		Send(nil).
+		ParseResponse(&appointmentList).
+		Error; err != nil {
+		return nil, fmt.Errorf("failed to get branch appointments: %w", err)
+	}
+
+	return &appointmentList, nil
+}
+
 func GetExampleBranchWorkSchedule(branchID uuid.UUID, servicesID []DTO.ServiceBase) DTO.CreateBranchWorkSchedule {
 	return DTO.CreateBranchWorkSchedule{
 		WorkRanges: []DTO.CreateBranchWorkRange{
