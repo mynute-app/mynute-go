@@ -997,7 +997,7 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 // GetEmployeeAppointments retrieves appointments for a specific employee with pagination
 //
 //	@Summary		Get employee appointments
-//	@Description	Retrieve appointments for a specific employee with pagination
+//	@Description	Retrieve appointments for a specific employee with pagination and filtering
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
@@ -1005,32 +1005,127 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Param			page		query		int	false	"Page number"				default(1)
-//	@Param			page_size	query		int	false	"Number of items per page"	default(10)
-//	@Success		200			{object}	DTO.AppointmentList
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Param			page			query		int		false	"Page number"							default(1)
+//	@Param			page_size		query		int		false	"Number of items per page"				default(10)
+//	@Param			start_date		query		string	false	"Start date filter (DD/MM/YYYY)"		example(21/04/2025)
+//	@Param			end_date		query		string	false	"End date filter (DD/MM/YYYY)"			example(31/05/2025)
+//	@Param			cancelled		query		string	false	"Filter by cancelled status (true/false)"
+//	@Success		200				{object}	DTO.AppointmentList
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/appointments [get]
 func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	employee_id := c.Params("id")
 
-	var appointments []model.Appointment
+	// Validate employee_id is not empty and is a valid UUID
+	if employee_id == "" {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("employee_id parameter is required"))
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(employee_id); err != nil {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("invalid employee_id format"))
+	}
+
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
 
+	// Verify employee exists
+	var count int64
+	if err := tx.Model(&model.Employee{}).Where("id = ?", employee_id).Count(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if count == 0 {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("employee not found"))
+	}
+
+	// Parse pagination parameters
 	page := c.QueryInt("page", 1)
 	pageSize := c.QueryInt("page_size", 10)
 	offset := (page - 1) * pageSize
 
-	if err := tx.
-		Where("employee_id = ?", employee_id).
+	// Parse required timezone parameter
+	timezone := c.Query("timezone")
+	if timezone == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("timezone parameter is required"))
+	}
+
+	// Build query with employee filter
+	query := tx.Model(&model.Appointment{}).Where("employee_id = ?", employee_id)
+
+	// Parse and validate date range filters
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	if startDateStr != "" || endDateStr != "" {
+		var startDate, endDate time.Time
+
+		if startDateStr != "" {
+			startDate, err = time.Parse("02/01/2006", startDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_date format, expected DD/MM/YYYY"))
+			}
+		}
+
+		if endDateStr != "" {
+			endDate, err = time.Parse("02/01/2006", endDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_date format, expected DD/MM/YYYY"))
+			}
+			// Set end date to end of day
+			endDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		}
+
+		// Validate date range
+		if startDateStr != "" && endDateStr != "" {
+			if endDate.Before(startDate) {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("end_date must be after start_date"))
+			}
+
+			daysDiff := endDate.Sub(startDate).Hours() / 24
+			if daysDiff > 90 {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("date range cannot exceed 90 days"))
+			}
+		}
+
+		// Apply date filters
+		if startDateStr != "" {
+			query = query.Where("start_time >= ?", startDate)
+		}
+		if endDateStr != "" {
+			query = query.Where("start_time <= ?", endDate)
+		}
+	}
+
+	// Parse cancelled filter
+	cancelledStr := c.Query("cancelled")
+	if cancelledStr != "" {
+		if cancelledStr == "true" {
+			query = query.Where("is_cancelled = ?", true)
+		} else if cancelledStr == "false" {
+			query = query.Where("is_cancelled = ?", false)
+		} else {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("cancelled parameter must be 'true' or 'false'"))
+		}
+	}
+
+	// Get total count for pagination
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Get appointments with pagination
+	var appointments []model.Appointment
+	if err := query.
 		Offset(offset).
 		Limit(pageSize).
 		Find(&appointments).Error; err != nil {
-		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointments not found"))
+		return lib.Error.General.InternalError.WithError(err)
 	}
 
+	// Convert to DTO
 	bytes, err := json.Marshal(appointments)
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -1040,11 +1135,44 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
+	// Collect unique client IDs
+	clientIDMap := make(map[uuid.UUID]bool)
+	for _, apt := range appointments {
+		clientIDMap[apt.ClientID] = true
+	}
+
+	// Fetch client information
+	var clientInfo []DTO.ClientBasicInfo
+	if len(clientIDMap) > 0 {
+		clientIDs := make([]uuid.UUID, 0, len(clientIDMap))
+		for id := range clientIDMap {
+			clientIDs = append(clientIDs, id)
+		}
+
+		var clients []model.Client
+		if err := tx.Select("id", "name", "surname", "email", "phone").
+			Where("id IN ?", clientIDs).
+			Find(&clients).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		for _, client := range clients {
+			clientInfo = append(clientInfo, DTO.ClientBasicInfo{
+				ID:      client.ID,
+				Name:    client.Name,
+				Surname: client.Surname,
+				Email:   client.Email,
+				Phone:   client.Phone,
+			})
+		}
+	}
+
 	AppointmentList := DTO.AppointmentList{
 		Appointments: appointmentsDTO,
+		ClientInfo:   clientInfo,
 		Page:         page,
 		PageSize:     pageSize,
-		TotalCount:   len(appointments),
+		TotalCount:   int(totalCount),
 	}
 
 	if err := lib.ResponseFactory(c).Send(200, &AppointmentList); err != nil {

@@ -775,14 +775,17 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 // GetBranchAppointments retrieves all appointments for a branch with pagination
 //
 //	@Summary		Get all branch appointments
-//	@Description	Retrieve all appointments for a branch with pagination
+//	@Description	Retrieve all appointments for a branch with pagination and filtering
 //	@Tags			Branch
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			branch_id		path	string	true	"Branch ID"
-//	@Param			page			query	int		false	"Page number"	default(1)
-//	@Param			page_size		query	int		false	"Page size"		default(10)
+//	@Param			page			query	int		false	"Page number"							default(1)
+//	@Param			page_size		query	int		false	"Page size"								default(10)
+//	@Param			start_date		query	string	false	"Start date filter (DD/MM/YYYY)"		example(21/04/2025)
+//	@Param			end_date		query	string	false	"End date filter (DD/MM/YYYY)"			example(31/05/2025)
+//	@Param			cancelled		query	string	false	"Filter by cancelled status (true/false)"
 //	@Produce		json
 //	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -800,15 +803,10 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("invalid branch_id format"))
 	}
 
-	var appointments []model.Appointment
 	tx, err := lib.Session(c)
 	if err != nil {
 		return err
 	}
-
-	page := c.QueryInt("page", 1)
-	pageSize := c.QueryInt("page_size", 10)
-	offset := (page - 1) * pageSize
 
 	// Verify branch exists
 	var count int64
@@ -819,21 +817,92 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("branch not found"))
 	}
 
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 10)
+	offset := (page - 1) * pageSize
+
+	// Parse required timezone parameter
+	timezone := c.Query("timezone")
+	if timezone == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("timezone parameter is required"))
+	}
+
+	// Build query with branch filter
+	query := tx.Model(&model.Appointment{}).Where("branch_id = ?", branch_id)
+
+	// Parse and validate date range filters
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	if startDateStr != "" || endDateStr != "" {
+		var startDate, endDate time.Time
+
+		if startDateStr != "" {
+			startDate, err = time.Parse("02/01/2006", startDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_date format, expected DD/MM/YYYY"))
+			}
+		}
+
+		if endDateStr != "" {
+			endDate, err = time.Parse("02/01/2006", endDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_date format, expected DD/MM/YYYY"))
+			}
+			// Set end date to end of day
+			endDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		}
+
+		// Validate date range
+		if startDateStr != "" && endDateStr != "" {
+			if endDate.Before(startDate) {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("end_date must be after start_date"))
+			}
+
+			daysDiff := endDate.Sub(startDate).Hours() / 24
+			if daysDiff > 90 {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("date range cannot exceed 90 days"))
+			}
+		}
+
+		// Apply date filters
+		if startDateStr != "" {
+			query = query.Where("start_time >= ?", startDate)
+		}
+		if endDateStr != "" {
+			query = query.Where("start_time <= ?", endDate)
+		}
+	}
+
+	// Parse cancelled filter
+	cancelledStr := c.Query("cancelled")
+	if cancelledStr != "" {
+		if cancelledStr == "true" {
+			query = query.Where("is_cancelled = ?", true)
+		} else if cancelledStr == "false" {
+			query = query.Where("is_cancelled = ?", false)
+		} else {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("cancelled parameter must be 'true' or 'false'"))
+		}
+	}
+
 	// Get total count for pagination
 	var totalCount int64
-	if err := tx.Model(&model.Appointment{}).Where("branch_id = ?", branch_id).Count(&totalCount).Error; err != nil {
+	if err := query.Count(&totalCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
 	// Get appointments with pagination
-	if err := tx.
-		Where("branch_id = ?", branch_id).
+	var appointments []model.Appointment
+	if err := query.
 		Offset(offset).
 		Limit(pageSize).
 		Find(&appointments).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
+	// Convert to DTO
 	bytes, err := json.Marshal(appointments)
 	if err != nil {
 		return lib.Error.General.InternalError.WithError(err)
@@ -843,8 +912,41 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
+	// Collect unique client IDs
+	clientIDMap := make(map[uuid.UUID]bool)
+	for _, apt := range appointments {
+		clientIDMap[apt.ClientID] = true
+	}
+
+	// Fetch client information
+	var clientInfo []DTO.ClientBasicInfo
+	if len(clientIDMap) > 0 {
+		clientIDs := make([]uuid.UUID, 0, len(clientIDMap))
+		for id := range clientIDMap {
+			clientIDs = append(clientIDs, id)
+		}
+
+		var clients []model.Client
+		if err := tx.Select("id", "name", "surname", "email", "phone").
+			Where("id IN ?", clientIDs).
+			Find(&clients).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		for _, client := range clients {
+			clientInfo = append(clientInfo, DTO.ClientBasicInfo{
+				ID:      client.ID,
+				Name:    client.Name,
+				Surname: client.Surname,
+				Email:   client.Email,
+				Phone:   client.Phone,
+			})
+		}
+	}
+
 	AppointmentList := DTO.AppointmentList{
 		Appointments: appointmentsDTO,
+		ClientInfo:   clientInfo,
 		Page:         page,
 		PageSize:     pageSize,
 		TotalCount:   int(totalCount),
