@@ -894,6 +894,48 @@ func (e *Employee) DeleteImages(status int, image_types []string, x_auth_token s
 	return nil
 }
 
+func (e *Employee) GetAppointments(status int, page int, pageSize int, startDate string, endDate string, cancelled string, timezone string, x_auth_token *string, x_company_id *string) (*DTO.AppointmentList, error) {
+	t, err := Get_x_auth_token(x_auth_token, &e.X_Auth_Token)
+	if err != nil {
+		return nil, err
+	}
+	companyIDStr := e.Company.Created.ID.String()
+	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var appointmentList DTO.AppointmentList
+	urlStr := fmt.Sprintf("/employee/%s/appointments?page=%d&page_size=%d", e.Created.ID.String(), page, pageSize)
+
+	if timezone != "" {
+		urlStr += fmt.Sprintf("&timezone=%s", timezone)
+	}
+	if startDate != "" {
+		urlStr += fmt.Sprintf("&start_date=%s", startDate)
+	}
+	if endDate != "" {
+		urlStr += fmt.Sprintf("&end_date=%s", endDate)
+	}
+	if cancelled != "" {
+		urlStr += fmt.Sprintf("&cancelled=%s", cancelled)
+	}
+
+	if err := handler.NewHttpClient().
+		Method("GET").
+		URL(urlStr).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Company, cID).
+		Header(namespace.HeadersKey.Auth, t).
+		Send(nil).
+		ParseResponse(&appointmentList).
+		Error; err != nil {
+		return nil, fmt.Errorf("failed to get employee appointments: %w", err)
+	}
+
+	return &appointmentList, nil
+}
+
 func Get_x_auth_token(priority *string, secundary *string) (string, error) {
 	if priority != nil {
 		return *priority, nil

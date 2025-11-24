@@ -409,7 +409,7 @@ func (b *Branch) DeleteWorkRange(status int, wrID string, x_auth_token string, x
 	return nil
 }
 
-func (b *Branch) GetAppointments(status int, page int, pageSize int, x_auth_token string, x_company_id *string) (*DTO.AppointmentList, error) {
+func (b *Branch) GetAppointments(status int, page int, pageSize int, startDate string, endDate string, cancelled string, timezone string, x_auth_token string, x_company_id *string) (*DTO.AppointmentList, error) {
 	companyIDStr := b.Company.Created.ID.String()
 	cID, err := Get_x_company_id(x_company_id, &companyIDStr)
 	if err != nil {
@@ -417,11 +417,24 @@ func (b *Branch) GetAppointments(status int, page int, pageSize int, x_auth_toke
 	}
 
 	var appointmentList DTO.AppointmentList
-	url := fmt.Sprintf("/branch/%s/appointments?page=%d&page_size=%d", b.Created.ID.String(), page, pageSize)
+	urlStr := fmt.Sprintf("/branch/%s/appointments?page=%d&page_size=%d", b.Created.ID.String(), page, pageSize)
+
+	if timezone != "" {
+		urlStr += fmt.Sprintf("&timezone=%s", timezone)
+	}
+	if startDate != "" {
+		urlStr += fmt.Sprintf("&start_date=%s", startDate)
+	}
+	if endDate != "" {
+		urlStr += fmt.Sprintf("&end_date=%s", endDate)
+	}
+	if cancelled != "" {
+		urlStr += fmt.Sprintf("&cancelled=%s", cancelled)
+	}
 
 	if err := handler.NewHttpClient().
 		Method("GET").
-		URL(url).
+		URL(urlStr).
 		ExpectedStatus(status).
 		Header(namespace.HeadersKey.Company, cID).
 		Header(namespace.HeadersKey.Auth, x_auth_token).
