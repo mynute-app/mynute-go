@@ -221,3 +221,226 @@ func Test_Employee(t *testing.T) {
 
 	tt.Describe("Get deleted employee by ID").Test(employee.GetById(404, &c.Owner.X_Auth_Token, nil))
 }
+
+func Test_EmployeeAppointments(t *testing.T) {
+	server := core.NewServer().Run("parallel")
+	defer server.Shutdown()
+
+	tt := handler.NewTestErrorHandler(t)
+	c := &model.Company{}
+
+	tt.Describe("Company setup").Test(c.Set())
+
+	employee := c.Employees[0]
+
+	// Test employee appointments endpoint
+	t.Run("Employee Appointments", func(t *testing.T) {
+		// Test getting appointments when employee has no appointments
+		tt.Describe("Get empty appointments list").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "", "", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments, got %d", len(appointmentList.Appointments))
+			}
+			if appointmentList.TotalCount != 0 {
+				return fmt.Errorf("expected total count 0, got %d", appointmentList.TotalCount)
+			}
+			if appointmentList.Page != 1 {
+				return fmt.Errorf("expected page 1, got %d", appointmentList.Page)
+			}
+			if appointmentList.PageSize != 10 {
+				return fmt.Errorf("expected page size 10, got %d", appointmentList.PageSize)
+			}
+			if len(appointmentList.ClientInfo) != 0 {
+				return fmt.Errorf("expected 0 clients in ClientInfo, got %d", len(appointmentList.ClientInfo))
+			}
+			return nil
+		}())
+
+		// Test pagination with different page sizes
+		tt.Describe("Get empty appointments with page size 5").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 5, "", "", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments, got %d", len(appointmentList.Appointments))
+			}
+			if appointmentList.PageSize != 5 {
+				return fmt.Errorf("expected page size 5, got %d", appointmentList.PageSize)
+			}
+			return nil
+		}())
+
+		// Test different pagination parameters
+		tt.Describe("Get appointments page 2 (empty)").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 2, 10, "", "", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments on page 2, got %d", len(appointmentList.Appointments))
+			}
+			if appointmentList.Page != 2 {
+				return fmt.Errorf("expected page 2, got %d", appointmentList.Page)
+			}
+			return nil
+		}())
+
+		// Test missing timezone parameter
+		tt.Describe("Test missing timezone parameter").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "", "", "", "", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - invalid date format
+		tt.Describe("Test invalid start_date format").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "2025-04-21", "", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - invalid end_date format
+		tt.Describe("Test invalid end_date format").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "", "04/21/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - valid date range
+		tt.Describe("Test valid date range filter").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "21/04/2025", "31/05/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with date filter, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test date range filtering - range exceeds 90 days
+		tt.Describe("Test date range exceeds 90 days").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "01/01/2025", "15/04/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - end date before start date
+		tt.Describe("Test end_date before start_date").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "31/05/2025", "21/04/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - exactly 90 days
+		tt.Describe("Test exactly 90 days range").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "01/01/2025", "31/03/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with 90-day filter, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - true
+		tt.Describe("Test cancelled filter true").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "", "", "true", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 cancelled appointments, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - false
+		tt.Describe("Test cancelled filter false").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "", "", "false", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 non-cancelled appointments, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - invalid value
+		tt.Describe("Test invalid cancelled filter value").Test(func() error {
+			_, err := employee.GetAppointments(400, 1, 10, "", "", "invalid", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test combined filters - date range and cancelled status
+		tt.Describe("Test combined date range and cancelled filters").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "21/04/2025", "31/05/2025", "false", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with combined filters, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test with only start_date (no end_date)
+		tt.Describe("Test with only start_date filter").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "21/04/2025", "", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with start_date filter, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test with only end_date (no start_date)
+		tt.Describe("Test with only end_date filter").Test(func() error {
+			appointmentList, err := employee.GetAppointments(200, 1, 10, "", "31/05/2025", "", "UTC", nil, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with end_date filter, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test for non-existent employee UUID validation
+		tt.Describe("Test non-existent employee returns 404").Test(func() error {
+			nonExistentEmployee := &model.Employee{
+				Created: &coreModel.Employee{},
+				Company: c,
+			}
+			nonExistentEmployee.Created.ID = uuid.New()
+			nonExistentEmployee.X_Auth_Token = c.Owner.X_Auth_Token
+
+			_, err := nonExistentEmployee.GetAppointments(404, 1, 10, "", "", "", "UTC", &c.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+	})
+}

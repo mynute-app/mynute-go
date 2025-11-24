@@ -180,7 +180,7 @@ func Test_Branch(t *testing.T) {
 
 		// Test getting appointments when branch has no appointments
 		tt.Describe("Get empty appointments list").Test(func() error {
-			appointmentList, err := branch.GetAppointments(200, 1, 10, company.Owner.X_Auth_Token, nil)
+			appointmentList, err := branch.GetAppointments(200, 1, 10, "", "", "", "UTC", company.Owner.X_Auth_Token, nil)
 			if err != nil {
 				return err
 			}
@@ -196,12 +196,15 @@ func Test_Branch(t *testing.T) {
 			if appointmentList.PageSize != 10 {
 				return fmt.Errorf("expected page size 10, got %d", appointmentList.PageSize)
 			}
+			if len(appointmentList.ClientInfo) != 0 {
+				return fmt.Errorf("expected 0 clients in ClientInfo, got %d", len(appointmentList.ClientInfo))
+			}
 			return nil
 		}())
 
 		// Test pagination with different page sizes (still empty)
 		tt.Describe("Get empty appointments with page size 5").Test(func() error {
-			appointmentList, err := branch.GetAppointments(200, 1, 5, company.Owner.X_Auth_Token, nil)
+			appointmentList, err := branch.GetAppointments(200, 1, 5, "", "", "", "UTC", company.Owner.X_Auth_Token, nil)
 			if err != nil {
 				return err
 			}
@@ -219,7 +222,7 @@ func Test_Branch(t *testing.T) {
 
 		// Test different pagination parameters
 		tt.Describe("Get appointments page 2 (empty)").Test(func() error {
-			appointmentList, err := branch.GetAppointments(200, 2, 10, company.Owner.X_Auth_Token, nil)
+			appointmentList, err := branch.GetAppointments(200, 2, 10, "", "", "", "UTC", company.Owner.X_Auth_Token, nil)
 			if err != nil {
 				return err
 			}
@@ -228,6 +231,87 @@ func Test_Branch(t *testing.T) {
 			}
 			if appointmentList.Page != 2 {
 				return fmt.Errorf("expected page 2, got %d", appointmentList.Page)
+			}
+			return nil
+		}())
+
+		// Test missing timezone parameter
+		tt.Describe("Test missing timezone parameter").Test(func() error {
+			_, err := branch.GetAppointments(400, 1, 10, "", "", "", "", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - invalid date format
+		tt.Describe("Test invalid start_date format").Test(func() error {
+			_, err := branch.GetAppointments(400, 1, 10, "2025-04-21", "", "", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - valid date range
+		tt.Describe("Test valid date range filter").Test(func() error {
+			appointmentList, err := branch.GetAppointments(200, 1, 10, "21/04/2025", "31/05/2025", "", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 appointments with date filter, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test date range filtering - range exceeds 90 days
+		tt.Describe("Test date range exceeds 90 days").Test(func() error {
+			_, err := branch.GetAppointments(400, 1, 10, "01/01/2025", "15/04/2025", "", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test date range filtering - end date before start date
+		tt.Describe("Test end_date before start_date").Test(func() error {
+			_, err := branch.GetAppointments(400, 1, 10, "31/05/2025", "21/04/2025", "", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - true
+		tt.Describe("Test cancelled filter true").Test(func() error {
+			appointmentList, err := branch.GetAppointments(200, 1, 10, "", "", "true", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 cancelled appointments, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - false
+		tt.Describe("Test cancelled filter false").Test(func() error {
+			appointmentList, err := branch.GetAppointments(200, 1, 10, "", "", "false", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
+			}
+			if len(appointmentList.Appointments) != 0 {
+				return fmt.Errorf("expected 0 non-cancelled appointments, got %d", len(appointmentList.Appointments))
+			}
+			return nil
+		}())
+
+		// Test cancelled filter - invalid value
+		tt.Describe("Test invalid cancelled filter value").Test(func() error {
+			_, err := branch.GetAppointments(400, 1, 10, "", "", "invalid", "UTC", company.Owner.X_Auth_Token, nil)
+			if err != nil {
+				return err
 			}
 			return nil
 		}())
