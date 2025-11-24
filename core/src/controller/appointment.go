@@ -13,6 +13,7 @@ import (
 	"mynute-go/core/src/middleware"
 	"mynute-go/debug"
 	"path/filepath"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -32,6 +33,55 @@ import (
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment [post]
 func CreateAppointment(c *fiber.Ctx) error {
+	// Parse the request body to get appointment details
+	var createDTO DTO.CreateAppointment
+	if err := c.BodyParser(&createDTO); err != nil {
+		return lib.Error.General.BadRequest.WithError(err)
+	}
+
+	// Check for overlapping appointments before creating
+	tx, err := lib.Session(c)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Parse the start time
+	startTime, err := time.Parse(time.RFC3339, createDTO.StartTime)
+	if err != nil {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start time format: %w", err))
+	}
+
+	// Get service duration to calculate end time
+	var serviceDuration uint
+	if err := tx.Model(&model.Service{}).Where("id = ?", createDTO.ServiceID).Pluck("duration", &serviceDuration).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading service duration: %w", err))
+	}
+
+	// Calculate end time
+	endTime := startTime.Add(time.Duration(serviceDuration) * time.Minute)
+
+	// Query for overlapping appointments for the same client
+	// Overlap condition: (new_start < existing_end AND new_end > existing_start)
+	var existingAppointment model.Appointment
+	err = tx.Where("client_id = ? AND is_cancelled = ? AND start_time < ? AND end_time > ?",
+		createDTO.ClientID,
+		false,
+		endTime,
+		startTime,
+	).First(&existingAppointment).Error
+
+	if err == nil {
+		// Found an overlapping appointment
+		return lib.Error.General.BadRequest.WithError(
+			fmt.Errorf("client already has an appointment scheduled from %s to %s that overlaps with the requested time",
+				existingAppointment.StartTime.Format("15:04"),
+				existingAppointment.EndTime.Format("15:04")))
+	} else if err != gorm.ErrRecordNotFound {
+		// Database error
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// No overlap found, proceed with creation
 	var appointment model.Appointment
 	if err := Create(c, &appointment); err != nil {
 		return err
@@ -142,6 +192,44 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 
 	if updated_appointment.ID != uuid.Nil {
 		return lib.Error.General.UpdatedError.WithError(fmt.Errorf("appointment update can not have pre defined ID"))
+	}
+
+	// Check for overlapping appointments if start time is being updated
+	if !updated_appointment.StartTime.IsZero() {
+		// Get service duration to calculate end time
+		var serviceDuration uint
+		serviceID := updated_appointment.ServiceID
+		if serviceID == uuid.Nil {
+			serviceID = appointment.ServiceID // Use existing service ID if not being updated
+		}
+
+		if err := tx.Model(&model.Service{}).Where("id = ?", serviceID).Pluck("duration", &serviceDuration).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(fmt.Errorf("error loading service duration: %w", err))
+		}
+
+		// Calculate end time
+		endTime := updated_appointment.StartTime.Add(time.Duration(serviceDuration) * time.Minute)
+
+		// Query for overlapping appointments for the same client (excluding current appointment)
+		var existingAppointment model.Appointment
+		err = tx.Where("client_id = ? AND is_cancelled = ? AND id != ? AND start_time < ? AND end_time > ?",
+			appointment.ClientID,
+			false,
+			appointment.ID,
+			endTime,
+			updated_appointment.StartTime,
+		).First(&existingAppointment).Error
+
+		if err == nil {
+			// Found an overlapping appointment
+			return lib.Error.General.BadRequest.WithError(
+				fmt.Errorf("client already has an appointment scheduled from %s to %s that overlaps with the requested time",
+					existingAppointment.StartTime.Format("15:04"),
+					existingAppointment.EndTime.Format("15:04")))
+		} else if err != gorm.ErrRecordNotFound {
+			// Database error
+			return lib.Error.General.InternalError.WithError(err)
+		}
 	}
 
 	tx.Model(appointment).Where("id = ?", appointment_id).Updates(updated_appointment)
