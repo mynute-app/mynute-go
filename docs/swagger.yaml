@@ -986,24 +986,6 @@ definitions:
           $ref: '#/definitions/dJSON.FieldChange'
         type: array
     type: object
-  dJSON.ClientAppointment:
-    properties:
-      branch_address:
-        example: 76, Example street, My city, My country, 09090790
-        type: string
-      company_id:
-        example: 00000000-0000-0000-0000-000000000000
-        type: string
-      company_name:
-        example: Company name example
-        type: string
-      service_name:
-        example: Service name example
-        type: string
-      start_time:
-        example: "2021-01-01T09:00:00Z"
-        type: string
-    type: object
   dJSON.Colors:
     properties:
       primary:
@@ -1372,6 +1354,12 @@ paths:
       - description: Filter by cancelled status (true/false)
         in: query
         name: cancelled
+        type: string
+      - description: Timezone for date filtering
+        example: '"America/New_York"'
+        in: query
+        name: timezone
+        required: true
         type: string
       produces:
       - application/json
@@ -2018,7 +2006,7 @@ paths:
       summary: Create client
       tags:
       - Client
-  /client/{id}:
+  /client/{client_id}:
     delete:
       description: Delete an client
       parameters:
@@ -2029,7 +2017,7 @@ paths:
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
         required: true
         type: string
       produces:
@@ -2047,16 +2035,16 @@ paths:
       tags:
       - Client
     get:
-      description: Retrieve an client by its ID
+      description: Get a client by ID
       parameters:
       - description: X-Auth-Token
         in: header
-        name: Authorization
+        name: X-Auth-Token
         required: true
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
         required: true
         type: string
       produces:
@@ -2087,7 +2075,7 @@ paths:
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
         required: true
         type: string
       - description: Client
@@ -2114,9 +2102,9 @@ paths:
       summary: Update client
       tags:
       - Client
-  /client/{id}/appointments:
+  /client/{client_id}/appointments:
     get:
-      description: Get only the appointments field from a client
+      description: Get the appointments of a client with pagination and optional filters
       parameters:
       - description: X-Auth-Token
         in: header
@@ -2125,7 +2113,32 @@ paths:
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
+        required: true
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 10)'
+        in: query
+        name: page_size
+        type: integer
+      - description: Start date in DD/MM/YYYY format
+        in: query
+        name: start_date
+        type: string
+      - description: End date in DD/MM/YYYY format (max 90 days range)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Filter by cancelled status: ''true'' or ''false'''
+        in: query
+        name: cancelled
+        type: string
+      - description: Timezone in IANA format (required)
+        in: query
+        name: timezone
         required: true
         type: string
       produces:
@@ -2134,9 +2147,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dJSON.ClientAppointment'
-            type: array
+            $ref: '#/definitions/DTO.AppointmentList'
         "400":
           description: Bad Request
           schema:
@@ -2146,7 +2157,7 @@ paths:
       summary: Get client appointments
       tags:
       - Client
-  /client/{id}/design/images:
+  /client/{client_id}/design/images:
     patch:
       consumes:
       - application/json
@@ -2159,7 +2170,7 @@ paths:
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
         required: true
         type: string
       - description: Profile image
@@ -2184,7 +2195,7 @@ paths:
       summary: Update client design images
       tags:
       - Client
-  /client/{id}/design/images/{image_type}:
+  /client/{client_id}/design/images/{image_type}:
     delete:
       description: Delete the design images of an client
       parameters:
@@ -2195,7 +2206,7 @@ paths:
         type: string
       - description: Client ID
         in: path
-        name: id
+        name: client_id
         required: true
         type: string
       - description: Image Type
@@ -2820,6 +2831,74 @@ paths:
       summary: Create employee
       tags:
       - Employee
+  /employee/{employee_id}/appointments:
+    get:
+      description: Retrieve appointments for a specific employee with pagination and
+        filtering
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      - description: Start date filter (DD/MM/YYYY)
+        example: 21/04/2025
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (DD/MM/YYYY)
+        example: 31/05/2025
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by cancelled status (true/false)
+        in: query
+        name: cancelled
+        type: string
+      - description: Timezone for date filtering
+        example: '"America/New_York"'
+        in: query
+        name: timezone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.AppointmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get employee appointments
+      tags:
+      - Employee
   /employee/{employee_id}/branch/{branch_id}:
     delete:
       description: Remove an employee from a branch
@@ -2988,6 +3067,138 @@ paths:
       summary: Add service to employee
       tags:
       - Employee
+  /employee/{employee_id}/work_range/{work_range_id}:
+    delete:
+      description: Delete a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Delete work schedule
+      tags:
+      - Employee
+    get:
+      description: Retrieve a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkRange'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get work range by ID
+      tags:
+      - Employee
+    put:
+      consumes:
+      - application/json
+      description: Update a work range for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Range ID
+        in: path
+        name: work_range_id
+        required: true
+        type: string
+      - description: Work Range
+        in: body
+        name: work_range
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.UpdateWorkRange'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Update work range
+      tags:
+      - Employee
   /employee/{employee_id}/work_range/{work_range_id}/service/{service_id}:
     delete:
       consumes:
@@ -3085,6 +3296,85 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Add services to employee's work range
+      tags:
+      - Employee
+  /employee/{employee_id}/work_schedule:
+    get:
+      description: Retrieve all work ranges for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Get all employee's work ranges
+      tags:
+      - Employee
+    post:
+      consumes:
+      - application/json
+      description: Create a work schedule for an employee
+      parameters:
+      - description: X-Auth-Token
+        in: header
+        name: X-Auth-Token
+        required: true
+        type: string
+      - description: X-Company-ID
+        in: header
+        name: X-Company-ID
+        required: true
+        type: string
+      - description: Work Schedule
+        in: body
+        name: work_schedule
+        required: true
+        schema:
+          $ref: '#/definitions/DTO.CreateEmployeeWorkSchedule'
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/DTO.ErrorResponse'
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Create work schedule
       tags:
       - Employee
   /employee/{id}:
@@ -3204,68 +3494,6 @@ paths:
       summary: Update employee
       tags:
       - Employee
-  /employee/{id}/appointments:
-    get:
-      description: Retrieve appointments for a specific employee with pagination and
-        filtering
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Number of items per page
-        in: query
-        name: page_size
-        type: integer
-      - description: Start date filter (DD/MM/YYYY)
-        example: 21/04/2025
-        in: query
-        name: start_date
-        type: string
-      - description: End date filter (DD/MM/YYYY)
-        example: 31/05/2025
-        in: query
-        name: end_date
-        type: string
-      - description: Filter by cancelled status (true/false)
-        in: query
-        name: cancelled
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.AppointmentList'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Get employee appointments
-      tags:
-      - Employee
   /employee/{id}/design/images:
     patch:
       consumes:
@@ -3349,217 +3577,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete employee image
-      tags:
-      - Employee
-  /employee/{id}/work_range/{work_range_id}:
-    delete:
-      description: Delete a work schedule for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Work Range ID
-        in: path
-        name: work_range_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Delete work schedule
-      tags:
-      - Employee
-    get:
-      description: Retrieve a work range for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Work Range ID
-        in: path
-        name: work_range_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeWorkRange'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Get work range by ID
-      tags:
-      - Employee
-    put:
-      consumes:
-      - application/json
-      description: Update a work range for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Work Range ID
-        in: path
-        name: work_range_id
-        required: true
-        type: string
-      - description: Work Range
-        in: body
-        name: work_range
-        required: true
-        schema:
-          $ref: '#/definitions/DTO.UpdateWorkRange'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Update work range
-      tags:
-      - Employee
-  /employee/{id}/work_schedule:
-    get:
-      description: Retrieve all work ranges for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Get all employee's work ranges
-      tags:
-      - Employee
-    post:
-      consumes:
-      - application/json
-      description: Create a work schedule for an employee
-      parameters:
-      - description: X-Auth-Token
-        in: header
-        name: X-Auth-Token
-        required: true
-        type: string
-      - description: X-Company-ID
-        in: header
-        name: X-Company-ID
-        required: true
-        type: string
-      - description: Work Schedule
-        in: body
-        name: work_schedule
-        required: true
-        schema:
-          $ref: '#/definitions/DTO.CreateEmployeeWorkSchedule'
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/DTO.EmployeeWorkSchedule'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/DTO.ErrorResponse'
-        "401":
-          description: Unauthorized
-      security:
-      - ApiKeyAuth: []
-      summary: Create work schedule
       tags:
       - Employee
   /employee/email/{email}:

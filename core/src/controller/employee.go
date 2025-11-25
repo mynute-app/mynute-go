@@ -202,7 +202,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Employee Email"
-//	@Query			language															query	string	false	"Language code (default: en)"
+//	@Query			language																			query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/send-login-code/email/{email} [post]
@@ -223,7 +223,7 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			email		path		string	true	"Employee Email"
-//	@Query			language	query										string	false	"Language code (default: en)"
+//	@Query			language	query													string	false	"Language code (default: en)"
 //	@Success		200			{object}	DTO.PasswordReseted
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
@@ -541,9 +541,9 @@ func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Param			work_range	body		DTO.UpdateWorkRange	true	"Work Range"
 //	@Success		200			{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400			{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_range/{work_range_id} [put]
+//	@Router			/employee/{employee_id}/work_range/{work_range_id} [put]
 func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 	work_range_id := c.Params("work_range_id")
 
 	var mapInput map[string]any
@@ -1004,14 +1004,15 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Param			employee_id				path		string	true	"Employee ID"
-//	@Param			page		query		int		false	"Page number"						default(1)
-//	@Param			page_size	query		int		false	"Number of items per page"			default(10)
-//	@Param			start_date	query		string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
-//	@Param			end_date	query		string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
-//	@Param			cancelled	query		string	false	"Filter by cancelled status (true/false)"
-//	@Success		200			{object}	DTO.AppointmentList
-//	@Failure		400			{object}	DTO.ErrorResponse
+//	@Param			employee_id		path		string	true	"Employee ID"
+//	@Param			page			query		int		false	"Page number"						default(1)
+//	@Param			page_size		query		int		false	"Number of items per page"			default(10)
+//	@Param			start_date		query		string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
+//	@Param			end_date		query		string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
+//	@Param			cancelled		query		string	false	"Filter by cancelled status (true/false)"
+//	@Param			timezone		query		string	true	"Timezone for date filtering"	example("America/New_York")
+//	@Success		200				{object}	DTO.AppointmentList
+//	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/appointments [get]
 func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	employee_id := c.Params("employee_id")

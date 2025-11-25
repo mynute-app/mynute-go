@@ -370,6 +370,14 @@ const docTemplate = `{
                         "description": "Filter by cancelled status (true/false)",
                         "name": "cancelled",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"America/New_York\"",
+                        "description": "Timezone for date filtering",
+                        "name": "timezone",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1648,14 +1656,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/client/{id}": {
+        "/client/{client_id}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve an client by its ID",
+                "description": "Get a client by ID",
                 "produces": [
                     "application/json"
                 ],
@@ -1667,14 +1675,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "X-Auth-Token",
-                        "name": "Authorization",
+                        "name": "X-Auth-Token",
                         "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
                         "required": true
                     }
@@ -1719,7 +1727,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
                         "required": true
                     }
@@ -1764,7 +1772,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
                         "required": true
                     },
@@ -1797,14 +1805,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/client/{id}/appointments": {
+        "/client/{client_id}/appointments": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get only the appointments field from a client",
+                "description": "Get the appointments of a client with pagination and optional filters",
                 "produces": [
                     "application/json"
                 ],
@@ -1823,8 +1831,45 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date in DD/MM/YYYY format",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date in DD/MM/YYYY format (max 90 days range)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by cancelled status: 'true' or 'false'",
+                        "name": "cancelled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timezone in IANA format (required)",
+                        "name": "timezone",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -1832,10 +1877,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dJSON.ClientAppointment"
-                            }
+                            "$ref": "#/definitions/DTO.AppointmentList"
                         }
                     },
                     "400": {
@@ -1847,7 +1889,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/client/{id}/design/images": {
+        "/client/{client_id}/design/images": {
             "patch": {
                 "security": [
                     {
@@ -1876,7 +1918,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
                         "required": true
                     },
@@ -1906,7 +1948,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/client/{id}/design/images/{image_type}": {
+        "/client/{client_id}/design/images/{image_type}": {
             "delete": {
                 "security": [
                     {
@@ -1932,7 +1974,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client ID",
-                        "name": "id",
+                        "name": "client_id",
                         "in": "path",
                         "required": true
                     },
@@ -2860,6 +2902,105 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/{employee_id}/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve appointments for a specific employee with pagination and filtering",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get employee appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "21/04/2025",
+                        "description": "Start date filter (DD/MM/YYYY)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "31/05/2025",
+                        "description": "End date filter (DD/MM/YYYY)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by cancelled status (true/false)",
+                        "name": "cancelled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"America/New_York\"",
+                        "description": "Timezone for date filtering",
+                        "name": "timezone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.AppointmentList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/employee/{employee_id}/branch/{branch_id}": {
             "post": {
                 "security": [
@@ -3115,6 +3256,206 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/{employee_id}/work_range/{work_range_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a work range for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get work range by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkRange"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a work range for an employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Update work range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Work Range",
+                        "name": "work_range",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.UpdateWorkRange"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a work schedule for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Delete work schedule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Work Range ID",
+                        "name": "work_range_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
         "/employee/{employee_id}/work_range/{work_range_id}/service/{service_id}": {
             "delete": {
                 "security": [
@@ -3244,6 +3585,127 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.EmployeeWorkRangeServices"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/employee/{employee_id}/work_schedule": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all work ranges for an employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get all employee's work ranges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/DTO.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a work schedule for an employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Create work schedule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "X-Auth-Token",
+                        "name": "X-Auth-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "X-Company-ID",
+                        "name": "X-Company-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Work Schedule",
+                        "name": "work_schedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/DTO.CreateEmployeeWorkSchedule"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3444,97 +3906,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/{id}/appointments": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve appointments for a specific employee with pagination and filtering",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get employee appointments",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of items per page",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "21/04/2025",
-                        "description": "Start date filter (DD/MM/YYYY)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "31/05/2025",
-                        "description": "End date filter (DD/MM/YYYY)",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by cancelled status (true/false)",
-                        "name": "cancelled",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.AppointmentList"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
         "/employee/{id}/design/images": {
             "patch": {
                 "security": [
@@ -3651,327 +4022,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dJSON.Images"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_range/{work_range_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve a work range for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get work range by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkRange"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update a work range for an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Update work range",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Work Range",
-                        "name": "work_range",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.UpdateWorkRange"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a work schedule for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Delete work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Work Range ID",
-                        "name": "work_range_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            }
-        },
-        "/employee/{id}/work_schedule": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieve all work ranges for an employee",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get all employee's work ranges",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a work schedule for an employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Create work schedule",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "X-Auth-Token",
-                        "name": "X-Auth-Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "X-Company-ID",
-                        "name": "X-Company-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Work Schedule",
-                        "name": "work_schedule",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DTO.CreateEmployeeWorkSchedule"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/DTO.EmployeeWorkSchedule"
                         }
                     },
                     "400": {
@@ -6302,31 +6352,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dJSON.FieldChange"
                     }
-                }
-            }
-        },
-        "dJSON.ClientAppointment": {
-            "type": "object",
-            "properties": {
-                "branch_address": {
-                    "type": "string",
-                    "example": "76, Example street, My city, My country, 09090790"
-                },
-                "company_id": {
-                    "type": "string",
-                    "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "company_name": {
-                    "type": "string",
-                    "example": "Company name example"
-                },
-                "service_name": {
-                    "type": "string",
-                    "example": "Service name example"
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2021-01-01T09:00:00Z"
                 }
             }
         },

@@ -155,7 +155,7 @@ func GetClientByEmail(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			client_id		path	string	true	"Client ID"
 //	@Produce		json
-//	@Success		200	{object}	dJSON.Client
+//	@Success		200	{object}	DTO.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/client/{client_id} [get]
 func GetClientById(c *fiber.Ctx) error {
@@ -366,9 +366,9 @@ func GetClientAppointmentsById(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			client_id	path		string		true	"Client ID"
-//	@Param			client	body		DTO.Client	true	"Client"
-//	@Success		200		{object}	DTO.Client
-//	@Failure		400		{object}	DTO.ErrorResponse
+//	@Param			client		body		DTO.Client	true	"Client"
+//	@Success		200			{object}	DTO.Client
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/client/{client_id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
 	var client model.Client
@@ -471,7 +471,7 @@ func DeleteClientImage(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
 //	@Param			email			path		string	true	"Client Email"
-//	@Query			language																		query		string	false	"Language code (default: en)"
+//	@Query			language																							query		string	false	"Language code (default: en)"
 //	@Produce		json
 //	@Success		200	{object}	DTO.PasswordReseted
 //	@Failure		400	{object}	DTO.ErrorResponse

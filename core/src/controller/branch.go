@@ -786,6 +786,7 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 //	@Param			start_date		query	string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
 //	@Param			end_date		query	string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
 //	@Param			cancelled		query	string	false	"Filter by cancelled status (true/false)"
+//	@Param			timezone		query	string	true	"Timezone for date filtering"	example("America/New_York")
 //	@Produce		json
 //	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse

@@ -34,20 +34,20 @@ func (PolicyRule) Indexes() map[string]string {
 
 // --- ConditionNode (Represents a logical grouping OR a leaf check) ---
 type ConditionNode struct {
-	// Description explains the purpose of this node 
+	// Description explains the purpose of this node
 	// (e.g., "Client Access Check", "Company Membership Check")
 	Description string `json:"description,omitempty"`
 	// --- Fields for Branch Nodes (Logical Operators: AND, OR, NOT) ---
-	// LogicType specifies how to evaluate Children ("AND", "OR"). 
+	// LogicType specifies how to evaluate Children ("AND", "OR").
 	// Required for branch nodes.
-	LogicType string `json:"logic_type,omitempty"` 
-	// Children contains nested nodes to be evaluated. 
+	LogicType string `json:"logic_type,omitempty"`
+	// Children contains nested nodes to be evaluated.
 	// Required for branch nodes.
 	Children []ConditionNode `json:"children,omitempty"`
 	// --- Field for Leaf Nodes (Actual Condition Check) ---
-	// Leaf points to the actual condition details. 
+	// Leaf points to the actual condition details.
 	// Required for leaf nodes.
-	Leaf *ConditionLeaf `json:"leaf,omitempty"` 
+	Leaf *ConditionLeaf `json:"leaf,omitempty"`
 }
 
 // --- ConditionLeaf (Represents a single atomic check) ---
@@ -56,21 +56,21 @@ type ConditionLeaf struct {
 	// e.g., "subject.role_id","resource.employee_id",
 	// "path.employee_id","body.employee_id",
 	// "query.employee_id","header.employee_id"
-	Attribute string `json:"attribute"` 
+	Attribute string `json:"attribute"`
 	// Operator defines the comparison operation
-	// e.g., "Equals" - "==", "NotEquals" - "!=", 
+	// e.g., "Equals" - "==", "NotEquals" - "!=",
 	// "IsNull" - "== null", "IsNotNull" - "!= null"
-	Operator    string `json:"operator"`
-	// Description is a human-readable explanation of 
+	Operator string `json:"operator"`
+	// Description is a human-readable explanation of
 	// the check being performed.
 	// e.g., "Subject must be a Client"
-	Description string `json:"description,omitempty"` 
+	Description string `json:"description,omitempty"`
 	// --- Use EITHER Value OR ResourceAttribute ---
 	// Value is a static JSON value to compare against.
-	Value             json.RawMessage `json:"value,omitempty"`
+	Value json.RawMessage `json:"value,omitempty"`
 	// ResourceAttribute is the name of a dynamic attribute
 	// that can be used for comparison.
-	ResourceAttribute string          `json:"resource_attribute,omitempty"`
+	ResourceAttribute string `json:"resource_attribute,omitempty"`
 }
 
 // GetConditionsNode parses and validates the stored JSON conditions
@@ -1020,6 +1020,14 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		Conditions:  JsonRawMessage(client_self_access_check), // Client can delete self images (checks subject.id == resource.id)
 	}
 
+	var AllowGetClientAppointmentsById = &PolicyRule{
+		Name:        "SDP: CanGetClientAppointmentsById",
+		Description: "Allows a client to view their own appointments.",
+		Effect:      "Allow",
+		EndPointID:  GetClientAppointmentsById.ID,
+		Conditions:  JsonRawMessage(client_self_access_check), // Client can view self appointments (checks subject.id == resource.id)
+	}
+
 	// --- Company Policies ---
 
 	var AllowGetCompanyById = &PolicyRule{
@@ -1375,6 +1383,7 @@ func init_policy_array() []*PolicyRule { // --- Reusable Condition Checks --- //
 		AllowGetClientById,
 		AllowUpdateClientImages,
 		AllowDeleteClientImage,
+		AllowGetClientAppointmentsById,
 
 		// Company
 		AllowGetCompanyById,

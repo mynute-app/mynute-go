@@ -489,3 +489,46 @@ func (c *Client) DeleteImages(status int, image_types []string, x_auth_token *st
 	}
 	return nil
 }
+
+// GetAppointments retrieves the appointments for this client with pagination and filters
+func (c *Client) GetAppointments(status int, page int, pageSize int, startDate string, endDate string, cancelled string, timezone string, x_auth_token *string, x_company_id *string) (*DTO.AppointmentList, error) {
+	t, err := Get_x_auth_token(x_auth_token, &c.X_Auth_Token)
+	if err != nil {
+		return nil, err
+	}
+
+	var appointmentList DTO.AppointmentList
+	urlStr := fmt.Sprintf("/client/%s/appointments?page=%d&page_size=%d", c.Created.ID.String(), page, pageSize)
+
+	if timezone != "" {
+		urlStr += fmt.Sprintf("&timezone=%s", url.QueryEscape(timezone))
+	}
+	if startDate != "" {
+		urlStr += fmt.Sprintf("&start_date=%s", startDate)
+	}
+	if endDate != "" {
+		urlStr += fmt.Sprintf("&end_date=%s", endDate)
+	}
+	if cancelled != "" {
+		urlStr += fmt.Sprintf("&cancelled=%s", cancelled)
+	}
+
+	req := handler.NewHttpClient().
+		Method("GET").
+		URL(urlStr).
+		ExpectedStatus(status).
+		Header(namespace.HeadersKey.Auth, t)
+
+	// Add X-Company-ID header if provided
+	if x_company_id != nil && *x_company_id != "" {
+		req.Header(namespace.HeadersKey.Company, *x_company_id)
+	}
+
+	if err := req.Send(nil).
+		ParseResponse(&appointmentList).
+		Error; err != nil {
+		return nil, fmt.Errorf("failed to get client appointments: %w", err)
+	}
+
+	return &appointmentList, nil
+}

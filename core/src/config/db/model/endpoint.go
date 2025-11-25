@@ -355,6 +355,15 @@ var DeleteClientImage = &EndPoint{
 	DenyUnauthorized: true,
 	Resource:         ClientResource,
 }
+var GetClientAppointmentsById = &EndPoint{
+	Path:             "/client/:client_id/appointments",
+	Method:           namespace.ViewActionMethod,
+	ControllerName:   "GetClientAppointmentsById",
+	Description:      "Get appointments for a client with pagination and filters",
+	DenyUnauthorized: true,
+	NeedsCompanyId:   true,
+	Resource:         ClientResource,
+}
 
 // --- Company Endpoints --- //
 
@@ -544,7 +553,7 @@ var DeleteEmployeeImage = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var CreateEmployeeWorkSchedule = &EndPoint{
-	Path:             "/employee/:id/work_schedule",
+	Path:             "/employee/:employee_id/work_schedule",
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "CreateEmployeeWorkSchedule",
 	Description:      "Add work schedule to employee",
@@ -553,7 +562,7 @@ var CreateEmployeeWorkSchedule = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var DeleteEmployeeWorkRange = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id",
+	Path:             "/employee/:employee_id/work_range/:work_range_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteEmployeeWorkRange",
 	Description:      "Remove work schedule from employee",
@@ -562,7 +571,7 @@ var DeleteEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var UpdateEmployeeWorkRange = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id",
+	Path:             "/employee/:employee_id/work_range/:work_range_id",
 	Method:           namespace.PutActionMethod,
 	ControllerName:   "UpdateEmployeeWorkRange",
 	Description:      "Update work schedule for employee",
@@ -571,7 +580,7 @@ var UpdateEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var GetEmployeeWorkSchedule = &EndPoint{
-	Path:           "/employee/:id/work_schedule",
+	Path:           "/employee/:employee_id/work_schedule",
 	Method:         namespace.ViewActionMethod,
 	ControllerName: "GetEmployeeWorkSchedule",
 	Description:    "View work schedule for employee",
@@ -579,7 +588,7 @@ var GetEmployeeWorkSchedule = &EndPoint{
 	Resource:       EmployeeResource,
 }
 var GetEmployeeWorkRange = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id",
+	Path:             "/employee/:employee_id/work_range/:work_range_id",
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetEmployeeWorkRangeById",
 	Description:      "View work range for employee",
@@ -588,7 +597,7 @@ var GetEmployeeWorkRange = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var AddEmployeeWorkRangeServices = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id/services",
+	Path:             "/employee/:employee_id/work_range/:work_range_id/services",
 	Method:           namespace.CreateActionMethod,
 	ControllerName:   "AddEmployeeWorkRangeServices",
 	Description:      "Add services to work range for a employee",
@@ -597,7 +606,7 @@ var AddEmployeeWorkRangeServices = &EndPoint{
 	Resource:         EmployeeResource,
 }
 var DeleteEmployeeWorkRangeService = &EndPoint{
-	Path:             "/employee/:id/work_range/:work_range_id/service/:service_id",
+	Path:             "/employee/:employee_id/work_range/:work_range_id/service/:service_id",
 	Method:           namespace.DeleteActionMethod,
 	ControllerName:   "DeleteEmployeeWorkRangeService",
 	Description:      "Remove service from work range for a employee",
@@ -669,7 +678,7 @@ var RemoveRoleFromEmployee = &EndPoint{
 	Resource:         RoleResource,
 }
 var GetEmployeeAppointmentsById = &EndPoint{
-	Path:             "/employee/:id/appointments",
+	Path:             "/employee/:employee_id/appointments",
 	Method:           namespace.ViewActionMethod,
 	ControllerName:   "GetEmployeeAppointmentsById",
 	Description:      "View appointments for an employee",
@@ -878,6 +887,7 @@ var endpoints = []*EndPoint{
 	DeleteClientById,
 	UpdateClientImages,
 	DeleteClientImage,
+	GetClientAppointmentsById,
 	// Company
 	CreateCompany,
 	GetCompanyById,
