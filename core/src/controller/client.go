@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	dJSON "mynute-go/core/src/config/api/dto/json"
@@ -10,8 +11,10 @@ import (
 	"mynute-go/core/src/lib"
 	"mynute-go/core/src/middleware"
 	"net/url"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -322,7 +325,7 @@ func GetClientAppointmentsById(c *fiber.Ctx) error {
 	// Since this is client appointments, we don't need to fetch client info (it's the same client)
 	// But we'll keep the structure consistent with the other endpoints
 	var clientInfo []DTO.ClientBasicInfo
-	
+
 	// Get the client's basic info
 	var client model.Client
 	if err := tx.Select("id", "name", "surname", "email", "phone").
