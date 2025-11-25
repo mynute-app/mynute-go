@@ -781,10 +781,10 @@ func RemoveServiceFromBranch(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			branch_id		path	string	true	"Branch ID"
-//	@Param			page			query	int		false	"Page number"							default(1)
-//	@Param			page_size		query	int		false	"Page size"								default(10)
-//	@Param			start_date		query	string	false	"Start date filter (DD/MM/YYYY)"		example(21/04/2025)
-//	@Param			end_date		query	string	false	"End date filter (DD/MM/YYYY)"			example(31/05/2025)
+//	@Param			page			query	int		false	"Page number"						default(1)
+//	@Param			page_size		query	int		false	"Page size"							default(10)
+//	@Param			start_date		query	string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
+//	@Param			end_date		query	string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
 //	@Param			cancelled		query	string	false	"Filter by cancelled status (true/false)"
 //	@Produce		json
 //	@Success		200	{object}	DTO.AppointmentList

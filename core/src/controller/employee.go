@@ -202,7 +202,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Employee Email"
-//	@Query			language											query	string	false	"Language code (default: en)"
+//	@Query			language															query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/send-login-code/email/{email} [post]
@@ -223,7 +223,7 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			email		path		string	true	"Employee Email"
-//	@Query			language	query							string	false	"Language code (default: en)"
+//	@Query			language	query										string	false	"Language code (default: en)"
 //	@Success		200			{object}	DTO.PasswordReseted
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
@@ -1005,13 +1005,13 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			id				path		string	true	"Employee ID"
 //	@Produce		json
-//	@Param			page			query		int		false	"Page number"							default(1)
-//	@Param			page_size		query		int		false	"Number of items per page"				default(10)
-//	@Param			start_date		query		string	false	"Start date filter (DD/MM/YYYY)"		example(21/04/2025)
-//	@Param			end_date		query		string	false	"End date filter (DD/MM/YYYY)"			example(31/05/2025)
-//	@Param			cancelled		query		string	false	"Filter by cancelled status (true/false)"
-//	@Success		200				{object}	DTO.AppointmentList
-//	@Failure		400				{object}	DTO.ErrorResponse
+//	@Param			page		query		int		false	"Page number"						default(1)
+//	@Param			page_size	query		int		false	"Number of items per page"			default(10)
+//	@Param			start_date	query		string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
+//	@Param			end_date	query		string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
+//	@Param			cancelled	query		string	false	"Filter by cancelled status (true/false)"
+//	@Success		200			{object}	DTO.AppointmentList
+//	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{id}/appointments [get]
 func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	employee_id := c.Params("id")

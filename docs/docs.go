@@ -307,7 +307,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve all appointments for a branch with pagination",
+                "description": "Retrieve all appointments for a branch with pagination and filtering",
                 "produces": [
                     "application/json"
                 ],
@@ -349,6 +349,26 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Page size",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "21/04/2025",
+                        "description": "Start date filter (DD/MM/YYYY)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "31/05/2025",
+                        "description": "End date filter (DD/MM/YYYY)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by cancelled status (true/false)",
+                        "name": "cancelled",
                         "in": "query"
                     }
                 ],
@@ -3431,7 +3451,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve appointments for a specific employee with pagination",
+                "description": "Retrieve appointments for a specific employee with pagination and filtering",
                 "produces": [
                     "application/json"
                 ],
@@ -3473,6 +3493,26 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Number of items per page",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "21/04/2025",
+                        "description": "Start date filter (DD/MM/YYYY)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "31/05/2025",
+                        "description": "End date filter (DD/MM/YYYY)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by cancelled status (true/false)",
+                        "name": "cancelled",
                         "in": "query"
                     }
                 ],
@@ -5006,6 +5046,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/DTO.Appointment"
                     }
                 },
+                "client_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ClientBasicInfo"
+                    }
+                },
                 "page": {
                     "type": "integer",
                     "example": 1
@@ -5072,7 +5118,7 @@ const docTemplate = `{
                     "example": "USA"
                 },
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "id": {
                     "type": "string",
@@ -5134,7 +5180,7 @@ const docTemplate = `{
                     "example": "USA"
                 },
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "employees": {
                     "type": "array",
@@ -5292,12 +5338,37 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.ClientBasicInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+15555555555"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
         "DTO.CompanyBase": {
             "description": "Company Base DTO",
             "type": "object",
             "properties": {
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "id": {
                     "description": "Primary key",
@@ -5341,7 +5412,7 @@ const docTemplate = `{
                     }
                 },
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "employees": {
                     "type": "array",
@@ -5729,12 +5800,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
                 "id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "meta": {
+                    "$ref": "#/definitions/dJSON.UserMeta"
                 },
                 "name": {
                     "type": "string",
@@ -5768,9 +5839,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
-                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -5778,6 +5846,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "meta": {
+                    "$ref": "#/definitions/dJSON.UserMeta"
                 },
                 "name": {
                     "type": "string",
@@ -6047,7 +6118,7 @@ const docTemplate = `{
                     "example": "A 60-minute in-depth business consultation"
                 },
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "duration": {
                     "type": "integer",
@@ -6112,7 +6183,7 @@ const docTemplate = `{
                     "example": "A 60-minute in-depth business consultation"
                 },
                 "design": {
-                    "$ref": "#/definitions/mJSON.DesignConfig"
+                    "$ref": "#/definitions/dJSON.Design"
                 },
                 "duration": {
                     "type": "integer",
@@ -6422,6 +6493,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dJSON.UserMeta": {
+            "type": "object",
+            "properties": {
+                "design": {
+                    "$ref": "#/definitions/dJSON.Design"
+                }
+            }
+        },
         "mJSON.Colors": {
             "type": "object",
             "properties": {
@@ -6436,54 +6515,6 @@ const docTemplate = `{
                 },
                 "tertiary": {
                     "type": "string"
-                }
-            }
-        },
-        "mJSON.DesignConfig": {
-            "type": "object",
-            "properties": {
-                "colors": {
-                    "$ref": "#/definitions/mJSON.Colors"
-                },
-                "images": {
-                    "$ref": "#/definitions/mJSON.Images"
-                }
-            }
-        },
-        "mJSON.Image": {
-            "type": "object",
-            "properties": {
-                "alt": {
-                    "type": "string"
-                },
-                "caption": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "mJSON.Images": {
-            "type": "object",
-            "properties": {
-                "background": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "banner": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "favicon": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "logo": {
-                    "$ref": "#/definitions/mJSON.Image"
-                },
-                "profile": {
-                    "$ref": "#/definitions/mJSON.Image"
                 }
             }
         }
