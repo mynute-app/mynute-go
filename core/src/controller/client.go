@@ -143,20 +143,20 @@ func GetClientByEmail(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetClientById retrieves an client by ID
+// GetClientById returns a client by ID
 //
 //	@Summary		Get client by ID
-//	@Description	Retrieve an client by its ID
+//	@Description	Get a client by ID
 //	@Tags			Client
 //	@Security		ApiKeyAuth
-//	@Param			Authorization	header	string	true	"X-Auth-Token"
-//	@Param			id				path	string	true	"Client ID"
+//	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
+//	@Param			client_id		path	string	true	"Client ID"
 //	@Produce		json
-//	@Success		200	{object}	DTO.Client
+//	@Success		200	{object}	dJSON.Client
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/client/{id} [get]
+//	@Router			/client/{client_id} [get]
 func GetClientById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id := c.Params("client_id")
 	if id == "" {
 		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing 'id' at params route"))
 	}
@@ -179,23 +179,35 @@ func GetClientById(c *fiber.Ctx) error {
 	return nil
 }
 
-// GetClientAppointments returns only the appointments of a client
+// GetClientAppointmentsById returns the appointments of a client with pagination and filters
 //
 //	@Summary		Get client appointments
-//	@Description	Get only the appointments field from a client
+//	@Description	Get the appointments of a client with pagination and optional filters
 //	@Tags			Client
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header	string	true	"X-Auth-Token"
-//	@Param			id				path	string	true	"Client ID"
+//	@Param			client_id		path	string	true	"Client ID"
+//	@Param			page			query	int		false	"Page number (default: 1)"
+//	@Param			page_size		query	int		false	"Page size (default: 10)"
+//	@Param			start_date		query	string	false	"Start date in DD/MM/YYYY format"
+//	@Param			end_date		query	string	false	"End date in DD/MM/YYYY format (max 90 days range)"
+//	@Param			cancelled		query	string	false	"Filter by cancelled status: 'true' or 'false'"
+//	@Param			timezone		query	string	true	"Timezone in IANA format (required)"
 //	@Produce		json
-//	@Success		200	{object}	dJSON.ClientAppointments
+//	@Success		200	{object}	DTO.AppointmentList
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/client/{id}/appointments [get]
-func GetClientAppointments(c *fiber.Ctx) error {
-	var err error
-	id := c.Params("id")
-	if id == "" {
-		return lib.Error.General.BadRequest.WithError(fmt.Errorf("missing ID on params route"))
+//	@Router			/client/{client_id}/appointments [get]
+func GetClientAppointmentsById(c *fiber.Ctx) error {
+	client_id := c.Params("client_id")
+
+	// Validate client_id is not empty and is a valid UUID
+	if client_id == "" {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("client_id parameter is required"))
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(client_id); err != nil {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("invalid client_id format"))
 	}
 
 	tx, err := lib.Session(c)
@@ -203,19 +215,141 @@ func GetClientAppointments(c *fiber.Ctx) error {
 		return err
 	}
 
-	var Appointments []model.ClientAppointment
-	if err := tx.Model(&model.ClientAppointment{}).
-		Where("client_id = ?", id).
-		Find(&Appointments).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return lib.Error.Client.NotFound
+	// Verify client exists
+	var count int64
+	if err := tx.Model(&model.Client{}).Where("id = ?", client_id).Count(&count).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	if count == 0 {
+		return lib.Error.General.ResourceNotFoundError.WithError(fmt.Errorf("client not found"))
+	}
+
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	pageSize := c.QueryInt("page_size", 10)
+	offset := (page - 1) * pageSize
+
+	// Parse required timezone parameter
+	timezone := c.Query("timezone")
+	if timezone == "" {
+		return lib.Error.General.BadRequest.WithError(fmt.Errorf("timezone parameter is required"))
+	}
+
+	// Build query with client filter
+	query := tx.Model(&model.Appointment{}).Where("client_id = ?", client_id)
+
+	// Parse and validate date range filters
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	if startDateStr != "" || endDateStr != "" {
+		var startDate, endDate time.Time
+
+		if startDateStr != "" {
+			startDate, err = time.Parse("02/01/2006", startDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid start_date format, expected DD/MM/YYYY"))
+			}
 		}
+
+		if endDateStr != "" {
+			endDate, err = time.Parse("02/01/2006", endDateStr)
+			if err != nil {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid end_date format, expected DD/MM/YYYY"))
+			}
+			// Set end date to end of day
+			endDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		}
+
+		// Validate date range
+		if startDateStr != "" && endDateStr != "" {
+			if endDate.Before(startDate) {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("end_date must be after start_date"))
+			}
+
+			daysDiff := endDate.Sub(startDate).Hours() / 24
+			if daysDiff > 90 {
+				return lib.Error.General.BadRequest.WithError(fmt.Errorf("date range cannot exceed 90 days"))
+			}
+		}
+
+		// Apply date filters
+		if startDateStr != "" {
+			query = query.Where("start_time >= ?", startDate)
+		}
+		if endDateStr != "" {
+			query = query.Where("start_time <= ?", endDate)
+		}
+	}
+
+	// Parse cancelled filter
+	cancelledStr := c.Query("cancelled")
+	if cancelledStr != "" {
+		if cancelledStr == "true" {
+			query = query.Where("is_cancelled = ?", true)
+		} else if cancelledStr == "false" {
+			query = query.Where("is_cancelled = ?", false)
+		} else {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("cancelled parameter must be 'true' or 'false'"))
+		}
+	}
+
+	// Get total count for pagination
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	return lib.ResponseFactory(c).Send(200, fiber.Map{
-		"appointments": Appointments,
-	})
+	// Get appointments with pagination
+	var appointments []model.Appointment
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Find(&appointments).Error; err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Convert to DTO
+	bytes, err := json.Marshal(appointments)
+	if err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+	var appointmentsDTO []DTO.Appointment
+	if err := json.Unmarshal(bytes, &appointmentsDTO); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	// Since this is client appointments, we don't need to fetch client info (it's the same client)
+	// But we'll keep the structure consistent with the other endpoints
+	var clientInfo []DTO.ClientBasicInfo
+	
+	// Get the client's basic info
+	var client model.Client
+	if err := tx.Select("id", "name", "surname", "email", "phone").
+		Where("id = ?", client_id).
+		First(&client).Error; err == nil {
+		clientInfo = append(clientInfo, DTO.ClientBasicInfo{
+			ID:      client.ID,
+			Name:    client.Name,
+			Surname: client.Surname,
+			Email:   client.Email,
+			Phone:   client.Phone,
+		})
+	}
+
+	AppointmentList := DTO.AppointmentList{
+		Appointments: appointmentsDTO,
+		ClientInfo:   clientInfo,
+		Page:         page,
+		PageSize:     pageSize,
+		TotalCount:   int(totalCount),
+	}
+
+	if err := lib.ResponseFactory(c).Send(200, &AppointmentList); err != nil {
+		return lib.Error.General.InternalError.WithError(err)
+	}
+
+	return nil
 }
 
 // UpdateClientById updates an client by ID
@@ -228,11 +362,11 @@ func GetClientAppointments(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string		true	"Client ID"
+//	@Param			client_id	path		string		true	"Client ID"
 //	@Param			client	body		DTO.Client	true	"Client"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/client/{id} [patch]
+//	@Router			/client/{client_id} [patch]
 func UpdateClientById(c *fiber.Ctx) error {
 	var client model.Client
 
@@ -264,11 +398,11 @@ func UpdateClientById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Client ID"
+//	@Param			client_id		path		string	true	"Client ID"
 //	@Produce		json
 //	@Success		200	{object}	nil
 //	@Failure		404	{object}	nil
-//	@Router			/client/{id} [delete]
+//	@Router			/client/{client_id} [delete]
 func DeleteClientById(c *fiber.Ctx) error {
 	return DeleteOneById(c, &model.Client{})
 }
@@ -281,13 +415,13 @@ func DeleteClientById(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Client ID"
+//	@Param			client_id		path		string	true	"Client ID"
 //	@Accept			json
 //	@Produce		json
 //	@Param			profile	formData	file	false	"Profile image"
 //	@Success		200		{object}	DTO.Client
 //	@Failure		400		{object}	DTO.ErrorResponse
-//	@Router			/client/{id}/design/images [patch]
+//	@Router			/client/{client_id}/design/images [patch]
 func UpdateClientImages(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
 
@@ -308,12 +442,12 @@ func UpdateClientImages(c *fiber.Ctx) error {
 //	@Security		ApiKeyAuth
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil
-//	@Param			id				path		string	true	"Client ID"
+//	@Param			client_id		path		string	true	"Client ID"
 //	@Param			image_type		path		string	true	"Image Type"
 //	@Produce		json
 //	@Success		200	{object}	dJSON.Images
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/client/{id}/design/images/{image_type} [delete]
+//	@Router			/client/{client_id}/design/images/{image_type} [delete]
 func DeleteClientImage(c *fiber.Ctx) error {
 	img_types_allowed := map[string]bool{"profile": true}
 	var client model.Client
@@ -389,7 +523,7 @@ func Client(Gorm *handler.Gorm) {
 		ResetClientPasswordByEmail,
 		GetClientByEmail,
 		GetClientById,
-		GetClientAppointments,
+		GetClientAppointmentsById,
 		UpdateClientById,
 		DeleteClientById,
 		UpdateClientImages,

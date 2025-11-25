@@ -303,10 +303,10 @@ func DeleteEmployeeImage(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Accept			json
 //	@Param			work_schedule	body		DTO.CreateEmployeeWorkSchedule	true	"Work Schedule"
-//	@Param			id				path		string							true	"Employee ID"
+//	@Param			employee_id		path		string							true	"Employee ID"
 //	@Success		200				{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400				{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_schedule [post]
+//	@Router			/employee/{employee_id}/work_schedule [post]
 func CreateEmployeeWorkSchedule(c *fiber.Ctx) error {
 	var input DTO.CreateEmployeeWorkSchedule
 	if err := c.BodyParser(&input); err != nil {
@@ -315,7 +315,7 @@ func CreateEmployeeWorkSchedule(c *fiber.Ctx) error {
 
 	var EmployeeWorkSchedule model.EmployeeWorkSchedule
 
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 
 	for i, ewr := range input.WorkRanges {
 		if ewr.EmployeeID.String() != employee_id {
@@ -388,13 +388,13 @@ func CreateEmployeeWorkSchedule(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Failure		401				{object}	nil		"Unauthorized"
-//	@Param			id				path		string	true	"Employee ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_schedule [get]
+//	@Router			/employee/{employee_id}/work_schedule [get]
 func GetEmployeeWorkSchedule(c *fiber.Ctx) error {
-	employeeID := c.Params("id")
+	employeeID := c.Params("employee_id")
 
 	tx, err := lib.Session(c)
 	if err != nil {
@@ -428,14 +428,14 @@ func GetEmployeeWorkSchedule(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Failure		401				{object}	nil		"Unauthorized"
-//	@Param			id				path		string	true	"Employee ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.EmployeeWorkRange
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_range/{work_range_id} [get]
+//	@Router			/employee/{employee_id}/work_range/{work_range_id} [get]
 func GetEmployeeWorkRangeById(c *fiber.Ctx) error {
-	employeeID := c.Params("id")
+	employeeID := c.Params("employee_id")
 	workRangeID := c.Params("work_range_id")
 
 	tx, err := lib.Session(c)
@@ -471,15 +471,15 @@ func GetEmployeeWorkRangeById(c *fiber.Ctx) error {
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Param			id				path		string	true	"Employee ID"
+//	@Param			employee_id		path		string	true	"Employee ID"
 //	@Param			work_range_id	path		string	true	"Work Range ID"
 //	@Produce		json
 //	@Success		200	{object}	DTO.EmployeeWorkSchedule
 //	@Failure		400	{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/work_range/{work_range_id} [delete]
+//	@Router			/employee/{employee_id}/work_range/{work_range_id} [delete]
 func DeleteEmployeeWorkRange(c *fiber.Ctx) error {
 	var err error
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 	work_range_id := c.Params("work_range_id")
 
 	tx, err := lib.Session(c)
@@ -635,7 +635,7 @@ func UpdateEmployeeWorkRange(c *fiber.Ctx) error {
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/services [post]
 func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 	workRangeID := c.Params("work_range_id")
 
 	var body DTO.EmployeeWorkRangeServices
@@ -705,7 +705,7 @@ func AddEmployeeWorkRangeServices(c *fiber.Ctx) error {
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/{employee_id}/work_range/{work_range_id}/service/{service_id} [delete]
 func DeleteEmployeeWorkRangeService(c *fiber.Ctx) error {
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 	workRangeID := c.Params("work_range_id")
 	serviceID := c.Params("service_id")
 
@@ -1000,11 +1000,11 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Description	Retrieve appointments for a specific employee with pagination and filtering
 //	@Tags			Employee
 //	@Security		ApiKeyAuth
+//	@Produce		json
+//	@Failure		401				{object}	nil		"Unauthorized"
 //	@Param			X-Auth-Token	header		string	true	"X-Auth-Token"
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
-//	@Failure		401				{object}	nil		"Unauthorized"
-//	@Param			id				path		string	true	"Employee ID"
-//	@Produce		json
+//	@Param			employee_id				path		string	true	"Employee ID"
 //	@Param			page		query		int		false	"Page number"						default(1)
 //	@Param			page_size	query		int		false	"Number of items per page"			default(10)
 //	@Param			start_date	query		string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
@@ -1012,9 +1012,9 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Param			cancelled	query		string	false	"Filter by cancelled status (true/false)"
 //	@Success		200			{object}	DTO.AppointmentList
 //	@Failure		400			{object}	DTO.ErrorResponse
-//	@Router			/employee/{id}/appointments [get]
+//	@Router			/employee/{employee_id}/appointments [get]
 func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
-	employee_id := c.Params("id")
+	employee_id := c.Params("employee_id")
 
 	// Validate employee_id is not empty and is a valid UUID
 	if employee_id == "" {
