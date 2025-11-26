@@ -219,6 +219,7 @@ func DeleteServiceImage(c *fiber.Ctx) error {
 //	@Param			timezone			query	string	false	"Client Time Zone (IANA format, e.g., America/New_York)"
 //	@Param			date_forward_start	query	number	true	"The start date for the forward search in number format"
 //	@Param			date_forward_end	query	number	true	"The end date for the forward search in number format"
+//	@Param			client_id			query	string	false	"Client ID to filter out slots where the client already has appointments"
 //	@Produce		json
 //	@Success		200	{object}	DTO.ServiceAvailability
 //	@Failure		400	{object}	DTO.ErrorResponse
@@ -579,14 +580,19 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 
 	availableDateMap := map[string]map[uuid.UUID]*DTO.AvailableDate{}
 
-	client_public_id := c.Query("client_public_id")
+	clientID := c.Query("client_id")
 	var clientAppointments []model.ClientAppointment
-	if client_public_id != "" {
+	if clientID != "" {
+		// Validate client_id is a valid UUID
+		if _, err := uuid.Parse(clientID); err != nil {
+			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid client_id format: must be a valid UUID"))
+		}
+
 		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
 			return err
 		}
 		if err := tx.Model(&model.ClientAppointment{}).
-			Where("client_id = ? AND is_cancelled = ?", client_public_id, false).
+			Where("client_id = ? AND is_cancelled = ?", clientID, false).
 			Where("start_time >= ? AND start_time < ?", startDate, endDate).
 			Find(&clientAppointments).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
@@ -615,28 +621,25 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		slotLoop:
 			for timeStr, empIDs := range slots {
 				// Filter out times where the client already has an appointment
-				if client_public_id != "" {
-					// Create a time object for the current slot
+				if clientID != "" {
+					// Create a time object for the current slot in the client's timezone
 					slotTime_RFC3339 := fmt.Sprintf("%sT%s:00", date, timeStr)
 					slotTime, err := time.Parse("2006-01-02T15:04:05", slotTime_RFC3339)
 					if err != nil {
 						return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to parse slot time: %w", err))
 					}
+					// Localize the slot time to the requested timezone
+					slotTime = time.Date(slotTime.Year(), slotTime.Month(), slotTime.Day(), slotTime.Hour(), slotTime.Minute(), slotTime.Second(), slotTime.Nanosecond(), loc)
+					slotEndTime := slotTime.Add(time.Minute * time.Duration(serviceDuration))
 
 					for _, appt := range clientAppointments {
-						// Same start time means conflict
-						if appt.StartTime.Equal(slotTime) {
-							continue slotLoop
-						}
-						// If slotTime is between appt.StartTime and appt.EndTime then there is a conflict
-						if appt.StartTime.Before(slotTime) && appt.EndTime.After(slotTime) {
-							continue slotLoop
-						}
-						// If appt.StartTime is After slotTime
-						// AND
-						// appt.StartTime is Before slotTime + service duration then there is a conflict
-						slotTime_end := slotTime.Add(time.Minute * time.Duration(serviceDuration))
-						if appt.StartTime.After(slotTime) && appt.StartTime.Before(slotTime_end) {
+						// Convert appointment times to the client's requested timezone for comparison
+						apptStart := appt.StartTime.In(loc)
+						apptEnd := appt.EndTime.In(loc)
+
+						// Check for any overlap between [slotTime, slotEndTime) and [apptStart, apptEnd)
+						// Overlap occurs if: slotTime < apptEnd AND slotEndTime > apptStart
+						if slotTime.Before(apptEnd) && slotEndTime.After(apptStart) {
 							continue slotLoop
 						}
 					}
