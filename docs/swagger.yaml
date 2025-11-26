@@ -4250,6 +4250,10 @@ paths:
         name: date_forward_end
         required: true
         type: number
+      - description: Client ID to filter out slots where the client already has appointments
+        in: query
+        name: client_id
+        type: string
       produces:
       - application/json
       responses:

@@ -4854,6 +4854,12 @@ const docTemplate = `{
                         "name": "date_forward_end",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID to filter out slots where the client already has appointments",
+                        "name": "client_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
