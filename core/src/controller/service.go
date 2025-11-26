@@ -624,14 +624,12 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 			for timeStr, empIDs := range slots {
 				// Filter out times where the client already has an appointment
 				if clientID != "" {
-					// Create a time object for the current slot in the client's timezone
+					// Parse the date and time strings directly into the requested timezone
 					slotTime_RFC3339 := fmt.Sprintf("%sT%s:00", date, timeStr)
-					slotTime, err := time.Parse("2006-01-02T15:04:05", slotTime_RFC3339)
+					slotTime, err := time.ParseInLocation("2006-01-02T15:04:05", slotTime_RFC3339, loc)
 					if err != nil {
 						return lib.Error.General.InternalError.WithError(fmt.Errorf("failed to parse slot time: %w", err))
 					}
-					// Localize the slot time to the requested timezone
-					slotTime = time.Date(slotTime.Year(), slotTime.Month(), slotTime.Day(), slotTime.Hour(), slotTime.Minute(), slotTime.Second(), slotTime.Nanosecond(), loc)
 					slotEndTime := slotTime.Add(time.Minute * time.Duration(serviceDuration))
 
 					for _, appt := range clientAppointments {

@@ -435,6 +435,395 @@ func Test_ServiceAvailability_ClientFilter(t *testing.T) {
 
 		t.Logf("✓ Appointment at %s correctly filtered for client2", slotTime)
 	})
+
+	// Test 7: Client appointment filtering with date_forward_start = 0 (TODAY)
+	t.Run("Test 7: Client appointment filtering with date_forward_start = 0 (TODAY)", func(t *testing.T) {
+		// Create a new client for this test
+		clientToday := &model.Client{}
+		tt.Describe("Create client for today test").Test(clientToday.Set())
+
+		// Get availability for today only (date_forward_start=0, date_forward_end=1)
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=0&date_forward_end=1&timezone=%s", TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		if http.Error != nil {
+			t.Fatalf("Failed to get service availability: %v", http.Error)
+		}
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No available dates for today")
+		}
+
+		todayStr := now.Format("2006-01-02")
+		var todayAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == todayStr {
+				todayAvailability = &ad
+				break
+			}
+		}
+
+		if todayAvailability == nil || len(todayAvailability.AvailableTimes) == 0 {
+			t.Skip("No available slots for today")
+		}
+
+		// Book an appointment for today at the first available slot
+		firstSlot := todayAvailability.AvailableTimes[0]
+		slotTime := firstSlot.Time
+
+		slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", todayStr, slotTime), loc)
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientToday)
+		if err != nil {
+			t.Skipf("Could not create appointment for today: %v", err)
+		}
+
+		t.Logf("✓ Created appointment for TODAY at %s", slotTime)
+
+		// Get availability again with client_id and date_forward_start=0
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=0&date_forward_end=1&timezone=%s&client_id=%s", TimeZone, clientToday.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		var todayFiltered *DTO.AvailableDate
+		for _, ad := range availabilityFiltered.AvailableDates {
+			if ad.Date == todayStr {
+				todayFiltered = &ad
+				break
+			}
+		}
+
+		// Verify the booked slot is NOT in the filtered results
+		if todayFiltered != nil {
+			for _, slot := range todayFiltered.AvailableTimes {
+				if slot.Time == slotTime {
+					t.Errorf("FAILED: Expected slot %s to be filtered out for TODAY with date_forward_start=0, but it was present", slotTime)
+				}
+			}
+		}
+
+		t.Logf("✓ With date_forward_start=0: Booked slot %s correctly filtered out for TODAY", slotTime)
+	})
+
+	// Test 8: Client appointment filtering with date_forward_start = 1 (TOMORROW)
+	t.Run("Test 8: Client appointment filtering with date_forward_start = 1 (TOMORROW)", func(t *testing.T) {
+		// Create a new client for this test
+		clientTomorrow := &model.Client{}
+		tt.Describe("Create client for tomorrow test").Test(clientTomorrow.Set())
+
+		// Get availability for tomorrow only (date_forward_start=1, date_forward_end=2)
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s", TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		if http.Error != nil {
+			t.Fatalf("Failed to get service availability: %v", http.Error)
+		}
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No available dates for tomorrow")
+		}
+
+		tomorrowStr := tomorrow.Format("2006-01-02")
+		var tomorrowAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowAvailability = &ad
+				break
+			}
+		}
+
+		if tomorrowAvailability == nil || len(tomorrowAvailability.AvailableTimes) == 0 {
+			t.Skip("No available slots for tomorrow")
+		}
+
+		// Book an appointment for tomorrow at 14:00 if available, otherwise first slot
+		var slotTime string
+		slotFound := false
+		for _, slot := range tomorrowAvailability.AvailableTimes {
+			if slot.Time == "14:00" {
+				slotTime = slot.Time
+				slotFound = true
+				break
+			}
+		}
+
+		if !slotFound {
+			slotTime = tomorrowAvailability.AvailableTimes[0].Time
+		}
+
+		slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", tomorrowStr, slotTime), loc)
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientTomorrow)
+		if err != nil {
+			t.Skipf("Could not create appointment for tomorrow: %v", err)
+		}
+
+		t.Logf("✓ Created appointment for TOMORROW at %s", slotTime)
+
+		// Get availability again with client_id and date_forward_start=1
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s&client_id=%s", TimeZone, clientTomorrow.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		var tomorrowFiltered *DTO.AvailableDate
+		for _, ad := range availabilityFiltered.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowFiltered = &ad
+				break
+			}
+		}
+
+		// Verify the booked slot is NOT in the filtered results
+		if tomorrowFiltered != nil {
+			for _, slot := range tomorrowFiltered.AvailableTimes {
+				if slot.Time == slotTime {
+					t.Errorf("FAILED: Expected slot %s to be filtered out for TOMORROW with date_forward_start=1, but it was present", slotTime)
+				}
+			}
+		}
+
+		t.Logf("✓ With date_forward_start=1: Booked slot %s correctly filtered out for TOMORROW", slotTime)
+	})
+
+	// Test 9: Client appointment filtering with broader date range (0 to 3)
+	t.Run("Test 9: Client with multiple appointments in broader date range (0-3)", func(t *testing.T) {
+		// Create a new client for this test
+		clientMultiDay := &model.Client{}
+		tt.Describe("Create client for multi-day test").Test(clientMultiDay.Set())
+
+		// Book appointments on 3 different days
+		bookedAppointments := []struct {
+			Date string
+			Time string
+		}{}
+
+		for dayOffset := 0; dayOffset < 3; dayOffset++ {
+			// Get availability for this specific day
+			http := handler.NewHttpClient()
+			http.Method("GET")
+			http.ExpectedStatus(200)
+			query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", dayOffset, dayOffset+1, TimeZone)
+			url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+			http.URL(url)
+			http.Header("X-Company-ID", cy.Created.ID.String())
+			http.Send(nil)
+
+			var availability DTO.ServiceAvailability
+			http.ParseResponse(&availability)
+
+			if len(availability.AvailableDates) == 0 {
+				t.Logf("No availability for day offset %d, skipping", dayOffset)
+				continue
+			}
+
+			targetDate := now.AddDate(0, 0, dayOffset)
+			dateStr := targetDate.Format("2006-01-02")
+
+			var dayAvailability *DTO.AvailableDate
+			for _, ad := range availability.AvailableDates {
+				if ad.Date == dateStr {
+					dayAvailability = &ad
+					break
+				}
+			}
+
+			if dayAvailability == nil || len(dayAvailability.AvailableTimes) == 0 {
+				t.Logf("No slots available for %s, skipping", dateStr)
+				continue
+			}
+
+			// Book first available slot
+			slotTime := dayAvailability.AvailableTimes[0].Time
+			slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", dateStr, slotTime), loc)
+			if err != nil {
+				t.Logf("Failed to parse time for %s: %v", dateStr, err)
+				continue
+			}
+			startTimeStr := slotDateTime.Format(time.RFC3339)
+
+			appointment := &model.Appointment{}
+			err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientMultiDay)
+			if err != nil {
+				t.Logf("Could not create appointment for %s: %v", dateStr, err)
+				continue
+			}
+
+			bookedAppointments = append(bookedAppointments, struct {
+				Date string
+				Time string
+			}{Date: dateStr, Time: slotTime})
+			t.Logf("✓ Booked appointment on %s at %s", dateStr, slotTime)
+		}
+
+		if len(bookedAppointments) == 0 {
+			t.Skip("Could not create any appointments for multi-day test")
+		}
+
+		// Now query with broader range and client_id
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=0&date_forward_end=3&timezone=%s&client_id=%s", TimeZone, clientMultiDay.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		// Verify ALL booked slots are filtered out across all days
+		for _, booked := range bookedAppointments {
+			var dateFound *DTO.AvailableDate
+			for _, ad := range availabilityFiltered.AvailableDates {
+				if ad.Date == booked.Date {
+					dateFound = &ad
+					break
+				}
+			}
+
+			if dateFound != nil {
+				for _, slot := range dateFound.AvailableTimes {
+					if slot.Time == booked.Time {
+						t.Errorf("FAILED: Expected slot %s on %s to be filtered out in range 0-3, but it was present", booked.Time, booked.Date)
+					}
+				}
+			}
+		}
+
+		t.Logf("✓ With date_forward_start=0 to date_forward_end=3: ALL %d booked slots correctly filtered across multiple days", len(bookedAppointments))
+	})
+
+	// Test 10: Appointment at boundary of date range
+	t.Run("Test 10: Client appointment at the boundary of date range", func(t *testing.T) {
+		// Create a new client for this test
+		clientBoundary := &model.Client{}
+		tt.Describe("Create client for boundary test").Test(clientBoundary.Set())
+
+		// Book appointment on the last day of a date range (day 2 when querying 0-3)
+		dayOffset := 2
+		targetDate := now.AddDate(0, 0, dayOffset)
+		dateStr := targetDate.Format("2006-01-02")
+
+		// Get availability for day 2
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", dayOffset, dayOffset+1, TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No availability for boundary day")
+		}
+
+		var dayAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == dateStr {
+				dayAvailability = &ad
+				break
+			}
+		}
+
+		if dayAvailability == nil || len(dayAvailability.AvailableTimes) == 0 {
+			t.Skip("No slots available for boundary day")
+		}
+
+		slotTime := dayAvailability.AvailableTimes[0].Time
+		slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", dateStr, slotTime), loc)
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientBoundary)
+		if err != nil {
+			t.Skipf("Could not create appointment at boundary: %v", err)
+		}
+
+		t.Logf("✓ Created appointment at boundary date %s at %s", dateStr, slotTime)
+
+		// Query with range 0-3 and verify it's filtered
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=0&date_forward_end=3&timezone=%s&client_id=%s", TimeZone, clientBoundary.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		var boundaryDateFiltered *DTO.AvailableDate
+		for _, ad := range availabilityFiltered.AvailableDates {
+			if ad.Date == dateStr {
+				boundaryDateFiltered = &ad
+				break
+			}
+		}
+
+		if boundaryDateFiltered != nil {
+			for _, slot := range boundaryDateFiltered.AvailableTimes {
+				if slot.Time == slotTime {
+					t.Errorf("FAILED: Expected boundary slot %s on %s to be filtered out, but it was present", slotTime, dateStr)
+				}
+			}
+		}
+
+		t.Logf("✓ Appointment at boundary date correctly filtered in broader date range query")
+	})
 }
 
 // Helper function to get service availability with optional client filter
