@@ -749,6 +749,12 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 	}
 
 	if len(validBranches) == 0 {
+		if workProbability >= 1.0 {
+			if employee != nil {
+				return fmt.Errorf("no valid branches found for employee %s on weekday %d, but workProbability=1.0 requires work schedules", employee.Created.Email, weekday)
+			}
+			return fmt.Errorf("no valid branches provided for work schedule generation on weekday %d with workProbability=1.0", weekday)
+		}
 		return nil // No valid branches
 	}
 
@@ -758,6 +764,13 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 	}
 
 	branch := validBranches[rand.Intn(len(validBranches))]
+
+	// For branches without employee context, ensure branch has services when workProbability >= 1.0
+	if employee == nil && workProbability >= 1.0 {
+		if len(branch.Services) == 0 {
+			return fmt.Errorf("branch %s has no services assigned on weekday %d, cannot generate work schedule with workProbability=1.0", branch.Created.Name, weekday)
+		}
+	}
 
 	var branchWorkRangesForDay []model.BranchWorkRange
 	if employee != nil {
@@ -769,6 +782,9 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 			}
 		}
 		if len(branchWorkRangesForDay) == 0 {
+			if workProbability >= 1.0 {
+				return fmt.Errorf("branch %s doesn't work on weekday %d, but workProbability=1.0 requires all days to have work schedules", branch.Created.Name, weekday)
+			}
 			return nil // Branch doesn't work on this day, so employee can't either.
 		}
 	}
@@ -804,6 +820,30 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 	// For employees, also track sequential non-overlapping ranges
 	var employeeLastEndHour int
 	var employeeLastEndMinute int
+
+	// Pre-check for common services when workProbability >= 1.0 to fail fast
+	if workProbability >= 1.0 && employee != nil {
+		if len(employee.Created.Services) == 0 {
+			return fmt.Errorf("employee %s has no services assigned, cannot generate work schedule", employee.Created.Email)
+		}
+
+		employeeServices := map[uuid.UUID]bool{}
+		for _, s := range employee.Created.Services {
+			employeeServices[s.ID] = true
+		}
+
+		hasCommonService := false
+		for _, s := range branch.Services {
+			if _, ok := employeeServices[s.Created.ID]; ok {
+				hasCommonService = true
+				break
+			}
+		}
+
+		if !hasCommonService {
+			return fmt.Errorf("employee %s has no common services with branch %s on weekday %d, cannot generate work schedule with workProbability=1.0", employee.Created.Email, branch.Created.Name, weekday)
+		}
+	}
 
 	for range numRanges {
 		var startHour int
@@ -1022,6 +1062,16 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 		}
 
 		if len(commonServices) == 0 {
+			// This should never happen when workProbability >= 1.0 because we pre-checked above
+			if workProbability >= 1.0 {
+				entityType := "branch"
+				entityID := branch.Created.ID.String()
+				if employee != nil {
+					entityType = "employee"
+					entityID = employee.Created.Email
+				}
+				return fmt.Errorf("no common services found for %s %s on weekday %d despite workProbability=1.0 and pre-check passing", entityType, entityID, weekday)
+			}
 			continue
 		}
 
