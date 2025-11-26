@@ -98,6 +98,7 @@ func (c *Client) AddAppointment(a *Appointment, tx *gorm.DB) error {
 		ClientID:      c.ID,
 		CompanyID:     a.CompanyID,
 		StartTime:     a.StartTime,
+		EndTime:       a.EndTime,
 		TimeZone:      a.TimeZone,
 	}
 	if err := lib.ChangeToPublicSchema(tx); err != nil {

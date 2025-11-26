@@ -591,6 +591,8 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
 			return err
 		}
+		// Query without company_id to get ALL client appointments across all companies
+		// This ensures we don't double-book clients who have appointments with other companies
 		if err := tx.Model(&model.ClientAppointment{}).
 			Where("client_id = ? AND is_cancelled = ?", clientID, false).
 			Where("start_time >= ? AND start_time < ?", startDate, endDate).

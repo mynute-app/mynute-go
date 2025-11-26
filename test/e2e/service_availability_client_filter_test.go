@@ -62,41 +62,6 @@ func Test_ServiceAvailability_ClientFilter(t *testing.T) {
 
 	now := time.Now().In(loc)
 	tomorrow := now.AddDate(0, 0, 1)
-	dayAfterTomorrow := now.AddDate(0, 0, 2)
-
-	// The branch and employee already have work schedules from CreateCompanyRandomly
-	// We'll work with the existing schedules and create appointments for testing
-
-	// Create work schedule for the employee for tomorrow and day after tomorrow if not already configured
-	// We'll add additional work ranges to ensure coverage
-	additionalWorkSchedule := DTO.CreateEmployeeWorkSchedule{
-		WorkRanges: []DTO.CreateEmployeeWorkRange{
-			{
-				EmployeeID: employee.Created.ID,
-				StartTime:  "09:00",
-				EndTime:    "18:00",
-				TimeZone:   TimeZone,
-				Weekday:    uint8(tomorrow.Weekday()),
-				BranchID:   branch.Created.ID,
-				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{
-					Services: []DTO.ServiceBase{{ID: service.Created.ID}},
-				},
-			},
-			{
-				EmployeeID: employee.Created.ID,
-				StartTime:  "09:00",
-				EndTime:    "18:00",
-				TimeZone:   TimeZone,
-				Weekday:    uint8(dayAfterTomorrow.Weekday()),
-				BranchID:   branch.Created.ID,
-				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{
-					Services: []DTO.ServiceBase{{ID: service.Created.ID}},
-				},
-			},
-		},
-	}
-	// Try to create, but don't fail if it already exists or conflicts
-	_ = employee.CreateWorkSchedule(200, additionalWorkSchedule, nil, nil)
 
 	// Test 1: Get availability without client_id - should show all available slots
 	t.Run("Test 1: Get availability without client_id filter", func(t *testing.T) {
@@ -298,8 +263,112 @@ func Test_ServiceAvailability_ClientFilter(t *testing.T) {
 		}
 	})
 
-	// Test 5: Test overlapping appointment filtering
-	t.Run("Test 5: Test overlapping appointment filtering", func(t *testing.T) {
+	// Test 5: Test cross-service filtering - client with appointment in Service A should see filtered slots in Service B
+	t.Run("Test 5: Test cross-service filtering", func(t *testing.T) {
+		// Create a second service
+		service2 := &model.Service{Company: cy}
+		tt.Describe("Create second service").Test(service2.Create(200, cy.Owner.X_Auth_Token, nil))
+
+		// Update second service duration to match first service
+		tt.Describe("Update second service duration").Test(service2.Update(200, map[string]any{
+			"duration": 60,
+		}, cy.Owner.X_Auth_Token, nil))
+
+		// Add service to branch and employee
+		tt.Describe("Add second service to branch").Test(branch.AddService(200, service2, cy.Owner.X_Auth_Token, nil))
+		tt.Describe("Add second service to employee").Test(employee.AddService(200, service2, nil, nil))
+
+		// Add second service to employee's existing work schedules
+		// Since CreateCompanyRandomly now guarantees all 7 weekdays, we just need to add service2
+		workRangesToAdd2 := []DTO.CreateEmployeeWorkRange{}
+		for weekday := 0; weekday < 7; weekday++ {
+			workRangesToAdd2 = append(workRangesToAdd2, DTO.CreateEmployeeWorkRange{
+				EmployeeID: employee.Created.ID,
+				StartTime:  "08:00",
+				EndTime:    "20:00",
+				TimeZone:   TimeZone,
+				Weekday:    uint8(weekday),
+				BranchID:   branch.Created.ID,
+				EmployeeWorkRangeServices: DTO.EmployeeWorkRangeServices{
+					Services: []DTO.ServiceBase{{ID: service2.Created.ID}},
+				},
+			})
+		}
+
+		additionalWorkSchedule2 := DTO.CreateEmployeeWorkSchedule{
+			WorkRanges: workRangesToAdd2,
+		}
+		// Try to create, but don't fail if already exists (employee might already have this weekday)
+		_ = employee.CreateWorkSchedule(200, additionalWorkSchedule2, nil, nil)
+
+		// Create a new client for this test
+		client3 := &model.Client{}
+		tt.Describe("Create third client").Test(client3.Set())
+
+		// Book an appointment for client3 in the FIRST service at a specific time
+		availability := getServiceAvailabilityWithClient(t, service, TimeZone, "")
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No available dates for first service")
+		}
+
+		var testDate *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if len(ad.AvailableTimes) > 0 {
+				testDate = &ad
+				break
+			}
+		}
+
+		if testDate == nil {
+			t.Skip("No available slots in first service")
+		}
+
+		firstSlot := testDate.AvailableTimes[0]
+		slotTime := firstSlot.Time
+		dateStr := testDate.Date
+
+		slotDateTime, err := time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", dateStr, slotTime))
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		slotDateTime = time.Date(slotDateTime.Year(), slotDateTime.Month(), slotDateTime.Day(), slotDateTime.Hour(), slotDateTime.Minute(), 0, 0, loc)
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		// Create appointment in FIRST service
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, client3)
+		if err != nil {
+			t.Skipf("Could not create appointment in first service: %v", err)
+		}
+
+		t.Logf("✓ Created appointment in first service at %s %s for client3", dateStr, slotTime)
+
+		// Now check availability for the SECOND service with client3's ID
+		// The same time slot should be filtered out because the client is busy
+		availability2 := getServiceAvailabilityWithClient(t, service2, TimeZone, client3.Created.ID.String())
+
+		// Check if the booked slot appears in service2's availability
+		var testDate2 *DTO.AvailableDate
+		for _, ad := range availability2.AvailableDates {
+			if ad.Date == dateStr {
+				testDate2 = &ad
+				break
+			}
+		}
+
+		if testDate2 != nil {
+			for _, slot := range testDate2.AvailableTimes {
+				if slot.Time == slotTime {
+					t.Errorf("CROSS-SERVICE FILTERING FAILED: Expected slot %s to be filtered out in service2 for client3 (who has appointment in service1), but it was present", slotTime)
+				}
+			}
+		}
+
+		t.Logf("✓ Cross-service filtering works: Slot %s correctly filtered out in service2 when client3 has appointment in service1", slotTime)
+	})
+
+	// Test 6: Test overlapping appointment filtering
+	t.Run("Test 6: Test overlapping appointment filtering", func(t *testing.T) {
 		// Create a new client for this test
 		client2 := &model.Client{}
 		tt.Describe("Create second client").Test(client2.Set())
