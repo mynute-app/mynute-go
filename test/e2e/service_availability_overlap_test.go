@@ -360,14 +360,14 @@ func Test_ServiceAvailability_OverlapFiltering(t *testing.T) {
 }
 
 // Helper function to get service availability
-func getServiceAvailability(t *testing.T, service *model.Service, timezone string, clientPublicID string) DTO.ServiceAvailability {
+func getServiceAvailability(t *testing.T, service *model.Service, timezone string, clientID string) DTO.ServiceAvailability {
 	http := handler.NewHttpClient()
 	http.Method("GET")
 	http.ExpectedStatus(200)
 
 	query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", 0, 7, timezone)
-	if clientPublicID != "" {
-		query += fmt.Sprintf("&client_public_id=%s", clientPublicID)
+	if clientID != "" {
+		query += fmt.Sprintf("&client_id=%s", clientID)
 	}
 
 	url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
