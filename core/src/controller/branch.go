@@ -888,6 +888,18 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		}
 	}
 
+	// Parse employee_id filter
+	employeeID := c.Query("employee_id")
+	if employeeID != "" {
+		query = query.Where("employee_id = ?", employeeID)
+	}
+
+	// Parse service_id filter
+	serviceID := c.Query("service_id")
+	if serviceID != "" {
+		query = query.Where("service_id = ?", serviceID)
+	}
+
 	// Get total count for pagination
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {

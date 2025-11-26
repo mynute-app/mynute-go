@@ -202,7 +202,7 @@ func LoginEmployeeByEmailCode(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			X-Company-ID	header	string	true	"X-Company-ID"
 //	@Param			email			path	string	true	"Employee Email"
-//	@Query			language																							query	string	false	"Language code (default: en)"
+//	@Query			language																											query	string	false	"Language code (default: en)"
 //	@Success		200
 //	@Failure		400	{object}	DTO.ErrorResponse
 //	@Router			/employee/send-login-code/email/{email} [post]
@@ -223,7 +223,7 @@ func SendEmployeeLoginValidationCodeByEmail(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			email		path		string	true	"Employee Email"
-//	@Query			language	query																string	false	"Language code (default: en)"
+//	@Query			language	query																			string	false	"Language code (default: en)"
 //	@Success		200			{object}	DTO.PasswordReseted
 //	@Failure		400			{object}	DTO.ErrorResponse
 //	@Router			/employee/reset-password/{email} [post]
@@ -1010,6 +1010,8 @@ func RemoveRoleFromEmployee(c *fiber.Ctx) error {
 //	@Param			start_date		query		string	false	"Start date filter (DD/MM/YYYY)"	example(21/04/2025)
 //	@Param			end_date		query		string	false	"End date filter (DD/MM/YYYY)"		example(31/05/2025)
 //	@Param			cancelled		query		string	false	"Filter by cancelled status (true/false)"
+//	@Param			branch_id		query		string	false	"Filter by branch ID"
+//	@Param			service_id		query		string	false	"Filter by service ID"
 //	@Param			timezone		query		string	true	"Timezone for date filtering"	example("America/New_York")
 //	@Success		200				{object}	DTO.AppointmentList
 //	@Failure		400				{object}	DTO.ErrorResponse
@@ -1109,6 +1111,18 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 		} else {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("cancelled parameter must be 'true' or 'false'"))
 		}
+	}
+
+	// Parse branch_id filter
+	branchID := c.Query("branch_id")
+	if branchID != "" {
+		query = query.Where("branch_id = ?", branchID)
+	}
+
+	// Parse service_id filter
+	serviceID := c.Query("service_id")
+	if serviceID != "" {
+		query = query.Where("service_id = ?", serviceID)
 	}
 
 	// Get total count for pagination

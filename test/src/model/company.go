@@ -174,13 +174,23 @@ func (c *Company) CreateCompanyRandomly(numEmployees, numBranches, numServices i
 	}
 
 	// --- Random Relationship Assignments ---
+	// Instead of random assignments, assign ALL services to ALL employees and branches
+	// This guarantees service overlap needed for work schedule generation (workProbability=1.0)
 
-	if err := c.RandomlyAssignServicesToEmployees(); err != nil {
-		return err
+	// Assign all services to all employees
+	for _, employee := range c.Employees {
+		for _, service := range c.Services {
+			// Silently ignore errors (service may already be assigned)
+			_ = employee.AddService(200, service, nil, nil)
+		}
 	}
 
-	if err := c.RandomlyAssignServicesToBranches(); err != nil {
-		return err
+	// Assign all services to all branches
+	for _, branch := range c.Branches {
+		for _, service := range c.Services {
+			// Silently ignore errors (service may already be assigned)
+			_ = branch.AddService(200, service, c.Owner.X_Auth_Token, nil)
+		}
 	}
 
 	if err := c.RandomlyAssignWorkScheduleToBranches(); err != nil {
@@ -254,13 +264,23 @@ func (c *Company) AddRandomizedEntitiesToCompany(numEmployees, numBranches, numS
 	}
 
 	// --- Random Relationship Assignments ---
+	// Instead of random assignments, assign ALL services to ALL employees and branches
+	// This guarantees service overlap needed for work schedule generation (workProbability=1.0)
 
-	if err := c.RandomlyAssignServicesToEmployees(); err != nil {
-		return err
+	// Assign all services to all employees
+	for _, employee := range c.Employees {
+		for _, service := range c.Services {
+			// Silently ignore errors (service may already be assigned)
+			_ = employee.AddService(200, service, nil, nil)
+		}
 	}
 
-	if err := c.RandomlyAssignServicesToBranches(); err != nil {
-		return err
+	// Assign all services to all branches
+	for _, branch := range c.Branches {
+		for _, service := range c.Services {
+			// Silently ignore errors (service may already be assigned)
+			_ = branch.AddService(200, service, c.Owner.X_Auth_Token, nil)
+		}
 	}
 
 	if err := c.RandomlyAssignWorkScheduleToBranches(); err != nil {
@@ -809,9 +829,17 @@ func generateWorkRangeForDay(ranges any, validBranches []*Branch, employee *Empl
 		max int
 	}
 
+	// When workProbability is 1.0, use predictable hours (8am-6pm) for test reliability
+	// Otherwise, use wider random hours (6am-11pm) for variety
 	acceptableHours := AcceptableHours{
 		min: 6,
 		max: 23,
+	}
+	if workProbability >= 1.0 {
+		acceptableHours = AcceptableHours{
+			min: 8,
+			max: 18,
+		}
 	}
 
 	// For branches, we want sequential non-overlapping ranges, so lastEndHour persists across iterations

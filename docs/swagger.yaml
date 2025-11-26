@@ -2875,6 +2875,14 @@ paths:
         in: query
         name: cancelled
         type: string
+      - description: Filter by branch ID
+        in: query
+        name: branch_id
+        type: string
+      - description: Filter by service ID
+        in: query
+        name: service_id
+        type: string
       - description: Timezone for date filtering
         example: '"America/New_York"'
         in: query

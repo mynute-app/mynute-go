@@ -2975,6 +2975,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Filter by branch ID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by service ID",
+                        "name": "service_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "example": "\"America/New_York\"",
                         "description": "Timezone for date filtering",
                         "name": "timezone",
