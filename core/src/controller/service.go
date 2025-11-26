@@ -588,6 +588,12 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 			return lib.Error.General.BadRequest.WithError(fmt.Errorf("invalid client_id format: must be a valid UUID"))
 		}
 
+		// Calculate the proper end date for fetching client appointments
+		// The endDate variable has an extra 24h added for the availability loop,
+		// but for querying appointments we need to cover the actual requested range:
+		// from startDate (midnight + dfs days) to end of last day (midnight + dfe days)
+		clientQueryEndDate := midnight.AddDate(0, 0, dfe).Add(24 * time.Hour)
+
 		if err := lib.ChangeToPublicSchemaByContext(c); err != nil {
 			return err
 		}
@@ -595,7 +601,7 @@ func GetServiceAvailability(c *fiber.Ctx) error {
 		// This ensures we don't double-book clients who have appointments with other companies
 		if err := tx.Model(&model.ClientAppointment{}).
 			Where("client_id = ? AND is_cancelled = ?", clientID, false).
-			Where("start_time >= ? AND start_time < ?", startDate, endDate).
+			Where("start_time >= ? AND start_time < ?", startDate, clientQueryEndDate).
 			Find(&clientAppointments).Error; err != nil {
 			return lib.Error.General.InternalError.WithError(err)
 		}

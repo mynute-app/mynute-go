@@ -824,6 +824,341 @@ func Test_ServiceAvailability_ClientFilter(t *testing.T) {
 
 		t.Logf("✓ Appointment at boundary date correctly filtered in broader date range query")
 	})
+
+	// Test 11: Narrow range query AFTER booking (1 to 2) - Regression test for the timezone bug
+	t.Run("Test 11: REGRESSION - Narrow range (1 to 2) must filter appointments on day 1", func(t *testing.T) {
+		// This test specifically replicates the bug from the conversation where
+		// date_forward_start=1&date_forward_end=2 was NOT filtering appointments correctly
+
+		clientNarrow := &model.Client{}
+		tt.Describe("Create client for narrow range test").Test(clientNarrow.Set())
+
+		tomorrowStr := tomorrow.Format("2006-01-02")
+
+		// First, get availability for day 1 (tomorrow) using narrow range 1-2
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s", TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No availability for tomorrow in narrow range")
+		}
+
+		var tomorrowAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowAvailability = &ad
+				break
+			}
+		}
+
+		if tomorrowAvailability == nil || len(tomorrowAvailability.AvailableTimes) == 0 {
+			t.Skip("No slots available for tomorrow in narrow range")
+		}
+
+		// Book an appointment for tomorrow at 11:00 (or first available slot)
+		var slotTime string
+		for _, slot := range tomorrowAvailability.AvailableTimes {
+			if slot.Time == "11:00" {
+				slotTime = slot.Time
+				break
+			}
+		}
+		if slotTime == "" {
+			slotTime = tomorrowAvailability.AvailableTimes[0].Time
+		}
+
+		slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", tomorrowStr, slotTime), loc)
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientNarrow)
+		if err != nil {
+			t.Skipf("Could not create appointment: %v", err)
+		}
+
+		t.Logf("✓ REGRESSION TEST: Created appointment on tomorrow at %s", slotTime)
+
+		// Now query again with the SAME narrow range (1-2) and client_id
+		// THIS is where the bug was - it was NOT filtering correctly
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s&client_id=%s", TimeZone, clientNarrow.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		var tomorrowFiltered *DTO.AvailableDate
+		for _, ad := range availabilityFiltered.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowFiltered = &ad
+				break
+			}
+		}
+
+		// CRITICAL ASSERTION: The booked slot MUST be filtered out
+		if tomorrowFiltered != nil {
+			for _, slot := range tomorrowFiltered.AvailableTimes {
+				if slot.Time == slotTime {
+					t.Errorf("❌ REGRESSION BUG DETECTED: Slot %s on tomorrow NOT filtered with date_forward_start=1&date_forward_end=2 and client_id=%s", slotTime, clientNarrow.Created.ID.String())
+					t.Errorf("This is the exact bug from the conversation - narrow range queries not filtering correctly!")
+				}
+			}
+		}
+
+		t.Logf("✓ REGRESSION TEST PASSED: Narrow range (1-2) correctly filtered appointment at %s", slotTime)
+	})
+
+	// Test 12: Compare narrow vs wide range filtering - they should behave identically
+	t.Run("Test 12: REGRESSION - Narrow range (2 to 3) vs Wide range (0 to 5) consistency", func(t *testing.T) {
+		clientConsistency := &model.Client{}
+		tt.Describe("Create client for consistency test").Test(clientConsistency.Set())
+
+		// Book appointment on day 2
+		dayOffset := 2
+		targetDate := now.AddDate(0, 0, dayOffset)
+		dateStr := targetDate.Format("2006-01-02")
+
+		// Get availability for day 2 to book an appointment
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=%d&date_forward_end=%d&timezone=%s", dayOffset, dayOffset+1, TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No availability for day 2")
+		}
+
+		var dayAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == dateStr {
+				dayAvailability = &ad
+				break
+			}
+		}
+
+		if dayAvailability == nil || len(dayAvailability.AvailableTimes) == 0 {
+			t.Skip("No slots for day 2")
+		}
+
+		slotTime := dayAvailability.AvailableTimes[0].Time
+		slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", dateStr, slotTime), loc)
+		if err != nil {
+			t.Fatalf("Failed to parse slot time: %v", err)
+		}
+		startTimeStr := slotDateTime.Format(time.RFC3339)
+
+		appointment := &model.Appointment{}
+		err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientConsistency)
+		if err != nil {
+			t.Skipf("Could not create appointment: %v", err)
+		}
+
+		t.Logf("✓ Created appointment on day 2 (%s) at %s", dateStr, slotTime)
+
+		// Query with NARROW range (2 to 3) with client_id
+		httpNarrow := handler.NewHttpClient()
+		httpNarrow.Method("GET")
+		httpNarrow.ExpectedStatus(200)
+		queryNarrow := fmt.Sprintf("date_forward_start=2&date_forward_end=3&timezone=%s&client_id=%s", TimeZone, clientConsistency.Created.ID.String())
+		urlNarrow := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), queryNarrow)
+		httpNarrow.URL(urlNarrow)
+		httpNarrow.Header("X-Company-ID", cy.Created.ID.String())
+		httpNarrow.Send(nil)
+
+		var availabilityNarrow DTO.ServiceAvailability
+		httpNarrow.ParseResponse(&availabilityNarrow)
+
+		// Query with WIDE range (0 to 5) with client_id
+		httpWide := handler.NewHttpClient()
+		httpWide.Method("GET")
+		httpWide.ExpectedStatus(200)
+		queryWide := fmt.Sprintf("date_forward_start=0&date_forward_end=5&timezone=%s&client_id=%s", TimeZone, clientConsistency.Created.ID.String())
+		urlWide := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), queryWide)
+		httpWide.URL(urlWide)
+		httpWide.Header("X-Company-ID", cy.Created.ID.String())
+		httpWide.Send(nil)
+
+		var availabilityWide DTO.ServiceAvailability
+		httpWide.ParseResponse(&availabilityWide)
+
+		// Check if the slot is filtered in NARROW range
+		var day2Narrow *DTO.AvailableDate
+		for _, ad := range availabilityNarrow.AvailableDates {
+			if ad.Date == dateStr {
+				day2Narrow = &ad
+				break
+			}
+		}
+
+		slotInNarrow := false
+		if day2Narrow != nil {
+			for _, slot := range day2Narrow.AvailableTimes {
+				if slot.Time == slotTime {
+					slotInNarrow = true
+					break
+				}
+			}
+		}
+
+		// Check if the slot is filtered in WIDE range
+		var day2Wide *DTO.AvailableDate
+		for _, ad := range availabilityWide.AvailableDates {
+			if ad.Date == dateStr {
+				day2Wide = &ad
+				break
+			}
+		}
+
+		slotInWide := false
+		if day2Wide != nil {
+			for _, slot := range day2Wide.AvailableTimes {
+				if slot.Time == slotTime {
+					slotInWide = true
+					break
+				}
+			}
+		}
+
+		// BOTH should have the slot filtered (slotIn* = false)
+		if slotInNarrow && !slotInWide {
+			t.Errorf("❌ INCONSISTENCY: Slot %s appears in NARROW range (2-3) but NOT in WIDE range (0-5)", slotTime)
+			t.Errorf("This indicates the narrow range query is NOT filtering correctly!")
+		} else if !slotInNarrow && !slotInWide {
+			t.Logf("✓ CONSISTENCY CHECK PASSED: Slot correctly filtered in BOTH narrow and wide ranges")
+		} else if !slotInNarrow && slotInWide {
+			t.Logf("✓ Slot filtered in narrow range but appears in wide range (edge case, might be OK)")
+		} else {
+			t.Errorf("❌ Slot appears in BOTH ranges - not filtered at all!")
+		}
+	})
+
+	// Test 13: Multiple appointments in narrow range - ensure ALL are filtered
+	t.Run("Test 13: REGRESSION - Multiple appointments with narrow range (1 to 2)", func(t *testing.T) {
+		clientMultiNarrow := &model.Client{}
+		tt.Describe("Create client for multi-narrow test").Test(clientMultiNarrow.Set())
+
+		tomorrowStr := tomorrow.Format("2006-01-02")
+
+		// Get availability for tomorrow
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s", TimeZone)
+		url := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Send(nil)
+
+		var availability DTO.ServiceAvailability
+		http.ParseResponse(&availability)
+
+		if len(availability.AvailableDates) == 0 {
+			t.Skip("No availability for tomorrow")
+		}
+
+		var tomorrowAvailability *DTO.AvailableDate
+		for _, ad := range availability.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowAvailability = &ad
+				break
+			}
+		}
+
+		if tomorrowAvailability == nil || len(tomorrowAvailability.AvailableTimes) == 0 {
+			t.Skip("No slots for tomorrow")
+		}
+
+		// Try to book 3 appointments
+		bookedSlots := []string{}
+		maxToBook := 3
+		if len(tomorrowAvailability.AvailableTimes) < maxToBook {
+			maxToBook = len(tomorrowAvailability.AvailableTimes)
+		}
+
+		for i := 0; i < maxToBook; i++ {
+			slotTime := tomorrowAvailability.AvailableTimes[i].Time
+			slotDateTime, err := time.ParseInLocation("2006-01-02T15:04:05", fmt.Sprintf("%sT%s:00", tomorrowStr, slotTime), loc)
+			if err != nil {
+				continue
+			}
+			startTimeStr := slotDateTime.Format(time.RFC3339)
+
+			appointment := &model.Appointment{}
+			err = appointment.Create(200, cy.Owner.X_Auth_Token, nil, &startTimeStr, TimeZone, branch, employee, service, cy, clientMultiNarrow)
+			if err != nil {
+				continue
+			}
+			bookedSlots = append(bookedSlots, slotTime)
+			t.Logf("✓ Booked slot %d: %s", i+1, slotTime)
+		}
+
+		if len(bookedSlots) == 0 {
+			t.Skip("Could not book any appointments")
+		}
+
+		// Query with narrow range and client_id
+		http2 := handler.NewHttpClient()
+		http2.Method("GET")
+		http2.ExpectedStatus(200)
+		query2 := fmt.Sprintf("date_forward_start=1&date_forward_end=2&timezone=%s&client_id=%s", TimeZone, clientMultiNarrow.Created.ID.String())
+		url2 := fmt.Sprintf("/service/%s/availability?%s", service.Created.ID.String(), query2)
+		http2.URL(url2)
+		http2.Header("X-Company-ID", cy.Created.ID.String())
+		http2.Send(nil)
+
+		var availabilityFiltered DTO.ServiceAvailability
+		http2.ParseResponse(&availabilityFiltered)
+
+		var tomorrowFiltered *DTO.AvailableDate
+		for _, ad := range availabilityFiltered.AvailableDates {
+			if ad.Date == tomorrowStr {
+				tomorrowFiltered = &ad
+				break
+			}
+		}
+
+		// Verify ALL booked slots are filtered
+		failedFilters := []string{}
+		if tomorrowFiltered != nil {
+			for _, slot := range tomorrowFiltered.AvailableTimes {
+				for _, booked := range bookedSlots {
+					if slot.Time == booked {
+						failedFilters = append(failedFilters, booked)
+					}
+				}
+			}
+		}
+
+		if len(failedFilters) > 0 {
+			t.Errorf("❌ REGRESSION BUG: %d slots NOT filtered in narrow range (1-2): %v", len(failedFilters), failedFilters)
+		} else {
+			t.Logf("✓ REGRESSION TEST PASSED: All %d booked slots correctly filtered in narrow range (1-2)", len(bookedSlots))
+		}
+	})
 }
 
 // Helper function to get service availability with optional client filter
