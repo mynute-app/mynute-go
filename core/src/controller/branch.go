@@ -931,6 +931,12 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		clientIDMap[apt.ClientID] = true
 	}
 
+	// Collect unique service IDs
+	serviceIDMap := make(map[uuid.UUID]bool)
+	for _, apt := range appointments {
+		serviceIDMap[apt.ServiceID] = true
+	}
+
 	// Fetch client information
 	var clientInfo []DTO.ClientBasicInfo
 	if len(clientIDMap) > 0 {
@@ -957,9 +963,36 @@ func GetBranchAppointmentsById(c *fiber.Ctx) error {
 		}
 	}
 
+	// Fetch service information
+	var serviceInfo []DTO.ServiceBasicInfo
+	if len(serviceIDMap) > 0 {
+		serviceIDs := make([]uuid.UUID, 0, len(serviceIDMap))
+		for id := range serviceIDMap {
+			serviceIDs = append(serviceIDs, id)
+		}
+
+		var services []model.Service
+		if err := tx.Select("id", "name", "description", "price", "duration").
+			Where("id IN ?", serviceIDs).
+			Find(&services).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		for _, service := range services {
+			serviceInfo = append(serviceInfo, DTO.ServiceBasicInfo{
+				ID:          service.ID,
+				Name:        service.Name,
+				Description: service.Description,
+				Price:       int32(service.Price),
+				Duration:    uint(service.Duration),
+			})
+		}
+	}
+
 	AppointmentList := DTO.AppointmentList{
 		Appointments: appointmentsDTO,
 		ClientInfo:   clientInfo,
+		ServiceInfo:  serviceInfo,
 		Page:         page,
 		PageSize:     pageSize,
 		TotalCount:   int(totalCount),
