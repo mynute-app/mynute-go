@@ -5105,19 +5105,106 @@ const docTemplate = `{
                 }
             }
         },
+        "DTO.AppointmentBasicInfo": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "cancel_time": {
+                    "type": "string",
+                    "example": "2021-01-01T08:00:00Z"
+                },
+                "cancelled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "cancelled_employee_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "client_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "company_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "employee_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "end_time": {
+                    "type": "string",
+                    "example": "2021-01-01T10:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "is_cancelled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_cancelled_by_client": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_cancelled_by_employee": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_confirmed_by_client": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_fulfilled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "payment_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "rescheduled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "service_id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2021-01-01T09:00:00Z"
+                },
+                "time_zone": {
+                    "type": "string",
+                    "example": "America/New_York"
+                }
+            }
+        },
         "DTO.AppointmentList": {
             "type": "object",
             "properties": {
                 "appointments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DTO.Appointment"
+                        "$ref": "#/definitions/DTO.AppointmentBasicInfo"
                     }
                 },
                 "client_info": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/DTO.ClientBasicInfo"
+                    }
+                },
+                "employee_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.EmployeeBasicInfo"
                     }
                 },
                 "page": {
@@ -5896,6 +5983,27 @@ const docTemplate = `{
                 "total_service_density": {
                     "type": "integer",
                     "example": 100
+                }
+            }
+        },
+        "DTO.EmployeeBasicInfo": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
                 }
             }
         },

@@ -65,15 +65,79 @@ definitions:
         example: America/New_York
         type: string
     type: object
+  DTO.AppointmentBasicInfo:
+    properties:
+      branch_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      cancel_time:
+        example: "2021-01-01T08:00:00Z"
+        type: string
+      cancelled:
+        example: false
+        type: boolean
+      cancelled_employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      client_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      company_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      employee_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      end_time:
+        example: "2021-01-01T10:00:00Z"
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      is_cancelled:
+        example: true
+        type: boolean
+      is_cancelled_by_client:
+        example: false
+        type: boolean
+      is_cancelled_by_employee:
+        example: true
+        type: boolean
+      is_confirmed_by_client:
+        example: true
+        type: boolean
+      is_fulfilled:
+        example: false
+        type: boolean
+      payment_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      rescheduled:
+        example: false
+        type: boolean
+      service_id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      start_time:
+        example: "2021-01-01T09:00:00Z"
+        type: string
+      time_zone:
+        example: America/New_York
+        type: string
+    type: object
   DTO.AppointmentList:
     properties:
       appointments:
         items:
-          $ref: '#/definitions/DTO.Appointment'
+          $ref: '#/definitions/DTO.AppointmentBasicInfo'
         type: array
       client_info:
         items:
           $ref: '#/definitions/DTO.ClientBasicInfo'
+        type: array
+      employee_info:
+        items:
+          $ref: '#/definitions/DTO.EmployeeBasicInfo'
         type: array
       page:
         example: 1
@@ -644,6 +708,21 @@ definitions:
       total_service_density:
         example: 100
         type: integer
+    type: object
+  DTO.EmployeeBasicInfo:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: John
+        type: string
+      surname:
+        example: Doe
+        type: string
     type: object
   DTO.EmployeeFull:
     description: Employee Full DTO

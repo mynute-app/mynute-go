@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"fmt"
 	DTO "mynute-go/core/src/config/api/dto"
 	dJSON "mynute-go/core/src/config/api/dto/json"
@@ -312,14 +311,38 @@ func GetClientAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Convert to DTO
-	bytes, err := json.Marshal(appointments)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	var appointmentsDTO []DTO.Appointment
-	if err := json.Unmarshal(bytes, &appointmentsDTO); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	// Convert to DTO (AppointmentBasicInfo - excludes History and Comments)
+	appointmentsDTO := make([]DTO.AppointmentBasicInfo, len(appointments))
+	for i, apt := range appointments {
+		paymentID := uuid.UUID{}
+		if apt.PaymentID != nil {
+			paymentID = *apt.PaymentID
+		}
+		cancelledEmployeeID := uuid.UUID{}
+		if apt.CancelledEmployeeID != nil {
+			cancelledEmployeeID = *apt.CancelledEmployeeID
+		}
+
+		appointmentsDTO[i] = DTO.AppointmentBasicInfo{
+			ID:                    apt.ID,
+			ServiceID:             apt.ServiceID,
+			EmployeeID:            apt.EmployeeID,
+			ClientID:              apt.ClientID,
+			BranchID:              apt.BranchID,
+			CompanyID:             apt.CompanyID,
+			PaymentID:             paymentID,
+			CancelledEmployeeID:   cancelledEmployeeID,
+			StartTime:             apt.StartTime.Format(time.RFC3339),
+			EndTime:               apt.EndTime.Format(time.RFC3339),
+			TimeZone:              apt.TimeZone,
+			Cancelled:             apt.IsCancelled,
+			CancelTime:            apt.CancelTime.Format(time.RFC3339),
+			IsFulfilled:           apt.IsFulfilled,
+			IsCancelled:           apt.IsCancelled,
+			IsCancelledByClient:   apt.IsCancelledByClient,
+			IsCancelledByEmployee: apt.IsCancelledByEmployee,
+			IsConfirmedByClient:   apt.IsConfirmedByClient,
+		}
 	}
 
 	// Since this is client appointments, we don't need to fetch client info (it's the same client)

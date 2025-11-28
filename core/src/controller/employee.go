@@ -1140,14 +1140,38 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 		return lib.Error.General.InternalError.WithError(err)
 	}
 
-	// Convert to DTO
-	bytes, err := json.Marshal(appointments)
-	if err != nil {
-		return lib.Error.General.InternalError.WithError(err)
-	}
-	var appointmentsDTO []DTO.Appointment
-	if err := json.Unmarshal(bytes, &appointmentsDTO); err != nil {
-		return lib.Error.General.InternalError.WithError(err)
+	// Convert to DTO (AppointmentBasicInfo - excludes History and Comments)
+	appointmentsDTO := make([]DTO.AppointmentBasicInfo, len(appointments))
+	for i, apt := range appointments {
+		paymentID := uuid.UUID{}
+		if apt.PaymentID != nil {
+			paymentID = *apt.PaymentID
+		}
+		cancelledEmployeeID := uuid.UUID{}
+		if apt.CancelledEmployeeID != nil {
+			cancelledEmployeeID = *apt.CancelledEmployeeID
+		}
+
+		appointmentsDTO[i] = DTO.AppointmentBasicInfo{
+			ID:                    apt.ID,
+			ServiceID:             apt.ServiceID,
+			EmployeeID:            apt.EmployeeID,
+			ClientID:              apt.ClientID,
+			BranchID:              apt.BranchID,
+			CompanyID:             apt.CompanyID,
+			PaymentID:             paymentID,
+			CancelledEmployeeID:   cancelledEmployeeID,
+			StartTime:             apt.StartTime.Format(time.RFC3339),
+			EndTime:               apt.EndTime.Format(time.RFC3339),
+			TimeZone:              apt.TimeZone,
+			Cancelled:             apt.IsCancelled,
+			CancelTime:            apt.CancelTime.Format(time.RFC3339),
+			IsFulfilled:           apt.IsFulfilled,
+			IsCancelled:           apt.IsCancelled,
+			IsCancelledByClient:   apt.IsCancelledByClient,
+			IsCancelledByEmployee: apt.IsCancelledByEmployee,
+			IsConfirmedByClient:   apt.IsConfirmedByClient,
+		}
 	}
 
 	// Collect unique client IDs
@@ -1160,6 +1184,12 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 	serviceIDMap := make(map[uuid.UUID]bool)
 	for _, apt := range appointments {
 		serviceIDMap[apt.ServiceID] = true
+	}
+
+	// Collect unique employee IDs
+	employeeIDMap := make(map[uuid.UUID]bool)
+	for _, apt := range appointments {
+		employeeIDMap[apt.EmployeeID] = true
 	}
 
 	// Fetch client information
@@ -1214,10 +1244,36 @@ func GetEmployeeAppointmentsById(c *fiber.Ctx) error {
 		}
 	}
 
+	// Fetch employee information
+	var employeeInfo []DTO.EmployeeBasicInfo
+	if len(employeeIDMap) > 0 {
+		employeeIDs := make([]uuid.UUID, 0, len(employeeIDMap))
+		for id := range employeeIDMap {
+			employeeIDs = append(employeeIDs, id)
+		}
+
+		var employees []model.Employee
+		if err := tx.Select("id", "name", "surname", "email").
+			Where("id IN ?", employeeIDs).
+			Find(&employees).Error; err != nil {
+			return lib.Error.General.InternalError.WithError(err)
+		}
+
+		for _, employee := range employees {
+			employeeInfo = append(employeeInfo, DTO.EmployeeBasicInfo{
+				ID:      employee.ID,
+				Name:    employee.Name,
+				Surname: employee.Surname,
+				Email:   employee.Email,
+			})
+		}
+	}
+
 	AppointmentList := DTO.AppointmentList{
 		Appointments: appointmentsDTO,
 		ClientInfo:   clientInfo,
 		ServiceInfo:  serviceInfo,
+		EmployeeInfo: employeeInfo,
 		Page:         page,
 		PageSize:     pageSize,
 		TotalCount:   int(totalCount),

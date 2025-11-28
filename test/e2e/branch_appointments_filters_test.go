@@ -418,7 +418,7 @@ func Test_BranchAppointments_Filters(t *testing.T) {
 		serviceMap := make(map[string]DTO.ServiceBasicInfo)
 		for _, svc := range appointmentList.ServiceInfo {
 			serviceMap[svc.ID.String()] = svc
-			
+
 			// Verify service has required fields
 			if svc.ID.String() == "" {
 				t.Error("Service ID should not be empty")
@@ -473,7 +473,61 @@ func Test_BranchAppointments_Filters(t *testing.T) {
 			t.Errorf("Expected 3 unique clients in ClientInfo, got %d", len(appointmentList.ClientInfo))
 		}
 
+		// Verify EmployeeInfo is also populated
+		if len(appointmentList.EmployeeInfo) == 0 {
+			t.Error("Expected EmployeeInfo to be populated, but it's empty")
+		}
+
+		// We should have 2 unique employees (employee1 and employee2)
+		if len(appointmentList.EmployeeInfo) != 2 {
+			t.Errorf("Expected 2 unique employees in EmployeeInfo, got %d", len(appointmentList.EmployeeInfo))
+		}
+
+		// Create a map to quickly lookup employees
+		employeeMap := make(map[string]DTO.EmployeeBasicInfo)
+		for _, emp := range appointmentList.EmployeeInfo {
+			employeeMap[emp.ID.String()] = emp
+
+			// Verify employee has required fields
+			if emp.ID.String() == "" {
+				t.Error("Employee ID should not be empty")
+			}
+			if emp.Name == "" {
+				t.Error("Employee Name should not be empty")
+			}
+			if emp.Email == "" {
+				t.Error("Employee Email should not be empty")
+			}
+		}
+
+		// Verify that all appointments have corresponding employee info
+		for _, apt := range appointmentList.Appointments {
+			if _, exists := employeeMap[apt.EmployeeID.String()]; !exists {
+				t.Errorf("Appointment has employee_id %s but it's not in EmployeeInfo", apt.EmployeeID.String())
+			}
+		}
+
+		// Verify specific employees are present
+		employee1Found := false
+		employee2Found := false
+		for _, emp := range appointmentList.EmployeeInfo {
+			if emp.ID.String() == employee1.Created.ID.String() {
+				employee1Found = true
+			}
+			if emp.ID.String() == employee2.Created.ID.String() {
+				employee2Found = true
+			}
+		}
+
+		if !employee1Found {
+			t.Error("Expected to find employee1 in EmployeeInfo")
+		}
+		if !employee2Found {
+			t.Error("Expected to find employee2 in EmployeeInfo")
+		}
+
 		t.Logf("✓ ServiceInfo correctly populated with %d services", len(appointmentList.ServiceInfo))
 		t.Logf("✓ ClientInfo correctly populated with %d clients", len(appointmentList.ClientInfo))
+		t.Logf("✓ EmployeeInfo correctly populated with %d employees", len(appointmentList.EmployeeInfo))
 	})
 }

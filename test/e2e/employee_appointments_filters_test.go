@@ -67,9 +67,24 @@ func Test_EmployeeAppointments_Filters(t *testing.T) {
 	_ = employee.AddService(200, service1, nil, nil) // Ignore if already assigned
 	_ = employee.AddService(200, service2, nil, nil) // Ignore if already assigned
 
-	// Ensure employee is associated with both branches
-	// Silently ignore if already assigned by CreateCompanyRandomly
-	_ = employee.AddBranch(200, branch2, nil, nil) // Ignore if already assigned
+	// Refresh employee data to see which branches they're actually assigned to
+	tt.Describe("Refresh employee data").Test(employee.GetById(200, nil, nil))
+
+	// Determine which branches the employee is assigned to
+	employeeBranchIDs := make(map[string]bool)
+	for _, b := range employee.Created.Branches {
+		employeeBranchIDs[b.ID.String()] = true
+	}
+
+	// Check if employee has work schedules at both branches
+	hasBranch1 := employeeBranchIDs[branch1.Created.ID.String()]
+	hasBranch2 := employeeBranchIDs[branch2.Created.ID.String()]
+
+	if !hasBranch1 {
+		t.Fatalf("Employee is not assigned to branch1, cannot proceed with test")
+	}
+
+	t.Logf("Employee assigned to branch1: %v, branch2: %v", hasBranch1, hasBranch2)
 
 	// Create 3 different clients
 	client1 := &model.Client{}
@@ -465,7 +480,7 @@ func Test_EmployeeAppointments_Filters(t *testing.T) {
 		serviceMap := make(map[string]DTO.ServiceBasicInfo)
 		for _, svc := range appointmentList.ServiceInfo {
 			serviceMap[svc.ID.String()] = svc
-			
+
 			// Verify service has required fields
 			if svc.ID.String() == "" {
 				t.Error("Service ID should not be empty")
@@ -520,7 +535,50 @@ func Test_EmployeeAppointments_Filters(t *testing.T) {
 			t.Errorf("Expected 3 unique clients in ClientInfo, got %d", len(appointmentList.ClientInfo))
 		}
 
+		// Verify EmployeeInfo is also populated
+		if len(appointmentList.EmployeeInfo) == 0 {
+			t.Error("Expected EmployeeInfo to be populated, but it's empty")
+		}
+
+		// We should have 1 unique employee (only employee1 is being queried)
+		if len(appointmentList.EmployeeInfo) != 1 {
+			t.Errorf("Expected 1 unique employee in EmployeeInfo, got %d", len(appointmentList.EmployeeInfo))
+		}
+
+		// Create a map to quickly lookup employees
+		employeeMap := make(map[string]DTO.EmployeeBasicInfo)
+		for _, emp := range appointmentList.EmployeeInfo {
+			employeeMap[emp.ID.String()] = emp
+
+			// Verify employee has required fields
+			if emp.ID.String() == "" {
+				t.Error("Employee ID should not be empty")
+			}
+			if emp.Name == "" {
+				t.Error("Employee Name should not be empty")
+			}
+			if emp.Email == "" {
+				t.Error("Employee Email should not be empty")
+			}
+		}
+
+		// Verify that all appointments have corresponding employee info
+		for _, apt := range appointmentList.Appointments {
+			if _, exists := employeeMap[apt.EmployeeID.String()]; !exists {
+				t.Errorf("Appointment has employee_id %s but it's not in EmployeeInfo", apt.EmployeeID.String())
+			}
+		}
+
+		// Verify the employee is employee
+		if len(appointmentList.EmployeeInfo) > 0 {
+			emp := appointmentList.EmployeeInfo[0]
+			if emp.ID.String() != employee.Created.ID.String() {
+				t.Errorf("Expected EmployeeInfo to contain employee (ID: %s), got ID: %s", employee.Created.ID.String(), emp.ID.String())
+			}
+		}
+
 		t.Logf("✓ ServiceInfo correctly populated with %d services", len(appointmentList.ServiceInfo))
 		t.Logf("✓ ClientInfo correctly populated with %d clients", len(appointmentList.ClientInfo))
+		t.Logf("✓ EmployeeInfo correctly populated with %d employees", len(appointmentList.EmployeeInfo))
 	})
 }
