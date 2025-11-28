@@ -1,11 +1,24 @@
 package main
 
+// Run all pending migrations
+// go run migrate/main.go -action=up
+
+// Check current migration version
+// go run migrate/main.go -action=version
+
+// Rollback last migration
+// go run migrate/main.go -action=down -steps=1
+
+// Create a new migration file
+// go run migrate/main.go -action=create your_migration_name
+
 import (
 	"flag"
 	"fmt"
 	"log"
 	"mynute-go/core/src/lib"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -66,11 +79,11 @@ func main() {
 		}
 
 	case "create":
-		if len(flag.Args()) == 0 {
-			log.Fatal("Please provide a migration name: go run migrate/main.go -action=create <migration_name>")
+		migrationName := "migration"
+		if len(flag.Args()) > 0 {
+			migrationName = flag.Args()[0]
 		}
-		migrationName := flag.Args()[0]
-		if err := createMigration(absPath, migrationName); err != nil {
+		if err := runSmartMigration(migrationName); err != nil {
 			log.Fatalf("Failed to create migration: %v", err)
 		}
 
@@ -79,24 +92,18 @@ func main() {
 	}
 }
 
-func createMigration(migrationsPath, name string) error {
-	// Generate timestamp-based version
-	timestamp := lib.GetTimestampVersion()
-	upFile := filepath.Join(migrationsPath, fmt.Sprintf("%s_%s.up.sql", timestamp, name))
-	downFile := filepath.Join(migrationsPath, fmt.Sprintf("%s_%s.down.sql", timestamp, name))
+func runSmartMigration(name string) error {
+	log.Println("Running smart-migration tool to generate migration...")
 
-	// Create up migration file
-	upContent := fmt.Sprintf("-- Migration: %s\n-- Created at: %s\n\n-- Add your UP migration here\n", name, timestamp)
-	if err := os.WriteFile(upFile, []byte(upContent), 0644); err != nil {
-		return fmt.Errorf("failed to create up migration file: %w", err)
+	// Run the smart-migration tool
+	cmd := exec.Command("go", "run", "tools/smart-migration/main.go", "-name="+name, "-models=all")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run smart-migration tool: %w", err)
 	}
 
-	// Create down migration file
-	downContent := fmt.Sprintf("-- Migration: %s\n-- Created at: %s\n\n-- Add your DOWN migration here\n", name, timestamp)
-	if err := os.WriteFile(downFile, []byte(downContent), 0644); err != nil {
-		return fmt.Errorf("failed to create down migration file: %w", err)
-	}
-
-	log.Printf("Created migration files:\n  %s\n  %s\n", upFile, downFile)
+	log.Println("Migration files created successfully!")
 	return nil
 }
