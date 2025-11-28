@@ -45,10 +45,19 @@ type Appointment struct {
 	Comments              dJSON.Comments           `json:"comments"`
 }
 
+type ServiceBasicInfo struct {
+	ID          uuid.UUID `json:"id" example:"00000000-0000-0000-0000-000000000000"`
+	Name        string    `json:"name" example:"Premium Consultation"`
+	Description string    `json:"description" example:"A 60-minute in-depth business consultation"`
+	Price       int32     `json:"price" example:"150"`
+	Duration    uint      `json:"duration" example:"60"`
+}
+
 type AppointmentList struct {
-	Appointments []Appointment     `json:"appointments"`
-	ClientInfo   []ClientBasicInfo `json:"client_info"`
-	TotalCount   int               `json:"total_count" example:"100"`
-	Page         int               `json:"page" example:"1"`
-	PageSize     int               `json:"page_size" example:"10"`
+	Appointments []Appointment      `json:"appointments"`
+	ClientInfo   []ClientBasicInfo  `json:"client_info"`
+	ServiceInfo  []ServiceBasicInfo `json:"service_info"`
+	TotalCount   int                `json:"total_count" example:"100"`
+	Page         int                `json:"page" example:"1"`
+	PageSize     int                `json:"page_size" example:"10"`
 }
