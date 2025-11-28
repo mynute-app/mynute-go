@@ -5128,6 +5128,12 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 10
                 },
+                "service_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DTO.ServiceBasicInfo"
+                    }
+                },
                 "total_count": {
                     "type": "integer",
                     "example": 100
@@ -6252,6 +6258,31 @@ const docTemplate = `{
                 },
                 "design": {
                     "$ref": "#/definitions/dJSON.Design"
+                },
+                "duration": {
+                    "type": "integer",
+                    "example": 60
+                },
+                "id": {
+                    "type": "string",
+                    "example": "00000000-0000-0000-0000-000000000000"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Premium Consultation"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 150
+                }
+            }
+        },
+        "DTO.ServiceBasicInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "A 60-minute in-depth business consultation"
                 },
                 "duration": {
                     "type": "integer",

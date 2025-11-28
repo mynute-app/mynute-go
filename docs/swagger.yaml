@@ -81,6 +81,10 @@ definitions:
       page_size:
         example: 10
         type: integer
+      service_info:
+        items:
+          $ref: '#/definitions/DTO.ServiceBasicInfo'
+        type: array
       total_count:
         example: 100
         type: integer
@@ -899,6 +903,24 @@ definitions:
         type: string
       design:
         $ref: '#/definitions/dJSON.Design'
+      duration:
+        example: 60
+        type: integer
+      id:
+        example: 00000000-0000-0000-0000-000000000000
+        type: string
+      name:
+        example: Premium Consultation
+        type: string
+      price:
+        example: 150
+        type: integer
+    type: object
+  DTO.ServiceBasicInfo:
+    properties:
+      description:
+        example: A 60-minute in-depth business consultation
+        type: string
       duration:
         example: 60
         type: integer
