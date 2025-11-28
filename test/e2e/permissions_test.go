@@ -1,28 +1,28 @@
 package e2e_test
 
-import (
-	"mynute-go/core"
-	// "mynute-go/core/src/lib"
-	// jobLib "mynute-go/job/lib"
-	// "mynute-go/test/src/handler"
-	"mynute-go/test/src/model"
-	// "os"
-	// "testing"
-)
+// import (
+// 	"mynute-go/core"
+// 	"mynute-go/core/src/lib"
+// 	jobLib "mynute-go/job/lib"
+// 	"mynute-go/test/src/handler"
+// 	"mynute-go/test/src/model"
+// 	"os"
+// 	"testing"
+// )
 
-type permissions_test struct {
-	server             *core.Server
-	company1           *model.Company
-	company2           *model.Company
-	client1            *model.Client
-	client2            *model.Client
-	company1_employee1 *model.Employee
-	company1_employee2 *model.Employee
-	company2_employee1 *model.Employee
-	company2_employee2 *model.Employee
-}
+// type permissions_test struct {
+// 	server             *core.Server
+// 	company1           *model.Company
+// 	company2           *model.Company
+// 	client1            *model.Client
+// 	client2            *model.Client
+// 	company1_employee1 *model.Employee
+// 	company1_employee2 *model.Employee
+// 	company2_employee1 *model.Employee
+// 	company2_employee2 *model.Employee
+// }
 
-var permissions_test_instance *permissions_test
+// var permissions_test_instance *permissions_test
 
 // func load_permissions_test_instance(t *testing.T) {
 // 	if permissions_test_instance == nil {
