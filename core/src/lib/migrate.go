@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -69,9 +70,14 @@ func NewMigrate(migrationsPath string) (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("failed to create postgres driver: %w", err)
 	}
 
+	// Convert Windows path to file:// URL format
+	// Replace backslashes with forward slashes and ensure proper file:// prefix
+	migrationsPath = strings.ReplaceAll(migrationsPath, "\\", "/")
+	sourceURL := fmt.Sprintf("file:///%s", migrationsPath)
+
 	// Create migrate instance
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", migrationsPath),
+		sourceURL,
 		"postgres",
 		driver,
 	)
