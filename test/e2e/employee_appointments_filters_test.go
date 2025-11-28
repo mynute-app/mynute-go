@@ -431,4 +431,96 @@ func Test_EmployeeAppointments_Filters(t *testing.T) {
 
 		t.Logf("✓ All filters combined correctly")
 	})
+
+	// Test 11: Verify ServiceInfo is returned correctly
+	t.Run("Test 11: Verify ServiceInfo is populated correctly", func(t *testing.T) {
+		http := handler.NewHttpClient()
+		http.Method("GET")
+		http.ExpectedStatus(200)
+		query := fmt.Sprintf("page=1&page_size=10&timezone=%s&start_date=%s&end_date=%s", TimeZone, tomorrowFormatted, tomorrowFormatted)
+		url := fmt.Sprintf("/employee/%s/appointments?%s", employee.Created.ID.String(), query)
+		http.URL(url)
+		http.Header("X-Company-ID", cy.Created.ID.String())
+		http.Header("X-Auth-Token", cy.Owner.X_Auth_Token)
+		http.Send(nil)
+
+		if http.Error != nil {
+			t.Fatalf("Failed to get employee appointments: %v", http.Error)
+		}
+
+		var appointmentList DTO.AppointmentList
+		http.ParseResponse(&appointmentList)
+
+		// Check that ServiceInfo is populated
+		if len(appointmentList.ServiceInfo) == 0 {
+			t.Error("Expected ServiceInfo to be populated, but it's empty")
+		}
+
+		// We should have 2 unique services (service1 and service2)
+		if len(appointmentList.ServiceInfo) != 2 {
+			t.Errorf("Expected 2 unique services in ServiceInfo, got %d", len(appointmentList.ServiceInfo))
+		}
+
+		// Create a map to quickly lookup services
+		serviceMap := make(map[string]DTO.ServiceBasicInfo)
+		for _, svc := range appointmentList.ServiceInfo {
+			serviceMap[svc.ID.String()] = svc
+			
+			// Verify service has required fields
+			if svc.ID.String() == "" {
+				t.Error("Service ID should not be empty")
+			}
+			if svc.Name == "" {
+				t.Error("Service Name should not be empty")
+			}
+			if svc.Duration == 0 {
+				t.Error("Service Duration should not be zero")
+			}
+		}
+
+		// Verify that all appointments have corresponding service info
+		for _, apt := range appointmentList.Appointments {
+			if _, exists := serviceMap[apt.ServiceID.String()]; !exists {
+				t.Errorf("Appointment has service_id %s but it's not in ServiceInfo", apt.ServiceID.String())
+			}
+		}
+
+		// Verify specific services are present
+		service1Found := false
+		service2Found := false
+		for _, svc := range appointmentList.ServiceInfo {
+			if svc.ID.String() == service1.Created.ID.String() {
+				service1Found = true
+				if svc.Duration != 60 {
+					t.Errorf("Expected service1 duration to be 60, got %d", svc.Duration)
+				}
+			}
+			if svc.ID.String() == service2.Created.ID.String() {
+				service2Found = true
+				if svc.Duration != 60 {
+					t.Errorf("Expected service2 duration to be 60, got %d", svc.Duration)
+				}
+			}
+		}
+
+		if !service1Found {
+			t.Error("Expected to find service1 in ServiceInfo")
+		}
+		if !service2Found {
+			t.Error("Expected to find service2 in ServiceInfo")
+		}
+
+		// Verify ClientInfo is also populated (regression check)
+		if len(appointmentList.ClientInfo) == 0 {
+			t.Error("Expected ClientInfo to be populated, but it's empty")
+		}
+
+		// We should have 3 unique clients
+		if len(appointmentList.ClientInfo) != 3 {
+			t.Errorf("Expected 3 unique clients in ClientInfo, got %d", len(appointmentList.ClientInfo))
+		}
+
+		t.Logf("✓ ServiceInfo correctly populated with %d services", len(appointmentList.ServiceInfo))
+		t.Logf("✓ ClientInfo correctly populated with %d clients", len(appointmentList.ClientInfo))
+	})
 }
