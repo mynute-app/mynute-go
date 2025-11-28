@@ -141,8 +141,6 @@ func DenyUnauthorized(c *fiber.Ctx) error {
 			if err := json.Unmarshal(body_bytes, &body_data); err != nil {
 				return lib.Error.General.AuthError.WithError(fmt.Errorf("unmarshal body error: %w", err))
 			}
-		} else {
-			log.Println("No request body found")
 		}
 	} else if strings.HasPrefix(contentType, "multipart/form-data") {
 		// log.Println("Multipart form data not supported in this context, skipping body parsing")
