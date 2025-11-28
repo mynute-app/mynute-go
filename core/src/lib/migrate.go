@@ -50,18 +50,29 @@ func GetMigrationConfig() *MigrationConfig {
 
 // GetDatabaseURL returns the database connection URL
 func (c *MigrationConfig) GetDatabaseURL() string {
+	// Ensure sslmode is properly set in the connection string
+	sslMode := c.SSLMode
+	if sslMode == "" {
+		sslMode = "disable"
+	}
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		c.User, c.Password, c.Host, c.Port, c.DBName, c.SSLMode)
+		c.User, c.Password, c.Host, c.Port, c.DBName, sslMode)
 }
 
 // NewMigrate creates a new migrate instance
 func NewMigrate(migrationsPath string) (*migrate.Migrate, error) {
 	config := GetMigrationConfig()
 
-	// Open database connection
-	db, err := sql.Open("postgres", config.GetDatabaseURL())
+	// Open database connection with explicit sslmode
+	dbURL := config.GetDatabaseURL()
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	}
+
+	// Test the connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	// Create postgres driver instance
@@ -70,10 +81,13 @@ func NewMigrate(migrationsPath string) (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("failed to create postgres driver: %w", err)
 	}
 
-	// Convert Windows path to file:// URL format
-	// Replace backslashes with forward slashes and ensure proper file:// prefix
+	// Convert Windows path to proper format
+	// golang-migrate needs forward slashes
 	migrationsPath = strings.ReplaceAll(migrationsPath, "\\", "/")
-	sourceURL := fmt.Sprintf("file:///%s", migrationsPath)
+
+	// Use file:// with relative-style path (no triple slash for drive letter)
+	// This works better on Windows: file://C:/path instead of file:///C:/path
+	sourceURL := "file://" + migrationsPath
 
 	// Create migrate instance
 	m, err := migrate.NewWithDatabaseInstance(
