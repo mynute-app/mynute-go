@@ -410,20 +410,21 @@ go run migrate/main.go -action=version
 
 When your Go models change, you need to create a migration to update the database schema.
 
-### Method 1: Smart Migration (Automatic Detection)
+### Automatic Migration Generation (Recommended)
 
-Automatically detects changes between your Go models and database:
+The system automatically detects changes between your Go models and the current database schema:
 
 ```powershell
-# Compare model with database and generate SQL
+# Automatically detect and generate migration SQL
 go run tools/smart-migration/main.go -name=add_employee_bio -models=Employee
 ```
 
-**This will:**
-- Connect to database (uses `POSTGRES_DB_PROD`)
-- Compare GORM model with actual schema
-- Generate both `.up.sql` and `.down.sql` files
-- Include proper multi-tenant loops if needed
+**What this does:**
+- Connects to database (uses `POSTGRES_DB_PROD`)
+- Compares your GORM model with actual database schema
+- Detects added/removed columns automatically
+- Generates both `.up.sql` and `.down.sql` files with correct SQL
+- Includes multi-tenant loops for company schemas when needed
 
 **Example output:**
 ```
@@ -436,44 +437,363 @@ go run tools/smart-migration/main.go -name=add_employee_bio -models=Employee
   - Added column: bio (TEXT)
 ```
 
-### Method 2: Generate Template
-
-Creates migration template with examples:
-
+**For multiple models:**
 ```powershell
-go run tools/generate-migration/main.go -name=add_employee_bio -models=Employee
+# Check multiple models at once
+go run tools/smart-migration/main.go -name=update_contact_info -models=Employee,Branch
 ```
-
-Then edit the generated files to add your specific SQL.
-
-### Method 3: Manual Migration
-
-For complex migrations or data transformations:
-
-```powershell
-# Create empty migration files
-go run migrate/main.go -action=create complex_data_migration
-```
-
-Then write the SQL manually in both files.
 
 ### Testing Your Migration
 
-Always test before applying to production:
+Always test locally before applying to production:
 
 ```powershell
-# Automated test: UP → verify → DOWN → verify → UP
-# Windows PowerShell:
+# Option 1: Automated test script (recommended)
 pwsh -File scripts/test-migration.ps1 -SkipConfirmation
 
-# Or manually test:
+# Option 2: Manual testing
+go run migrate/main.go -action=up      # Apply migration
+go run migrate/main.go -action=version # Check it worked
+go run migrate/main.go -action=down -steps=1  # Rollback
+go run migrate/main.go -action=up      # Apply again
+```
+
+### Important Notes
+
+⚠️ **Always review the generated SQL** before applying to production, even though it's auto-generated.
+
+⚠️ **The tool compares against your current database** (specified by `POSTGRES_DB_PROD`), not migration history.
+
+⚠️ **Test in your development environment first** with `POSTGRES_DB_PROD=devdb`.
+
+---
+
+## Production Migration Tutorial
+
+This is a complete, step-by-step tutorial for applying migrations to a live production system.
+
+### Prerequisites
+
+- [ ] You have new migration files in `migrations/` directory
+- [ ] Migration files have been tested in development
+- [ ] You have access to production server
+- [ ] You have database backup tools installed (`pg_dump`)
+- [ ] You have scheduled a maintenance window (if needed)
+
+### Step 1: Prepare Locally
+
+On your development machine:
+
+```powershell
+# 1. Ensure your migration files are committed
+git status
+git add migrations/
+git commit -m "Add migration: [description]"
+git push
+
+# 2. Test the migration locally one more time
+$env:POSTGRES_DB_PROD = "devdb"
 go run migrate/main.go -action=up
+# Test your application thoroughly
+```
+
+### Step 2: Connect to Production Server
+
+```powershell
+# SSH into your production server
+ssh user@production-server.com
+
+# Navigate to application directory
+cd /app/mynute-go
+```
+
+### Step 3: Update Code
+
+```bash
+# Pull latest code with new migrations
+git pull origin main
+
+# Verify new migration files exist
+ls -la migrations/
+```
+
+### Step 4: Set Environment Variables
+
+```bash
+# Verify production environment is configured
+echo $POSTGRES_DB_PROD  # Should show: maindb (or your production DB name)
+
+# If not set, configure it
+export POSTGRES_DB_PROD=maindb
+export POSTGRES_HOST=your-db-host
+export POSTGRES_USER=your-db-user
+export POSTGRES_PASSWORD=your-db-password
+```
+
+### Step 5: Check Current State
+
+```bash
+# Check current migration version
 go run migrate/main.go -action=version
-go run migrate/main.go -action=down -steps=1
+```
+
+**Example output:**
+```
+20251128111531
+dirty: false
+```
+
+Note this version - it's your rollback point if needed.
+
+### Step 6: Backup Database (CRITICAL!)
+
+```bash
+# Create timestamped backup
+BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).dump"
+pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB_PROD -F c -f $BACKUP_FILE
+
+# Verify backup was created
+ls -lh $BACKUP_FILE
+
+# Store backup safely (copy to backup location)
+cp $BACKUP_FILE /backups/
+```
+
+### Step 7: Stop Application (Optional)
+
+For critical schema changes, stop the application during migration:
+
+```bash
+# If using systemd
+sudo systemctl stop mynute-go
+
+# If using docker
+docker stop mynute-go
+
+# If running directly
+pkill mynute-go
+```
+
+For non-critical changes (adding columns, indexes), you can keep the app running.
+
+### Step 8: Run Migration
+
+```bash
+# Run the migration
 go run migrate/main.go -action=up
 ```
 
-### Migration File Best Practices
+**Watch the output carefully:**
+```
+Running migrations...
+Migrating to version 20251204143000
+Migration complete!
+```
+
+### Step 9: Verify Migration
+
+```bash
+# Check new version
+go run migrate/main.go -action=version
+```
+
+**Expected output:**
+```
+20251204143000
+dirty: false
+```
+
+✅ `dirty: false` means migration completed successfully.
+
+### Step 10: Run Seeding (If Needed)
+
+If you added new endpoints, roles, or policies:
+
+```bash
+# Run seeding to update system data
+go run cmd/seed/main.go
+```
+
+**Output should show:**
+```
+Starting seeding process...
+Target database: maindb
+⚠️  WARNING: Seeding will modify the database specified by POSTGRES_DB_PROD
+
+✓ Seeding completed successfully!
+```
+
+### Step 11: Start Application
+
+```bash
+# If using systemd
+sudo systemctl start mynute-go
+sudo systemctl status mynute-go
+
+# If using docker
+docker start mynute-go
+docker logs -f mynute-go
+
+# If running directly
+./mynute-go &
+```
+
+### Step 12: Verify Application Health
+
+```bash
+# Check application is running
+curl http://localhost:8080/health
+# Or your health check endpoint
+
+# Check logs for errors
+tail -f /var/log/mynute-go/app.log
+# Or: docker logs -f mynute-go
+
+# Test a few API endpoints
+curl http://localhost:8080/api/appointments
+```
+
+### Step 13: Monitor and Validate
+
+Monitor for the next 15-30 minutes:
+
+```bash
+# Watch logs continuously
+tail -f /var/log/mynute-go/app.log
+
+# Check for database errors
+grep -i "error" /var/log/mynute-go/app.log | tail -20
+
+# Monitor system resources
+htop
+# or
+docker stats mynute-go
+```
+
+### Step 14: Cleanup (After 24-48 Hours)
+
+Once you're confident everything is working:
+
+```bash
+# Keep backup for 24-48 hours, then clean up old backups
+find /backups -name "backup_*.dump" -mtime +2 -delete
+```
+
+### Rollback Procedure (If Something Goes Wrong)
+
+If you encounter issues after migration:
+
+#### Quick Rollback (If Migration Just Applied)
+
+```bash
+# Stop application
+sudo systemctl stop mynute-go
+
+# Rollback the migration
+go run migrate/main.go -action=down -steps=1
+
+# Verify rollback
+go run migrate/main.go -action=version
+
+# Start application
+sudo systemctl start mynute-go
+```
+
+#### Full Database Restore (If Rollback Fails)
+
+```bash
+# Stop application completely
+sudo systemctl stop mynute-go
+
+# Restore from backup
+pg_restore -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB_PROD -c $BACKUP_FILE
+
+# Verify restoration
+go run migrate/main.go -action=version
+
+# Start application
+sudo systemctl start mynute-go
+```
+
+### Production Migration Checklist
+
+Before starting:
+- [ ] Migration tested in development
+- [ ] Code committed and pushed to repository
+- [ ] Maintenance window scheduled (if needed)
+- [ ] Team notified of deployment
+- [ ] Backup tools verified
+
+During migration:
+- [ ] Connected to production server
+- [ ] Code updated (git pull)
+- [ ] Environment variables verified
+- [ ] Current migration version noted
+- [ ] Database backup created
+- [ ] Application stopped (if needed)
+- [ ] Migration executed
+- [ ] Migration verified (dirty: false)
+- [ ] Seeding run (if needed)
+- [ ] Application started
+
+After migration:
+- [ ] Application health checked
+- [ ] API endpoints tested
+- [ ] Logs monitored for errors
+- [ ] Team notified of completion
+- [ ] Documentation updated
+
+### Common Production Scenarios
+
+#### Scenario 1: Zero-Downtime Migration (Adding Column)
+
+```bash
+# No need to stop application
+go run migrate/main.go -action=up
+# Application continues running
+```
+
+#### Scenario 2: Maintenance Window Required (Modifying Column)
+
+```bash
+# Stop application first
+sudo systemctl stop mynute-go
+go run migrate/main.go -action=up
+sudo systemctl start mynute-go
+```
+
+#### Scenario 3: Multiple Migrations Pending
+
+```bash
+# Check how many migrations will run
+ls migrations/*.up.sql | sort
+
+# Run all pending migrations at once
+go run migrate/main.go -action=up
+
+# Verify final version
+go run migrate/main.go -action=version
+```
+
+### Best Practices for Production Migrations
+
+✅ **Always backup first** - No exceptions, ever.
+
+✅ **Test in staging** - If you have a staging environment, test there first.
+
+✅ **Schedule wisely** - Run during low-traffic periods.
+
+✅ **Monitor closely** - Watch logs and metrics for at least 30 minutes after.
+
+✅ **Communicate** - Notify your team before and after.
+
+✅ **Document** - Keep a log of what was deployed and when.
+
+✅ **Keep backups** - Don't delete backups for 24-48 hours minimum.
+
+---
+
+## Migration File Best Practices
 
 #### Always Use Idempotent SQL
 
@@ -645,7 +965,7 @@ pg_dump -F c -f backup.dump ...
 
 ## Command Reference
 
-### Essential Commands
+### Migration Commands
 
 ```powershell
 # Check which database will be targeted
@@ -663,27 +983,37 @@ go run migrate/main.go -action=down -steps=1
 # Rollback multiple migrations
 go run migrate/main.go -action=down -steps=3
 
-# Force to specific version (emergency use)
+# Force to specific version (emergency use only)
 go run migrate/main.go -action=force -version=20251128111531
+```
 
-# Create new migration (automatic detection)
-go run tools/smart-migration/main.go -name=description -models=ModelName
+### Creating Migrations
 
-# Create new migration (template)
-go run tools/generate-migration/main.go -name=description -models=ModelName
+```powershell
+# Automatically detect changes and generate migration
+go run tools/smart-migration/main.go -name=add_employee_bio -models=Employee
 
-# Create new migration (manual)
-go run migrate/main.go -action=create description
+# Multiple models
+go run tools/smart-migration/main.go -name=update_fields -models=Employee,Branch
+```
 
-# Test migration manually
-go run migrate/main.go -action=up
-go run migrate/main.go -action=down -steps=1
-go run migrate/main.go -action=up
+### Testing Migrations
 
-# Or use automated test script
+```powershell
+# Automated test (recommended)
 pwsh -File scripts/test-migration.ps1 -SkipConfirmation
 
-# Run seeding
+# Manual testing
+go run migrate/main.go -action=up
+go run migrate/main.go -action=version
+go run migrate/main.go -action=down -steps=1
+go run migrate/main.go -action=up
+```
+
+### Seeding
+
+```powershell
+# Run seeding (updates endpoints, roles, policies)
 go run cmd/seed/main.go
 ```
 
