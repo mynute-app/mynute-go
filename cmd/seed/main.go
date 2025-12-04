@@ -12,17 +12,28 @@ import (
 // Seed command for production environments
 // Usage: go run cmd/seed/main.go
 // Or build: go build -o bin/seed cmd/seed/main.go && ./bin/seed
+//
+// IMPORTANT: This command uses POSTGRES_DB_PROD environment variable
+// to determine which database to seed (same as migrations).
+// Set POSTGRES_DB_PROD=maindb for production, or POSTGRES_DB_PROD=devdb for dev.
 func main() {
 	log.Println("Starting seeding process...")
 
 	// Load environment variables
 	lib.LoadEnv()
 
-	app_env := os.Getenv("APP_ENV")
-	log.Printf("Environment: %s\n", app_env)
+	// Verify POSTGRES_DB_PROD is set
+	dbName := os.Getenv("POSTGRES_DB_PROD")
+	if dbName == "" {
+		log.Fatal("Error: POSTGRES_DB_PROD environment variable is required for seeding")
+	}
 
-	// Connect to database
-	db := database.Connect()
+	log.Printf("Target database: %s\n", dbName)
+	log.Println("⚠️  WARNING: Seeding will modify the database specified by POSTGRES_DB_PROD")
+	log.Println("")
+
+	// Connect to database using production configuration
+	db := database.ConnectForTools()
 	defer db.Disconnect()
 
 	// Start transaction for seeding
