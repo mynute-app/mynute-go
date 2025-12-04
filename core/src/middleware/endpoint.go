@@ -21,6 +21,19 @@ type Endpoint struct {
 func (ep *Endpoint) Build(r fiber.Router) error {
 	db := ep.DB.DB
 
+	// Check if endpoints table exists before querying
+	var tableExists bool
+	err := db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'endpoints')").Scan(&tableExists).Error
+	if err != nil {
+		return fmt.Errorf("failed to check if endpoints table exists: %w", err)
+	}
+
+	if !tableExists {
+		log.Println("⚠️  Endpoints table does not exist yet. Please run migrations first.")
+		log.Println("   Run: docker compose -f docker-compose.prod.yml run --rm migrate")
+		return fmt.Errorf("endpoints table not found - run migrations first")
+	}
+
 	var edps []*model.EndPoint
 	if err := db.Find(&edps).Error; err != nil {
 		return err
