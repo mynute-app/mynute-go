@@ -85,6 +85,10 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - APP_ENV=${APP_ENV:-prod}
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
@@ -96,6 +100,40 @@ services:
         condition: service_started
     networks:
       - mynute-app-network
+
+  # One-time migration job - run this manually when needed
+  migrate:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+    command: ./migrate-tool up
+    profiles:
+      - tools  # Won't run by default, only when explicitly requested
+
+  # One-time seeding job - run this manually when needed
+  seed:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+    command: ./seed-tool
+    profiles:
+      - tools  # Won't run by default, only when explicitly requested
 
   prometheus:
     image: prom/prometheus:v3.4.1
