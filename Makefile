@@ -146,6 +146,8 @@ test-migrate-interactive:
 # ============================================
 # SEEDING COMMANDS
 # ============================================
+# NOTE: Seeding uses POSTGRES_DB_PROD (same as migrations)
+# Set POSTGRES_DB_PROD=maindb for production, or POSTGRES_DB_PROD=devdb for dev
 
 # Run seeding (endpoints, policies, roles, resources)
 seed:
@@ -166,6 +168,11 @@ seed-help:
 	@echo "  make seed              - Run seeding (endpoints, policies, roles, resources)"
 	@echo "  make seed-build        - Build seed binary for production deployment"
 	@echo ""
+	@echo "IMPORTANT: Seeding uses POSTGRES_DB_PROD environment variable"
+	@echo "  - Same as migrations for consistency"
+	@echo "  - Set POSTGRES_DB_PROD=maindb for production"
+	@echo "  - Set POSTGRES_DB_PROD=devdb for development seeding"
+	@echo ""
 	@echo "What gets seeded:"
 	@echo "  - System Resources (tables configuration)"
 	@echo "  - System Roles (Owner, General Manager, etc.)"
@@ -173,9 +180,10 @@ seed-help:
 	@echo "  - Access Policies (RBAC/ABAC rules)"
 	@echo ""
 	@echo "Usage in production:"
-	@echo "  1. Build: make seed-build"
-	@echo "  2. Deploy bin/seed to production server"
-	@echo "  3. Run: ./bin/seed (or seed.exe on Windows)"
+	@echo "  1. Set: POSTGRES_DB_PROD=maindb in .env"
+	@echo "  2. Build: make seed-build"
+	@echo "  3. Deploy bin/seed to production server"
+	@echo "  4. Run: ./bin/seed (or seed.exe on Windows)"
 	@echo ""
 	@echo "Note: Seeding is idempotent - safe to run multiple times"
 	@echo "      Updates existing records, creates new ones"
