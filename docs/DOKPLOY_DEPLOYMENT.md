@@ -2,13 +2,31 @@
 
 ## Overview
 
-Your Dockerfile includes the migration and seeding tools, but they are **run separately** as manual operations:
+This project uses **Docker Compose** for deployment, which includes:
 
+✅ **PostgreSQL database** - Managed within the compose stack  
+✅ **Backend application** - Go application with migration and seeding tools  
+✅ **Monitoring stack** - Prometheus, Grafana, Loki  
 ✅ **Migration tool** - Built and included in the image  
 ✅ **Seeding tool** - Built and included in the image  
 ✅ **Migration files** - Copied to `/mynute-go/migrations`  
 ✅ **Separate execution** - Run migrations/seeding explicitly when needed  
 ✅ **No automatic runs** - App starts immediately without migration delays  
+
+## Important: Use Docker Compose, Not Dockerfile
+
+⚠️ **Critical:** In Dokploy, configure your project to use **Docker Compose**, not just the Dockerfile.
+
+**Why?**
+- The full stack (database + app + monitoring) is defined in `docker-compose.prod.yml`
+- Using Dockerfile only will deploy the app without the database
+- Your app will fail with "no such host" errors if the database isn't running
+- All services need to be on the same Docker network
+
+**In Dokploy:**
+1. Set **Source Type** to "Docker Compose"
+2. Point to `docker-compose.prod.yml`
+3. All services will be deployed together on the same network  
 
 ## Deployment Workflow
 
@@ -27,65 +45,110 @@ Your Dockerfile includes the migration and seeding tools, but they are **run sep
 4. **Deploy updated app** (container restarts)
 5. **Run seeding** (only if new resources added)
 
-## Deployment Commands
+## Dokploy Configuration
 
-### Step 1: Initial Deployment
+### Step 1: Create Application in Dokploy
 
-Deploy the stack (database + app):
+1. **Project Settings:**
+   - Name: `mynute-backend` (or your preference)
+   - Repository: `github.com/mynute-app/mynute-go.git`
+   - Branch: `main`
 
+2. **Build Configuration:**
+   - **Source Type:** `Docker Compose` ⚠️ (NOT "Dockerfile")
+   - **Compose File:** `docker-compose.prod.yml`
+   - **Compose Path:** Leave empty (file is in root)
+
+3. **Advanced Settings > Run Command:**
+   ```bash
+   docker compose -f docker-compose.prod.yml build --no-cache && docker compose -f docker-compose.prod.yml up -d --force-recreate
+   ```
+
+4. **Environment Variables:**
+   Add all variables from your `.env` file (see Required Environment Variables section below)
+
+### Step 2: Initial Deployment
+
+Deploy the stack (database + app + monitoring):
+
+**In Dokploy:**
+- Click "Deploy" button
+- Wait for build to complete
+- Check logs to ensure all services started
+
+**Locally (for testing):**
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-For Dokploy, use:
-```bash
-docker compose build --no-cache && docker compose up -d --force-recreate
-```
-
-### Step 2: Run Migrations (When Needed)
+### Step 3: Run Migrations (When Needed)
 
 **When to run:**
 - First deployment
 - When new `.sql` files exist in `/migrations`
 - After pulling code with database schema changes
 
-**How to run:**
+**How to run in Dokploy:**
 
+1. **Find your project name:**
+   ```bash
+   # SSH into Dokploy server
+   docker ps | grep mynute
+   ```
+   
+   Look for the container with your app name (e.g., `prod-backend-fai3hk-go-backend-app-1`)
+
+2. **Run migrations:**
+   ```bash
+   # Find the compose project directory
+   cd /etc/dokploy/applications/<your-project-id>/
+   
+   # Run migrations using docker compose
+   docker compose -f docker-compose.prod.yml run --rm migrate
+   
+   # OR directly with docker exec
+   docker exec <container-name> ./migrate-tool up
+   ```
+
+**Locally (for testing):**
 ```bash
 # Using docker compose with profiles
 docker compose -f docker-compose.prod.yml run --rm migrate
 
-# OR directly with docker exec (if container is running)
+# OR directly with docker exec
 docker compose -f docker-compose.prod.yml exec go-backend-app ./migrate-tool up
 ```
 
-**For Dokploy:**
-```bash
-# SSH into your Dokploy server, then:
-docker exec <container-name> ./migrate-tool up
-```
-
-### Step 3: Run Seeding (When Needed)
+### Step 4: Run Seeding (When Needed)
 
 **When to run:**
 - First deployment (to populate resources, roles, endpoints, policies)
 - When new resources/endpoints are added to the codebase
 - After manual database cleanup
 
-**How to run:**
+**How to run in Dokploy:**
 
+1. **SSH into Dokploy server and navigate to project:**
+   ```bash
+   cd /etc/dokploy/applications/<your-project-id>/
+   ```
+
+2. **Run seeding:**
+   ```bash
+   # Using docker compose with profiles
+   docker compose -f docker-compose.prod.yml run --rm seed
+   
+   # OR directly with docker exec
+   docker exec <container-name> ./seed-tool
+   ```
+
+**Locally (for testing):**
 ```bash
 # Using docker compose with profiles
 docker compose -f docker-compose.prod.yml run --rm seed
 
-# OR directly with docker exec (if container is running)
+# OR directly with docker exec
 docker compose -f docker-compose.prod.yml exec go-backend-app ./seed-tool
-```
-
-**For Dokploy:**
-```bash
-# SSH into your Dokploy server, then:
-docker exec <container-name> ./seed-tool
 ```
 
 ## Required Environment Variables
@@ -152,36 +215,60 @@ In production, migrations should be:
 
 This is exactly what your current setup allows!
 
-## Deployment Commands
+## Quick Reference Commands
 
-### For Dokploy (Advanced > Run Command)
+### Dokploy Deployment Commands
 
-Use this command in Dokploy's "Advanced > Run Command" section:
+**Initial setup in Dokploy UI:**
+- Set Source Type: `Docker Compose`
+- Compose File: `docker-compose.prod.yml`
+- Advanced > Run Command:
+  ```bash
+  docker compose -f docker-compose.prod.yml build --no-cache && docker compose -f docker-compose.prod.yml up -d --force-recreate
+  ```
 
+**After deployment (SSH into Dokploy server):**
 ```bash
-docker compose build --no-cache && docker compose up -d --force-recreate
-```
+# Navigate to your project
+cd /etc/dokploy/applications/<your-project-id>/
 
-**After deployment, run migrations and seeding manually:**
+# Check running containers
+docker compose -f docker-compose.prod.yml ps
 
-1. SSH into your Dokploy server
-2. Find your container: `docker ps | grep mynute`
-3. Run migrations: `docker exec <container-name> ./migrate-tool up`
-4. Run seeding: `docker exec <container-name> ./seed-tool`
+# View logs
+docker compose -f docker-compose.prod.yml logs go-backend-app
+docker compose -f docker-compose.prod.yml logs postgres
 
-### For Local Testing
-
-Test the production setup locally:
-
-```bash
-# Deploy the stack
-docker compose -f docker-compose.prod.yml up -d --build
-
-# Run migrations (one-time or when needed)
+# Run migrations (first time or when needed)
 docker compose -f docker-compose.prod.yml run --rm migrate
 
-# Run seeding (one-time or when needed)
+# Run seeding (first time or when needed)
 docker compose -f docker-compose.prod.yml run --rm seed
+
+# Restart services
+docker compose -f docker-compose.prod.yml restart go-backend-app
+```
+
+### Local Testing Commands
+
+```bash
+# Deploy the full stack
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Check services
+docker compose -f docker-compose.prod.yml ps
+
+# Run migrations
+docker compose -f docker-compose.prod.yml run --rm migrate
+
+# Run seeding
+docker compose -f docker-compose.prod.yml run --rm seed
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f go-backend-app
+
+# Stop everything
+docker compose -f docker-compose.prod.yml down
 ```
 
 ## Monitoring Deployment
@@ -221,6 +308,45 @@ SELECT * FROM endpoints;
 ```
 
 ## Troubleshooting
+
+### ❌ Error: "no such host" when connecting to postgres
+
+**Error message:**
+```
+[error] failed to initialize database, got error failed to connect to `host=postgres user=postgres database=maindb`: 
+hostname resolving error (lookup postgres on 127.0.0.11:53: no such host)
+```
+
+**Cause:** Dokploy is deploying only the Dockerfile, not the full docker-compose stack.
+
+**Solution:**
+
+1. **In Dokploy UI, verify Source Type:**
+   - Should be: `Docker Compose` ✅
+   - NOT: `Dockerfile` ❌
+
+2. **Verify Compose File setting:**
+   - Compose File: `docker-compose.prod.yml`
+   - Compose Path: (leave empty)
+
+3. **Redeploy the application:**
+   - This will deploy ALL services (postgres + app + monitoring)
+   - All containers will be on the same network
+   - The app can resolve `postgres` hostname
+
+4. **Verify all services are running:**
+   ```bash
+   # SSH to Dokploy server
+   cd /etc/dokploy/applications/<your-project-id>/
+   docker compose -f docker-compose.prod.yml ps
+   
+   # You should see:
+   # - postgres (healthy)
+   # - go-backend-app (running)
+   # - grafana (healthy)
+   # - loki (running)
+   # - prometheus (running)
+   ```
 
 ### Migrations Not Running
 
@@ -307,6 +433,41 @@ docker exec <postgres-container> psql -U <user> -l
 6. **Set up backups** - Follow backup procedures in MIGRATIONS.md before future updates
 
 ## Complete First Deployment Example
+
+### In Dokploy UI:
+
+1. **Create New Application**
+   - Set Source Type to `Docker Compose`
+   - Point to `docker-compose.prod.yml`
+   - Configure environment variables
+
+2. **Deploy**
+   - Click "Deploy" button
+   - Wait for build and deployment
+
+3. **Post-Deployment (SSH to server):**
+   ```bash
+   # Navigate to project
+   cd /etc/dokploy/applications/<your-project-id>/
+   
+   # Wait for database to be healthy
+   docker compose -f docker-compose.prod.yml logs postgres
+   
+   # Run migrations (first time)
+   docker compose -f docker-compose.prod.yml run --rm migrate
+   
+   # Run seeding (first time)
+   docker compose -f docker-compose.prod.yml run --rm seed
+   
+   # Check app is running
+   docker compose -f docker-compose.prod.yml ps
+   docker compose -f docker-compose.prod.yml logs go-backend-app
+   
+   # Test your API (from server or use your domain)
+   curl http://localhost:4000/health
+   ```
+
+### Locally:
 
 ```bash
 # 1. Deploy the stack

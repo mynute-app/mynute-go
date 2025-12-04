@@ -248,17 +248,34 @@ The application automatically uses the test database (`POSTGRES_DB_TEST`) when `
 
 ## 🚀 Deployment
 
-### Production with Docker
+### Production with Docker Compose (Recommended)
 
-1. **Build production image**
+**Important:** Use Docker Compose for production deployments to ensure all services (database, app, monitoring) are properly networked together.
+
+1. **Configure environment variables**
+   - Copy `.env.example` to `.env`
+   - Set `APP_ENV=prod`
+   - Configure all required production variables
+
+2. **Deploy with Docker Compose**
    ```bash
-   docker-compose -f docker-compose.prod.yml build
+   docker compose -f docker-compose.prod.yml up -d --build
    ```
 
-2. **Deploy with production configuration**
+3. **Run migrations** (first deployment or when schema changes)
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker compose -f docker-compose.prod.yml run --rm migrate
    ```
+
+4. **Run seeding** (first deployment or when resources change)
+   ```bash
+   docker compose -f docker-compose.prod.yml run --rm seed
+   ```
+
+**For Dokploy deployment:**
+- See detailed guide: [docs/DOKPLOY_DEPLOYMENT.md](docs/DOKPLOY_DEPLOYMENT.md)
+- **Critical:** Configure Source Type as `Docker Compose`, not `Dockerfile`
+- Point to `docker-compose.prod.yml`
 
 ### Manual Production Deployment
 
@@ -269,10 +286,15 @@ The application automatically uses the test database (`POSTGRES_DB_TEST`) when `
 
 2. **Run migrations manually**
    ```bash
-   make migrate-up
+   go run migrate/main.go -action=up
    ```
 
-3. **Start application**
+3. **Run seeding**
+   ```bash
+   go run cmd/seed/main.go
+   ```
+
+4. **Start application**
    ```bash
    ./mynute-backend-app
    ```
@@ -315,8 +337,9 @@ Each company gets its own database schema for data isolation:
 
 ## 📖 Additional Documentation
 
-- [Database Migrations Guide](docs/MIGRATIONS.md)
-- [Migration Workflow](docs/MIGRATION_WORKFLOW.md)
+- [Database Migrations Guide](docs/MIGRATIONS.md) - Complete migration workflow
+- [Seeding Guide](docs/SEEDING.md) - Database seeding for resources and permissions
+- [Dokploy Deployment Guide](docs/DOKPLOY_DEPLOYMENT.md) - Docker Compose deployment on Dokploy
 - [Email System Documentation](core/src/lib/email/README.md)
 - [API Documentation](docs/swagger.yaml)
 
