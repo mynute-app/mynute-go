@@ -1146,6 +1146,37 @@ psql -h $env:POSTGRES_HOST -U $env:POSTGRES_USER -c "CREATE DATABASE $env:POSTGR
 
 ---
 
+## Docker/Dokploy Deployment
+
+For Docker-based deployments (including Dokploy), migrations are **manual operations** that you run explicitly:
+
+### Running Migrations in Docker
+
+```bash
+# If using docker-compose with profiles
+docker compose -f docker-compose.prod.yml run --rm migrate
+
+# Or directly in a running container
+docker exec <container-name> ./migrate-tool up
+```
+
+### Important Notes
+
+- **No automatic migrations** - The app starts immediately without running migrations
+- **Manual control** - You decide when migrations run (after backups, during maintenance windows)
+- **Fast restarts** - Container restarts don't trigger unnecessary migration checks
+- **Production best practice** - Migrations should be deliberate, reviewed operations
+
+### Complete Deployment Workflow
+
+See `docs/DOKPLOY_DEPLOYMENT.md` for:
+- First-time deployment steps
+- Ongoing deployment with migrations
+- Troubleshooting common issues
+- Complete examples with docker-compose
+
+---
+
 **Need Help?** Run `go run migrate/main.go -action=help` or check available actions: `up`, `down`, `version`, `force`, `create`
 
 

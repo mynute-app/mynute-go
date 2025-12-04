@@ -900,4 +900,42 @@ If you see duplicates, check that these fields are consistent in your code.
 
 ---
 
-**Need Help?** Run `make seed-help` for quick reference or see [MIGRATIONS.md](./MIGRATIONS.md) for related migration commands.
+## Docker/Dokploy Deployment
+
+For Docker-based deployments (including Dokploy), seeding is a **manual operation** that you run explicitly:
+
+### Running Seeding in Docker
+
+```bash
+# If using docker-compose with profiles
+docker compose -f docker-compose.prod.yml run --rm seed
+
+# Or directly in a running container
+docker exec <container-name> ./seed-tool
+```
+
+### When to Run Seeding
+
+- **First deployment** - Populate initial resources, roles, endpoints, and policies
+- **After endpoint changes** - When you add/modify API endpoints in code
+- **After role/policy changes** - When authorization rules change
+- **After database reset** - To repopulate system data
+
+### Important Notes
+
+- **No automatic seeding** - The app starts immediately without running seeding
+- **Manual control** - You decide when seeding runs
+- **Idempotent** - Safe to run multiple times (won't create duplicates)
+- **Always after migrations** - Run seeding after migrations complete
+
+### Complete Deployment Workflow
+
+See `docs/DOKPLOY_DEPLOYMENT.md` for:
+- First-time deployment with seeding
+- Ongoing deployments with selective seeding
+- Complete examples with docker-compose
+- Troubleshooting common issues
+
+---
+
+**Need Help?** Run `go run cmd/seed/main.go -help` for more options or see [MIGRATIONS.md](./MIGRATIONS.md) for related migration commands.
