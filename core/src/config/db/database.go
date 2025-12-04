@@ -111,7 +111,77 @@ func Connect() *Database {
 	return dbWrapper
 }
 
-// Seed the database with initial data
+// ConnectForTools connects to the database using POSTGRES_DB_PROD
+// This is used by migration and seeding tools to ensure explicit database targeting
+// Use this for: migrate/main.go, cmd/seed/main.go, and other CLI tools
+func ConnectForTools() *Database {
+	// Get environment variables
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB_PROD")
+	port := os.Getenv("POSTGRES_PORT")
+	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")
+	sslmode := "disable"
+	timeZone := "UTC"
+	LogLevel := logger.Warn
+
+	if dbName == "" {
+		log.Fatal("POSTGRES_DB_PROD environment variable is required for tools")
+	}
+
+	if db_log_level == "info" {
+		LogLevel = logger.Info
+	} else if db_log_level == "error" {
+		LogLevel = logger.Error
+	} else if db_log_level == "silent" {
+		LogLevel = logger.Silent
+	} else if db_log_level == "warn" {
+		LogLevel = logger.Warn
+	}
+
+	log.Printf("Connecting to database: %s\n", dbName)
+
+	// Build the DSN (Data Source Name)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		host, user, password, dbName, port, sslmode, timeZone)
+
+	customGormLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  LogLevel,
+			Colorful:                  true,
+			IgnoreRecordNotFoundError: true,
+		},
+	)
+
+	gormConfig := &gorm.Config{
+		Logger: customGormLogger,
+	}
+
+	// Connect to the database
+	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
+	if err != nil {
+		log.Fatal("Failed to connect to the database: ", err)
+	}
+
+	// Set the connection pool settings
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("Failed to get database connection pool: ", err)
+	}
+
+	sqlDB.SetMaxIdleConns(20)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(15 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(2 * time.Second)
+
+	return &Database{
+		Gorm:  db,
+		Error: nil,
+	}
+}
 func (db *Database) InitialSeed() {
 	tx, end, err := Transaction(db.Gorm)
 	defer end(nil)
