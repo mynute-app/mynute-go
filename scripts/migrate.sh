@@ -34,7 +34,7 @@ echo ""
 # Confirmation for production
 if [ "$APP_ENV" = "prod" ]; then
     echo "⚠️  WARNING: Running migrations in PRODUCTION environment!"
-    echo "Database: $POSTGRES_DB"
+    echo "Database: $POSTGRES_DB_PROD"
     echo ""
     read -p "Are you sure you want to continue? (yes/no): " -r
     if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then

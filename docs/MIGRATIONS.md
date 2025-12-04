@@ -19,7 +19,7 @@ This project uses **golang-migrate** for database schema management, providing v
    POSTGRES_PORT=5432
    POSTGRES_USER=your_user
    POSTGRES_PASSWORD=your_password
-   POSTGRES_DB=your_prod_db
+   POSTGRES_DB_PROD=your_prod_db
    POSTGRES_DB_DEV=your_dev_db
    POSTGRES_DB_TEST=your_test_db
    APP_ENV=dev  # or test, prod

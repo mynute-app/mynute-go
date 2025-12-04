@@ -48,7 +48,7 @@ Write-Host ""
 # Confirmation for production
 if ($appEnv -eq "prod") {
     Write-Host "⚠️  WARNING: Running migrations in PRODUCTION environment!" -ForegroundColor Yellow
-    Write-Host "Database: $env:POSTGRES_DB" -ForegroundColor Yellow
+    Write-Host "Database: $env:POSTGRES_DB_PROD" -ForegroundColor Yellow
     Write-Host ""
     $confirmation = Read-Host "Are you sure you want to continue? (yes/no)"
     if ($confirmation -ne "yes") {

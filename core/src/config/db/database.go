@@ -34,7 +34,7 @@ func Connect() *Database {
 	host := os.Getenv("POSTGRES_HOST")
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
+	dbName := os.Getenv("POSTGRES_DB_PROD")
 	port := os.Getenv("POSTGRES_PORT")
 	app_env := os.Getenv("APP_ENV")
 	db_log_level := os.Getenv("POSTGRES_LOG_LEVEL")

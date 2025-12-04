@@ -2,14 +2,14 @@
 
 ## CRITICAL CHANGE
 
-**Migration tools now ALWAYS use `POSTGRES_DB` environment variable.**
+**Migration tools now ALWAYS use `POSTGRES_DB_PROD` environment variable.**
 
 This ensures migrations are explicit about which database they target, preventing accidental migrations to the wrong database.
 
 ## How It Works Now
 
 ### Migration Tools Behavior
-All migration-related tools use **only** `POSTGRES_DB`:
+All migration-related tools use **only** `POSTGRES_DB_PROD`:
 - `make migrate-up`
 - `make migrate-down`
 - `make migrate-smart`
@@ -21,35 +21,35 @@ All migration-related tools use **only** `POSTGRES_DB`:
 The application (`go run main.go`) uses `APP_ENV` to determine database:
 - `APP_ENV=dev` → Uses `POSTGRES_DB_DEV`
 - `APP_ENV=test` → Uses `POSTGRES_DB_TEST`
-- `APP_ENV=prod` → Uses `POSTGRES_DB`
+- `APP_ENV=prod` → Uses `POSTGRES_DB_PROD`
 
 ## Configuration Examples
 
 ### Development Environment (.env)
 ```env
 APP_ENV=dev
-POSTGRES_DB=devdb           # Migration tools target devdb
+POSTGRES_DB_PROD=devdb           # Migration tools target devdb
 POSTGRES_DB_DEV=devdb       # App uses this when APP_ENV=dev
 POSTGRES_DB_TEST=testdb     # App uses this when APP_ENV=test
 ```
 
 **Result:**
 - `go run main.go` → Connects to **devdb** (via APP_ENV)
-- `make migrate-up` → Migrates **devdb** (via POSTGRES_DB)
-- `make migrate-smart` → Checks **devdb** (via POSTGRES_DB)
+- `make migrate-up` → Migrates **devdb** (via POSTGRES_DB_PROD)
+- `make migrate-smart` → Checks **devdb** (via POSTGRES_DB_PROD)
 
 ### Production Environment (.env)
 ```env
 APP_ENV=prod
-POSTGRES_DB=maindb          # Migration tools target maindb
+POSTGRES_DB_PROD=maindb          # Migration tools target maindb
 POSTGRES_DB_DEV=devdb       # Not used in production
 POSTGRES_DB_TEST=testdb     # Not used in production
 ```
 
 **Result:**
 - `go run main.go` → Connects to **maindb** (via APP_ENV)
-- `make migrate-up` → Migrates **maindb** (via POSTGRES_DB)
-- `make migrate-smart` → Checks **maindb** (via POSTGRES_DB)
+- `make migrate-up` → Migrates **maindb** (via POSTGRES_DB_PROD)
+- `make migrate-smart` → Checks **maindb** (via POSTGRES_DB_PROD)
 
 ## Why This Change?
 
@@ -57,7 +57,7 @@ POSTGRES_DB_TEST=testdb     # Not used in production
 ```bash
 # In production .env
 APP_ENV=prod
-POSTGRES_DB=maindb
+POSTGRES_DB_PROD=maindb
 
 # Developer runs migration thinking they're on dev
 make migrate-up
@@ -68,11 +68,11 @@ make migrate-up
 ```bash
 # In production .env
 APP_ENV=prod
-POSTGRES_DB=maindb  # Explicitly set to maindb
+POSTGRES_DB_PROD=maindb  # Explicitly set to maindb
 
 # Developer sees clearly which database will be migrated
 make migrate-up
-# ✅ Migrates maindb because POSTGRES_DB=maindb
+# ✅ Migrates maindb because POSTGRES_DB_PROD=maindb
 ```
 
 ## Workflow Examples
@@ -81,7 +81,7 @@ make migrate-up
 ```bash
 # Set up .env
 APP_ENV=dev
-POSTGRES_DB=devdb
+POSTGRES_DB_PROD=devdb
 
 # Run migrations on dev database
 make migrate-up          # Targets devdb
@@ -97,7 +97,7 @@ go run main.go           # Connects to devdb
 ```bash
 # Set up .env for test
 APP_ENV=test
-POSTGRES_DB=testdb  # Point migration tools to test DB
+POSTGRES_DB_PROD=testdb  # Point migration tools to test DB
 
 # Run migrations on test database
 make migrate-up          # Targets testdb
@@ -110,7 +110,7 @@ go test ./...           # App connects to testdb via APP_ENV
 ```bash
 # Production .env
 APP_ENV=prod
-POSTGRES_DB=maindb  # ALWAYS explicit!
+POSTGRES_DB_PROD=maindb  # ALWAYS explicit!
 
 # Run migrations BEFORE deploying new code
 make migrate-up          # Targets maindb
@@ -126,21 +126,21 @@ make migrate-up          # Targets maindb
 
 Before running migrations:
 
-1. ✅ Check `POSTGRES_DB` value
+1. ✅ Check `POSTGRES_DB_PROD` value
    ```bash
-   echo $POSTGRES_DB  # Linux/Mac
-   echo $env:POSTGRES_DB  # Windows PowerShell
+   echo $POSTGRES_DB_PROD  # Linux/Mac
+   echo $env:POSTGRES_DB_PROD  # Windows PowerShell
    ```
 
 2. ✅ Verify you're targeting the right database
    ```bash
-   psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT current_database();"
+   psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB_PROD -c "SELECT current_database();"
    ```
 
 3. ✅ For production, ALWAYS double-check
    ```bash
    # Should output 'maindb' (or your production DB name)
-   grep POSTGRES_DB .env
+   grep POSTGRES_DB_PROD .env
    ```
 
 4. ✅ Run migration
@@ -154,7 +154,7 @@ Before running migrations:
 ```yaml
 - name: Run Migrations
   env:
-    POSTGRES_DB: ${{ secrets.PROD_DB_NAME }}  # Explicit!
+    POSTGRES_DB_PROD: ${{ secrets.PROD_DB_NAME }}  # Explicit!
     POSTGRES_HOST: ${{ secrets.PROD_DB_HOST }}
     POSTGRES_USER: ${{ secrets.PROD_DB_USER }}
     POSTGRES_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
@@ -167,7 +167,7 @@ services:
   migrations:
     image: mynute-go:latest
     environment:
-      - POSTGRES_DB=maindb  # Explicit!
+      - POSTGRES_DB_PROD=maindb  # Explicit!
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -185,12 +185,12 @@ APP_ENV=dev make migrate-up  # Used to migrate devdb
 
 **New way:**
 ```bash
-POSTGRES_DB=devdb make migrate-up  # Explicitly target devdb
+POSTGRES_DB_PROD=devdb make migrate-up  # Explicitly target devdb
 ```
 
 Or update your `.env` file:
 ```env
-POSTGRES_DB=devdb  # Set this explicitly
+POSTGRES_DB_PROD=devdb  # Set this explicitly
 ```
 
 ## Benefits
@@ -204,13 +204,13 @@ POSTGRES_DB=devdb  # Set this explicitly
 ## Questions?
 
 - **Q: How do I migrate my dev database?**
-  - A: Set `POSTGRES_DB=devdb` in your `.env`
+  - A: Set `POSTGRES_DB_PROD=devdb` in your `.env`
 
 - **Q: How do I migrate production?**
-  - A: Set `POSTGRES_DB=maindb` in production `.env`
+  - A: Set `POSTGRES_DB_PROD=maindb` in production `.env`
 
 - **Q: Can I override via command line?**
-  - A: Yes! `POSTGRES_DB=mydb make migrate-up`
+  - A: Yes! `POSTGRES_DB_PROD=mydb make migrate-up`
 
-- **Q: What if POSTGRES_DB is not set?**
+- **Q: What if POSTGRES_DB_PROD is not set?**
   - A: Migration tools will fail with clear error message

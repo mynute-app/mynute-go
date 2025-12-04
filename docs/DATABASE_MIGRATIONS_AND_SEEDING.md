@@ -27,7 +27,7 @@ This is your comprehensive guide to database migrations and seeding in the mynut
 ```bash
 # 1. Set your database target (CRITICAL!)
 # Edit .env file:
-POSTGRES_DB=devdb          # Your target database
+POSTGRES_DB_PROD=devdb          # Your target database
 
 # 2. Run initial schema migration
 go run migrate/main.go up
@@ -50,10 +50,10 @@ go run main.go
 
 ```bash
 # 1. Run migrations manually
-POSTGRES_DB=proddb go run migrate/main.go up
+POSTGRES_DB_PROD=proddb go run migrate/main.go up
 
 # 2. Run seeding manually
-POSTGRES_DB=proddb go run cmd/seed/main.go
+POSTGRES_DB_PROD=proddb go run cmd/seed/main.go
 
 # 3. Start your app (no auto-migration in prod)
 APP_ENV=prod go run main.go
@@ -352,7 +352,7 @@ func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 - [ ] Migration DOWN scripts tested (rollback plan)
 - [ ] Seeding tested with production-like data
 - [ ] Database backup created
-- [ ] `POSTGRES_DB` environment variable set correctly
+- [ ] `POSTGRES_DB_PROD` environment variable set correctly
 - [ ] No `APP_ENV=dev` in production!
 
 ### Deployment Steps
@@ -360,7 +360,7 @@ func EndPoints(cfg *EndpointCfg, db *gorm.DB) ([]*EndPoint, func(), error) {
 ```bash
 # 1. Set environment variables
 export APP_ENV=prod
-export POSTGRES_DB=proddb
+export POSTGRES_DB_PROD=proddb
 export POSTGRES_USER=produser
 export POSTGRES_PASSWORD=***
 
@@ -412,7 +412,7 @@ psql -h localhost -U produser -d proddb < backup_YYYYMMDD.sql
 go run main.go
 
 # What happens:
-# 1. Connects to POSTGRES_DB (from .env)
+# 1. Connects to POSTGRES_DB_PROD (from .env)
 # 2. Auto-runs GORM migrations for GeneralModels
 # 3. Auto-seeds roles, endpoints, policies
 # 4. Starts server
@@ -465,7 +465,7 @@ go run tools/smart-migration/main.go
 createdb testdb
 
 # 2. Point to test database
-export POSTGRES_DB=testdb
+export POSTGRES_DB_PROD=testdb
 
 # 3. Run migrations
 go run migrate/main.go up
@@ -578,16 +578,16 @@ db.Seed("Roles", model.Roles, "name = ? AND company_id IS NULL", []string{"Name"
 
 ```bash
 # Check what database you're targeting
-echo $POSTGRES_DB
+echo $POSTGRES_DB_PROD
 
 # If wrong, set it:
-export POSTGRES_DB=devdb
+export POSTGRES_DB_PROD=devdb
 
 # Never rely on APP_ENV to determine database!
-# Migration tools now explicitly use POSTGRES_DB only
+# Migration tools now explicitly use POSTGRES_DB_PROD only
 ```
 
-See `docs/MIGRATION_DATABASE_CONFIG.md` for the critical POSTGRES_DB change.
+See `docs/MIGRATION_DATABASE_CONFIG.md` for the critical POSTGRES_DB_PROD change.
 
 ---
 
@@ -613,7 +613,7 @@ See `docs/MIGRATION_DATABASE_CONFIG.md` for the critical POSTGRES_DB change.
 
 | Variable | Required | Purpose | Example |
 |----------|----------|---------|---------|
-| `POSTGRES_DB` | ✅ Yes | Target database for migrations | `devdb` |
+| `POSTGRES_DB_PROD` | ✅ Yes | Target database for migrations | `devdb` |
 | `POSTGRES_USER` | ✅ Yes | Database user | `postgres` |
 | `POSTGRES_PASSWORD` | ✅ Yes | Database password | `***` |
 | `POSTGRES_HOST` | ✅ Yes | Database host | `localhost` |
@@ -635,7 +635,7 @@ See `docs/MIGRATION_DATABASE_CONFIG.md` for the critical POSTGRES_DB change.
 ### Migrations
 
 ✅ **Always:**
-- Use `POSTGRES_DB` to explicitly target database
+- Use `POSTGRES_DB_PROD` to explicitly target database
 - Test on staging before production
 - Create both UP and DOWN migrations
 - Use `IF NOT EXISTS` / `IF EXISTS`
@@ -668,7 +668,7 @@ See `docs/MIGRATION_DATABASE_CONFIG.md` for the critical POSTGRES_DB change.
 
 ## Related Documentation
 
-- **[MIGRATION_DATABASE_CONFIG.md](./MIGRATION_DATABASE_CONFIG.md)** - CRITICAL: POSTGRES_DB change
+- **[MIGRATION_DATABASE_CONFIG.md](./MIGRATION_DATABASE_CONFIG.md)** - CRITICAL: POSTGRES_DB_PROD change
 - **[SEEDING.md](./SEEDING.md)** - Detailed seeding guide
 - **[MIGRATIONS.md](./MIGRATIONS.md)** - Legacy migration docs
 - **[MIGRATION_WORKFLOW.md](./MIGRATION_WORKFLOW.md)** - Workflow diagrams
@@ -717,13 +717,13 @@ go build -o bin/seed cmd/seed/main.go
 # ==========================================
 # DATABASE TARGETING
 # ==========================================
-export POSTGRES_DB=devdb                    # Set target
-echo $POSTGRES_DB                           # Verify target
+export POSTGRES_DB_PROD=devdb                    # Set target
+echo $POSTGRES_DB_PROD                           # Verify target
 
 # ==========================================
 # PRODUCTION DEPLOYMENT
 # ==========================================
-export POSTGRES_DB=proddb
+export POSTGRES_DB_PROD=proddb
 go run migrate/main.go up
 go run cmd/seed/main.go
 APP_ENV=prod go run main.go
@@ -735,7 +735,7 @@ APP_ENV=prod go run main.go
 1. Check [Troubleshooting](#troubleshooting) section
 2. Review related documentation
 3. Check migration tool output for hints
-4. Verify `POSTGRES_DB` is set correctly
+4. Verify `POSTGRES_DB_PROD` is set correctly
 
 **Last Updated:** October 28, 2025  
 **Maintainer:** mynute-app team

@@ -77,7 +77,7 @@ Add this step **before** deploying your app:
     POSTGRES_HOST: ${{ secrets.DB_HOST }}
     POSTGRES_USER: ${{ secrets.DB_USER }}
     POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-    POSTGRES_DB: ${{ secrets.DB_NAME }}
+    POSTGRES_DB_PROD: ${{ secrets.DB_NAME }}
 ```
 
 **Example (Docker deployment):**
@@ -144,7 +144,7 @@ make migrate-down-n STEPS=3
 Migrations use your existing `.env` configuration:
 - `APP_ENV` - Determines which database to use
 - `POSTGRES_HOST`, `POSTGRES_PORT`, etc. - Database connection
-- `POSTGRES_DB` - Production database
+- `POSTGRES_DB_PROD` - Production database
 - `POSTGRES_DB_DEV` - Development database  
 - `POSTGRES_DB_TEST` - Test database
 

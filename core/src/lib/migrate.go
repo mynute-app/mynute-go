@@ -29,13 +29,13 @@ type MigrationConfig struct {
 }
 
 // GetMigrationConfig returns the migration configuration from environment variables
-// IMPORTANT: Migrations always use POSTGRES_DB (production database).
-// For dev/test migrations, set POSTGRES_DB=devdb or POSTGRES_DB=testdb in your .env
+// IMPORTANT: Migrations always use POSTGRES_DB_PROD (production database).
+// For dev/test migrations, set POSTGRES_DB_PROD=devdb or POSTGRES_DB_PROD=testdb in your .env
 func GetMigrationConfig() *MigrationConfig {
-	dbName := os.Getenv("POSTGRES_DB")
+	dbName := os.Getenv("POSTGRES_DB_PROD")
 
 	if dbName == "" {
-		log.Fatal("POSTGRES_DB environment variable is required for migrations")
+		log.Fatal("POSTGRES_DB_PROD environment variable is required for migrations")
 	}
 
 	return &MigrationConfig{

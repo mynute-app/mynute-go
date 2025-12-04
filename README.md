@@ -85,7 +85,7 @@ mynute-go/
    POSTGRES_PORT=5432
    POSTGRES_USER=your_user
    POSTGRES_PASSWORD=your_password
-   POSTGRES_DB=mynute_prod
+   POSTGRES_DB_PROD=mynute_prod
    POSTGRES_DB_DEV=mynute_dev
    POSTGRES_DB_TEST=mynute_test
    
@@ -162,11 +162,11 @@ Access the interactive API documentation at: `http://localhost:4000/swagger/`
 
 ### Important: Database Configuration
 
-⚠️ **Migration tools use `POSTGRES_DB` environment variable to determine the target database.**
+⚠️ **Migration tools use `POSTGRES_DB_PROD` environment variable to determine the target database.**
 
 Set this explicitly in your `.env` file:
-- Development: `POSTGRES_DB=devdb`
-- Production: `POSTGRES_DB=maindb`
+- Development: `POSTGRES_DB_PROD=devdb`
+- Production: `POSTGRES_DB_PROD=maindb`
 
 See [docs/MIGRATION_DATABASE_CONFIG.md](docs/MIGRATION_DATABASE_CONFIG.md) for details.
 
