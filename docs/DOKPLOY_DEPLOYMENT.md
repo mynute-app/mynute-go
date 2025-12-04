@@ -32,18 +32,27 @@ This project uses **Docker Compose** for deployment, which includes:
 
 ### Initial Deployment (First Time)
 
+**The application now uses a wait/retry mechanism:**
+- App will wait up to 2.5 minutes (30 attempts × 5 seconds) for migrations to complete
+- No more crash loops if migrations haven't run yet
+- You can run migrations while the app is waiting
+
+**Steps:**
+
 1. **Deploy the stack** (creates database and app)
-2. **Run migrations** (one-time setup)
-3. **Run seeding** (one-time setup)
-4. **App is ready** to serve traffic
+2. **App starts and waits for migrations** (logs will show "Waiting for migrations...")
+3. **Run migrations** (while app is waiting or after)
+4. **Run seeding** (populates initial data)
+5. **App automatically continues** and loads endpoints
 
 ### Ongoing Deployments (Updates)
 
 1. **Review changes** - Check if new migrations exist
 2. **Backup database** (if migrations present)
-3. **Run new migrations** (only if needed)
-4. **Deploy updated app** (container restarts)
+3. **Deploy updated app** (container restarts, waits for migrations if needed)
+4. **Run new migrations** (only if needed)
 5. **Run seeding** (only if new resources added)
+6. **App loads automatically** after detecting migrations are complete
 
 ## Dokploy Configuration
 
@@ -83,32 +92,51 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ### Step 3: Run Migrations (When Needed)
 
+**The app waits for migrations automatically!**
+
+The application will wait up to 2.5 minutes for the endpoints table to exist. You can run migrations at any time during this waiting period or after deployment.
+
 **When to run:**
-- First deployment
+- First deployment (required)
 - When new `.sql` files exist in `/migrations`
 - After pulling code with database schema changes
 
 **How to run in Dokploy:**
 
-1. **Find your project name:**
-   ```bash
-   # SSH into Dokploy server
-   docker ps | grep mynute
-   ```
-   
-   Look for the container with your app name (e.g., `prod-backend-fai3hk-go-backend-app-1`)
+The app will be waiting and showing logs like:
+```
+⚠️  Endpoints table does not exist yet. Waiting for migrations...
+   Attempt 1/30: Waiting 5 seconds for migrations to complete...
+```
 
-2. **Run migrations:**
-   ```bash
-   # Find the compose project directory
-   cd /etc/dokploy/applications/<your-project-id>/
-   
-   # Run migrations using docker compose
-   docker compose -f docker-compose.prod.yml run --rm migrate
-   
-   # OR directly with docker exec
-   docker exec <container-name> ./migrate-tool up
-   ```
+While it's waiting (or after stopping it), run:
+
+```bash
+# SSH into Dokploy server
+# Find your backend container
+docker ps | grep backend
+
+# Option 1: Stop app, run migration, start app
+docker stop <backend-container-name>
+docker run --rm \
+  --network <project>_mynute-app-network \
+  -e POSTGRES_HOST=postgres \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=<your-password> \
+  -e POSTGRES_DB_PROD=maindb \
+  <backend-image> \
+  ./migrate-tool up
+docker start <backend-container-name>
+
+# Option 2: If you have docker-compose access
+cd /path/to/project/
+docker compose -f docker-compose.prod.yml run --rm migrate
+
+# Option 3: Direct psql (copy migration file and run)
+docker cp <backend-container>:/mynute-go/migrations/20251120000000_initial_schema_setup.up.sql /tmp/
+docker exec -i <postgres-container> psql -U postgres -d maindb < /tmp/20251120000000_initial_schema_setup.up.sql
+```
 
 **Locally (for testing):**
 ```bash
@@ -126,21 +154,32 @@ docker compose -f docker-compose.prod.yml exec go-backend-app ./migrate-tool up
 - When new resources/endpoints are added to the codebase
 - After manual database cleanup
 
+**The app will continue waiting after migrations until seeding is complete!**
+
 **How to run in Dokploy:**
 
-1. **SSH into Dokploy server and navigate to project:**
-   ```bash
-   cd /etc/dokploy/applications/<your-project-id>/
-   ```
+```bash
+# While app is waiting or after migrations complete:
 
-2. **Run seeding:**
-   ```bash
-   # Using docker compose with profiles
-   docker compose -f docker-compose.prod.yml run --rm seed
-   
-   # OR directly with docker exec
-   docker exec <container-name> ./seed-tool
-   ```
+# Option 1: Using temporary container
+docker run --rm \
+  --network <project>_mynute-app-network \
+  -e POSTGRES_HOST=postgres \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=<your-password> \
+  -e POSTGRES_DB_PROD=maindb \
+  <backend-image> \
+  ./seed-tool
+
+# Option 2: If docker-compose is available
+docker compose -f docker-compose.prod.yml run --rm seed
+
+# Option 3: Exec into running/stopped container
+docker exec <backend-container-name> ./seed-tool
+
+# After seeding, the app will automatically detect endpoints and continue startup
+```
 
 **Locally (for testing):**
 ```bash

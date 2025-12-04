@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,6 +19,58 @@ type Endpoint struct {
 	DB *handler.Gorm
 }
 
+// BuildWithRetry attempts to build endpoints with retry logic
+// Waits for migrations to complete instead of crashing
+func (ep *Endpoint) BuildWithRetry(r fiber.Router, maxRetries int, retryDelay int) error {
+	db := ep.DB.DB
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		// Check if endpoints table exists
+		var tableExists bool
+		err := db.Raw("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'endpoints')").Scan(&tableExists).Error
+		if err != nil {
+			log.Printf("⚠️  Attempt %d/%d: Failed to check endpoints table: %v", attempt, maxRetries, err)
+			if attempt < maxRetries {
+				time.Sleep(time.Duration(retryDelay) * time.Second)
+				continue
+			}
+			return fmt.Errorf("failed to check if endpoints table exists after %d attempts: %w", maxRetries, err)
+		}
+
+		if !tableExists {
+			if attempt == 1 {
+				log.Println("⚠️  Endpoints table does not exist yet. Waiting for migrations...")
+				log.Println("   If migrations haven't been run, execute: docker exec <container> ./migrate-tool up")
+			}
+			log.Printf("   Attempt %d/%d: Waiting %d seconds for migrations to complete...", attempt, maxRetries, retryDelay)
+			if attempt < maxRetries {
+				time.Sleep(time.Duration(retryDelay) * time.Second)
+				continue
+			}
+			return fmt.Errorf("endpoints table not found after %d attempts - please run migrations manually", maxRetries)
+		}
+
+		// Table exists, try to load endpoints
+		var edps []*model.EndPoint
+		if err := db.Find(&edps).Error; err != nil {
+			log.Printf("⚠️  Attempt %d/%d: Failed to load endpoints: %v", attempt, maxRetries, err)
+			if attempt < maxRetries {
+				time.Sleep(time.Duration(retryDelay) * time.Second)
+				continue
+			}
+			return fmt.Errorf("failed to load endpoints after %d attempts: %w", maxRetries, err)
+		}
+
+		log.Printf("✅ Successfully loaded %d endpoints", len(edps))
+
+		// Build routes with loaded endpoints
+		return ep.buildRoutes(r, edps)
+	}
+
+	return fmt.Errorf("unexpected error in BuildWithRetry")
+}
+
+// Build attempts to build endpoints once (kept for backward compatibility)
 func (ep *Endpoint) Build(r fiber.Router) error {
 	db := ep.DB.DB
 
@@ -38,6 +91,13 @@ func (ep *Endpoint) Build(r fiber.Router) error {
 	if err := db.Find(&edps).Error; err != nil {
 		return err
 	}
+
+	return ep.buildRoutes(r, edps)
+}
+
+// buildRoutes is the internal method that actually builds the routes
+func (ep *Endpoint) buildRoutes(r fiber.Router, edps []*model.EndPoint) error {
+	db := ep.DB.DB
 
 	r.Use(WhoAreYou)
 

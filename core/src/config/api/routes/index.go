@@ -33,7 +33,7 @@ func Build(DB *gorm.DB, App *fiber.App) {
 	r.Get("/translations/page/:page", controller.GetPageTranslations)
 
 	endpoints := &middleware.Endpoint{DB: Gorm}
-	if err := endpoints.Build(r); err != nil {
+	if err := endpoints.BuildWithRetry(r, 30, 5); err != nil {
 		panic(err)
 	}
 }
