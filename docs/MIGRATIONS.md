@@ -88,8 +88,8 @@ POSTGRES_DB_TEST=testdb  # App uses when APP_ENV=test
 
 ```bash
 # Migration and seeding tools target what POSTGRES_DB_PROD points to
-POSTGRES_DB_PROD=maindb make migrate-up  # ✅ Migrates maindb
-POSTGRES_DB_PROD=maindb make seed        # ✅ Seeds maindb
+POSTGRES_DB_PROD=maindb go run migrate/main.go -action=up  # ✅ Migrates maindb
+POSTGRES_DB_PROD=maindb go run cmd/seed/main.go           # ✅ Seeds maindb
 
 # The application uses APP_ENV to determine the database
 APP_ENV=prod ./mynute-go  # ✅ Connects to maindb (via POSTGRES_DB_PROD)
@@ -153,7 +153,7 @@ Expected output: PostgreSQL version information
 See which migrations exist and their status:
 
 ```powershell
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 **First-time setup will show:** `error: no migration` (this is normal)
@@ -163,7 +163,7 @@ make migrate-version
 Apply all pending migrations to create the database schema:
 
 ```powershell
-make migrate-up
+go run migrate/main.go -action=up
 ```
 
 **Expected output:**
@@ -176,7 +176,7 @@ Migration complete!
 #### 5. Verify Migration Success
 
 ```powershell
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 **Expected output:**
@@ -223,8 +223,8 @@ The application will:
 - [ ] Environment variables configured (`POSTGRES_DB_PROD`, `APP_ENV=prod`)
 - [ ] Database server is running and accessible
 - [ ] Database exists (create with `CREATE DATABASE maindb;` if needed)
-- [ ] Ran `make migrate-up` successfully
-- [ ] Verified with `make migrate-version`
+- [ ] Ran `go run migrate/main.go -action=up` successfully
+- [ ] Verified with `go run migrate/main.go -action=version`
 - [ ] Ran `go run cmd/seed/main.go` successfully
 - [ ] Started application successfully
 
@@ -273,7 +273,7 @@ This creates a timestamped backup file you can restore if needed.
 See what version your production database is currently on:
 
 ```powershell
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 **Example output:**
@@ -302,7 +302,7 @@ If you have a staging environment, test the migration there first:
 ```powershell
 # Point to staging database
 $env:POSTGRES_DB_PROD = "staging_db"
-make migrate-up
+go run migrate/main.go -action=up
 
 # Verify staging works
 # Test your application
@@ -322,7 +322,7 @@ For critical migrations that might cause downtime:
 echo $env:POSTGRES_DB_PROD  # Should show your prod database name
 
 # Run migrations
-make migrate-up
+go run migrate/main.go -action=up
 ```
 
 **Monitor the output carefully:**
@@ -334,7 +334,7 @@ Migration complete!
 #### 8. Verify Migration Success
 
 ```powershell
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 Ensure:
@@ -374,7 +374,7 @@ Watch for:
 
 ```powershell
 # Rollback the last migration
-make migrate-down
+go run migrate/main.go -action=down -steps=1
 ```
 
 #### Option 2: Restore from Backup
@@ -385,7 +385,7 @@ make migrate-down
 pg_restore -h $env:POSTGRES_HOST -U $env:POSTGRES_USER -d $env:POSTGRES_DB_PROD -c backup_20251204_143000.dump
 
 # Verify restoration
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 ### Ongoing Migration Checklist
@@ -395,8 +395,8 @@ make migrate-version
 - [ ] Checked current migration version
 - [ ] Tested in staging environment (if available)
 - [ ] Scheduled maintenance window (if needed)
-- [ ] Ran `make migrate-up`
-- [ ] Verified with `make migrate-version`
+- [ ] Ran `go run migrate/main.go -action=up`
+- [ ] Verified with `go run migrate/main.go -action=version`
 - [ ] Ran `go run cmd/seed/main.go` (if needed)
 - [ ] Deployed new application code
 - [ ] Monitored application health
@@ -416,7 +416,7 @@ Automatically detects changes between your Go models and database:
 
 ```powershell
 # Compare model with database and generate SQL
-make migrate-smart NAME=add_employee_bio MODELS=Employee
+go run tools/smart-migration/main.go -name=add_employee_bio -models=Employee
 ```
 
 **This will:**
@@ -441,7 +441,7 @@ make migrate-smart NAME=add_employee_bio MODELS=Employee
 Creates migration template with examples:
 
 ```powershell
-make migrate-generate NAME=add_employee_bio MODELS=Employee
+go run tools/generate-migration/main.go -name=add_employee_bio -models=Employee
 ```
 
 Then edit the generated files to add your specific SQL.
@@ -452,7 +452,7 @@ For complex migrations or data transformations:
 
 ```powershell
 # Create empty migration files
-make migrate-create NAME=complex_data_migration
+go run migrate/main.go -action=create complex_data_migration
 ```
 
 Then write the SQL manually in both files.
@@ -463,7 +463,14 @@ Always test before applying to production:
 
 ```powershell
 # Automated test: UP → verify → DOWN → verify → UP
-make test-migrate
+# Windows PowerShell:
+pwsh -File scripts/test-migration.ps1 -SkipConfirmation
+
+# Or manually test:
+go run migrate/main.go -action=up
+go run migrate/main.go -action=version
+go run migrate/main.go -action=down -steps=1
+go run migrate/main.go -action=up
 ```
 
 ### Migration File Best Practices
@@ -524,7 +531,7 @@ If a migration fails partway through:
 
 ```powershell
 # Check status
-make migrate-version
+go run migrate/main.go -action=version
 ```
 
 **Output shows dirty:**
@@ -537,27 +544,27 @@ dirty: true  # ⚠️ Migration failed!
 
 ```powershell
 # Option 1: Force to previous working version
-make migrate-force VERSION=20251128111531
+go run migrate/main.go -action=force -version=20251128111531
 
 # Option 2: Force to current version (if DB is actually correct)
-make migrate-force VERSION=20251128112901
+go run migrate/main.go -action=force -version=20251128112901
 
 # Then fix the migration file and try again
-make migrate-up
+go run migrate/main.go -action=up
 ```
 
 ### Application Won't Start After Migration
 
 1. **Check migration status:**
    ```powershell
-   make migrate-version
+   go run migrate/main.go -action=version
    ```
 
 2. **Check application logs** for specific error messages
 
 3. **Rollback if necessary:**
    ```powershell
-   make migrate-down
+   go run migrate/main.go -action=down -steps=1
    ```
 
 4. **Restore from backup if rollback doesn't work:**
@@ -645,37 +652,53 @@ pg_dump -F c -f backup.dump ...
 echo $env:POSTGRES_DB_PROD
 
 # Check current migration version
-make migrate-version
+go run migrate/main.go -action=version
 
 # Run all pending migrations
-make migrate-up
+go run migrate/main.go -action=up
 
 # Rollback last migration
-make migrate-down
+go run migrate/main.go -action=down -steps=1
 
 # Rollback multiple migrations
-make migrate-down-n STEPS=3
+go run migrate/main.go -action=down -steps=3
 
 # Force to specific version (emergency use)
-make migrate-force VERSION=20251128111531
+go run migrate/main.go -action=force -version=20251128111531
 
 # Create new migration (automatic detection)
-make migrate-smart NAME=description MODELS=ModelName
+go run tools/smart-migration/main.go -name=description -models=ModelName
 
 # Create new migration (template)
-make migrate-generate NAME=description MODELS=ModelName
+go run tools/generate-migration/main.go -name=description -models=ModelName
 
 # Create new migration (manual)
-make migrate-create NAME=description
+go run migrate/main.go -action=create description
 
-# Test migration automatically
-make test-migrate
+# Test migration manually
+go run migrate/main.go -action=up
+go run migrate/main.go -action=down -steps=1
+go run migrate/main.go -action=up
+
+# Or use automated test script
+pwsh -File scripts/test-migration.ps1 -SkipConfirmation
 
 # Run seeding
 go run cmd/seed/main.go
+```
 
-# Show all available commands
-make migrate-help
+### Building Binaries for Production
+
+```powershell
+# Build migration binary
+go build -o bin/migrate migrate/main.go
+
+# Build seed binary
+go build -o bin/seed cmd/seed/main.go
+
+# Use in production
+./bin/migrate -action=up
+./bin/seed
 ```
 
 ### CI/CD Integration
@@ -692,7 +715,7 @@ deploy-production:
         PGPASSWORD: ${{ secrets.DB_PASSWORD }}
     
     - name: Run Migrations
-      run: make migrate-up
+      run: go run migrate/main.go -action=up
       env:
         POSTGRES_DB_PROD: ${{ secrets.DB_NAME }}
         POSTGRES_HOST: ${{ secrets.DB_HOST }}
@@ -773,7 +796,7 @@ psql -h $env:POSTGRES_HOST -U $env:POSTGRES_USER -c "CREATE DATABASE $env:POSTGR
 ### First-Time Setup
 1. Configure environment variables
 2. Verify database connection
-3. Run `make migrate-up`
+3. Run `go run migrate/main.go -action=up`
 4. Run `go run cmd/seed/main.go`
 5. Start application
 
@@ -781,7 +804,7 @@ psql -h $env:POSTGRES_HOST -U $env:POSTGRES_USER -c "CREATE DATABASE $env:POSTGR
 1. Backup database
 2. Check current version
 3. Test in staging
-4. Run `make migrate-up`
+4. Run `go run migrate/main.go -action=up`
 5. Deploy new code
 6. Monitor health
 
@@ -793,6 +816,6 @@ psql -h $env:POSTGRES_HOST -U $env:POSTGRES_USER -c "CREATE DATABASE $env:POSTGR
 
 ---
 
-**Need Help?** Run `make migrate-help` for command reference
+**Need Help?** Run `go run migrate/main.go -action=help` or check available actions: `up`, `down`, `version`, `force`, `create`
 
 
