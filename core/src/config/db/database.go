@@ -423,12 +423,12 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 				return db
 			}
 			oldModelID := oldModelIDField.Interface()
-			
+
 			// Skip update if oldModel doesn't have a valid ID (shouldn't happen, but be safe)
 			if oldModelID == uuid.Nil || oldModelID == (uuid.UUID{}) {
 				continue
 			}
-			
+
 			// Update using the table name and primary key
 			// We create a new instance for the Model() call to get the table name
 			modelForTable := reflect.New(underlyingStructType).Interface()
