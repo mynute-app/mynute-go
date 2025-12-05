@@ -2,29 +2,42 @@
 
 This project is configured to work with Traefik reverse proxy in Dokploy.
 
-## Required Environment Variable
+## Required Environment Variables
 
-Add this to your `.env` file or Dokploy environment variables:
+Add these to your `.env` file or Dokploy environment variables:
 
 ```bash
-# Traefik External Domain
+# Traefik External Domains
 BACKEND_EXTERNAL_DOMAIN=api.yourdomain.com
+PGADMIN_EXTERNAL_DOMAIN=db.yourdomain.com
+
+# pgAdmin Credentials (already in .env)
+PGADMIN_DEFAULT_EMAIL=admin@admin.com
+PGADMIN_DEFAULT_PASSWORD=your-secure-password
 ```
 
 ## How It Works
 
-The `docker-compose.prod.yml` includes Traefik labels that:
+The `docker-compose.prod.yml` includes Traefik labels for multiple services:
+
+### Backend API
+Routes external traffic to your Go application
+
+### pgAdmin
+Web interface for PostgreSQL database management
+
+Both services:
 
 1. **Connect to Dokploy's Traefik network**
-   - Joins `dokploy-network` (external network managed by Dokploy)
-   - Maintains internal network for postgres/grafana communication
+   - Join `dokploy-network` (external network managed by Dokploy)
+   - Maintain internal network for postgres/grafana communication
 
 2. **Configure HTTPS with Let's Encrypt**
    - Automatic SSL certificate from Let's Encrypt
-   - Routes traffic based on hostname
+   - Route traffic based on hostname
 
 3. **Load Balancer Configuration**
-   - Routes external traffic to your app's internal port (defined by `APP_PORT`)
+   - Route external traffic to service's internal port
 
 ## Traefik Labels Explained
 
@@ -51,20 +64,26 @@ labels:
 
 ## Setup in Dokploy
 
-1. **Set the domain in environment variables:**
+1. **Set the domains in environment variables:**
    ```bash
    BACKEND_EXTERNAL_DOMAIN=api.yourdomain.com
+   PGADMIN_EXTERNAL_DOMAIN=db.yourdomain.com
    APP_PORT=4000
+   PGADMIN_DEFAULT_EMAIL=admin@admin.com
+   PGADMIN_DEFAULT_PASSWORD=your-secure-password
    ```
 
 2. **Configure DNS:**
    - Point `api.yourdomain.com` to your Dokploy server IP
+   - Point `db.yourdomain.com` to your Dokploy server IP
    - Wait for DNS propagation
 
 3. **Deploy:**
    - Dokploy will automatically configure Traefik
-   - Let's Encrypt will issue SSL certificate
-   - Your API will be accessible at `https://api.yourdomain.com`
+   - Let's Encrypt will issue SSL certificates
+   - Services will be accessible:
+     - API: `https://api.yourdomain.com`
+     - pgAdmin: `https://db.yourdomain.com`
 
 ## Benefits
 

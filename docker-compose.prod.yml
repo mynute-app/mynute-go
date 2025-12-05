@@ -80,6 +80,34 @@ services:
     networks:
       - mynute-app-network
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+      - dokploy-network
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      # External URL
+      - "traefik.http.routers.mynute-pgadmin-prod-http.rule=Host(`${PGADMIN_EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.mynute-pgadmin-prod-http.entrypoints=websecure"
+      - "traefik.http.routers.mynute-pgadmin-prod-http.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mynute-pgadmin-prod-http.loadbalancer.server.port=80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
   go-backend-app:
     build: .
     restart: always
