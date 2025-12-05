@@ -400,6 +400,15 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 
 		if err := tx.Where(query, args...).First(oldModel).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
+				// Generate UUID if the model doesn't have one
+				idField := newModelVal.Elem().FieldByName("ID")
+				if idField.IsValid() && idField.CanSet() && idField.Type() == reflect.TypeOf(uuid.UUID{}) {
+					currentID := idField.Interface().(uuid.UUID)
+					if currentID == uuid.Nil || currentID == (uuid.UUID{}) {
+						idField.Set(reflect.ValueOf(uuid.New()))
+					}
+				}
+
 				if errCreate := tx.Create(newModel).Error; errCreate != nil {
 					db.Error = fmt.Errorf("failed to create model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, errCreate, name)
 					return db
