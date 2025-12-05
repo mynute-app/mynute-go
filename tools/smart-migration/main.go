@@ -177,6 +177,17 @@ func generateSmartMigrations(db *gorm.DB, models []any, schemaName string) (stri
 			fullTableName = "public." + tableName
 		}
 
+		// Check if table exists
+		tableExists := checkTableExists(db, fullTableName)
+		
+		if !tableExists {
+			// Generate CREATE TABLE statement
+			hasChanges = true
+			upSQL.WriteString("-- Table does not exist, creating it\n")
+			generateCreateTable(m, tableName, schemaType, expectedCols, &upSQL, &downSQL)
+			continue
+		}
+
 		actualCols := getDatabaseColumns(db, fullTableName)
 
 		// Find differences
@@ -289,6 +300,96 @@ func getGormColumns(db *gorm.DB, model any) map[string]ColumnInfo {
 	}
 
 	return cols
+}
+
+func checkTableExists(db *gorm.DB, tableName string) bool {
+	parts := strings.Split(tableName, ".")
+	var schema, table string
+	if len(parts) == 2 {
+		schema = parts[0]
+		table = parts[1]
+	} else {
+		schema = "public"
+		table = tableName
+	}
+
+	var exists bool
+	err := db.Raw(`
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.tables 
+			WHERE table_schema = ? AND table_name = ?
+		)
+	`, schema, table).Scan(&exists).Error
+
+	if err != nil {
+		log.Printf("Warning: Could not check table existence for %s: %v", tableName, err)
+		return false
+	}
+
+	return exists
+}
+
+func generateCreateTable(model any, tableName string, schemaType string, cols map[string]ColumnInfo, upSQL, downSQL *strings.Builder) {
+	if schemaType == "company" || schemaType == "tenant" {
+		// Generate for all company_* schemas
+		upSQL.WriteString("DO $$\n")
+		upSQL.WriteString("DECLARE\n")
+		upSQL.WriteString("    schema_name TEXT;\n")
+		upSQL.WriteString("BEGIN\n")
+		upSQL.WriteString("    FOR schema_name IN \n")
+		upSQL.WriteString("        SELECT nspname FROM pg_namespace WHERE nspname LIKE 'company_%'\n")
+		upSQL.WriteString("    LOOP\n")
+		
+		// Build column definitions
+		var colDefs []string
+		for _, col := range cols {
+			nullable := "NOT NULL"
+			if col.Nullable {
+				nullable = "NULL"
+			}
+			// Quote column name to handle reserved keywords
+			colDefs = append(colDefs, fmt.Sprintf(`"%s" %s %s`, col.Name, col.Type, nullable))
+		}
+		
+		upSQL.WriteString(fmt.Sprintf("        EXECUTE format('CREATE TABLE IF NOT EXISTS %%I.%s (", tableName))
+		upSQL.WriteString(strings.Join(colDefs, ", "))
+		upSQL.WriteString(")', schema_name);\n")
+		upSQL.WriteString("    END LOOP;\n")
+		upSQL.WriteString("END $$;\n\n")
+
+		// Down migration - DROP TABLE
+		downSQL.WriteString("DO $$\n")
+		downSQL.WriteString("DECLARE\n")
+		downSQL.WriteString("    schema_name TEXT;\n")
+		downSQL.WriteString("BEGIN\n")
+		downSQL.WriteString("    FOR schema_name IN \n")
+		downSQL.WriteString("        SELECT nspname FROM pg_namespace WHERE nspname LIKE 'company_%'\n")
+		downSQL.WriteString("    LOOP\n")
+		downSQL.WriteString(fmt.Sprintf("        EXECUTE format('DROP TABLE IF EXISTS %%I.%s', schema_name);\n", tableName))
+		downSQL.WriteString("    END LOOP;\n")
+		downSQL.WriteString("END $$;\n\n")
+	} else {
+		// Generate for public schema
+		upSQL.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS public.%s (\n", tableName))
+		
+		first := true
+		for _, col := range cols {
+			if !first {
+				upSQL.WriteString(",\n")
+			}
+			nullable := "NOT NULL"
+			if col.Nullable {
+				nullable = "NULL"
+			}
+			// Quote column name to handle reserved keywords
+			upSQL.WriteString(fmt.Sprintf(`    "%s" %s %s`, col.Name, col.Type, nullable))
+			first = false
+		}
+		upSQL.WriteString("\n);\n\n")
+
+		// Down migration - DROP TABLE
+		downSQL.WriteString(fmt.Sprintf("DROP TABLE IF EXISTS public.%s;\n\n", tableName))
+	}
 }
 
 func getDatabaseColumns(db *gorm.DB, tableName string) map[string]ColumnInfo {
