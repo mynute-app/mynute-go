@@ -224,8 +224,8 @@ func generateSmartMigrations(db *gorm.DB, models []any, schemaName string) (stri
 			}
 		}
 
-		// Generate DROP COLUMN for removed columns (for DOWN migration)
-		if len(removedCols) > 0 {
+		// Generate DROP COLUMN for added columns (for DOWN migration)
+		if len(addedCols) > 0 {
 			downSQL.WriteString(fmt.Sprintf("-- Removing %d column(s) that were added\n", len(addedCols)))
 
 			// Both "company" and "tenant" schema types should use company_* schema pattern
