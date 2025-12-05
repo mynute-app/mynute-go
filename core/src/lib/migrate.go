@@ -85,8 +85,8 @@ func NewMigrate(migrationsPath string) (*migrate.Migrate, error) {
 	// golang-migrate needs forward slashes
 	migrationsPath = strings.ReplaceAll(migrationsPath, "\\", "/")
 
-	// Use file:// with relative-style path (no triple slash for drive letter)
-	// This works better on Windows: file://C:/path instead of file:///C:/path
+	// For Windows absolute paths, ensure proper file:// URL format
+	// golang-migrate library expects: file://path (no extra slash for absolute paths on Windows after file://)
 	sourceURL := "file://" + migrationsPath
 
 	// Create migrate instance
