@@ -179,7 +179,7 @@ func generateSmartMigrations(db *gorm.DB, models []any, schemaName string) (stri
 
 		// Check if table exists
 		tableExists := checkTableExists(db, fullTableName)
-		
+
 		if !tableExists {
 			// Generate CREATE TABLE statement
 			hasChanges = true
@@ -339,7 +339,7 @@ func generateCreateTable(model any, tableName string, schemaType string, cols ma
 		upSQL.WriteString("    FOR schema_name IN \n")
 		upSQL.WriteString("        SELECT nspname FROM pg_namespace WHERE nspname LIKE 'company_%'\n")
 		upSQL.WriteString("    LOOP\n")
-		
+
 		// Build column definitions
 		var colDefs []string
 		for _, col := range cols {
@@ -350,7 +350,7 @@ func generateCreateTable(model any, tableName string, schemaType string, cols ma
 			// Quote column name to handle reserved keywords
 			colDefs = append(colDefs, fmt.Sprintf(`"%s" %s %s`, col.Name, col.Type, nullable))
 		}
-		
+
 		upSQL.WriteString(fmt.Sprintf("        EXECUTE format('CREATE TABLE IF NOT EXISTS %%I.%s (", tableName))
 		upSQL.WriteString(strings.Join(colDefs, ", "))
 		upSQL.WriteString(")', schema_name);\n")
@@ -371,7 +371,7 @@ func generateCreateTable(model any, tableName string, schemaType string, cols ma
 	} else {
 		// Generate for public schema
 		upSQL.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS public.%s (\n", tableName))
-		
+
 		first := true
 		for _, col := range cols {
 			if !first {
