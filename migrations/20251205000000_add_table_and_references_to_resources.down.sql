@@ -4,4 +4,4 @@
 
 ALTER TABLE public.resources 
 DROP COLUMN IF EXISTS "table",
-DROP COLUMN IF EXISTS references;
+DROP COLUMN IF EXISTS "references";
