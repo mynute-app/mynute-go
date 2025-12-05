@@ -89,8 +89,6 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - APP_ENV=${APP_ENV:-prod}
-    ports:
-      - "${APP_PORT}:${APP_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,6 +98,16 @@ services:
         condition: service_started
     networks:
       - mynute-app-network
+      - dokploy-network
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      # External URL
+      - "traefik.http.routers.mynute-backend-prod-http.rule=Host(`${BACKEND_EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.mynute-backend-prod-http.entrypoints=websecure"
+      - "traefik.http.routers.mynute-backend-prod-http.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mynute-backend-prod-http.loadbalancer.server.port=${APP_PORT}"
 
   # One-time migration job - run this manually when needed
   migrate:
@@ -114,7 +122,7 @@ services:
         condition: service_healthy
     networks:
       - mynute-app-network
-    command: ./migrate-tool up
+    command: ./migrate-tool -action=up
     profiles:
       - tools  # Won't run by default, only when explicitly requested
 
@@ -184,6 +192,9 @@ services:
       
 networks:
   mynute-app-network:
+    driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   postgres-data:
