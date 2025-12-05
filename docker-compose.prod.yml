@@ -107,6 +107,58 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
+  # Auto-run migrations on deploy if RUN_PROD_MIGRATIONS=true
+  migrate-auto:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - RUN_PROD_MIGRATIONS=${RUN_PROD_MIGRATIONS:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+    command: >
+      sh -c '
+        if [ "$$RUN_PROD_MIGRATIONS" = "true" ]; then
+          echo "🚀 Running migrations...";
+          ./migrate-tool -action=up "-path=/mynute-go/migrations";
+        else
+          echo "⏭️  Skipping migrations (RUN_PROD_MIGRATIONS not set to true)";
+        fi
+      '
+    restart: "no"
+
+  # Auto-run seeding on deploy if RUN_PROD_SEED=true
+  seed-auto:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - RUN_PROD_SEED=${RUN_PROD_SEED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate-auto:
+        condition: service_completed_successfully
+    networks:
+      - mynute-app-network
+    command: >
+      sh -c '
+        if [ "$$RUN_PROD_SEED" = "true" ]; then
+          echo "🌱 Running seed...";
+          ./seed-tool;
+        else
+          echo "⏭️  Skipping seed (RUN_PROD_SEED not set to true)";
+        fi
+      '
+    restart: "no"
+
   go-backend-app:
     build: .
     restart: always
@@ -119,6 +171,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate-auto:
+        condition: service_completed_successfully
+      seed-auto:
+        condition: service_completed_successfully
       grafana:
         condition: service_healthy
       loki:
@@ -135,40 +191,6 @@ services:
       - "traefik.http.routers.mynute-backend-prod-http.entrypoints=websecure"
       - "traefik.http.routers.mynute-backend-prod-http.tls.certresolver=letsencrypt"
       - "traefik.http.services.mynute-backend-prod-http.loadbalancer.server.port=${APP_PORT}"
-
-  # One-time migration job - run this manually when needed
-  migrate:
-    build: .
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - mynute-app-network
-    command: ./migrate-tool -action=up
-    profiles:
-      - tools  # Won't run by default, only when explicitly requested
-
-  # One-time seeding job - run this manually when needed
-  seed:
-    build: .
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - mynute-app-network
-    command: ./seed-tool
-    profiles:
-      - tools  # Won't run by default, only when explicitly requested
 
   prometheus:
     image: prom/prometheus:v3.4.1

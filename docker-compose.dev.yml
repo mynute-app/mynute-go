@@ -78,6 +78,58 @@ services:
     networks:
       - mynute-app-network
 
+  # Auto-run migrations on startup if RUN_DEV_MIGRATIONS=true
+  migrate-auto:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - RUN_DEV_MIGRATIONS=${RUN_DEV_MIGRATIONS:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+    command: >
+      sh -c '
+        if [ "$$RUN_DEV_MIGRATIONS" = "true" ]; then
+          echo "🚀 Running migrations...";
+          ./migrate-tool -action=up "-path=/mynute-go/migrations";
+        else
+          echo "⏭️  Skipping migrations (RUN_DEV_MIGRATIONS not set to true)";
+        fi
+      '
+    restart: "no"
+
+  # Auto-run seeding on startup if RUN_DEV_SEED=true
+  seed-auto:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - RUN_DEV_SEED=${RUN_DEV_SEED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate-auto:
+        condition: service_completed_successfully
+    networks:
+      - mynute-app-network
+    command: >
+      sh -c '
+        if [ "$$RUN_DEV_SEED" = "true" ]; then
+          echo "🌱 Running seed...";
+          ./seed-tool;
+        else
+          echo "⏭️  Skipping seed (RUN_DEV_SEED not set to true)";
+        fi
+      '
+    restart: "no"
+
   prometheus:
     image: prom/prometheus:v3.4.1
     restart: always
