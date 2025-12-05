@@ -416,9 +416,29 @@ func (db *Database) Seed(name string, models any, query string, keys []string) *
 				// No fields to update, skip
 				continue
 			}
-			if errUpdate := tx.Model(oldModel).Select(fieldsToUpdate).Updates(newModel).Error; errUpdate != nil {
-				db.Error = fmt.Errorf("failed to update model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, errUpdate, name)
+			// Get the primary key from oldModel to use as WHERE condition
+			oldModelIDField := reflect.ValueOf(oldModel).Elem().FieldByName("ID")
+			if !oldModelIDField.IsValid() {
+				db.Error = fmt.Errorf("model %s at index %d does not have an ID field. seeding name: %s", underlyingStructType.Name(), i, name)
 				return db
+			}
+			oldModelID := oldModelIDField.Interface()
+			
+			// Skip update if oldModel doesn't have a valid ID (shouldn't happen, but be safe)
+			if oldModelID == uuid.Nil || oldModelID == (uuid.UUID{}) {
+				continue
+			}
+			
+			// Update using the table name and primary key
+			// We create a new instance for the Model() call to get the table name
+			modelForTable := reflect.New(underlyingStructType).Interface()
+			result := tx.Model(modelForTable).Where("id = ?", oldModelID).Select(fieldsToUpdate).Updates(newModel)
+			if result.Error != nil {
+				db.Error = fmt.Errorf("failed to update model %s at index %d: %v. seeding name: %s", underlyingStructType.Name(), i, result.Error, name)
+				return db
+			}
+			if result.RowsAffected == 0 {
+				log.Printf("Warning: No rows updated for %s at index %d with ID %v. seeding name: %s", underlyingStructType.Name(), i, oldModelID, name)
 			}
 		}
 	}
