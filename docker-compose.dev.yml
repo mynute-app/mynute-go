@@ -205,6 +205,8 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB_PROD}?sslmode=disable
+      - PGWEB_AUTH_USER=${PGWEB_USER}
+      - PGWEB_AUTH_PASS=${PGWEB_PASSWORD}
     ports:
       - "8081:8081"
     depends_on:
@@ -212,7 +214,7 @@ services:
         condition: service_healthy
     networks:
       - mynute-app-network
-    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081"]
+    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081", "--auth-user=${PGWEB_USER}", "--auth-pass=${PGWEB_PASSWORD}"]
    
 networks:
   mynute-app-network:

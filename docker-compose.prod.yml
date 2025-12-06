@@ -86,6 +86,8 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_PROD}?sslmode=disable
+      - PGWEB_AUTH_USER=${PGWEB_USER}
+      - PGWEB_AUTH_PASS=${PGWEB_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,7 +103,7 @@ services:
       - "traefik.http.routers.mynute-pgweb-prod-http.entrypoints=websecure"
       - "traefik.http.routers.mynute-pgweb-prod-http.tls.certresolver=letsencrypt"
       - "traefik.http.services.mynute-pgweb-prod-http.loadbalancer.server.port=8081"
-    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081"]
+    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081", "--auth-user=${PGWEB_USER}", "--auth-pass=${PGWEB_PASSWORD}"]
 
   # Auto-run migrations on deploy if RUN_PROD_MIGRATIONS=true
   migrate-auto:
