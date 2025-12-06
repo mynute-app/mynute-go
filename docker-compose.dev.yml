@@ -197,13 +197,28 @@ services:
       - "8025:8025"  # Web UI
     networks:
       - mynute-app-network
+
+  pgweb:
+    image: sosedoff/pgweb:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB_PROD}?sslmode=disable
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mynute-app-network
+    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081"]
    
 networks:
   mynute-app-network:
 
 volumes:
   postgres-data:
-  pgadmin-data:
   grafana-data:
   loki-index:
   loki-cache:
