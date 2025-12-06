@@ -41,7 +41,7 @@ func (c *Company) BeforeUpdate(tx *gorm.DB) error {
 
 func (c *Company) AfterCreate(tx *gorm.DB) error {
 	schema_name := c.GenerateSchemaName()
-	if err := tx.Model(c).Update("schema_name", schema_name).Error; err != nil {
+	if err := tx.Model(c).Where("id = ?", c.ID).Update("schema_name", schema_name).Error; err != nil {
 		return fmt.Errorf("failed to update schema_name: %w", err)
 	}
 	if err := c.MigrateSchema(tx); err != nil {
