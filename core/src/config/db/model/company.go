@@ -81,6 +81,20 @@ func (c *Company) MigrateSchema(tx *gorm.DB) error {
 			return fmt.Errorf("failed to migrate model %T: %w", model, err)
 		}
 	}
+	
+	// Create employee_roles join table manually since we skipped Role migration
+	// This table links employees in company schema to roles in public schema
+	createEmployeeRolesSQL := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS "%s".employee_roles (
+			employee_id uuid NOT NULL,
+			role_id uuid NOT NULL,
+			PRIMARY KEY (employee_id, role_id),
+			CONSTRAINT fk_employee_roles_employee FOREIGN KEY (employee_id) REFERENCES "%s".employees(id) ON DELETE CASCADE
+		)
+	`, c.SchemaName, c.SchemaName)
+	if err := tx.Exec(createEmployeeRolesSQL).Error; err != nil {
+		return fmt.Errorf("failed to create employee_roles table: %w", err)
+	}
 
 	roleViewSQL := fmt.Sprintf(`CREATE OR REPLACE VIEW "%s".roles AS SELECT * FROM public.roles`, c.SchemaName)
 	if err := tx.Exec(roleViewSQL).Error; err != nil {
