@@ -48,10 +48,10 @@ func (c *Company) AfterCreate(tx *gorm.DB) error {
 	}).Error; err != nil {
 		return fmt.Errorf("failed to update schema_name: %w", err)
 	}
-	
+
 	// Update the in-memory object
 	c.SchemaName = schema_name
-	
+
 	if err := c.MigrateSchema(tx); err != nil {
 		return err
 	}
