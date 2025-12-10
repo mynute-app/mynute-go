@@ -18,7 +18,7 @@ type Service struct {
 	Currency    string             `gorm:"type:varchar(3);default:'BRL'" json:"currency"` // Default currency is BRL
 	Duration    uint16             `gorm:"not null" json:"duration"`                      // In minutes                    // Duration in minutes
 	CompanyID   uuid.UUID          `gorm:"not null;index" json:"company_id"`
-	Company     *Company           `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE;" json:"company"`
+	Company     *Company           `gorm:"foreignKey:CompanyID;references:ID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;-:migration" json:"company"`
 	Employees   []*Employee        `gorm:"many2many:employee_services;constraint:OnDelete:CASCADE;" json:"employees"` // Many-to-many relation with Employee
 	Branches    []*Branch          `gorm:"many2many:branch_services;constraint:OnDelete:CASCADE;" json:"branches"`    // Many-to-many relation with Branch
 	Design      mJSON.DesignConfig `gorm:"type:jsonb" json:"design"`

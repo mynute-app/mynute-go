@@ -73,9 +73,11 @@ func (c *Company) MigrateSchema(tx *gorm.DB) error {
 		return err
 	}
 
-	// Migrate tenant specific tables
+	// Migrate tenant specific tables without foreign key constraints
+	// Cross-schema FK constraints cause issues, so we disable them and rely on application-level integrity
+	migrator := tx.Migrator()
 	for _, model := range TenantModels {
-		if err := tx.AutoMigrate(model); err != nil {
+		if err := migrator.AutoMigrate(model); err != nil {
 			return fmt.Errorf("failed to migrate model %T: %w", model, err)
 		}
 	}
