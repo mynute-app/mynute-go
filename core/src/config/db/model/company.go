@@ -32,12 +32,6 @@ func (c *Company) BeforeCreate(tx *gorm.DB) error {
 	if err := lib.MyCustomStructValidator(c); err != nil {
 		return err
 	}
-	// Generate UUID if not set, so we can create schema_name before insert
-	if c.ID == uuid.Nil {
-		c.ID = uuid.New()
-	}
-	// Generate schema name before creating to avoid post-creation UPDATE
-	c.SchemaName = c.GenerateSchemaName()
 	return nil
 }
 
@@ -46,7 +40,18 @@ func (c *Company) BeforeUpdate(tx *gorm.DB) error {
 }
 
 func (c *Company) AfterCreate(tx *gorm.DB) error {
-	// Schema name is now set in BeforeCreate, no need to update
+	// Update schema_name using the database-generated UUID
+	// Use Updates with map to avoid triggering hooks and validation
+	schema_name := c.GenerateSchemaName()
+	if err := tx.Model(c).Where("id = ?", c.ID).Updates(map[string]interface{}{
+		"schema_name": schema_name,
+	}).Error; err != nil {
+		return fmt.Errorf("failed to update schema_name: %w", err)
+	}
+	
+	// Update the in-memory object
+	c.SchemaName = schema_name
+	
 	if err := c.MigrateSchema(tx); err != nil {
 		return err
 	}
