@@ -42,7 +42,7 @@ data "external_schema" "gorm" {
     "go",
     "run",
     "-mod=mod",
-    "./atlas-loader.go",
+    "./cmd/atlas-loader",
   ]
 }
 
