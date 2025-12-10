@@ -15,8 +15,8 @@ type Role struct {
 	BaseModel              // Adds ID (uint), CreatedAt, UpdatedAt, DeletedAt
 	Name        string     `gorm:"type:varchar(100);not null;uniqueIndex:idx_role_name_company,priority:1" json:"name"`
 	Description string     `json:"description"`
-	CompanyID   *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"` // Null for system roles
-	Company     *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;-:migration" json:"company"`     // BelongsTo Company
+	CompanyID   *uuid.UUID `gorm:"index;uniqueIndex:idx_role_name_company,priority:2" json:"company_id"`        // Null for system roles
+	Company     *Company   `gorm:"foreignKey:CompanyID;constraint:OnDelete:CASCADE;-:migration" json:"company"` // BelongsTo Company
 }
 
 func (Role) TableName() string  { return "public.roles" }

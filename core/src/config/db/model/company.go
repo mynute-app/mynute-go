@@ -81,7 +81,7 @@ func (c *Company) MigrateSchema(tx *gorm.DB) error {
 			return fmt.Errorf("failed to migrate model %T: %w", model, err)
 		}
 	}
-	
+
 	// Create employee_roles join table manually since we skipped Role migration
 	// This table links employees in company schema to roles in public schema
 	createEmployeeRolesSQL := fmt.Sprintf(`
