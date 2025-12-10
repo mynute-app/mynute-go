@@ -30,19 +30,19 @@ This guide covers:
 ### Development
 ```bash
 # Generate migration after changing GORM models
-make migrate-diff NAME=add_new_field
+go run migrate/main.go -action=diff -name=add_new_field
 
 # Apply migrations
-make migrate-up
+go run migrate/main.go -action=up
 
 # Check status
-make migrate-status
+go run migrate/main.go -action=status
 ```
 
 ### Production
 ```bash
 # Apply migrations (run BEFORE starting server)
-make migrate-up-prod
+go run migrate/main.go -action=up -env=prod
 ```
 
 ---
@@ -71,8 +71,8 @@ migrations/
 
 | Environment | Auto-Migration | Command |
 |-------------|----------------|---------|
-| `dev/test`  | ❌ Manual      | `make migrate-up` |
-| **`prod`**  | **❌ Manual**  | **`make migrate-up-prod`** |
+| `dev/test`  | ❌ Manual      | `go run migrate/main.go -action=up` |
+| **`prod`**  | **❌ Manual**  | **`go run migrate/main.go -action=up -env=prod`** |
 
 **⚠️ In production, migrations MUST be run manually before starting the application.**
 
