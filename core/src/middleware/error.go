@@ -49,9 +49,12 @@ func ErrorV12(logger *slog.Logger) fiber.ErrorHandler {
 			ResMsg := myLogger.GetResMessage(c)
 			ResMsg += "\nFailed to send error to client:\n" + err.Error() + "\n\n" + string(responseBody)
 
-			if err := loki.LogV12(ResMsg, ResLabels); err != nil {
-				logger.Error("Failed to log error to Loki", slog.String("error", err.Error()))
-			}
+			// Log to Loki asynchronously to avoid blocking
+			go func() {
+				if err := loki.LogV12(ResMsg, ResLabels); err != nil {
+					logger.Error("Failed to log error to Loki", slog.String("error", err.Error()))
+				}
+			}()
 		}
 
 		return nil
@@ -106,9 +109,12 @@ func ErrorV13(logger *slog.Logger) fiber.ErrorHandler {
 				"response": string(responseBody),
 			}
 
-			if err := loki.LogV13(resLabels, resBody); err != nil {
-				logger.Error("Failed to log critical error to Loki", slog.String("error", err.Error()))
-			}
+			// Log to Loki asynchronously to avoid blocking
+			go func() {
+				if err := loki.LogV13(resLabels, resBody); err != nil {
+					logger.Error("Failed to log critical error to Loki", slog.String("error", err.Error()))
+				}
+			}()
 		}
 
 		return nil

@@ -92,9 +92,12 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 			"req_body":    reqHeaders,
 		}
 
-		if err := loki.LogV13(reqStreamLabels, reqBodyLabels); err != nil {
-			logger.Error("Failed to log request to Loki", slog.String("error", err.Error()))
-		}
+		// Log to Loki asynchronously to avoid blocking
+		go func() {
+			if err := loki.LogV13(reqStreamLabels, reqBodyLabels); err != nil {
+				logger.Error("Failed to log request to Loki", slog.String("error", err.Error()))
+			}
+		}()
 
 		// --- Proceed ---
 		err := c.Next()
@@ -137,9 +140,12 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 			"res_body":    resBody,
 		}
 
-		if err := loki.LogV13(resStreamLabels, resBodyLabels); err != nil {
-			logger.Error("Failed to log response to Loki", slog.String("error", err.Error()))
-		}
+		// Log to Loki asynchronously to avoid blocking
+		go func() {
+			if err := loki.LogV13(resStreamLabels, resBodyLabels); err != nil {
+				logger.Error("Failed to log response to Loki", slog.String("error", err.Error()))
+			}
+		}()
 
 		return err
 	}

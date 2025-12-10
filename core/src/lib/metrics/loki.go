@@ -31,10 +31,15 @@ func (l *Loki) LogV12(message string, labels map[string]string) error {
 
 	lokiURL := fmt.Sprintf("http://%s:3100/loki/api/v1/push", loki_host)
 
-	const (
-		maxRetries = 3
-		retryDelay = 1 * time.Second
-	)
+	// For test/dev environments, fail fast without retries to avoid blocking
+	appEnv := os.Getenv("APP_ENV")
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	if appEnv == "test" || appEnv == "dev" {
+		maxRetries = 1
+		retryDelay = 10 * time.Millisecond
+	}
 
 	entry := LokiEntry{
 		Streams: []LokiStream{
@@ -83,10 +88,15 @@ func (l *Loki) LogV13(streamLabels map[string]string, bodyLabels map[string]any)
 
 	lokiURL := fmt.Sprintf("http://%s:3100/loki/api/v1/push", loki_host)
 
-	const (
-		maxRetries = 3
-		retryDelay = 1 * time.Second
-	)
+	// For test/dev environments, fail fast without retries to avoid blocking
+	appEnv := os.Getenv("APP_ENV")
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	if appEnv == "test" || appEnv == "dev" {
+		maxRetries = 1
+		retryDelay = 10 * time.Millisecond
+	}
 
 	// Timestamp
 	timestamp := time.Now().UnixNano()
