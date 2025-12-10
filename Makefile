@@ -7,83 +7,45 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-# Migration commands
-.PHONY: migrate-up migrate-down migrate-create migrate-version migrate-force migrate-help
+# Migration commands (Atlas-based)
+.PHONY: migrate-up migrate-down migrate-diff migrate-status migrate-help
 
 # Seeding commands
 .PHONY: seed seed-help
 
 # Run all pending migrations
 migrate-up:
-	@echo "Running database migrations..."
-	@go run migrate/main.go -action=up -path=./migrations
+	@echo "Applying database migrations..."
+	@go run migrate/main.go -action=up -env=dev
+
+# Run migrations in production
+migrate-up-prod:
+	@echo "Applying database migrations (PRODUCTION)..."
+	@go run migrate/main.go -action=up -env=prod
 
 # Rollback the last migration
 migrate-down:
 	@echo "Rolling back last migration..."
-	@go run migrate/main.go -action=down -steps=1 -path=./migrations
+	@go run migrate/main.go -action=down -env=dev
 
-# Rollback N migrations
-migrate-down-n:
-	@echo "Rolling back $(STEPS) migration(s)..."
-	@go run migrate/main.go -action=down -steps=$(STEPS) -path=./migrations
-
-# Check current migration version
-migrate-version:
-	@echo "Checking migration version..."
-	@go run migrate/main.go -action=version -path=./migrations
-
-# Force migration to specific version (use with caution!)
-migrate-force:
-	@echo "Forcing migration to version $(VERSION)..."
-	@go run migrate/main.go -action=force -version=$(VERSION) -path=./migrations
-
-# Create a new migration file (manual)
-migrate-create:
+# Generate a new migration by comparing models with database
+migrate-diff:
 ifndef NAME
-	@echo "Error: NAME is required. Usage: make migrate-create NAME=your_migration_name"
+	@echo "Error: NAME is required. Usage: make migrate-diff NAME=your_migration_name"
 	@exit 1
 endif
-	@echo "Creating new migration: $(NAME)"
-	@go run migrate/main.go -action=create $(NAME) -path=./migrations
+	@echo "Generating migration: $(NAME)"
+	@go run migrate/main.go -action=diff -name=$(NAME) -env=dev
 
-# Auto-generate migration with template for specific models
+# Check migration status
+migrate-status:
+	@echo "Checking migration status..."
+	@go run migrate/main.go -action=status -env=dev
 migrate-generate:
 ifndef NAME
 	@echo "Error: NAME is required. Usage: make migrate-generate NAME=migration_name [MODELS=Employee,Branch]"
 	@exit 1
 endif
-ifdef MODELS
-	@echo "Generating migration for models: $(MODELS)"
-	@go run tools/generate-migration/main.go -name=$(NAME) -models=$(MODELS)
-else
-	@echo "Generating migration template for all models"
-	@go run tools/generate-migration/main.go -name=$(NAME) -models=all
-endif
-	@echo ""
-	@echo "⚠️  IMPORTANT: Review and edit the generated SQL files before applying!"
-
-# Smart migration - Auto-detect schema changes
-migrate-smart:
-ifndef NAME
-	@echo "Error: NAME is required. Usage: make migrate-smart NAME=migration_name MODELS=Employee,Branch"
-	@echo "                            or: make migrate-smart NAME=migration_name MODELS=all"
-	@exit 1
-endif
-ifndef MODELS
-	@echo "Error: MODELS is required. Usage: make migrate-smart NAME=migration_name MODELS=Employee,Branch"
-	@echo "                            or: make migrate-smart NAME=migration_name MODELS=all"
-	@exit 1
-endif
-ifeq ($(MODELS),all)
-	@echo "Analyzing schema changes for ALL models..."
-else
-	@echo "Analyzing schema changes for models: $(MODELS)"
-endif
-	@go run tools/smart-migration/main.go -name=$(NAME) -models=$(MODELS)
-	@echo ""
-	@echo "💡 SQL generated based on detected changes!"
-
 # Show help
 migrate-help:
 	@echo "Database Migration Commands:"

@@ -40,18 +40,6 @@ func (c *Company) BeforeUpdate(tx *gorm.DB) error {
 }
 
 func (c *Company) AfterCreate(tx *gorm.DB) error {
-	// Ensure ID is populated (GORM should set it from RETURNING clause, but double-check)
-	if c.ID == uuid.Nil {
-		// If ID is still empty, query it back using a unique field
-		var company Company
-		if err := tx.Where("tax_id = ?", c.TaxID).First(&company).Error; err != nil {
-			return fmt.Errorf("failed to retrieve company ID: %w", err)
-		}
-		c.ID = company.ID
-		c.CreatedAt = company.CreatedAt
-		c.UpdatedAt = company.UpdatedAt
-	}
-
 	// Update schema_name using the database-generated UUID
 	// Use Updates with map to avoid triggering hooks and validation
 	schema_name := c.GenerateSchemaName()

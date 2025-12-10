@@ -1,11 +1,15 @@
-# Production Database Migrations Guide
+# Database Migrations Guide (Atlas)
 
-> **Last Updated:** December 4, 2025  
+> **Last Updated:** December 10, 2025  
+> **Migration Tool:** Atlas (https://atlasgo.io/)  
 > **Status:** Production Ready ✅
 
-This is your complete guide to running database migrations in **production environments**. This guide focuses on two critical scenarios:
-1. **First-time production setup** - When deploying your server for the first time
-2. **Ongoing migrations** - When applying new migrations to an already-running production system
+This project uses **Atlas** for database migrations. Atlas automatically compares your GORM models with the database and generates migration SQL files.
+
+This guide covers:
+1. **First-time production setup** - Initial deployment
+2. **Generating new migrations** - When you change GORM models
+3. **Applying migrations** - In development and production
 
 ---
 
@@ -21,33 +25,56 @@ This is your complete guide to running database migrations in **production envir
 
 ---
 
-## Understanding the System
+## Quick Start
+
+### Development
+```bash
+# Generate migration after changing GORM models
+make migrate-diff NAME=add_new_field
+
+# Apply migrations
+make migrate-up
+
+# Check status
+make migrate-status
+```
+
+### Production
+```bash
+# Apply migrations (run BEFORE starting server)
+make migrate-up-prod
+```
+
+---
+
+## Understanding Atlas Migrations
 
 ### What Are Migrations?
 
-Migrations are **version-controlled SQL files** that define your database schema. They ensure your database structure matches your application code.
+Atlas generates **versioned SQL files** by comparing your GORM models with your database:
 
 ```
 migrations/
-├── 20251128111531_change_employee_endpoint_path_parameters.up.sql
-├── 20251128111531_change_employee_endpoint_path_parameters.down.sql
-├── 20251128112901_fix_get_employee_work_range_path.up.sql
-└── 20251128112901_fix_get_employee_work_range_path.down.sql
+├── 20251210215800_init_schema.sql          # Initial schema
+├── 20251210220000_add_user_fields.sql      # Add new fields
+└── atlas.sum                                # Migration checksum
 ```
 
-Each migration has two files:
-- **`.up.sql`** - Applies changes (CREATE, ALTER, etc.)
-- **`.down.sql`** - Reverts changes (for rollback)
+### How Atlas Works
+
+1. **Reads your GORM models** from `core/src/config/db/model/`
+2. **Connects to your database** to check current schema
+3. **Generates migration SQL** with only the differences
+4. **Tracks applied migrations** in `atlas_schema_revisions` table
 
 ### Environment Behavior
 
-| Environment | Auto-Migration | Manual Migration Required |
-|-------------|----------------|--------------------------|
-| `dev`       | ✅ Yes         | ❌ No                    |
-| `test`      | ✅ Yes         | ❌ No                    |
-| **`prod`**  | **❌ No**      | **✅ YES - REQUIRED**    |
+| Environment | Auto-Migration | Command |
+|-------------|----------------|---------|
+| `dev/test`  | ❌ Manual      | `make migrate-up` |
+| **`prod`**  | **❌ Manual**  | **`make migrate-up-prod`** |
 
-**In production, migrations MUST be run manually before starting the application.**
+**⚠️ In production, migrations MUST be run manually before starting the application.**
 
 ---
 

@@ -1,15 +1,10 @@
 package lib
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	gormpostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -59,118 +54,13 @@ func (c *MigrationConfig) GetDatabaseURL() string {
 		c.User, c.Password, c.Host, c.Port, c.DBName, sslMode)
 }
 
-// NewMigrate creates a new migrate instance
-func NewMigrate(migrationsPath string) (*migrate.Migrate, error) {
-	config := GetMigrationConfig()
-
-	// Open database connection with explicit sslmode
-	dbURL := config.GetDatabaseURL()
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database connection: %w", err)
-	}
-
-	// Test the connection
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// Create postgres driver instance
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create postgres driver: %w", err)
-	}
-
-	// Convert Windows path to proper format
-	// golang-migrate needs forward slashes
-	migrationsPath = strings.ReplaceAll(migrationsPath, "\\", "/")
-
-	// For Windows absolute paths, ensure proper file:// URL format
-	// golang-migrate library expects: file://path (no extra slash for absolute paths on Windows after file://)
-	sourceURL := "file://" + migrationsPath
-
-	// Create migrate instance
-	m, err := migrate.NewWithDatabaseInstance(
-		sourceURL,
-		"postgres",
-		driver,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create migrate instance: %w", err)
-	}
-
-	return m, nil
-}
-
-// RunMigrations runs all pending migrations
-func RunMigrations(migrationsPath string) error {
-	m, err := NewMigrate(migrationsPath)
-	if err != nil {
-		return err
-	}
-	defer m.Close()
-
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("failed to run migrations: %w", err)
-	}
-
-	version, dirty, err := m.Version()
-	if err != nil && err != migrate.ErrNilVersion {
-		return fmt.Errorf("failed to get migration version: %w", err)
-	}
-
-	if err == migrate.ErrNilVersion {
-		log.Println("No migrations have been applied yet")
-	} else {
-		log.Printf("Current migration version: %d (dirty: %t)\n", version, dirty)
-	}
-
-	return nil
-}
-
-// RollbackMigration rolls back the last migration
-func RollbackMigration(migrationsPath string, steps int) error {
-	m, err := NewMigrate(migrationsPath)
-	if err != nil {
-		return err
-	}
-	defer m.Close()
-
-	if steps <= 0 {
-		steps = 1
-	}
-
-	if err := m.Steps(-steps); err != nil {
-		return fmt.Errorf("failed to rollback migrations: %w", err)
-	}
-
-	log.Printf("Successfully rolled back %d migration(s)\n", steps)
-	return nil
-}
-
-// MigrationVersion returns the current migration version
-func MigrationVersion(migrationsPath string) (uint, bool, error) {
-	m, err := NewMigrate(migrationsPath)
-	if err != nil {
-		return 0, false, err
-	}
-	defer m.Close()
-
-	return m.Version()
-}
-
-// ForceMigrationVersion sets the migration version without running migrations
-func ForceMigrationVersion(migrationsPath string, version int) error {
-	m, err := NewMigrate(migrationsPath)
-	if err != nil {
-		return err
-	}
-	defer m.Close()
-
-	if err := m.Force(version); err != nil {
-		return fmt.Errorf("failed to force migration version: %w", err)
-	}
-
-	log.Printf("Successfully forced migration version to %d\n", version)
-	return nil
-}
+// Note: Migration management is now handled by Atlas (https://atlasgo.io/)
+// Use the following commands:
+//   - make migrate-up: Apply pending migrations
+//   - make migrate-diff NAME=<name>: Generate new migration
+//   - make migrate-status: Check migration status
+//
+// For manual Atlas usage:
+//   - atlas migrate apply --env dev/prod
+//   - atlas migrate diff <name> --env dev
+//   - atlas migrate status --env dev/prod
