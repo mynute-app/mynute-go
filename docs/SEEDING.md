@@ -124,17 +124,15 @@ if recordExists {
 **Important:** The seed command uses `POSTGRES_DB_PROD` (just like migrations):
 
 ```bash
-# Seeding will affect whatever database POSTGRES_DB_PROD points to
-POSTGRES_DB_PROD=maindb ./bin/seed     # Seeds maindb
-POSTGRES_DB_PROD=devdb ./bin/seed      # Seeds devdb
+# Run seeding directly with go run
+go run cmd/seed/main.go
 
-# This is consistent with migrations
-POSTGRES_DB_PROD=maindb make migrate-up  # Migrates maindb
-POSTGRES_DB_PROD=maindb make seed        # Seeds maindb
+# Or via Docker with environment variable
+# Set RUN_PROD_SEED=true in .env, then redeploy
 ```
 
 **Why this matters:**
-- Both migrations and seeding use the same targeting mechanism
+- Both migrations and seeding use the same targeting mechanism (POSTGRES_DB_PROD)
 - You explicitly control which database is affected
 - Safer than relying on `APP_ENV` alone
 
@@ -551,65 +549,45 @@ var Policies = []*PolicyRule{
 
 ### Development
 
-```powershell
-# Quick seeding in development
-make seed
-
-# Or directly
+```bash
+# Run seeding directly
 go run cmd/seed/main.go
-
-# Using PowerShell script
-.\scripts\seed.ps1
 ```
 
 ### Production
 
-#### Build the Binary
+#### Option 1: Via Docker (Recommended)
 
-```powershell
-# Using Make (recommended)
-make seed-build
-
-# Manual build for Linux (from Windows)
-$env:GOOS = "linux"; $env:GOARCH = "amd64"
-go build -o bin/seed cmd/seed/main.go
-
-# Manual build for Windows
-go build -o bin/seed.exe cmd/seed/main.go
+Set environment variable in `.env`:
+```bash
+RUN_PROD_SEED=true
 ```
 
-#### Run on Production Server
+Then redeploy. The `seed-auto` service will run automatically.
+
+#### Option 2: Manual Execution
 
 ```bash
-# After deploying binary to server
-cd /app
-./bin/seed
-```
-
-#### Using Go Directly (if Go installed on server)
-
-```bash
+# If Go is installed on production server
 go run cmd/seed/main.go
+
+# Or build and run binary
+go build -o seed-tool cmd/seed/main.go
+./seed-tool
 ```
 
-### CI/CD Integration
+### Docker Deployment
 
-**GitHub Actions:**
+The docker-compose.prod.yml includes a `seed-auto` service that runs when `RUN_PROD_SEED=true`:
+
 ```yaml
-- name: Build Seed Binary
-  run: make seed-build
-
-- name: Deploy Seed Binary
-  run: scp bin/seed production:/app/bin/
-
-- name: Run Seeding
-  run: |
-    ssh production 'cd /app && ./bin/seed'
-  env:
-    POSTGRES_DB_PROD: ${{ secrets.DB_NAME }}
-    POSTGRES_HOST: ${{ secrets.DB_HOST }}
-    POSTGRES_USER: ${{ secrets.DB_USER }}
-    POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+seed-auto:
+  environment:
+    - RUN_PROD_SEED=${RUN_PROD_SEED:-false}
+  command: |
+    if [ "$RUN_PROD_SEED" = "true" ]; then
+      ./seed-tool
+    fi
 ```
 
 **Docker:**

@@ -44,7 +44,23 @@ func NewServer() *Server {
 		db.InitialSeed()
 	} else {
 		log.Println("Production environment detected - skipping automatic migrations and seeding")
-		log.Println("Run migrations manually with: make migrate-up (see docs/MIGRATIONS.md)")
+		log.Println("Migrations and seeding must be run manually via Docker services:")
+		log.Println("  • Migrations: Set RUN_PROD_MIGRATIONS=true in .env, then redeploy")
+		log.Println("  • Seeding:    Set RUN_PROD_SEED=true in .env, then redeploy")
+		log.Println("")
+		log.Println("Or run manually with:")
+		log.Println("  • Migrations: go run migrate/main.go -action=up -env=prod")
+		log.Println("  • Seeding:    go run cmd/seed/main.go")
+		log.Println("")
+		log.Println("For more information, see docs/MIGRATIONS.md and docs/SEEDING.md")
+		if err := model.LoadSystemRoleIDs(db.Gorm); err != nil {
+			log.Printf("Error loading system role IDs: %v", err)
+			log.Println("Seeding the database may be required for proper operation")
+		}
+		if err := model.LoadEndpointIDs(db.Gorm); err != nil {
+			log.Printf("Error loading endpoint IDs: %v", err)
+			log.Println("Seeding the database may be required for proper operation")
+		}
 	}
 
 	app.Static("/", "./static")
