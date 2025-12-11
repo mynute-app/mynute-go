@@ -123,7 +123,7 @@ services:
       sh -c '
         if [ "$$RUN_PROD_MIGRATIONS" = "true" ]; then
           echo "🚀 Running migrations...";
-          ./migrate-tool -action=up "-path=/mynute-go/migrations";
+          ./migrate-tool -action=up -env=prod;
         else
           echo "⏭️  Skipping migrations (RUN_PROD_MIGRATIONS not set to true)";
         fi

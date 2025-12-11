@@ -96,7 +96,7 @@ services:
       sh -c '
         if [ "$$RUN_DEV_MIGRATIONS" = "true" ]; then
           echo "🚀 Running migrations...";
-          ./migrate-tool -action=up "-path=/mynute-go/migrations";
+          ./migrate-tool -action=up -env=dev;
         else
           echo "⏭️  Skipping migrations (RUN_DEV_MIGRATIONS not set to true)";
         fi

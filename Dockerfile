@@ -3,7 +3,10 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /mynute-go
 
-RUN apk update && apk add --no-cache git
+RUN apk update && apk add --no-cache git curl
+
+# Install Atlas CLI
+RUN curl -sSf https://atlasgo.sh | sh
 
 COPY go.mod ./
 
@@ -30,6 +33,9 @@ WORKDIR /mynute-go
 # Install netcat for database health check
 RUN apk add --no-cache netcat-openbsd
 
+# Copy Atlas CLI from builder
+COPY --from=builder /usr/local/bin/atlas /usr/local/bin/atlas
+
 # Copy application binary
 COPY --from=builder /mynute-go/mynute-backend-app .
 
@@ -37,8 +43,9 @@ COPY --from=builder /mynute-go/mynute-backend-app .
 COPY --from=builder /mynute-go/migrate-tool .
 COPY --from=builder /mynute-go/seed-tool .
 
-# Copy migration files
+# Copy migration files and Atlas config
 COPY --from=builder /mynute-go/migrations ./migrations
+COPY --from=builder /mynute-go/atlas.hcl ./atlas.hcl
 
 # Copy static files
 COPY --from=builder /mynute-go/static ./static
