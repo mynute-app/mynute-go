@@ -30,8 +30,8 @@ FROM alpine:latest
 
 WORKDIR /mynute-go
 
-# Install netcat for database health check
-RUN apk add --no-cache netcat-openbsd
+# Install netcat for database health check and tzdata for timezone support
+RUN apk add --no-cache netcat-openbsd tzdata
 
 # Copy Atlas CLI from builder
 COPY --from=builder /usr/local/bin/atlas /usr/local/bin/atlas

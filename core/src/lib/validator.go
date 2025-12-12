@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+	_ "time/tzdata" // Embed timezone database for systems without tzdata installed
 
 	"github.com/go-playground/validator/v10"
 )
