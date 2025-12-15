@@ -65,6 +65,8 @@ func LogV12(logger *slog.Logger) fiber.Handler {
 // LogV13 is a middleware for logging requests and responses to Loki using the new Schema V13 format.
 func LogV13(logger *slog.Logger) fiber.Handler {
 	loki := &myLogger.Loki{}
+	const maxBodySize = 1024 * 1024 // 1MB - max size for request/response bodies
+
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 
@@ -83,13 +85,21 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 		reqBody := myLogger.MaskSensibleInformation(string(c.Request().Body()))
 		reqHeaders := myLogger.MaskSensibleInformation(string(c.Request().Header.Header()))
 
+		// Truncate large request bodies to prevent Loki errors
+		reqTruncated := false
+		if len(reqBody) > maxBodySize {
+			reqBody = reqBody[:maxBodySize] + "... [TRUNCATED - request too large]"
+			reqTruncated = true
+		}
+
 		reqBodyLabels := map[string]any{
-			"method":      method,
-			"path":        path,
-			"ip":          ip,
-			"host":        host,
-			"req_headers": reqBody,
-			"req_body":    reqHeaders,
+			"method":        method,
+			"path":          path,
+			"ip":            ip,
+			"host":          host,
+			"req_headers":   reqBody,
+			"req_body":      reqHeaders,
+			"req_truncated": reqTruncated,
 		}
 
 		// Log to Loki asynchronously to avoid blocking
@@ -121,6 +131,13 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 		resHeaders := myLogger.MaskSensibleInformation(string(c.Response().Header.Header()))
 		resBody := myLogger.MaskSensibleInformation(string(c.Response().Body()))
 
+		// Truncate large response bodies to prevent Loki errors
+		resTruncated := false
+		if len(resBody) > maxBodySize {
+			resBody = resBody[:maxBodySize] + "... [TRUNCATED - response too large]"
+			resTruncated = true
+		}
+
 		resStreamLabels := map[string]string{
 			"app":   "main-api",
 			"level": level,
@@ -128,16 +145,18 @@ func LogV13(logger *slog.Logger) fiber.Handler {
 		}
 
 		resBodyLabels := map[string]any{
-			"method":      method,
-			"path":        path,
-			"ip":          ip,
-			"host":        host,
-			"http_status": http_status,
-			"duration":    time.Since(start).String(),
-			"req_body":    reqBody,
-			"req_headers": reqHeaders,
-			"res_headers": resHeaders,
-			"res_body":    resBody,
+			"method":        method,
+			"path":          path,
+			"ip":            ip,
+			"host":          host,
+			"http_status":   http_status,
+			"duration":      time.Since(start).String(),
+			"req_body":      reqBody,
+			"req_headers":   reqHeaders,
+			"res_headers":   resHeaders,
+			"res_body":      resBody,
+			"req_truncated": reqTruncated,
+			"res_truncated": resTruncated,
 		}
 
 		// Log to Loki asynchronously to avoid blocking
