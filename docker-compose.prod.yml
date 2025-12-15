@@ -79,18 +79,22 @@ services:
     networks:
       - mynute-app-network
 
-  pgweb:
-    image: sosedoff/pgweb:latest
+  pgadmin:
+    image: dpage/pgadmin4:latest
     restart: always
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_PROD}?sslmode=disable
-      - PGWEB_AUTH_USER=${PGWEB_USER}
-      - PGWEB_AUTH_PASS=${PGWEB_PASSWORD}
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
+      - PGADMIN_CONFIG_LOGIN_BANNER="Authorized users only!"
+      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
     networks:
       - mynute-app-network
       - dokploy-network
@@ -99,11 +103,10 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
       # External URL
-      - "traefik.http.routers.mynute-pgweb-prod-http.rule=Host(`${PGWEB_EXTERNAL_DOMAIN}`)"
-      - "traefik.http.routers.mynute-pgweb-prod-http.entrypoints=websecure"
-      - "traefik.http.routers.mynute-pgweb-prod-http.tls.certresolver=letsencrypt"
-      - "traefik.http.services.mynute-pgweb-prod-http.loadbalancer.server.port=8081"
-    command: ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081", "--auth-user=${PGWEB_USER}", "--auth-pass=${PGWEB_PASSWORD}"]
+      - "traefik.http.routers.mynute-pgadmin-prod-http.rule=Host(`${PGADMIN_EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.mynute-pgadmin-prod-http.entrypoints=websecure"
+      - "traefik.http.routers.mynute-pgadmin-prod-http.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mynute-pgadmin-prod-http.loadbalancer.server.port=80"
 
   # Auto-run migrations on deploy if RUN_PROD_MIGRATIONS=true
   migrate-auto:
@@ -255,6 +258,7 @@ networks:
 
 volumes:
   postgres-data:
+  pgadmin-data:
   grafana-data:
   loki-index:
   loki-cache:
