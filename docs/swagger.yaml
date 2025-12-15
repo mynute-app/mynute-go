@@ -52,9 +52,6 @@ definitions:
       payment_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      rescheduled:
-        example: false
-        type: boolean
       service_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
@@ -112,9 +109,6 @@ definitions:
       payment_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string
-      rescheduled:
-        example: false
-        type: boolean
       service_id:
         example: 00000000-0000-0000-0000-000000000000
         type: string

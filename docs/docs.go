@@ -5087,10 +5087,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
                 },
-                "rescheduled": {
-                    "type": "boolean",
-                    "example": false
-                },
                 "service_id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
@@ -5167,10 +5163,6 @@ const docTemplate = `{
                 "payment_id": {
                     "type": "string",
                     "example": "00000000-0000-0000-0000-000000000000"
-                },
-                "rescheduled": {
-                    "type": "boolean",
-                    "example": false
                 },
                 "service_id": {
                     "type": "string",
