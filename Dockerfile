@@ -50,6 +50,9 @@ COPY --from=builder /mynute-go/atlas.hcl ./atlas.hcl
 # Copy static files
 COPY --from=builder /mynute-go/static ./static
 
+# Copy translation files
+COPY --from=builder /mynute-go/translation ./translation
+
 EXPOSE 4000
 
 # Just run the app - migrations/seeding are separate manual steps
