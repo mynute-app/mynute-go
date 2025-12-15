@@ -218,9 +218,19 @@ services:
       - loki
     networks:
       - mynute-app-network
+      - dokploy-network
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      # External URL
+      - "traefik.http.routers.mynute-grafana-prod-http.rule=Host(`${GRAFANA_EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.mynute-grafana-prod-http.entrypoints=websecure"
+      - "traefik.http.routers.mynute-grafana-prod-http.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mynute-grafana-prod-http.loadbalancer.server.port=${GRAFANA_PORT}"
 
   loki:
     user: root
