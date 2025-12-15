@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -60,6 +61,10 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		}
 	}
 
+	for email := range cleanedTo {
+		log.Printf("Sending email to: %s\n", cleanedTo[email])
+	}
+
 	params := &resend.SendEmailRequest{
 		From:    from,
 		To:      cleanedTo,
@@ -76,6 +81,8 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 	if sent != nil && sent.Id != "" {
 		fmt.Printf("Email sent successfully via Resend. ID: %s\n", sent.Id)
 	}
+	
+	log.Printf("Resend SendEmailResponse object: %+v", sent)
 
 	return nil
 }
