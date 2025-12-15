@@ -65,10 +65,6 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		}
 	}
 
-	for email := range cleanedTo {
-		log.Printf("Sending email to: %s\n", cleanedTo[email])
-	}
-
 	params := &resend.SendEmailRequest{
 		From:    from,
 		To:      cleanedTo,
@@ -76,15 +72,14 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		Html:    data.Html,
 	}
 
-	sent, err := r.client.Emails.SendWithContext(ctx, params)
+	_, err := r.client.Emails.SendWithContext(ctx, params)
 	if err != nil {
+		for email := range cleanedTo {
+			log.Printf("Sending email to: %s\n", cleanedTo[email])
+		}
+		log.Printf(">>> Resend email error: %v\n", err)
 		return fmt.Errorf("failed to send email via resend (from: %s, to: %v): %w", from, cleanedTo, err)
 	}
 
-	// Log successful send
-	if sent != nil && sent.Id != "" {
-		log.Printf("Email sent successfully via Resend. ID: %s\n", sent.Id)
-	}
-	
 	return nil
 }
