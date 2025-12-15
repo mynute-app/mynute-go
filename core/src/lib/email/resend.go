@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -55,7 +56,10 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 	cleanedTo := make([]string, len(data.To))
 	for i, email := range data.To {
 		// Trim whitespace
-		cleanedTo[i] = strings.TrimSpace(email)
+		trimmed := strings.TrimSpace(email)
+		// URL decode the email (fixes %40 encoding)
+		unescaped, _ := url.QueryUnescape(trimmed)
+		cleanedTo[i] = unescaped
 		if cleanedTo[i] == "" {
 			return fmt.Errorf("recipient email at index %d is empty", i)
 		}
@@ -79,10 +83,8 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 
 	// Log successful send
 	if sent != nil && sent.Id != "" {
-		fmt.Printf("Email sent successfully via Resend. ID: %s\n", sent.Id)
+		log.Printf("Email sent successfully via Resend. ID: %s\n", sent.Id)
 	}
 	
-	log.Printf("Resend SendEmailResponse object: %+v", sent)
-
 	return nil
 }
