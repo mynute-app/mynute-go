@@ -50,13 +50,14 @@ func (r *TemplateRenderer) RenderEmail(templateName, language string, customData
 		return nil, fmt.Errorf("failed to load translations: %w", err)
 	}
 
-	// Merge custom data with translations
-	subject, ok := translations["subject"].(string)
-	if !ok {
-		return nil, fmt.Errorf("failed to get email subject from translations")
-	}
-
+	// Merge custom data with translations (this processes template variables)
 	templateData := r.mergeData(translations, customData)
+
+	// Get processed subject from template data
+	subject, ok := templateData["subject"].(string)
+	if !ok {
+		return nil, fmt.Errorf("failed to get email subject from template data")
+	}
 
 	// Load and parse template
 	templatePath := filepath.Join(r.templateDir, templateName+".html")
