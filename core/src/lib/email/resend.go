@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/resend/resend-go/v2"
 )
@@ -49,16 +50,31 @@ func (r *ResendAdapter) Send(ctx context.Context, data EmailData) error {
 		from = r.defaultFrom
 	}
 
+	// Validate and clean email addresses
+	cleanedTo := make([]string, len(data.To))
+	for i, email := range data.To {
+		// Trim whitespace
+		cleanedTo[i] = strings.TrimSpace(email)
+		if cleanedTo[i] == "" {
+			return fmt.Errorf("recipient email at index %d is empty", i)
+		}
+	}
+
 	params := &resend.SendEmailRequest{
 		From:    from,
-		To:      data.To,
+		To:      cleanedTo,
 		Subject: data.Subject,
 		Html:    data.Html,
 	}
 
-	_, err := r.client.Emails.SendWithContext(ctx, params)
+	sent, err := r.client.Emails.SendWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("failed to send email via resend: %w", err)
+		return fmt.Errorf("failed to send email via resend (from: %s, to: %v): %w", from, cleanedTo, err)
+	}
+
+	// Log successful send
+	if sent != nil && sent.Id != "" {
+		fmt.Printf("Email sent successfully via Resend. ID: %s\n", sent.Id)
 	}
 
 	return nil
