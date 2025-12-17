@@ -78,6 +78,6 @@ func (c *cloudUploader) save(file []byte, scopedPath string) (string, error) {
 	if err != nil {
 		return "", lib.Error.General.InternalError.WithError(err)
 	}
-	url := fmt.Sprintf("%s/%s/%s", c.PublicURL, c.Bucket, filepath.ToSlash(scopedPath))
+	url := fmt.Sprintf("%s/%s", c.PublicURL, filepath.ToSlash(scopedPath))
 	return url, nil
 }
