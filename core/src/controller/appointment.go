@@ -29,6 +29,7 @@ import (
 //	@Produce		json
 //	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
+//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment [post]
@@ -90,6 +91,9 @@ func CreateAppointment(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Get email language from query parameter (default to "en")
+	emailLanguage := c.Query("email_language", "en")
+
 	// Send appointment created emails
 	go func() {
 		ctx := context.Background()
@@ -110,7 +114,7 @@ func CreateAppointment(c *fiber.Ctx) error {
 		translationDir := filepath.Join("translation", "email")
 		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
 
-		if err := emailService.SendAppointmentCreatedEmails(ctx, tx, &appointment); err != nil {
+		if err := emailService.SendAppointmentCreatedEmails(ctx, tx, &appointment, emailLanguage); err != nil {
 			log.Printf("Failed to send appointment created emails: %v", err)
 		}
 	}()
@@ -159,6 +163,7 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			id				path		string					true	"ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
+//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [patch]
@@ -245,6 +250,9 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		return lib.Error.General.UpdatedError.WithError(tx.Error)
 	}
 
+	// Get email language from query parameter (default to "en")
+	emailLanguage := c.Query("email_language", "en")
+
 	// Send appointment updated emails
 	go func() {
 		ctx := context.Background()
@@ -259,7 +267,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 		translationDir := filepath.Join("translation", "email")
 		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
 
-		if err := emailService.SendAppointmentUpdatedEmails(ctx, tx, &appointment); err != nil {
+		if err := emailService.SendAppointmentUpdatedEmails(ctx, tx, &appointment, emailLanguage); err != nil {
 			log.Printf("Failed to send appointment updated emails: %v", err)
 		}
 	}()
@@ -282,6 +290,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"ID"
+//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
@@ -311,6 +320,9 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Get email language from query parameter (default to "en")
+	emailLanguage := c.Query("email_language", "en")
+
 	// Send appointment cancelled emails
 	go func() {
 		ctx := context.Background()
@@ -325,7 +337,7 @@ func CancelAppointmentByID(c *fiber.Ctx) error {
 		translationDir := filepath.Join("translation", "email")
 		emailService := email.NewAppointmentEmailService(sender, templateDir, translationDir)
 
-		if err := emailService.SendAppointmentCancelledEmails(ctx, tx, &appointment); err != nil {
+		if err := emailService.SendAppointmentCancelledEmails(ctx, tx, &appointment, emailLanguage); err != nil {
 			log.Printf("Failed to send appointment cancelled emails: %v", err)
 		}
 	}()

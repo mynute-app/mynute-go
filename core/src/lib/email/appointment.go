@@ -38,7 +38,7 @@ func NewAppointmentEmailService(sender Sender, templateDir, translationDir strin
 }
 
 // LoadAppointmentData loads all necessary data for an appointment email
-func (s *AppointmentEmailService) LoadAppointmentData(tx *gorm.DB, appointment *model.Appointment) (*AppointmentEmailData, error) {
+func (s *AppointmentEmailService) LoadAppointmentData(tx *gorm.DB, appointment *model.Appointment, language string) (*AppointmentEmailData, error) {
 	// Load client
 	var client model.Client
 	if err := tx.Model(&model.Client{}).Where("id = ?", appointment.ClientID).First(&client).Error; err != nil {
@@ -68,9 +68,10 @@ func (s *AppointmentEmailService) LoadAppointmentData(tx *gorm.DB, appointment *
 	endTime := appointment.EndTime
 	duration := endTime.Sub(startTime)
 
-	// Determine language (default to English)
-	// TODO: Add language preference to UserMeta or Client model
-	language := "en"
+	// Use provided language (defaults to "en" if empty)
+	if language == "" {
+		language = "en"
+	}
 
 	// Build branch address
 	branchAddress := branch.Street
@@ -102,8 +103,8 @@ func (s *AppointmentEmailService) LoadAppointmentData(tx *gorm.DB, appointment *
 }
 
 // SendAppointmentCreatedEmails sends creation emails to both client and employee
-func (s *AppointmentEmailService) SendAppointmentCreatedEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment) error {
-	data, err := s.LoadAppointmentData(tx, appointment)
+func (s *AppointmentEmailService) SendAppointmentCreatedEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment, language string) error {
+	data, err := s.LoadAppointmentData(tx, appointment, language)
 	if err != nil {
 		return fmt.Errorf("failed to load appointment data: %w", err)
 	}
@@ -123,8 +124,8 @@ func (s *AppointmentEmailService) SendAppointmentCreatedEmails(ctx context.Conte
 }
 
 // SendAppointmentUpdatedEmails sends update emails to both client and employee
-func (s *AppointmentEmailService) SendAppointmentUpdatedEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment) error {
-	data, err := s.LoadAppointmentData(tx, appointment)
+func (s *AppointmentEmailService) SendAppointmentUpdatedEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment, language string) error {
+	data, err := s.LoadAppointmentData(tx, appointment, language)
 	if err != nil {
 		return fmt.Errorf("failed to load appointment data: %w", err)
 	}
@@ -143,8 +144,8 @@ func (s *AppointmentEmailService) SendAppointmentUpdatedEmails(ctx context.Conte
 }
 
 // SendAppointmentCancelledEmails sends cancellation emails to both client and employee
-func (s *AppointmentEmailService) SendAppointmentCancelledEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment) error {
-	data, err := s.LoadAppointmentData(tx, appointment)
+func (s *AppointmentEmailService) SendAppointmentCancelledEmails(ctx context.Context, tx *gorm.DB, appointment *model.Appointment, language string) error {
+	data, err := s.LoadAppointmentData(tx, appointment, language)
 	if err != nil {
 		return fmt.Errorf("failed to load appointment data: %w", err)
 	}
