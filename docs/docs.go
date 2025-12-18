@@ -45,6 +45,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.CreateAppointment"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "en",
+                        "description": "Email language (en, pt, es)",
+                        "name": "email_language",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -150,6 +157,13 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "en",
+                        "description": "Email language (en, pt, es)",
+                        "name": "email_language",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -217,6 +231,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/DTO.CreateAppointment"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "en",
+                        "description": "Email language (en, pt, es)",
+                        "name": "email_language",
+                        "in": "query"
                     }
                 ],
                 "responses": {

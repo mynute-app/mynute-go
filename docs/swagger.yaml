@@ -1236,6 +1236,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/DTO.CreateAppointment'
+      - default: en
+        description: Email language (en, pt, es)
+        in: query
+        name: email_language
+        type: string
       produces:
       - application/json
       responses:
@@ -1270,6 +1275,11 @@ paths:
         in: path
         name: id
         required: true
+        type: string
+      - default: en
+        description: Email language (en, pt, es)
+        in: query
+        name: email_language
         type: string
       produces:
       - application/json
@@ -1349,6 +1359,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/DTO.CreateAppointment'
+      - default: en
+        description: Email language (en, pt, es)
+        in: query
+        name: email_language
+        type: string
       produces:
       - application/json
       responses:

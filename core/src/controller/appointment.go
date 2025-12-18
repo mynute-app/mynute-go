@@ -29,7 +29,7 @@ import (
 //	@Produce		json
 //	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
-//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
+//	@Param			email_language	query		string					false	"Email language (en, pt, es)"	default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment [post]
@@ -163,7 +163,7 @@ func GetAppointmentByID(c *fiber.Ctx) error {
 //	@Param			X-Company-ID	header		string					true	"X-Company-ID"
 //	@Param			id				path		string					true	"ID"
 //	@Param			appointment		body		DTO.CreateAppointment	true	"Appointment"
-//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
+//	@Param			email_language	query		string					false	"Email language (en, pt, es)"	default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [patch]
@@ -290,7 +290,7 @@ func UpdateAppointmentByID(c *fiber.Ctx) error {
 //	@Failure		401				{object}	nil
 //	@Param			X-Company-ID	header		string	true	"X-Company-ID"
 //	@Param			id				path		string	true	"ID"
-//	@Param			email_language	query		string					false	"Email language (en, pt, es)" default(en)
+//	@Param			email_language	query		string	false	"Email language (en, pt, es)"	default(en)
 //	@Success		200				{object}	DTO.Appointment
 //	@Failure		400				{object}	DTO.ErrorResponse
 //	@Router			/appointment/{id} [delete]
