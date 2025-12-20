@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log"
 	DTO "mynute-go/core/src/config/api/dto"
 	mJSON "mynute-go/core/src/config/db/model/json"
 	"mynute-go/core/src/lib"
@@ -122,6 +123,7 @@ func SendLoginValidationCodeByEmail(c *fiber.Ctx, model any) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	log.Printf("Successfully sent login_validation_code email to %s", user_email)
 	return nil
 }
 
@@ -168,6 +170,7 @@ func SendNewPasswordByEmail(c *fiber.Ctx, user_email string, model any) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	log.Printf("Successfully sent new_password email to %s", user_email)
 	return nil
 }
 
@@ -239,6 +242,7 @@ func SendVerificationCodeByEmail(c *fiber.Ctx, model any) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	log.Printf("Successfully sent email_verification_code email to %s", user_email)
 	return nil
 }
 
